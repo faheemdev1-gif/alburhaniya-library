@@ -1,0 +1,15 @@
+# GPU override — use this on Windows with NVIDIA GPU:
+#   docker compose -f docker-compose.yml -f docker-compose.gpu.yml up -d --build
+#
+# This adds GPU access to the backend container only.
+# On Mac or CPU-only machines, just use docker-compose.yml directly.
+
+services:
+  backend:
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]

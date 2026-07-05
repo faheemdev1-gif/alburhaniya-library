@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: burhaniya-library-backend
+    runtime: docker
+    plan: free
+    rootDir: backend
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /health
+    envVars:
+      - key: CORS_ORIGINS
+        value: "*"
+      - key: STATIC_SITE_BASE_URL
+        value: ""   # fill in once your Vercel static site is deployed, e.g.
+                    # https://your-library.vercel.app  (no trailing slash)
+      - key: ENABLE_LEGACY_MEILISEARCH
+        value: "false"

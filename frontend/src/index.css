@@ -1,0 +1,86 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    direction: rtl;
+    font-family: 'Noto Naskh Arabic', 'Amiri', serif;
+  }
+
+  body {
+    background-color: #f5f0e8;
+    color: #1a1209;
+    min-height: 100vh;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+}
+
+@layer components {
+  /* Ornamental divider */
+  .ornament {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: #b8922a;
+  }
+  .ornament::before,
+  .ornament::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(to left, transparent, #b8922a88, transparent);
+  }
+
+  /* Arabic highlighted text from Meilisearch */
+  mark {
+    background-color: #d4a93c44;
+    color: #8a6a1a;
+    border-radius: 2px;
+    padding: 0 2px;
+  }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: #e8dfc8; }
+  ::-webkit-scrollbar-thumb { background: #b8922a88; border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: #b8922a; }
+
+  /* PDF viewer container */
+  .pdf-canvas-wrap canvas {
+    max-width: 100%;
+    height: auto !important;
+    display: block;
+    margin: 0 auto;
+    box-shadow: 0 4px 24px rgba(26,18,9,0.18);
+  }
+
+  /* Search input RTL */
+  .search-input {
+    direction: rtl;
+    text-align: right;
+    font-family: 'Noto Naskh Arabic', serif;
+    font-size: 1.125rem;
+  }
+}
+
+/* Loading shimmer */
+@keyframes shimmer {
+  0%   { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+.shimmer {
+  background: linear-gradient(90deg, #e8dfc8 25%, #f5f0e8 50%, #e8dfc8 75%);
+  background-size: 400px 100%;
+  animation: shimmer 1.4s ease infinite;
+}
+
+/* Fade in */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.fade-in { animation: fadeIn 0.25s ease forwards; }
