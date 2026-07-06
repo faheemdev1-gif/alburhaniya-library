@@ -21,8 +21,17 @@ Claude side:    add this service's URL + "/mcp" as a custom connector
 from __future__ import annotations
 
 from mcp.server.fastmcp import FastMCP
+from mcp.server.transport_security import TransportSecuritySettings
 
 from app.services import library_db as db
+
+# FastMCP's DNS-rebinding protection only allows localhost/127.0.0.1 by
+# default (because no `host` is passed at construction time). Deployed
+# behind Render + Cloudflare, real requests arrive with a Host header of
+# our public domain, which gets rejected as "421 Invalid Host header"
+# unless we explicitly allow it here. Add any other domain you deploy to
+# (e.g. a custom domain) to allowed_hosts/allowed_origins as needed.
+_RENDER_HOST = "burhaniya-library-backend.onrender.com"
 
 mcp = FastMCP(
     "burhaniya-library",
@@ -37,6 +46,15 @@ mcp = FastMCP(
     # Serve at root internally — app/main.py mounts this whole app at
     # "/mcp", so leaving the default "/mcp" here would produce "/mcp/mcp".
     streamable_http_path="/",
+    transport_security=TransportSecuritySettings(
+        enable_dns_rebinding_protection=True,
+        allowed_hosts=["localhost:*", "127.0.0.1:*", _RENDER_HOST],
+        allowed_origins=[
+            "http://localhost:*",
+            "http://127.0.0.1:*",
+            f"https://{_RENDER_HOST}",
+        ],
+    ),
 )
 
 
