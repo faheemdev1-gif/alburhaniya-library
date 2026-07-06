@@ -6,6 +6,9 @@ pydantic==2.7.1
 pydantic-settings==2.2.1
 aiofiles==23.2.1
 
+# MCP server (app/mcp_server.py) — exposes search as a real tool call
+mcp==1.28.1
+
 # HTML parsing — used to parse the shamela.ws .htm exports at image-build time
 beautifulsoup4==4.12.3
 lxml==5.2.2

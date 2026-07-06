@@ -14,3 +14,19 @@ services:
                     # https://your-library.vercel.app  (no trailing slash)
       - key: ENABLE_LEGACY_MEILISEARCH
         value: "false"
+
+  # Same image as the backend above (same Dockerfile, same baked-in
+  # library.db) — just started with a different command, so it serves
+  # the MCP tool instead of the normal HTTP API. This is what Claude
+  # connects to as a "custom connector" to search the library directly.
+  - type: web
+    name: burhaniya-library-mcp
+    runtime: docker
+    plan: free
+    rootDir: backend
+    dockerfilePath: ./Dockerfile
+    dockerCommand: uvicorn app.mcp_server:app --host 0.0.0.0 --port 8000
+    healthCheckPath: /mcp
+    envVars:
+      - key: CORS_ORIGINS
+        value: "*"
