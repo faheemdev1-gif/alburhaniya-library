@@ -2,18 +2,19 @@
 MCP (Model Context Protocol) server for the Burhaniya library.
 
 This gives Claude a real *tool* to search the library, instead of a URL
-it has to invent and fetch on its own. Claude's web-browsing tool refuses
-to fetch a URL it constructed itself (a safety restriction against an AI
-freely visiting arbitrary self-built URLs) — but an MCP tool call is not
-subject to that restriction at all, so this sidesteps the problem
-completely.
+it has to construct and fetch on its own — an MCP tool call gives Claude
+structured, validated access to search_library() and list_books()
+directly, rather than guessing at a REST URL shape.
 
 Runs as its own small ASGI app, in the same Docker image as the main
 FastAPI app (app/main.py), reusing the same baked-in library.db and the
-same search() function — just exposed a different way.
+same search() function — just exposed a different way. It's mounted
+inside app/main.py at "/mcp", so streamable_http_path is set to "/" here
+(instead of leaving it at its default of "/mcp") to avoid a doubled
+"/mcp/mcp" path once mounted.
 
 Local run:      uvicorn app.mcp_server:app --host 0.0.0.0 --port 8001
-Deployed:       its own Render web service, see render.yaml
+Deployed:       mounted inside the main FastAPI app, see app/main.py
 Claude side:    add this service's URL + "/mcp" as a custom connector
                 (Settings -> Connectors -> Add custom connector).
 """
@@ -33,6 +34,9 @@ mcp = FastMCP(
         "highlighted snippet, and a URL to read the full page."
     ),
     stateless_http=True,
+    # Serve at root internally — app/main.py mounts this whole app at
+    # "/mcp", so leaving the default "/mcp" here would produce "/mcp/mcp".
+    streamable_http_path="/",
 )
 
 
@@ -56,5 +60,7 @@ def list_books() -> dict:
     return {"books": db.list_books()}
 
 
-# Streamable-HTTP ASGI app — mounted at /mcp by default (streamable_http_path).
+# Streamable-HTTP ASGI app. When run standalone (uvicorn app.mcp_server:app)
+# this serves at "/" per streamable_http_path above. When mounted inside
+# app/main.py at "/mcp", the combined external path is a clean "/mcp".
 app = mcp.streamable_http_app()
