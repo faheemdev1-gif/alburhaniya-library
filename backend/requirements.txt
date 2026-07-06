@@ -1,34 +1,23 @@
-# ── Core (always installed) ──────────────────────────────────────────────
+# ── Core ──────────────────────────────────────────────
 fastapi==0.111.0
-uvicorn[standard]==0.29.0
+uvicorn[standard]==0.32.1
 python-multipart==0.0.9
-pydantic==2.10.6
+pydantic==2.11.10
 pydantic-settings==2.7.1
 aiofiles==23.2.1
 
-# MCP server (app/mcp_server.py) — exposes search as a real tool call
+mcp==1.28.1
+# MCP server
 mcp==1.28.1
 
-# HTML parsing — used to parse the shamela.ws .htm exports at image-build time
+# HTML parsing
 beautifulsoup4==4.12.3
 lxml==5.2.2
 
-# ── Optional document parsing (legacy ingestion pipeline only) ──────────
-# Only needed if ENABLE_LEGACY_MEILISEARCH=true and you're ingesting
-# PDF/DOCX files instead of the shamela .htm books. Safe to leave
-# installed — they're pure/light dependencies, no GPU/large downloads.
+# Optional document parsing
 pdfplumber==0.11.0
 pypdf==4.2.0
 python-docx==1.1.2
 python-magic==0.4.27
 chardet==5.2.0
 tqdm==4.66.4
-
-# ── Legacy search engines (NOT installed by default) ─────────────────────
-# The default deployment uses SQLite FTS5 (stdlib `sqlite3`, no extra
-# package needed). Uncomment these ONLY if you're re-enabling the old
-# Meilisearch/Qdrant hybrid-search docker-compose stack:
-# meilisearch==0.31.0
-# qdrant-client==1.9.1
-# sentence-transformers==2.7.0
-# transformers==4.41.0
