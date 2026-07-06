@@ -7,6 +7,7 @@ from fastapi.responses import HTMLResponse
 from app.core.config import get_settings
 from app.core.html_templates import page_shell, nav_bar
 from app.api import books, search, files
+from app.mcp_server import mcp
 
 logger = logging.getLogger(__name__)
 
@@ -28,6 +29,8 @@ app.add_middleware(
 app.include_router(books.router)
 app.include_router(search.router)
 app.include_router(files.router)
+
+app.mount("/mcp", mcp.streamable_http_app())
 
 
 @app.on_event("startup")
