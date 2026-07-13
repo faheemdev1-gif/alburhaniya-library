@@ -1,10 +1,19 @@
 #!/usr/bin/env python3
 """
-Build library.db (SQLite + FTS5) from data/raw_htm + data/mapping.json.
+Build library.db (SQLite + FTS5) from data/raw_htm + data/mapping.json
++ data/sources.json.
 
 Runs once, at Docker build time, so the shipped image already contains a
 ready-to-query search index. No persistent disk needed: every fresh
 deploy rebuilds this file from the book sources baked into the image.
+
+Source grading (added):
+  data/sources.json carries, for every book_id, its source grade
+  (أصلي / ثانوي) plus author + a short book-specific note. The long
+  boilerplate definition of each grade is stored ONCE in the `grades`
+  table — not repeated per book, and NEVER written into `pages`, which
+  would pollute the FTS index with 43 identical copies of high-value
+  words like العقيدة / المشايخ / سيدي الإمام فخر الدين.
 """
 from __future__ import annotations
 import json
@@ -21,13 +30,27 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.join(HERE, "..", "data")
 RAW_DIR = os.path.join(DATA_DIR, "raw_htm")
 MAPPING_FILE = os.path.join(DATA_DIR, "mapping.json")
+SOURCES_FILE = os.path.join(DATA_DIR, "sources.json")
 DB_PATH = os.environ.get("LIBRARY_DB_PATH", os.path.join(HERE, "..", "library.db"))
 
 SCHEMA = """
+CREATE TABLE grades (
+    grade       TEXT PRIMARY KEY,   -- 'أصلي' | 'ثانوي'
+    code        TEXT NOT NULL,      -- 'primary' | 'secondary'
+    label       TEXT NOT NULL,
+    definition  TEXT NOT NULL,      -- the Arabic boilerplate, stored ONCE
+    usage       TEXT NOT NULL       -- how a model should weigh it
+);
+
 CREATE TABLE books (
-    book_id     TEXT PRIMARY KEY,
-    title       TEXT NOT NULL,
-    page_count  INTEGER NOT NULL
+    book_id        TEXT PRIMARY KEY,
+    title          TEXT NOT NULL,
+    page_count     INTEGER NOT NULL,
+    source_grade   TEXT NOT NULL,   -- 'أصلي' | 'ثانوي'
+    source_code    TEXT NOT NULL,   -- 'primary' | 'secondary'  (ASCII-safe)
+    source_author  TEXT,
+    source_note    TEXT,
+    FOREIGN KEY (source_grade) REFERENCES grades(grade)
 );
 
 CREATE TABLE pages (
@@ -59,20 +82,56 @@ def build():
         os.remove(DB_PATH)
 
     mapping = json.load(open(MAPPING_FILE, encoding="utf-8"))
+    sources = json.load(open(SOURCES_FILE, encoding="utf-8"))
+    grades = sources["grades"]
+    book_sources = sources["books"]
+
     conn = sqlite3.connect(DB_PATH)
     conn.executescript(SCHEMA)
 
+    for grade, g in grades.items():
+        conn.execute(
+            "INSERT INTO grades (grade, code, label, definition, usage) "
+            "VALUES (?, ?, ?, ?, ?)",
+            (grade, g["code"], g["label"], g["definition"], g["usage"]),
+        )
+
+    missing: list[str] = []
     total_pages = 0
+
     for slug_in, title in sorted(mapping.items()):
         n = int(slug_in.split("_")[1])
         slug = slug_for(n)
         raw_path = os.path.join(RAW_DIR, f"{slug_in}.htm")
         pages = parse_book(raw_path)
 
+        src = book_sources.get(slug)
+        if src is None:
+            # Fail loud rather than silently shipping an ungraded book:
+            # an ungraded book is worse than a missing one, because the
+            # model will treat it as if it had no provenance caveat.
+            missing.append(slug)
+            continue
+
+        grade = src["grade"]
+        if grade not in grades:
+            raise SystemExit(f"{slug}: unknown grade '{grade}' — not in sources.json grades")
+
         conn.execute(
-            "INSERT INTO books (book_id, title, page_count) VALUES (?, ?, ?)",
-            (slug, title, len(pages)),
+            "INSERT INTO books "
+            "(book_id, title, page_count, source_grade, source_code, source_author, source_note) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?)",
+            (
+                slug,
+                title,
+                len(pages),
+                grade,
+                grades[grade]["code"],
+                src.get("author"),
+                src.get("note"),
+            ),
         )
+
         for seq, page in enumerate(pages, start=1):
             text = "\n\n".join(page["paragraphs"])
             norm = normalize_arabic(text, aggressive=True)
@@ -82,13 +141,28 @@ def build():
                 (slug, seq, page["printed_page"], text, norm),
             )
         total_pages += len(pages)
-        print(f"{slug}  {len(pages):4d} pages  {title}")
+        print(f"{slug}  [{grades[grade]['code']:<9}] {len(pages):4d} pages  {title}")
 
+    if missing:
+        raise SystemExit(
+            "\nERROR: these books have no entry in data/sources.json: "
+            + ", ".join(missing)
+            + "\nAdd them (with a grade) before building."
+        )
+
+    # NOTE: only `pages` feeds the FTS index. Grades / notes / authors
+    # deliberately stay out of it.
     conn.execute("INSERT INTO pages_fts(rowid, norm_text) SELECT id, norm_text FROM pages")
     conn.commit()
     conn.execute("PRAGMA optimize")
     conn.close()
-    print(f"\nBuilt {DB_PATH} — {len(mapping)} books, {total_pages} pages")
+
+    n_primary = sum(1 for s in book_sources.values() if s["grade"] == "أصلي")
+    n_secondary = len(book_sources) - n_primary
+    print(
+        f"\nBuilt {DB_PATH} — {len(mapping)} books "
+        f"({n_primary} primary / {n_secondary} secondary), {total_pages} pages"
+    )
 
 
 if __name__ == "__main__":
