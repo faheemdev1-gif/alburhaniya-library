@@ -40,22 +40,83 @@ still in the codebase (`app/services/hybrid_search.py`) but OFF by default;
 flip `ENABLE_SEMANTIC_SEARCH=true` and run the legacy Meilisearch/Qdrant
 compose stack to bring it back.
 
-## Deploying the backend (Render, free)
+## The React app (`frontend/`)
 
-1. Push this repo to GitHub.
-2. In Render: **New -> Blueprint**, point it at the repo -- `render.yaml` at
-   the repo root configures everything (free plan, Dockerfile in `backend/`).
-3. Once deployed you get a URL like `https://burhaniya-library-backend.onrender.com`.
-   Try:
-   - `https://.../search.html?q=التوحيد` -- server-rendered search results
-   - `https://.../books.html` -- full library index
-   - `https://.../health` -- should return `{"status":"ok"}`
-4. **Free-tier note:** the service spins down after 15 minutes idle; the
-   first request after that takes up to ~30-60s to wake up.
-5. If/when you deploy the companion static site to Vercel, set the
-   `STATIC_SITE_BASE_URL` env var on Render to that site's URL -- search
-   results will then link to the static pages instead of this backend's
-   own `/read/...` pages.
+Two screens, one search field.
+
+- **Library** — every book grouped by source grade. The header search field
+  is scoped to the whole library; results list one card per matching page.
+- **Reader** — opening a book (from the index, or from a search result) keeps
+  the same field in the same place but narrows its scope to that book. Hits
+  appear as a jump-list beside the page and stay highlighted as you read. A
+  link under the field widens the same query back out to the whole library.
+
+`/` focuses the search field, `←` / `→` turn pages, `Esc` clears the search.
+
+### How pages are formatted
+
+The shamela exports flatten each page into running text: poetry survives only
+as a `***` between the two hemistichs of a bayt, and consecutive bayts run
+together on one line with the commentary flowing straight into them. Across
+the corpus that is 8,849 separators on 2,326 pages, with 1,033 paragraphs
+holding more than one bayt inline.
+
+`src/utils/formatText.js` recovers the structure. Splitting on `***` is not
+enough — the hard part is knowing where the verse starts and stops. The signal
+it uses is vocalisation: poetry here is fully voweled (median diacritic-to-
+letter ratio 0.75) while the commentary around it is bare (median 0.00). So it
+classifies each word, grows a verse span outward from every `***`, and stops
+where the vowels stop. Inside a span the `***` marks exact hemistich
+boundaries; where two bayts run together it cuts on the bayt number
+(`419-`, `3 ق 1:`) when there is one, and otherwise on metre, since hemistichs
+within a qasida are near-constant in length.
+
+It returns typed blocks — `bayt`, `para`, `heading`, `quote`, `divider`,
+`folio` — which `components/PageText.jsx` renders: couplets as couplets, with
+the two hemistichs meeting at a rosette. `src/utils/arabic.js` adds the inline
+layer: Qur'anic citations, quoted hadith, and search highlighting that matches
+the way the backend matches (diacritics skippable, alef/ya/ta-marbuta
+interchangeable).
+
+Over all 7,450 pages this yields 8,213 bayts with no errors, in about 1.5s —
+roughly 0.2ms per page, so it runs per-page at render time.
+
+**This lives in the frontend only.** The server-rendered `/read/...` pages and
+the MCP output still emit the raw flattened text; porting `formatText.js` to
+`backend/app/core/` would give AI clients the same structure.
+
+## Deploying (Render, free)
+
+`render.yaml` at the repo root defines all three services, so **New → Blueprint**
+in Render sets up everything from one file:
+
+| service | type | what it is |
+|---|---|---|
+| `burhaniya-library-frontend` | static site | the React reader, on Render's CDN |
+| `burhaniya-library-backend`  | docker | FastAPI + SQLite FTS5, JSON + server-rendered HTML |
+| `burhaniya-library-mcp`      | docker | the same image, started as the MCP server |
+
+The frontend rewrites `/api/*` onto the backend's public URL, so the browser
+stays on one origin — no CORS, and the backend URL never lands in the bundle.
+**If you rename the backend service, update that rewrite destination in
+`render.yaml`**, or every API call will 404.
+
+Prefer to host the frontend elsewhere (Vercel, Netlify, Cloudflare Pages)?
+Build with `VITE_API_BASE` set to the backend's URL and it will call the
+backend directly instead; the backend already sends
+`Access-Control-Allow-Origin: *`.
+
+Once deployed, check:
+
+- `https://<backend>/health` → `{"status":"ok"}`
+- `https://<backend>/books.html` → the full library index
+- `https://<backend>/search.html?q=التوحيد` → server-rendered results
+
+**Free-tier note:** the two docker services spin down after 15 minutes idle,
+and the next request takes 30–60s to wake them. The static frontend never
+sleeps, so the page loads instantly while the first search sits waiting. If
+that matters, put the backend on a paid instance or ping `/health` on a
+schedule to keep it warm.
 
 ## Local development
 

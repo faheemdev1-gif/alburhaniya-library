@@ -283,10 +283,14 @@ function spanToBayts(spanText) {
 const LEAD_LABEL =
   /^(المعنى|المعني|الشرح|شرح المفردات|المفردات|اللغة|الإعراب|المناسبة|ملحوظة|ملاحظة|فائدة|تنبيه)\s*:\s*/
 
+// `\b` is ASCII-only in JS and never fires after an Arabic letter, so the
+// boundary has to be spelled out as whitespace-or-end.
+const HEADING_START = /^(باب|فصل|مقدمة|خاتمة|تمهيد|القصيدة|قصيدة|الوصية|خطاب|وصية)(?=\s|$)/
+
 function isHeading(s) {
   if (s.length > 70) return false
   if (/[.؟!]$/.test(s)) return false
-  if (/^(باب|فصل|مقدمة|خاتمة|تمهيد|القصيدة|قصيدة|الوصية|خطاب|وصية)\b/.test(s)) return true
+  if (HEADING_START.test(s)) return true
   // A trailing colon only makes a heading out of a short, comma-free label —
   // otherwise it is just a sentence introducing what comes next.
   if (/:$/.test(s) && s.length <= 50 && !/[,،؛]/.test(s)) return true
