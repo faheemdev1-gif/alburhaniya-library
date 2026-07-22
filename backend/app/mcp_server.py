@@ -32,7 +32,6 @@ from typing import Optional
 from mcp.server.fastmcp import FastMCP
 from mcp.server.transport_security import TransportSecuritySettings
 
-from app.core.text_format import format_page
 from app.services import library_db as db
 
 _RENDER_HOST = "burhaniya-library-backend.onrender.com"
@@ -156,10 +155,6 @@ def get_page(book_id: str, seq: int) -> dict:
     page = db.get_page(book_id, seq)
     if page is None:
         return {"error": f"no page {seq} in book '{book_id}'"}
-    # The stored text is flattened: a bayt survives only as `***` between its
-    # hemistichs, and consecutive bayts run together on one line. Restore the
-    # line breaks so verse is readable as verse.
-    page["text"] = format_page(page["text"])
     return page
 
 
@@ -195,8 +190,7 @@ def read_book(book_id: str, start_seq: int = 1) -> dict:
         page = db.get_page(book_id, seq)
         if page is None:
             break
-        page["text"] = format_page(page.get("text") or "")
-        page_chars = len(page["text"])
+        page_chars = len(page.get("text") or "")
         if pages and chars + page_chars > _MAX_CHARS_PER_CALL:
             break
         # Grade is stated once at the top level — don't repeat it on all 25 pages.

@@ -5,8 +5,6 @@ from fastapi.responses import HTMLResponse
 
 from app.core.config import get_settings
 from app.core.html_templates import page_shell, nav_bar
-from app.core.page_html import page_to_html
-from app.core.text_format import segment_page
 from app.services import library_db as db
 
 router = APIRouter(tags=["books"])
@@ -21,16 +19,10 @@ def list_books():
 
 @router.get("/books/{book_id}/page/{seq}")
 def get_page_text(book_id: str, seq: int):
-    """Return the text of a specific book page for the app's text viewer.
-
-    `blocks` carries the recovered structure (bayts split back into their two
-    hemistichs, headings, dividers) so a client does not have to re-derive it
-    from the flattened `text`, which is kept for compatibility.
-    """
+    """Return the text of a specific book page for the app's text viewer."""
     page = db.get_page(book_id, seq)
     if not page:
         raise HTTPException(404, "Page not found")
-    page["blocks"] = segment_page(page["text"])
     return page
 
 
@@ -110,7 +102,7 @@ def read_page_html(book_id: str, seq: int):
         + f"<h1>{_esc(page['book_title'])}</h1>"
         + f"<h2>{_esc(label)}</h2>"
         + '<article class="page-text">'
-        + page_to_html(page["text"])
+        + "\n".join(f"<p>{_esc(p)}</p>" for p in page["text"].split("\n\n"))
         + "</article>"
         + nav_bar(nav_links)
     )
