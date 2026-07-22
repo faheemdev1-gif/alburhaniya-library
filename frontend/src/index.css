@@ -2,85 +2,314 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   The reading surface is modelled on the page these books were printed on:
+   a ruled text block on warm paper, with a second ink — rubric red — reserved
+   for the things a scribe would have rubricated: headings, verse markers and
+   quoted revelation. Gold stays ornamental and is never asked to carry text.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+:root {
+  --paper:        #f7f3ea;
+  --paper-raised: #fffdf8;
+  --paper-edge:   #e6dcc6;
+  --paper-sunk:   #efe7d5;
+
+  --ink:          #211a11;
+  --ink-muted:    #6b5c47;
+  --ink-faint:    #9c8d76;
+
+  --rubric:       #9d3520;
+  --rubric-soft:  #c25c42;
+  --gold:         #b8922a;
+  --gold-soft:    #d9bf7a;
+  --sage:         #4c6b46;
+
+  --hit:          #f2d98a;
+  --hit-ink:      #4a3607;
+
+  --reading-size:    1.3rem;
+  --reading-leading: 2.15;
+}
+
+[data-theme='night'] {
+  --paper:        #171310;
+  --paper-raised: #1f1a15;
+  --paper-edge:   #33291f;
+  --paper-sunk:   #120f0c;
+
+  --ink:          #ece2d0;
+  --ink-muted:    #a2917a;
+  --ink-faint:    #6f6252;
+
+  --rubric:       #e08a70;
+  --rubric-soft:  #c96f55;
+  --gold:         #d2ad4d;
+  --gold-soft:    #8a7133;
+  --sage:         #8fae87;
+
+  --hit:          #6a5216;
+  --hit-ink:      #ffeab8;
+}
+
 @layer base {
   html {
     direction: rtl;
-    font-family: 'Noto Naskh Arabic', 'Amiri', serif;
+    -webkit-text-size-adjust: 100%;
   }
 
   body {
-    background-color: #f5f0e8;
-    color: #1a1209;
+    margin: 0;
     min-height: 100vh;
+    background-color: var(--paper);
+    color: var(--ink);
+    font-family: 'Noto Naskh Arabic', 'Amiri', serif;
+    font-feature-settings: 'kern' 1;
   }
 
-  * {
-    box-sizing: border-box;
+  * { box-sizing: border-box; }
+
+  :focus-visible {
+    outline: 2px solid var(--rubric);
+    outline-offset: 2px;
+    border-radius: 2px;
   }
+
+  ::selection { background: var(--hit); color: var(--hit-ink); }
 }
 
 @layer components {
-  /* Ornamental divider */
+
+  /* ── search hits ─────────────────────────────────────────────────────── */
+  mark {
+    background-color: var(--hit);
+    color: var(--hit-ink);
+    border-radius: 2px;
+    padding: 0 0.12em;
+    font-weight: 600;
+  }
+
+  /* ── the text block ──────────────────────────────────────────────────── */
+  .textblock {
+    font-family: 'Amiri', 'Noto Naskh Arabic', serif;
+    font-size: var(--reading-size);
+    line-height: var(--reading-leading);
+    color: var(--ink);
+    max-width: 64ch;
+    margin-inline: auto;
+  }
+
+  .blk + .blk { margin-top: 1.15em; }
+
+  .blk-para {
+    text-align: justify;
+    text-justify: inter-word;
+    hyphens: none;
+  }
+
+  /* First line of a fresh run of commentary gets the indent a printed
+     page would give it — but never right after a heading or a bayt. */
+  .blk-para + .blk-para { text-indent: 1.6em; margin-top: 0.5em; }
+
+  .blk-heading {
+    font-family: 'Reem Kufi', 'Noto Naskh Arabic', sans-serif;
+    font-size: 0.82em;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    color: var(--rubric);
+    line-height: 1.6;
+    margin-top: 2em;
+    display: flex;
+    align-items: center;
+    gap: 0.7em;
+  }
+  .blk-heading::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(to left, transparent, var(--gold-soft));
+  }
+
+  .blk-quote {
+    border-inline-start: 2px solid var(--gold-soft);
+    padding-inline-start: 1em;
+    color: var(--sage);
+  }
+
+  .blk-folio {
+    text-align: center;
+    font-family: 'Inter', system-ui, sans-serif;
+    font-size: 0.7em;
+    letter-spacing: 0.18em;
+    color: var(--ink-faint);
+    margin-top: 2em;
+  }
+
+  .blk-divider {
+    margin: 2.2em auto;
+    width: min(60%, 18rem);
+    height: 1px;
+    background: linear-gradient(to left, transparent, var(--gold-soft), transparent);
+    position: relative;
+  }
+  .blk-divider::after {
+    content: '❁';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: var(--paper);
+    color: var(--gold);
+    font-size: 0.75rem;
+    padding: 0 0.5rem;
+    line-height: 1;
+  }
+
+  /* ── the bayt ────────────────────────────────────────────────────────────
+     A couplet is set as a couplet: two balanced hemistichs meeting at a
+     rosette, the way a diwan prints it. This is the whole point of the
+     reader, so it gets the space it needs.                                  */
+  .bayt {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: baseline;
+    gap: 0 1.1em;
+    margin: 1.5em 0;
+    font-size: 1.02em;
+    line-height: 1.95;
+    color: var(--ink);
+  }
+
+  .bayt__sadr { text-align: left; }
+  .bayt__ajuz { text-align: right; }
+
+  .bayt__rosette {
+    color: var(--gold);
+    font-size: 0.72em;
+    line-height: 1;
+    user-select: none;
+    align-self: center;
+  }
+
+  .bayt__num,
+  .bayt__ref {
+    font-family: 'Inter', system-ui, sans-serif;
+    font-size: 0.58em;
+    color: var(--ink-faint);
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+    direction: ltr;
+    unicode-bidi: isolate;
+  }
+
+  .bayt__meta {
+    grid-column: 1 / -1;
+    display: flex;
+    justify-content: space-between;
+    gap: 1em;
+    margin-top: -0.35em;
+  }
+
+  .bayt--single { grid-template-columns: 1fr; }
+  .bayt--single .bayt__sadr,
+  .bayt--single .bayt__ajuz { text-align: center; }
+
+  @media (max-width: 640px) {
+    .bayt {
+      grid-template-columns: 1fr;
+      gap: 0.15em;
+      margin: 1.3em 0;
+    }
+    .bayt__sadr,
+    .bayt__ajuz { text-align: center; }
+    .bayt__rosette { display: none; }
+  }
+
+  /* ── quotation inside running text ───────────────────────────────────── */
+  .q-ayah {
+    font-family: 'Amiri Quran', 'Amiri', serif;
+    color: var(--sage);
+  }
+  .q-ayah::before { content: '\FD3F'; margin-inline-start: 0.15em; color: var(--gold); }
+  .q-ayah::after  { content: '\FD3E'; margin-inline-end: 0.15em; color: var(--gold); }
+
+  .q-ref {
+    font-family: 'Inter', system-ui, sans-serif;
+    font-size: 0.62em;
+    color: var(--ink-faint);
+    margin-inline: 0.25em;
+  }
+
+  .q-hadith { color: var(--rubric); }
+  .q-hadith::before { content: '«'; }
+  .q-hadith::after  { content: '»'; }
+
+  /* ── chrome ──────────────────────────────────────────────────────────── */
+  .app-header {
+    background: var(--paper);
+  }
+  @supports (background: color-mix(in srgb, red 50%, transparent)) {
+    .app-header { background: color-mix(in srgb, var(--paper) 92%, transparent); }
+  }
+
   .ornament {
     display: flex;
     align-items: center;
     gap: 0.75rem;
-    color: #b8922a;
+    color: var(--gold);
   }
   .ornament::before,
   .ornament::after {
     content: '';
     flex: 1;
     height: 1px;
-    background: linear-gradient(to left, transparent, #b8922a88, transparent);
+    background: linear-gradient(to left, transparent, var(--gold-soft), transparent);
   }
 
-  /* Arabic highlighted text from Meilisearch */
-  mark {
-    background-color: #d4a93c44;
-    color: #8a6a1a;
-    border-radius: 2px;
-    padding: 0 2px;
-  }
-
-  /* Scrollbar */
-  ::-webkit-scrollbar { width: 6px; height: 6px; }
-  ::-webkit-scrollbar-track { background: #e8dfc8; }
-  ::-webkit-scrollbar-thumb { background: #b8922a88; border-radius: 3px; }
-  ::-webkit-scrollbar-thumb:hover { background: #b8922a; }
-
-  /* PDF viewer container */
-  .pdf-canvas-wrap canvas {
-    max-width: 100%;
-    height: auto !important;
-    display: block;
-    margin: 0 auto;
-    box-shadow: 0 4px 24px rgba(26,18,9,0.18);
-  }
-
-  /* Search input RTL */
   .search-input {
     direction: rtl;
     text-align: right;
     font-family: 'Noto Naskh Arabic', serif;
-    font-size: 1.125rem;
   }
+
+  .card {
+    background: var(--paper-raised);
+    border: 1px solid var(--paper-edge);
+    border-radius: 4px;
+  }
+  .card:hover { border-color: var(--gold-soft); }
+
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb {
+    background: var(--paper-edge);
+    border-radius: 4px;
+  }
+  ::-webkit-scrollbar-thumb:hover { background: var(--gold-soft); }
 }
 
-/* Loading shimmer */
+/* ── motion ─────────────────────────────────────────────────────────────── */
 @keyframes shimmer {
   0%   { background-position: -400px 0; }
-  100% { background-position: 400px 0; }
+  100% { background-position:  400px 0; }
 }
 .shimmer {
-  background: linear-gradient(90deg, #e8dfc8 25%, #f5f0e8 50%, #e8dfc8 75%);
+  background: linear-gradient(90deg, var(--paper-sunk) 25%, var(--paper-raised) 50%, var(--paper-sunk) 75%);
   background-size: 400px 100%;
   animation: shimmer 1.4s ease infinite;
 }
 
-/* Fade in */
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(6px); }
-  to   { opacity: 1; transform: translateY(0); }
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(5px); }
+  to   { opacity: 1; transform: none; }
 }
-.fade-in { animation: fadeIn 0.25s ease forwards; }
+.fade-in { animation: fadeUp 0.22s ease both; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

@@ -4,17 +4,24 @@ export default {
   theme: {
     extend: {
       fontFamily: {
+        // The reading face is a real Naskh book type; the chrome stays on a
+        // lighter face so it never competes with the text block.
+        reading: ['Amiri', 'Noto Naskh Arabic', 'serif'],
         arabic: ['Noto Naskh Arabic', 'Amiri', 'serif'],
+        display: ['Reem Kufi', 'Noto Naskh Arabic', 'sans-serif'],
         ui: ['Inter', 'system-ui', 'sans-serif'],
       },
       colors: {
-        ink:    { DEFAULT: '#1a1209', light: '#3d2e14' },
-        parch:  { DEFAULT: '#f5f0e8', dark: '#e8dfc8', deeper: '#d4c9a8' },
-        gold:   { DEFAULT: '#b8922a', light: '#d4a93c', dark: '#8a6a1a' },
-        rust:   { DEFAULT: '#8b3a2a', light: '#b04d39' },
-        sage:   { DEFAULT: '#4a6741', light: '#6a9460' },
+        // Kept for any older markup; new work reads the CSS variables in
+        // index.css so the night theme can swap them wholesale.
+        ink: { DEFAULT: '#211a11', light: '#3d2e14' },
+        parch: { DEFAULT: '#f7f3ea', dark: '#efe7d5', deeper: '#e6dcc6' },
+        gold: { DEFAULT: '#b8922a', light: '#d9bf7a', dark: '#8a6a1a' },
+        rubric: { DEFAULT: '#9d3520', light: '#c25c42' },
+        rust: { DEFAULT: '#9d3520', light: '#c25c42' },
+        sage: { DEFAULT: '#4c6b46', light: '#8fae87' },
       },
-      borderRadius: { 'sm': '3px' },
+      borderRadius: { sm: '3px' },
     },
   },
   plugins: [],
