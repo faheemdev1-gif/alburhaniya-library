@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Build library.db (SQLite + FTS5) from data/raw_htm + data/mapping.json
-+ data/sources.json.
+Build library.db (SQLite + FTS5) from data/raw_htm (or data/raw_utf8) +
+data/mapping.json + data/sources.json.
 
 Runs once, at Docker build time, so the shipped image already contains a
 ready-to-query search index. No persistent disk needed: every fresh
@@ -14,6 +14,15 @@ Source grading (added):
   table — not repeated per book, and NEVER written into `pages`, which
   would pollute the FTS index with 43 identical copies of high-value
   words like العقيدة / المشايخ / سيدي الإمام فخر الدين.
+
+Two source formats (added):
+  Most books are shamela.ws .htm exports (windows-1256), parsed by
+  parse_book(). Some books use modern Unicode that windows-1256 can't
+  represent at all (e.g. the ﷺ ligature, Quranic ornate brackets ﴿ ﴾,
+  Arabic-Indic digits) — those live as pre-segmented UTF-8 JSON in
+  data/raw_utf8/ instead, parsed by parse_utf8_pages(). Both return the
+  same {"printed_page", "paragraphs"} shape, so everything downstream
+  (DB insert, FTS indexing) is identical either way.
 """
 from __future__ import annotations
 import json
@@ -23,12 +32,13 @@ import sys
 
 sys.path.insert(0, os.path.dirname(__file__))
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "app", "core"))
-from book_parser import parse_book                    # noqa: E402
+from book_parser import parse_book, parse_utf8_pages   # noqa: E402
 from arabic_utils import normalize_arabic             # noqa: E402
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.join(HERE, "..", "data")
 RAW_DIR = os.path.join(DATA_DIR, "raw_htm")
+RAW_UTF8_DIR = os.path.join(DATA_DIR, "raw_utf8")
 MAPPING_FILE = os.path.join(DATA_DIR, "mapping.json")
 SOURCES_FILE = os.path.join(DATA_DIR, "sources.json")
 DB_PATH = os.environ.get("LIBRARY_DB_PATH", os.path.join(HERE, "..", "library.db"))
@@ -102,8 +112,19 @@ def build():
     for slug_in, title in sorted(mapping.items()):
         n = int(slug_in.split("_")[1])
         slug = slug_for(n)
-        raw_path = os.path.join(RAW_DIR, f"{slug_in}.htm")
-        pages = parse_book(raw_path)
+
+        htm_path = os.path.join(RAW_DIR, f"{slug_in}.htm")
+        utf8_path = os.path.join(RAW_UTF8_DIR, f"{slug_in}.json")
+        if os.path.exists(htm_path):
+            pages = parse_book(htm_path)
+        elif os.path.exists(utf8_path):
+            pages = parse_utf8_pages(utf8_path)
+        else:
+            # Neither source file exists for this mapping entry — treat
+            # like any other missing book rather than crashing here, so
+            # the loud error at the end lists everything wrong in one go.
+            missing.append(f"{slug} (no {slug_in}.htm or {slug_in}.json found)")
+            continue
 
         src = book_sources.get(slug)
         if src is None:
