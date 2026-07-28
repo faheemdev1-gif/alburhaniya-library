@@ -169,14 +169,25 @@ def get_page(book_id: str, seq: int) -> dict | None:
 
 # ---------------------------------------------------------------- search
 
-def search(query: str, book_ids: list[str] | None = None, limit: int = 2000) -> list[dict]:
+def search(
+    query: str,
+    book_ids: list[str] | None = None,
+    source_code: str | None = None,
+    page_from: int | None = None,
+    page_to: int | None = None,
+    limit: int = 10,
+    offset: int = 0,
+    context_chars: int = 160,
+    include_full_text: bool = False,
+) -> list[dict]:
     """
     Exact-word search across the whole library (or a subset of books),
     one result per matching page, sorted by grade (primary first), then
     book title, then page order.
 
-    Every result carries source_grade/source_code so the caller never has
-    to make a second call to find out how much authority the hit has.
+    Results intentionally contain a short excerpt instead of the complete
+    page. Fetch a selected page with get_page(); returning the page here as
+    both plain and highlighted text used to dominate MCP token consumption.
     """
     conn = _connection()
     norm_q = normalize_arabic(query, aggressive=True)
@@ -198,40 +209,56 @@ def search(query: str, book_ids: list[str] | None = None, limit: int = 2000) -> 
         placeholders = ",".join("?" for _ in book_ids)
         sql += f" AND p.book_id IN ({placeholders})"
         params.extend(book_ids)
+    if source_code:
+        sql += " AND b.source_code = ?"
+        params.append(source_code)
+    if page_from is not None:
+        sql += " AND p.seq >= ?"
+        params.append(page_from)
+    if page_to is not None:
+        sql += " AND p.seq <= ?"
+        params.append(page_to)
     # source_code sorts 'primary' < 'secondary' alphabetically — so the
     # shaykh's own words come first without any extra CASE expression.
-    sql += " ORDER BY b.source_code, b.title, p.seq LIMIT ?"
-    params.append(limit)
+    sql += " ORDER BY b.source_code, b.title, p.seq LIMIT ? OFFSET ?"
+    params.extend((limit, offset))
 
     rows = conn.execute(sql, params).fetchall()
 
     pattern = _build_highlight_regex(query.strip())
     results = []
     for row in rows:
-        safe_text = _esc(row["text"])
-        highlighted, occ = _highlight(safe_text, pattern)
+        plain_text = row["text"]
+        _, occ = _highlight(plain_text, pattern)
         if occ == 0:
             # FTS matched the normalized form (diacritics/alef variants
             # differed) but our tolerant regex still didn't line up —
             # fall back so we don't silently report 0 for a real match.
             occ = 1
-            snippet = safe_text[:240] + ("…" if len(safe_text) > 240 else "")
+            snippet = _esc(plain_text[: context_chars * 2])
+            if len(plain_text) > context_chars * 2:
+                snippet += "…"
         else:
-            snippet = _make_snippet(safe_text, pattern)
+            snippet = _make_snippet(_esc(plain_text), pattern, radius=context_chars)
 
         label = f"الصفحة {row['printed_page']}" if row["printed_page"] else f"المقطع {row['seq']}"
-        results.append({
+        result = {
             "book_id": row["book_id"],
             "book_title": row["book_title"],
             "source_grade": row["source_grade"],   # أصلي | ثانوي
             "source_code": row["source_code"],     # primary | secondary
             "seq": row["seq"],
-            "page_number": row["seq"],          # kept for frontend compatibility
+            "page_number": row["seq"],             # frontend compatibility
             "page_label": label,
             "printed_page": row["printed_page"],
             "occurrences": occ,
-            "highlight": highlighted,
             "snippet": snippet,
-            "text": row["text"],
-        })
+        }
+        if include_full_text:
+            # Legacy REST clients may still depend on these fields. MCP search
+            # deliberately leaves them out and uses get_page for full content.
+            safe_text = _esc(plain_text)
+            result["highlight"], _ = _highlight(safe_text, pattern)
+            result["text"] = plain_text
+        results.append(result)
     return results

@@ -6,7 +6,6 @@ pydantic==2.11.10
 pydantic-settings==2.7.1
 aiofiles==23.2.1
 
-mcp==1.28.1
 # MCP server
 mcp==1.28.1
 

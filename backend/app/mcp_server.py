@@ -42,63 +42,19 @@ _MAX_CHARS_PER_CALL = 40_000
 
 # Short reminder attached to tool results that carry graded material.
 # Deliberately terse — the full legend comes from list_books once.
-_GRADE_REMINDER = (
-    "Each result carries source_code: 'primary' (أصلي — the shaykhs' own "
-    "words; authoritative on doctrine and meaning) or 'secondary' (ثانوي — "
-    "a disciple's or outsider's compilation, commentary, biography, or "
-    "administrative text; supporting use only). Never present a secondary "
-    "source as the position of the tariqa or attribute its interpretations "
-    "to Sidi al-Imam Fakhr al-Din. If a secondary source contradicts a "
-    "primary one, state the contradiction plainly rather than reconciling it. "
-    "Call list_books for the full legend."
-)
+_GRADE_REMINDER = "primary=authoritative; secondary=supporting only"
 
 mcp = FastMCP(
     "burhaniya-library",
     instructions=(
-        "Tools for the Burhaniya Arabic book library.\n\n"
-        "- list_books: see every book (id, title, page count, source grade) "
-        "plus the source-grade legend. Call this first.\n"
-        "- get_book: full metadata for one book by id, including its "
-        "provenance note (who compiled it, and any caveat).\n"
-        "- get_page: read a single page of a book by its sequence number.\n"
-        "- read_book: read a book's pages in order, starting at start_seq. "
-        "Returns up to a capped number of pages per call plus a next_seq "
-        "cursor — call again with start_seq=next_seq to continue until "
-        "next_seq is null. For short books (a few dozen pages) one call "
-        "usually returns the whole thing.\n"
-        "- search_library: exact word/phrase search across the whole "
-        "library, or restrict to one or more books with book_ids for a "
-        "much more precise lookup once you know which book you care "
-        "about (get the id from list_books first).\n\n"
-        "SOURCE GRADING — this matters more than anything else here.\n"
-        "Every book is graded 'primary' (أصلي) or 'secondary' (ثانوي), and "
-        "the grade is attached to every search hit and every page you read.\n"
-        "  primary  = the direct words of Sidi al-Imam Fakhr al-Din (or "
-        "another recognised shaykh of the silsila), whether written by his "
-        "own hand or transmitted from his lessons and addresses. This is "
-        "authoritative and governing on any question of doctrine ('aqida) or "
-        "meaning.\n"
-        "  secondary = a compilation, commentary, explanation, biography, "
-        "lexicon, magazine, or administrative document by a disciple, a "
-        "researcher, a commentator, or a scholar from outside the tariqa. "
-        "It may quote the shaykhs, but without a verified chain. Use it only "
-        "for corroboration, clarification, or as an extra reference.\n"
-        "Rules you must follow when answering from this library:\n"
-        "  1. Always say which grade a quotation came from.\n"
-        "  2. Never attribute a secondary source's interpretation to Sidi "
-        "al-Imam Fakhr al-Din or to the tariqa itself.\n"
-        "  3. If a secondary source conflicts with a primary one, do NOT "
-        "harmonise them — state the conflict openly and leave it for study.\n"
-        "  4. Prefer primary sources when both are available. Search results "
-        "are already ordered primary-first.\n"
-        "  5. Book b35 (كل خطابات المشايخ) is primary but has MULTIPLE "
-        "speakers — verify who is speaking in each address before "
-        "attributing it.\n\n"
-        "Prefer read_book/get_page over repeated broad searches when the "
-        "task is 'read/summarize/explain book X' — search_library is for "
-        "finding *where* something occurs, not for reading a book "
-        "start to finish."
+        "Burhaniya Arabic library. Search returns compact excerpts; call "
+        "get_page for selected full text and read_book for sequential reading. "
+        "Use book/source/page filters and pagination where possible. "
+        "Source rule: primary (أصلي) is authoritative shaykh material; "
+        "secondary (ثانوي) is supporting commentary or compilation. Identify "
+        "the grade when quoting, prefer primary, never attribute secondary "
+        "interpretation to the shaykh/tariqa, and state conflicts without "
+        "harmonising them. Book b35 has multiple speakers; verify the speaker."
     ),
     stateless_http=True,
     streamable_http_path="/",
@@ -115,22 +71,31 @@ mcp = FastMCP(
 
 
 @mcp.tool()
-def list_books() -> dict:
-    """List every book in the library (id, title, page count, source grade),
-    together with the source-grade legend that explains how much authority
-    each grade carries. Books are ordered primary-first.
+def list_books(include_legend: bool = False) -> dict:
+    """List every book in a compact catalogue, ordered primary-first.
+
+    Args:
+        include_legend: Include the long source-grade definitions. Defaults
+            to false because the server instructions already explain them.
     """
-    return {
-        "grades": db.get_grades(),
-        "books": db.list_books(),
-    }
+    books = [
+        {
+            "id": b["book_id"],
+            "title": b["title"],
+            "pages": b["page_count"],
+            "source": b["source_code"],
+        }
+        for b in db.list_books()
+    ]
+    result = {"total": len(books), "books": books}
+    if include_legend:
+        result["grades"] = db.get_grades()
+    return result
 
 
 @mcp.tool()
 def get_book(book_id: str) -> dict:
-    """Get metadata for a single book: title, page count, source grade,
-    who compiled/authored it, and its provenance note (including any
-    caveat about attributing its content).
+    """Get full metadata and provenance for one book.
 
     Args:
         book_id: The book's id, as returned by list_books (e.g. "b33").
@@ -143,11 +108,7 @@ def get_book(book_id: str) -> dict:
 
 @mcp.tool()
 def get_page(book_id: str, seq: int) -> dict:
-    """Read a single page of a book by its sequence number (1-indexed).
-
-    Returns the page text along with book_title, total_pages, the book's
-    source grade, and has_prev/has_next flags so a client can walk
-    forward or backward.
+    """Read one full page by its 1-indexed sequence.
 
     Args:
         book_id: The book's id, as returned by list_books (e.g. "b33").
@@ -165,16 +126,7 @@ def get_page(book_id: str, seq: int) -> dict:
 
 @mcp.tool()
 def read_book(book_id: str, start_seq: int = 1) -> dict:
-    """Read a book's pages in reading order, starting at start_seq.
-
-    Returns as many consecutive pages as fit under the per-call cap
-    (currently 25 pages / ~40,000 characters, whichever is smaller).
-    If the book has more pages after that, `next_seq` is set — call
-    read_book again with start_seq=next_seq to continue. When the
-    whole book has been read, `next_seq` is null.
-
-    The book's source grade and provenance note are returned once at the
-    top level; read them before quoting anything from the pages.
+    """Read consecutive pages; continue from the returned next_seq.
 
     Args:
         book_id: The book's id, as returned by list_books (e.g. "b33").
@@ -223,34 +175,64 @@ def read_book(book_id: str, start_seq: int = 1) -> dict:
 @mcp.tool()
 def search_library(
     query: str,
-    limit: int = 50,
+    limit: int = 10,
+    offset: int = 0,
     book_ids: Optional[list[str]] = None,
+    source_code: Optional[str] = None,
+    page_from: Optional[int] = None,
+    page_to: Optional[int] = None,
+    context_chars: int = 160,
 ) -> dict:
-    """Search the Arabic library for an exact word or phrase.
-
-    Every result carries the book's source grade (source_code: 'primary'
-    or 'secondary'). Results are ordered primary-first. Check the grade
-    before quoting: a hit in a secondary source is a disciple's or an
-    outsider's words, not the shaykh's.
+    """Exact Arabic search returning compact, primary-first excerpts.
 
     Args:
         query: The Arabic word or phrase to search for (e.g. "الحب").
-        limit: Maximum number of matching pages to return (default 50,
-            capped at 500).
+        limit: Results per call (default 10, capped at 50).
+        offset: Zero-based result offset for pagination.
         book_ids: Optional list of book ids to restrict the search to
             (e.g. ["b33"]). Get ids from list_books. Omit to search the
             whole library — note that for common words this can return
             many results from other books before reaching the one you
             want, so scoping with book_ids is strongly recommended once
             you know which book you're interested in.
+        source_code: Optional "primary" or "secondary" filter.
+        page_from: Optional first page sequence (inclusive).
+        page_to: Optional last page sequence (inclusive).
+        context_chars: Characters of context on each side of the first
+            match (default 160, range 40–500).
     """
-    limit = max(1, min(limit, 500))
-    results = db.search(query, book_ids=book_ids, limit=limit)
+    limit = max(1, min(limit, 50))
+    offset = max(0, offset)
+    context_chars = max(40, min(context_chars, 500))
+    if source_code not in (None, "primary", "secondary"):
+        return {"error": "source_code must be 'primary' or 'secondary'"}
+    if page_from is not None and page_from < 1:
+        return {"error": "page_from must be at least 1"}
+    if page_to is not None and page_to < 1:
+        return {"error": "page_to must be at least 1"}
+    if page_from is not None and page_to is not None and page_from > page_to:
+        return {"error": "page_from cannot be greater than page_to"}
+
+    rows = db.search(
+        query,
+        book_ids=book_ids,
+        source_code=source_code,
+        page_from=page_from,
+        page_to=page_to,
+        limit=limit + 1,
+        offset=offset,
+        context_chars=context_chars,
+    )
+    has_more = len(rows) > limit
+    results = rows[:limit]
     n_primary = sum(1 for r in results if r["source_code"] == "primary")
     return {
         "query": query,
         "book_ids": book_ids,
-        "total": len(results),
+        "source_code": source_code,
+        "count": len(results),
+        "offset": offset,
+        "next_offset": offset + limit if has_more else None,
         "primary_hits": n_primary,
         "secondary_hits": len(results) - n_primary,
         "provenance": _GRADE_REMINDER,

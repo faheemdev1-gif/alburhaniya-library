@@ -54,7 +54,7 @@ def search_json(
 ):
     """JSON search results — used by the React app."""
     ids = [b.strip() for b in book_ids.split(",")] if book_ids else None
-    results = db.search(q, book_ids=ids, limit=limit)
+    results = db.search(q, book_ids=ids, limit=limit, include_full_text=True)
     return {"query": q, "total": len(results), "results": results}
 
 
@@ -83,5 +83,5 @@ def search_html_path(query: str, limit: int = Query(500, ge=1, le=5000)):
 def search_json_path(query: str, limit: int = Query(2000, ge=1, le=100_000)):
     """Same as /search, but the word is a URL path segment, e.g.
     GET /api/search/قلب — no query string involved at all."""
-    results = db.search(query, limit=limit)
+    results = db.search(query, limit=limit, include_full_text=True)
     return {"query": query, "total": len(results), "results": results}
