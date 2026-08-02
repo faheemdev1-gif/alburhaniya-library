@@ -61,7 +61,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="Arabic Library Search",
     description="Exact-word search over the Burhaniya Arabic book collection",
-    version="2.0.0",
+    version="2.1.0",
     lifespan=lifespan,
 )
 

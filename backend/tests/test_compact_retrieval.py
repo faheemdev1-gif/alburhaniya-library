@@ -2,6 +2,7 @@ import os
 import sys
 import types
 import unittest
+import json
 
 BACKEND_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 sys.path.insert(0, BACKEND_DIR)
@@ -14,6 +15,7 @@ config_stub.get_settings = lambda: types.SimpleNamespace(
 sys.modules["app.core.config"] = config_stub
 
 from app.services import library_db as db
+from app.services.compact_response import compact_search_response
 
 
 class CompactRetrievalTests(unittest.TestCase):
@@ -47,6 +49,27 @@ class CompactRetrievalTests(unittest.TestCase):
         first_keys = {(x["book_id"], x["seq"]) for x in first}
         second_keys = {(x["book_id"], x["seq"]) for x in second}
         self.assertFalse(first_keys & second_keys)
+
+    def test_v2_compact_shape_deduplicates_book_metadata(self):
+        rows = db.search("الله", limit=8, context_chars=120)
+        payload = compact_search_response(rows, limit=8, offset=0, has_more=False)
+        self.assertTrue(payload["results"])
+        self.assertTrue(payload["books"])
+        for hit in payload["results"]:
+            self.assertNotIn("book_title", hit)
+            self.assertNotIn("source_code", hit)
+            self.assertNotIn("page_number", hit)
+            self.assertNotIn("page_label", hit)
+            self.assertIn(hit["book_id"], payload["books"])
+
+    def test_v2_payload_is_smaller_than_standard_rows(self):
+        rows = db.search("الله", limit=8, context_chars=120)
+        compact = json.dumps(
+            compact_search_response(rows, limit=8, offset=0, has_more=False),
+            ensure_ascii=False,
+        )
+        standard = json.dumps({"results": rows}, ensure_ascii=False)
+        self.assertLess(len(compact), len(standard) * 0.8)
 
 
 if __name__ == "__main__":
