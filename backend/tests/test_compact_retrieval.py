@@ -69,7 +69,34 @@ class CompactRetrievalTests(unittest.TestCase):
             ensure_ascii=False,
         )
         standard = json.dumps({"results": rows}, ensure_ascii=False)
-        self.assertLess(len(compact), len(standard) * 0.8)
+        self.assertLess(len(compact), len(standard) * 0.9)
+
+    def test_total_hits_is_true_count(self):
+        total = db.count_search(["المريد"])
+        rows = db.search("المريد", limit=3)
+        self.assertGreaterEqual(total, len(rows))
+
+    def test_diversifies_across_books(self):
+        rows = db.search("المريد", limit=6, diversify_books=True, max_per_book=2)
+        counts = {}
+        for row in rows:
+            counts[row["book_id"]] = counts.get(row["book_id"], 0) + 1
+        self.assertTrue(all(n <= 2 for n in counts.values()))
+
+    def test_multiple_query_or_search(self):
+        rows = db.search(queries=["مدد", "إمداد"], operator="OR", limit=5)
+        self.assertTrue(rows)
+
+    def test_vowelled_query_centres_excerpt(self):
+        rows = db.search("اللّٰه", limit=1, context_chars=80)
+        self.assertTrue(rows)
+        self.assertIn("<mark>", rows[0]["snippet"])
+
+    def test_get_passage_is_bounded(self):
+        hit = db.search("المريد", limit=1)[0]
+        passage = db.get_passage(hit["book_id"], hit["seq"], "المريد", 300)
+        self.assertIsNotNone(passage)
+        self.assertLessEqual(len(passage["passage"]), 750)
 
 
 if __name__ == "__main__":

@@ -172,8 +172,25 @@ def get_page(
 
 
 @mcp.tool()
-def search_library(
+def get_passage(
+    book_id: str,
+    seq: int,
     query: str,
+    context_chars: int = 800,
+) -> dict:
+    """Read a bounded passage around a known match instead of a full page."""
+    context_chars = max(200, min(context_chars, 2000))
+    result = db.get_passage(book_id, seq, query, context_chars)
+    if result is None:
+        return {"error": f"no page {seq} in book '{book_id}'"}
+    return result
+
+
+@mcp.tool()
+def search_library(
+    query: Optional[str] = None,
+    queries: Optional[list[str]] = None,
+    operator: Literal["OR", "AND"] = "OR",
     limit: int = 8,
     offset: int = 0,
     book_ids: Optional[list[str]] = None,
@@ -182,11 +199,16 @@ def search_library(
     page_to: Optional[int] = None,
     context_chars: int = 120,
     mode: ResponseMode = "compact",
+    diversify_books: bool = True,
+    max_per_book: int = 2,
 ) -> dict:
-    """Search for an exact Arabic word or phrase, ordered primary-first.
+    """Search exact Arabic words/phrases, with optional OR/AND alternatives.
 
     Args:
-        query: Arabic word or phrase to search for, such as "الحب".
+        query: One Arabic word or phrase.
+        queries: Optional alternatives in one request. When supplied, this
+            takes precedence over query.
+        operator: Combine alternatives with OR (default) or AND.
         limit: Number of results. Defaults to 8 and is capped at 20.
         offset: Zero-based pagination offset.
         book_ids: Optional book IDs to search, such as ["b33"].
@@ -202,10 +224,11 @@ def search_library(
     offset = max(0, offset)
     context_chars = max(40, min(context_chars, 300))
 
-    if not query or not query.strip():
-        return {
-            "error": "query cannot be empty",
-        }
+    raw_queries = queries or ([query] if query else [])
+    raw_queries = [q for q in raw_queries if q and q.strip()]
+    if not raw_queries:
+        return {"error": "query or queries cannot be empty"}
+    max_per_book = max(1, min(max_per_book, 10))
 
     if source_code not in (None, "primary", "secondary"):
         return {
@@ -231,8 +254,15 @@ def search_library(
             "error": "page_from cannot be greater than page_to",
         }
 
+    total_hits = db.count_search(
+        raw_queries, operator=operator, book_ids=book_ids,
+        source_code=source_code, page_from=page_from, page_to=page_to,
+    )
+
     rows = db.search(
         query=query,
+        queries=raw_queries,
+        operator=operator,
         book_ids=book_ids,
         source_code=source_code,
         page_from=page_from,
@@ -240,6 +270,8 @@ def search_library(
         limit=limit + 1,
         offset=offset,
         context_chars=context_chars,
+        diversify_books=diversify_books,
+        max_per_book=max_per_book,
     )
 
     has_more = len(rows) > limit
@@ -251,6 +283,7 @@ def search_library(
             limit=limit,
             offset=offset,
             has_more=has_more,
+            total_hits=total_hits,
         )
 
     primary_hits = sum(
@@ -260,9 +293,12 @@ def search_library(
 
     return {
         "query": query,
+        "queries": raw_queries,
+        "operator": operator,
         "book_ids": book_ids,
         "source_code": source_code,
-        "count": len(results),
+        "returned_count": len(results),
+        "total_hits": total_hits,
         "offset": offset,
         "next_offset": offset + limit if has_more else None,
         "primary_hits": primary_hits,

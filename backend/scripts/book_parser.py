@@ -75,6 +75,53 @@ def parse_book(raw_path: str) -> list[dict]:
     return pages
 
 
+
+def split_oversized_pages(
+    pages: list[dict], *, max_words: int = 1600, min_words: int = 700
+) -> list[dict]:
+    """Split pathological source pages into bounded, paragraph-safe segments.
+
+    Normal books retain their original pagination. A page is split only when
+    it exceeds ``max_words``; paragraph boundaries are preserved whenever
+    possible, and unusually large paragraphs are split by sentence.
+    """
+    sentence_re = re.compile(r"(?<=[.!؟؛:])\s+")
+    output = []
+    for page in pages:
+        paragraphs = list(page.get("paragraphs") or [])
+        if sum(len(x.split()) for x in paragraphs) <= max_words:
+            output.append(page)
+            continue
+
+        units = []
+        for paragraph in paragraphs:
+            if len(paragraph.split()) <= max_words:
+                units.append(paragraph)
+                continue
+            parts = sentence_re.split(paragraph)
+            buf, count = [], 0
+            for part in parts:
+                n = len(part.split())
+                if buf and count + n > max_words:
+                    units.append(" ".join(buf).strip())
+                    buf, count = [], 0
+                buf.append(part); count += n
+            if buf:
+                units.append(" ".join(buf).strip())
+
+        chunks, buf, count = [], [], 0
+        for unit in units:
+            n = len(unit.split())
+            if buf and count + n > max_words and count >= min_words:
+                chunks.append(buf); buf, count = [], 0
+            buf.append(unit); count += n
+        if buf:
+            chunks.append(buf)
+
+        for chunk in chunks:
+            output.append({"printed_page": page.get("printed_page"), "paragraphs": chunk})
+    return output
+
 def parse_utf8_pages(raw_path: str) -> list[dict]:
     """
     Load a pre-segmented UTF-8 book: a JSON file containing a flat list of

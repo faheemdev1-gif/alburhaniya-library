@@ -32,7 +32,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(__file__))
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "app", "core"))
-from book_parser import parse_book, parse_utf8_pages   # noqa: E402
+from book_parser import parse_book, parse_utf8_pages, split_oversized_pages   # noqa: E402
 from arabic_utils import normalize_arabic             # noqa: E402
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -125,6 +125,11 @@ def build():
             # the loud error at the end lists everything wrong in one go.
             missing.append(f"{slug} (no {slug_in}.htm or {slug_in}.json found)")
             continue
+
+        # Protect the API from pathological source records (notably b02,
+        # whose source export has no real page markers). Ordinary pages are
+        # unchanged; only oversized records are segmented.
+        pages = split_oversized_pages(pages)
 
         src = book_sources.get(slug)
         if src is None:

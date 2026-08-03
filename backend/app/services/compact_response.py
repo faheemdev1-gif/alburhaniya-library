@@ -7,7 +7,8 @@ from __future__ import annotations
 
 
 def compact_search_response(
-    rows: list[dict], *, limit: int, offset: int, has_more: bool
+    rows: list[dict], *, limit: int, offset: int, has_more: bool,
+    total_hits: int | None = None,
 ) -> dict:
     """Deduplicate book metadata and retain only citation/search fields."""
     books: dict[str, dict] = {}
@@ -27,7 +28,9 @@ def compact_search_response(
             hit["printed_page"] = row["printed_page"]
         hits.append(hit)
 
-    response = {"count": len(hits), "books": books, "results": hits}
+    response = {"returned_count": len(hits), "books": books, "results": hits}
+    if total_hits is not None:
+        response["total_hits"] = total_hits
     if has_more:
         response["next_offset"] = offset + limit
     return response

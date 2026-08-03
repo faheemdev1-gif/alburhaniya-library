@@ -19,7 +19,7 @@ _DIACRITICS = re.compile(
     "\u06d6-\u06dc"    # Quran-specific marks
     "\u06df-\u06e4"
     "\u06e7\u06e8"
-    "\u06ea-\u06ed]"
+    "\u06ea-\u06ed\u0670]"
 )
 
 _PUNCT_WS = re.compile(r"[\u060c\u061b\u061f،؛؟!\"#$%&'()*+,\-./:;<=>?@\[\\\]^_`{|}~\s]+")
