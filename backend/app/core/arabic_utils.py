@@ -9,8 +9,9 @@ import unicodedata
 
 # ── character maps ────────────────────────────────────────────────────────────
 _ALEF_VARIANTS   = "\u0622\u0623\u0625\u0671"   # آأإٱ  → ا
-_YA_VARIANTS     = "\u0649"                       # ى  → ي
+_YA_VARIANTS     = "\u0649\u06cc\u06d2"             # ى ی ے → ي
 _TA_MARBUTA      = "\u0629"                       # ة  → ه
+_KAF_VARIANTS    = "\u06a9\u06aa"                 # ک ڪ → ك
 _TATWEEL         = "\u0640"                       # ـ  kashida
 
 _DIACRITICS = re.compile(
@@ -36,7 +37,15 @@ def normalize_alef(text: str) -> str:
 
 
 def normalize_ya(text: str) -> str:
-    return text.replace(_YA_VARIANTS, "\u064a")
+    for ch in _YA_VARIANTS:
+        text = text.replace(ch, "\u064a")
+    return text
+
+
+def normalize_kaf(text: str) -> str:
+    for ch in _KAF_VARIANTS:
+        text = text.replace(ch, "\u0643")
+    return text
 
 
 def normalize_ta_marbuta(text: str) -> str:
@@ -56,6 +65,12 @@ def normalize_arabic(text: str, *, aggressive: bool = False) -> str:
     text = remove_tatweel(text)
     text = normalize_alef(text)
     text = normalize_ya(text)
+    text = normalize_kaf(text)
+    # Search-only canonical expansion of the common honorific ligature.
+    text = text.replace("ﷺ", "صلى الله عليه وسلم")
+    # Treat punctuation as a word boundary so phrases still match when the
+    # source inserts commas, Quranic brackets, or editorial punctuation.
+    text = _PUNCT_WS.sub(" ", text)
     if aggressive:
         text = normalize_ta_marbuta(text)
     # collapse whitespace

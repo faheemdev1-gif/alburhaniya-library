@@ -98,6 +98,33 @@ class CompactRetrievalTests(unittest.TestCase):
         self.assertIsNotNone(passage)
         self.assertLessEqual(len(passage["passage"]), 750)
 
+    def test_single_book_search_is_not_diversified(self):
+        total = db.count_search(["الله"], book_ids=["b14"])
+        self.assertGreaterEqual(total, 8)
+        rows = db.search("الله", book_ids=["b14"], limit=8, diversify_books=True, max_per_book=2)
+        self.assertEqual(len(rows), 8)
+        self.assertTrue(all(row["book_id"] == "b14" for row in rows))
+
+    def test_search_modes(self):
+        phrase = db.search("صلى الله", search_mode="exact_phrase", limit=3)
+        all_words = db.search("الله المريد", search_mode="all_words", limit=3)
+        any_word = db.search("لفظغيرموجود الله", search_mode="any_word", limit=3)
+        self.assertTrue(phrase)
+        self.assertTrue(all_words)
+        self.assertTrue(any_word)
+
+    def test_ultra_compact_shape(self):
+        rows = db.search("الله", limit=4)
+        payload = compact_search_response(rows, limit=4, offset=0, has_more=False, ultra=True)
+        self.assertIn("n", payload)
+        self.assertIn("books", payload)
+        self.assertIn("b", payload["results"][0])
+        self.assertIn("x", payload["results"][0])
+
+    def test_persian_character_normalization(self):
+        from app.core.arabic_utils import normalize_arabic
+        self.assertEqual(normalize_arabic("ک ی ے"), "ك ي ي")
+
 
 if __name__ == "__main__":
     unittest.main()

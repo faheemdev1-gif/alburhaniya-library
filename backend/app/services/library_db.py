@@ -19,6 +19,7 @@ Token budget rule of thumb:
 from __future__ import annotations
 import re
 import sqlite3
+from difflib import get_close_matches
 from functools import lru_cache
 from html import escape as _esc
 
@@ -170,14 +171,29 @@ def get_page(book_id: str, seq: int) -> dict | None:
 
 # ---------------------------------------------------------------- search
 
-def _fts_expression(queries: list[str], operator: str = "OR") -> str:
-    normalized = [normalize_arabic(q, aggressive=True) for q in queries]
-    normalized = [q for q in normalized if q]
+def _query_expression(query: str, search_mode: str = "exact_phrase") -> str:
+    normalized = normalize_arabic(query, aggressive=True)
     if not normalized:
         return ""
-    joiner = " OR " if operator.upper() == "OR" else " AND "
-    return joiner.join('"' + q.replace('"', '""') + '"' for q in normalized)
+    words = [w for w in normalized.split() if w]
+    if search_mode == "exact_phrase":
+        return '"' + normalized.replace('"', '""') + '"'
+    if search_mode == "all_words":
+        return " AND ".join('"' + w.replace('"', '""') + '"' for w in words)
+    if search_mode == "any_word":
+        return " OR ".join('"' + w.replace('"', '""') + '"' for w in words)
+    raise ValueError("search_mode must be exact_phrase, all_words, or any_word")
 
+
+def _fts_expression(
+    queries: list[str], operator: str = "OR", search_mode: str = "exact_phrase"
+) -> str:
+    expressions = [_query_expression(q, search_mode) for q in queries]
+    expressions = [e for e in expressions if e]
+    if not expressions:
+        return ""
+    joiner = " OR " if operator.upper() == "OR" else " AND "
+    return joiner.join(f"({e})" for e in expressions)
 
 def _search_filters(
     *, book_ids=None, source_code=None, page_from=None, page_to=None
@@ -202,10 +218,10 @@ def _search_filters(
 def count_search(
     queries: list[str], operator: str = "OR", book_ids: list[str] | None = None,
     source_code: str | None = None, page_from: int | None = None,
-    page_to: int | None = None,
+    page_to: int | None = None, search_mode: str = "exact_phrase",
 ) -> int:
     """Return the true number of matching page/segments."""
-    expression = _fts_expression(queries, operator)
+    expression = _fts_expression(queries, operator, search_mode)
     if not expression:
         return 0
     filters, params = _search_filters(
@@ -222,10 +238,23 @@ def count_search(
     return int(row["n"])
 
 
+def _ranking_order(ranking: str, diversified: bool = False) -> str:
+    prefix = "source_code, " if ranking == "primary_first" else ""
+    if ranking == "relevance":
+        return prefix + ("book_rank, relevance, book_title, seq" if diversified else "relevance, book_title, seq")
+    if ranking == "primary_first":
+        return "source_code, " + ("book_rank, relevance, book_title, seq" if diversified else "relevance, book_title, seq")
+    if ranking in {"book_order", "chronological"}:
+        return prefix + "book_id, seq"
+    raise ValueError("ranking must be relevance, primary_first, chronological, or book_order")
+
+
 def search(
     query: str | None = None,
     queries: list[str] | None = None,
     operator: str = "OR",
+    search_mode: str = "exact_phrase",
+    ranking: str = "primary_first",
     book_ids: list[str] | None = None,
     source_code: str | None = None,
     page_from: int | None = None,
@@ -237,9 +266,9 @@ def search(
     diversify_books: bool = True,
     max_per_book: int = 2,
 ) -> list[dict]:
-    """Exact Arabic search with optional OR/AND alternatives and diversity."""
+    """Arabic FTS search with explicit modes, ranking, and safe diversity."""
     raw_queries = queries or ([query] if query else [])
-    expression = _fts_expression(raw_queries, operator)
+    expression = _fts_expression(raw_queries, operator, search_mode)
     if not expression:
         return []
     conn = _connection()
@@ -247,6 +276,10 @@ def search(
         book_ids=book_ids, source_code=source_code,
         page_from=page_from, page_to=page_to,
     )
+
+    # Diversification is useful across a library, but it must never truncate a
+    # deliberately selected single book.
+    apply_diversity = bool(diversify_books and (not book_ids or len(book_ids) > 1))
 
     base = """
         SELECT p.book_id, b.title AS book_title, b.source_grade, b.source_code,
@@ -257,7 +290,8 @@ def search(
         WHERE pages_fts MATCH ?
     """ + filters
     params = [expression, *filter_params]
-    if diversify_books:
+    if apply_diversity:
+        order = _ranking_order(ranking, diversified=True)
         sql = """WITH matched AS (""" + base + """), ranked AS (
             SELECT *, ROW_NUMBER() OVER (
                 PARTITION BY book_id ORDER BY relevance, seq
@@ -265,11 +299,11 @@ def search(
             FROM matched
         )
         SELECT * FROM ranked WHERE book_rank <= ?
-        ORDER BY source_code, book_rank, relevance, book_title, seq
-        LIMIT ? OFFSET ?"""
+        ORDER BY """ + order + " LIMIT ? OFFSET ?"
         params.extend((max(1, max_per_book), limit, offset))
     else:
-        sql = base + " ORDER BY b.source_code, relevance, b.title, p.seq LIMIT ? OFFSET ?"
+        order = _ranking_order(ranking, diversified=False)
+        sql = base + " ORDER BY " + order + " LIMIT ? OFFSET ?"
         params.extend((limit, offset))
     rows = conn.execute(sql, params).fetchall()
 
@@ -280,7 +314,7 @@ def search(
         matches = [(pat.search(plain_text), pat) for pat in patterns]
         matches = [(m, pat) for m, pat in matches if m]
         if matches:
-            first_match, pattern = min(matches, key=lambda x: x[0].start())
+            _, pattern = min(matches, key=lambda x: x[0].start())
             occ = sum(len(pat.findall(plain_text)) for pat in patterns)
             snippet = _make_snippet(plain_text, pattern, radius=context_chars)
         else:
@@ -307,8 +341,19 @@ def search(
     return results
 
 
+def _paragraph_window(text: str, match_start: int, match_end: int, context_chars: int) -> tuple[int, int]:
+    """Prefer complete paragraph boundaries while enforcing a bounded window."""
+    hard_start = max(0, match_start - context_chars)
+    hard_end = min(len(text), match_end + context_chars)
+    para_start = text.rfind("\n\n", hard_start, match_start)
+    para_end = text.find("\n\n", match_end, hard_end)
+    start = para_start + 2 if para_start >= 0 else hard_start
+    end = para_end if para_end >= 0 else hard_end
+    return start, end
+
+
 def get_passage(book_id: str, seq: int, query: str, context_chars: int = 800) -> dict | None:
-    """Return bounded context around a normalized Arabic match."""
+    """Return coherent bounded context around a normalized Arabic match."""
     page = get_page(book_id, seq)
     if page is None:
         return None
@@ -316,8 +361,7 @@ def get_passage(book_id: str, seq: int, query: str, context_chars: int = 800) ->
     text = page["text"]
     match = pattern.search(text)
     if match:
-        start = max(0, match.start() - context_chars)
-        end = min(len(text), match.end() + context_chars)
+        start, end = _paragraph_window(text, match.start(), match.end(), context_chars)
         passage = text[start:end]
         prefix, suffix = ("…" if start else ""), ("…" if end < len(text) else "")
         passage, occurrences = _highlight(passage, pattern)
@@ -329,5 +373,24 @@ def get_passage(book_id: str, seq: int, query: str, context_chars: int = 800) ->
         "book_id": page["book_id"], "book_title": page["book_title"],
         "source": page["source_code"], "seq": page["seq"],
         "printed_page": page["printed_page"], "occurrences": occurrences,
-        "passage": passage,
+        "passage": passage, "page_chars": len(text),
+        "truncated": len(passage) < len(text),
     }
+
+
+@lru_cache(maxsize=1)
+def _indexed_terms() -> tuple[str, ...]:
+    """Small vocabulary used only for no-result spelling suggestions."""
+    rows = _connection().execute("SELECT norm_text FROM pages").fetchall()
+    terms: set[str] = set()
+    for row in rows:
+        terms.update(w for w in row["norm_text"].split() if 2 <= len(w) <= 30)
+    return tuple(sorted(terms))
+
+
+def suggest_spelling(query: str, limit: int = 5) -> list[str]:
+    normalized = normalize_arabic(query, aggressive=True)
+    if not normalized or " " in normalized:
+        return []
+    return get_close_matches(normalized, _indexed_terms(), n=max(1, limit), cutoff=0.82)
+

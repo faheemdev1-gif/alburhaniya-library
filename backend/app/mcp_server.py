@@ -44,7 +44,7 @@ from app.services.compact_response import compact_search_response
 
 _RENDER_HOST = "burhaniya-library-backend.onrender.com"
 
-ResponseMode = Literal["compact", "standard"]
+ResponseMode = Literal["compact", "ultra_compact", "standard"]
 
 _GRADE_REMINDER = "primary=authoritative; secondary=supporting only"
 
@@ -131,6 +131,7 @@ def get_page(
     book_id: str,
     seq: int,
     mode: ResponseMode = "compact",
+    max_chars: int = 6000,
 ) -> dict:
     """Read one specific full page.
 
@@ -150,8 +151,13 @@ def get_page(
         }
 
     page["text"] = format_page(page["text"])
+    max_chars = max(1000, min(max_chars, 20000))
+    full_chars = len(page["text"])
+    oversized = full_chars > max_chars
+    if oversized:
+        page["text"] = page["text"][:max_chars] + "…"
 
-    if mode == "compact":
+    if mode in ("compact", "ultra_compact"):
         result = {
             "book_id": page["book_id"],
             "book_title": page["book_title"],
@@ -165,6 +171,10 @@ def get_page(
 
         if page["has_next"]:
             result["next_seq"] = page["seq"] + 1
+        if oversized:
+            result["truncated"] = True
+            result["full_chars"] = full_chars
+            result["hint"] = "Use get_passage for focused context or raise max_chars deliberately."
 
         return result
 
@@ -199,6 +209,8 @@ def search_library(
     page_to: Optional[int] = None,
     context_chars: int = 120,
     mode: ResponseMode = "compact",
+    search_mode: Literal["exact_phrase", "all_words", "any_word"] = "exact_phrase",
+    ranking: Literal["relevance", "primary_first", "chronological", "book_order"] = "primary_first",
     diversify_books: bool = True,
     max_per_book: int = 2,
 ) -> dict:
@@ -217,8 +229,9 @@ def search_library(
         page_to: Optional last page sequence, inclusive.
         context_chars: Context on each side of the match. Defaults to 120 and
             is restricted to 40–300.
-        mode: "compact" by default. Use "standard" only for compatibility with
-            the previous verbose response format.
+        mode: compact, ultra_compact, or standard.
+        search_mode: exact_phrase, all_words, or any_word.
+        ranking: relevance, primary_first, chronological, or book_order.
     """
     limit = max(1, min(limit, 20))
     offset = max(0, offset)
@@ -257,12 +270,15 @@ def search_library(
     total_hits = db.count_search(
         raw_queries, operator=operator, book_ids=book_ids,
         source_code=source_code, page_from=page_from, page_to=page_to,
+        search_mode=search_mode,
     )
 
     rows = db.search(
         query=query,
         queries=raw_queries,
         operator=operator,
+        search_mode=search_mode,
+        ranking=ranking,
         book_ids=book_ids,
         source_code=source_code,
         page_from=page_from,
@@ -277,14 +293,20 @@ def search_library(
     has_more = len(rows) > limit
     results = rows[:limit]
 
-    if mode == "compact":
-        return compact_search_response(
+    if mode in ("compact", "ultra_compact"):
+        payload = compact_search_response(
             results,
             limit=limit,
             offset=offset,
             has_more=has_more,
             total_hits=total_hits,
+            ultra=(mode == "ultra_compact"),
         )
+        if total_hits == 0 and len(raw_queries) == 1:
+            suggestions = db.suggest_spelling(raw_queries[0])
+            if suggestions:
+                payload["suggestions"] = suggestions
+        return payload
 
     primary_hits = sum(
         1 for result in results
@@ -295,6 +317,8 @@ def search_library(
         "query": query,
         "queries": raw_queries,
         "operator": operator,
+        "search_mode": search_mode,
+        "ranking": ranking,
         "book_ids": book_ids,
         "source_code": source_code,
         "returned_count": len(results),

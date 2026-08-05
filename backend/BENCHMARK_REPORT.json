@@ -1,0 +1,25 @@
+{
+  "tests_passed": "10/10",
+  "tests": {
+    "fully_vowelled_search": true,
+    "unvowelled_search": true,
+    "common_word_library": true,
+    "single_book_pagination": true,
+    "primary_filter": true,
+    "secondary_filter": true,
+    "page_retrieval": true,
+    "empty_result": true,
+    "spelling_suggestions": true,
+    "large_segment_detection": true
+  },
+  "largest_segment_chars": 19542,
+  "average_segment_chars": 1546.5,
+  "duplicate_page_rate_percent": 0.0,
+  "response_bytes": {
+    "standard": 6100,
+    "compact": 5460,
+    "ultra_compact": 4922
+  },
+  "compact_saving_percent": 13.0,
+  "ultra_saving_percent": 25.5
+}
