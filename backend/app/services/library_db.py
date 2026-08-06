@@ -109,14 +109,23 @@ def get_grades() -> dict:
     return {r["grade"]: dict(r) for r in rows}
 
 
+@lru_cache(maxsize=1)
+def get_tiers() -> dict:
+    """The numeric 1-5 evidential hierarchy, lower number = higher weight."""
+    rows = _connection().execute(
+        "SELECT tier, definition FROM source_tiers ORDER BY tier"
+    ).fetchall()
+    return {str(r["tier"]): r["definition"] for r in rows}
+
+
 # ----------------------------------------------------------------- books
 
 def list_books() -> list[dict]:
     """Every book with its source grade (short form — no note/author)."""
     conn = _connection()
     rows = conn.execute(
-        "SELECT book_id, title, page_count, source_grade, source_code "
-        "FROM books ORDER BY source_code, title"
+        "SELECT book_id, title, page_count, source_grade, source_code, source_tier "
+        "FROM books ORDER BY source_tier, title"
     ).fetchall()
     return [dict(r) for r in rows]
 
@@ -125,7 +134,7 @@ def get_book(book_id: str) -> dict | None:
     """Full metadata for one book, including the provenance note."""
     conn = _connection()
     row = conn.execute(
-        "SELECT book_id, title, page_count, source_grade, source_code, "
+        "SELECT book_id, title, page_count, source_grade, source_code, source_tier, "
         "       source_author, source_note "
         "FROM books WHERE book_id = ?",
         (book_id,),
@@ -152,9 +161,9 @@ def get_page(book_id: str, seq: int) -> dict | None:
     conn = _connection()
     row = conn.execute(
         """
-        SELECT p.book_id, p.seq, p.printed_page, p.text,
+        SELECT p.book_id, p.seq, p.printed_page, p.citation_label, p.text,
                b.title AS book_title, b.page_count AS total_pages,
-               b.source_grade, b.source_code
+               b.source_grade, b.source_code, b.source_tier
         FROM pages p
         JOIN books b ON b.book_id = p.book_id
         WHERE p.book_id = ? AND p.seq = ?
@@ -171,18 +180,87 @@ def get_page(book_id: str, seq: int) -> dict | None:
 
 # ---------------------------------------------------------------- search
 
+_PROCLITICS = ("وال", "فال", "بال", "كال", "لل", "ال", "و", "ف", "ب", "ل", "ك")
+_LEXEME_PREFIXES = ("", "ال", "و", "ف", "ب", "ل", "ك", "وال", "فال", "بال", "كال", "لل")
+_LEXEME_SUFFIXES = ("", "ه", "ها", "هم", "هن", "ك", "كم", "كما", "كن", "نا", "يه", "يات")
+
+
+def _bare_lexeme(token: str) -> str:
+    for prefix in _PROCLITICS:
+        if token.startswith(prefix) and len(token) - len(prefix) >= 3:
+            return token[len(prefix):]
+    return token
+
+
+def _lexeme_stems(token: str) -> list[str]:
+    """Conservative light expansion for one Arabic lexeme.
+
+    FTS prefix matching covers attached suffixes.  The ي/ا alternation covers
+    weak-final forms such as حمى/حماك/حماية without pretending to be a full
+    Arabic root analyser.
+    """
+    bare = _bare_lexeme(token)
+    stems = {bare}
+    if bare.endswith("ي"):
+        stems.add(bare[:-1] + "ا")
+    elif bare.endswith("ا"):
+        stems.add(bare[:-1] + "ي")
+    return sorted(stems)
+
+
 def _query_expression(query: str, search_mode: str = "exact_phrase") -> str:
     normalized = normalize_arabic(query, aggressive=True)
     if not normalized:
         return ""
     words = [w for w in normalized.split() if w]
+    if search_mode == "lexeme":
+        if len(words) != 1:
+            raise ValueError("lexeme search supports one Arabic word per query")
+        stems = _lexeme_stems(words[0])
+        variants = sorted({
+            prefix + stem + suffix
+            for stem in stems
+            for prefix in _LEXEME_PREFIXES
+            for suffix in _LEXEME_SUFFIXES
+        })
+        return " OR ".join('"' + v.replace('"', '""') + '"' for v in variants)
     if search_mode == "exact_phrase":
         return '"' + normalized.replace('"', '""') + '"'
     if search_mode == "all_words":
         return " AND ".join('"' + w.replace('"', '""') + '"' for w in words)
     if search_mode == "any_word":
         return " OR ".join('"' + w.replace('"', '""') + '"' for w in words)
-    raise ValueError("search_mode must be exact_phrase, all_words, or any_word")
+    raise ValueError("search_mode must be exact_phrase, all_words, any_word, or lexeme")
+
+
+def _pattern_for_query(query: str, search_mode: str) -> re.Pattern:
+    if search_mode != "lexeme":
+        return _build_highlight_regex(query)
+    normalized = normalize_arabic(query, aggressive=True)
+    words = normalized.split()
+    if len(words) != 1:
+        raise ValueError("lexeme search supports one Arabic word per query")
+    stems = _lexeme_stems(words[0])
+    stem_patterns = []
+    for stem in stems:
+        chars = [_tolerant_char_pattern(c) for c in stem]
+        stem_patterns.append(_DIACRITIC_CLASS.join(chars))
+    def word_pattern(word: str) -> str:
+        return _DIACRITIC_CLASS.join(_tolerant_char_pattern(c) for c in word)
+    prefix_patterns = [word_pattern(p) for p in _LEXEME_PREFIXES if p]
+    suffix_patterns = [word_pattern(s) for s in _LEXEME_SUFFIXES if s]
+    prefix = "(?:" + "|".join(prefix_patterns) + ")?"
+    suffix = "(?:" + "|".join(suffix_patterns) + ")?"
+    start_boundary = r"(?<![\u0621-\u064A])"
+    boundary = r"(?![\u0621-\u064A])"
+    return re.compile(
+        start_boundary + prefix + "(?:" + "|".join(stem_patterns) + ")" + suffix + boundary,
+        re.IGNORECASE,
+    )
+
+
+def _unique_occurrence_count(text: str, patterns: list[re.Pattern]) -> int:
+    return len({m.span() for pattern in patterns for m in pattern.finditer(text)})
 
 
 def _fts_expression(
@@ -238,6 +316,44 @@ def count_search(
     return int(row["n"])
 
 
+def search_stats(
+    queries: list[str], operator: str = "OR", book_ids: list[str] | None = None,
+    source_code: str | None = None, page_from: int | None = None,
+    page_to: int | None = None, search_mode: str = "exact_phrase",
+) -> dict:
+    """Return explicit page and occurrence census, including each alternative."""
+    expression = _fts_expression(queries, operator, search_mode)
+    if not expression:
+        return {"matching_pages": 0, "matching_occurrences": 0, "per_query": []}
+    filters, params = _search_filters(
+        book_ids=book_ids, source_code=source_code,
+        page_from=page_from, page_to=page_to,
+    )
+    sql = """SELECT p.id, p.text FROM pages_fts
+             JOIN pages p ON p.id = pages_fts.rowid
+             JOIN books b ON b.book_id = p.book_id
+             WHERE pages_fts MATCH ?""" + filters
+    rows = _connection().execute(sql, [expression, *params]).fetchall()
+    aggregate_patterns = [_pattern_for_query(q, search_mode) for q in queries]
+    per_query = []
+    for query in queries:
+        q_expression = _fts_expression([query], "OR", search_mode)
+        q_rows = _connection().execute(sql, [q_expression, *params]).fetchall()
+        pattern = _pattern_for_query(query, search_mode)
+        per_query.append({
+            "query": query,
+            "matching_pages": len(q_rows),
+            "occurrences": sum(_unique_occurrence_count(r["text"], [pattern]) for r in q_rows),
+        })
+    return {
+        "matching_pages": len(rows),
+        "matching_occurrences": sum(
+            _unique_occurrence_count(r["text"], aggregate_patterns) for r in rows
+        ),
+        "per_query": per_query,
+    }
+
+
 def _ranking_order(ranking: str, diversified: bool = False) -> str:
     prefix = "source_code, " if ranking == "primary_first" else ""
     if ranking == "relevance":
@@ -283,7 +399,8 @@ def search(
 
     base = """
         SELECT p.book_id, b.title AS book_title, b.source_grade, b.source_code,
-               p.seq, p.printed_page, p.text, bm25(pages_fts) AS relevance
+               b.source_tier, p.seq, p.printed_page, p.citation_label, p.text,
+               bm25(pages_fts) AS relevance
         FROM pages_fts
         JOIN pages p ON p.id = pages_fts.rowid
         JOIN books b ON b.book_id = p.book_id
@@ -307,7 +424,7 @@ def search(
         params.extend((limit, offset))
     rows = conn.execute(sql, params).fetchall()
 
-    patterns = [_build_highlight_regex(q.strip()) for q in raw_queries if q and q.strip()]
+    patterns = [_pattern_for_query(q.strip(), search_mode) for q in raw_queries if q and q.strip()]
     results = []
     for row in rows:
         plain_text = row["text"]
@@ -315,7 +432,7 @@ def search(
         matches = [(m, pat) for m, pat in matches if m]
         if matches:
             _, pattern = min(matches, key=lambda x: x[0].start())
-            occ = sum(len(pat.findall(plain_text)) for pat in patterns)
+            occ = _unique_occurrence_count(plain_text, patterns)
             snippet = _make_snippet(plain_text, pattern, radius=context_chars)
         else:
             occ = 1
@@ -327,8 +444,10 @@ def search(
         result = {
             "book_id": row["book_id"], "book_title": row["book_title"],
             "source_grade": row["source_grade"], "source_code": row["source_code"],
+            "source_tier": row["source_tier"],
             "seq": row["seq"], "page_number": row["seq"], "page_label": label,
             "printed_page": row["printed_page"], "occurrences": occ,
+            "citation_label": row["citation_label"],
             "snippet": snippet,
         }
         if include_full_text:
@@ -372,7 +491,8 @@ def get_passage(book_id: str, seq: int, query: str, context_chars: int = 800) ->
     return {
         "book_id": page["book_id"], "book_title": page["book_title"],
         "source": page["source_code"], "seq": page["seq"],
-        "printed_page": page["printed_page"], "occurrences": occurrences,
+        "printed_page": page["printed_page"], "citation_label": page["citation_label"],
+        "occurrences": occurrences,
         "passage": passage, "page_chars": len(text),
         "truncated": len(passage) < len(text),
     }
@@ -393,4 +513,3 @@ def suggest_spelling(query: str, limit: int = 5) -> list[str]:
     if not normalized or " " in normalized:
         return []
     return get_close_matches(normalized, _indexed_terms(), n=max(1, limit), cutoff=0.82)
-

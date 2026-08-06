@@ -52,12 +52,18 @@ CREATE TABLE grades (
     usage       TEXT NOT NULL       -- how a model should weigh it
 );
 
+CREATE TABLE source_tiers (
+    tier        INTEGER PRIMARY KEY CHECK (tier BETWEEN 1 AND 5),
+    definition  TEXT NOT NULL
+);
+
 CREATE TABLE books (
     book_id        TEXT PRIMARY KEY,
     title          TEXT NOT NULL,
     page_count     INTEGER NOT NULL,
     source_grade   TEXT NOT NULL,   -- 'أصلي' | 'ثانوي'
     source_code    TEXT NOT NULL,   -- 'primary' | 'secondary'  (ASCII-safe)
+    source_tier    INTEGER NOT NULL CHECK (source_tier BETWEEN 1 AND 5),
     source_author  TEXT,
     source_note    TEXT,
     FOREIGN KEY (source_grade) REFERENCES grades(grade)
@@ -68,6 +74,7 @@ CREATE TABLE pages (
     book_id       TEXT NOT NULL,
     seq           INTEGER NOT NULL,
     printed_page  TEXT,
+    citation_label TEXT,
     text          TEXT NOT NULL,
     norm_text     TEXT NOT NULL,
     FOREIGN KEY (book_id) REFERENCES books(book_id)
@@ -95,6 +102,8 @@ def build():
     sources = json.load(open(SOURCES_FILE, encoding="utf-8"))
     grades = sources["grades"]
     book_sources = sources["books"]
+    book_tiers = sources["tiers"]["books"]
+    tier_definitions = sources["tiers"]["definitions"]
 
     conn = sqlite3.connect(DB_PATH)
     conn.executescript(SCHEMA)
@@ -104,6 +113,12 @@ def build():
             "INSERT INTO grades (grade, code, label, definition, usage) "
             "VALUES (?, ?, ?, ?, ?)",
             (grade, g["code"], g["label"], g["definition"], g["usage"]),
+        )
+
+    for tier, definition in tier_definitions.items():
+        conn.execute(
+            "INSERT INTO source_tiers (tier, definition) VALUES (?, ?)",
+            (int(tier), definition),
         )
 
     missing: list[str] = []
@@ -139,20 +154,26 @@ def build():
             missing.append(slug)
             continue
 
+        tier = book_tiers.get(slug)
+        if not isinstance(tier, int) or not 1 <= tier <= 5:
+            missing.append(f"{slug} (missing numeric source tier 1-5)")
+            continue
+
         grade = src["grade"]
         if grade not in grades:
             raise SystemExit(f"{slug}: unknown grade '{grade}' — not in sources.json grades")
 
         conn.execute(
             "INSERT INTO books "
-            "(book_id, title, page_count, source_grade, source_code, source_author, source_note) "
-            "VALUES (?, ?, ?, ?, ?, ?, ?)",
+            "(book_id, title, page_count, source_grade, source_code, source_tier, source_author, source_note) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
             (
                 slug,
                 title,
                 len(pages),
                 grade,
                 grades[grade]["code"],
+                tier,
                 src.get("author"),
                 src.get("note"),
             ),
@@ -162,9 +183,9 @@ def build():
             text = "\n\n".join(page["paragraphs"])
             norm = normalize_arabic(text, aggressive=True)
             conn.execute(
-                "INSERT INTO pages (book_id, seq, printed_page, text, norm_text) "
-                "VALUES (?, ?, ?, ?, ?)",
-                (slug, seq, page["printed_page"], text, norm),
+                "INSERT INTO pages (book_id, seq, printed_page, citation_label, text, norm_text) "
+                "VALUES (?, ?, ?, ?, ?, ?)",
+                (slug, seq, page["printed_page"], page.get("page_label"), text, norm),
             )
         total_pages += len(pages)
         print(f"{slug}  [{grades[grade]['code']:<9}] {len(pages):4d} pages  {title}")

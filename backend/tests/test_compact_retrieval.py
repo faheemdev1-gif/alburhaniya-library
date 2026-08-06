@@ -113,6 +113,35 @@ class CompactRetrievalTests(unittest.TestCase):
         self.assertTrue(all_words)
         self.assertTrue(any_word)
 
+    def test_lexeme_mode_recovers_affixed_hima_forms(self):
+        exact = db.search_stats(["حمى"], book_ids=["b14"])
+        enumerated = db.search_stats(
+            ["حمى", "الحمى", "حماك", "حماه", "حماية", "حمانا"],
+            operator="OR", book_ids=["b14"],
+        )
+        lexeme = db.search_stats(["حمى"], book_ids=["b14"], search_mode="lexeme")
+        self.assertEqual(exact["matching_pages"], 7)
+        self.assertEqual(enumerated["matching_pages"], 16)
+        self.assertGreaterEqual(lexeme["matching_pages"], enumerated["matching_pages"])
+
+    def test_search_stats_distinguish_pages_occurrences_and_terms(self):
+        stats = db.search_stats(["حمى", "الحمى"], operator="OR", book_ids=["b14"])
+        self.assertEqual(stats["matching_pages"], 14)
+        self.assertGreater(stats["matching_occurrences"], stats["matching_pages"])
+        self.assertEqual([x["query"] for x in stats["per_query"]], ["حمى", "الحمى"])
+        self.assertTrue(all("matching_pages" in x and "occurrences" in x for x in stats["per_query"]))
+
+    def test_khitabat_have_citation_labels(self):
+        self.assertTrue(db.get_page("b44", 1)["citation_label"])
+        self.assertTrue(db.get_page("b45", 1)["citation_label"])
+
+    def test_numeric_tiers_preserve_internal_primary_order(self):
+        self.assertEqual(db.get_book("b26")["source_tier"], 2)
+        self.assertEqual(db.get_book("b42")["source_tier"], 3)
+        self.assertEqual(db.get_book("b44")["source_tier"], 3)
+        self.assertLess(db.get_book("b26")["source_tier"], db.get_book("b42")["source_tier"])
+        self.assertEqual(set(db.get_tiers()), {"1", "2", "3", "4", "5"})
+
     def test_ultra_compact_shape(self):
         rows = db.search("الله", limit=4)
         payload = compact_search_response(rows, limit=4, offset=0, has_more=False, ultra=True)

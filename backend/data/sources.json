@@ -14,6 +14,26 @@
       "usage": "SUPPORTING ONLY. Use for corroboration, clarification, or as an extra reference. Never cite it as the doctrinal position of the tariqa. If it conflicts with a primary source, say so plainly — do not harmonize."
     }
   },
+  "tiers": {
+    "definitions": {
+      "1": "Canonical works authored or directly issued by Sidi Fakhr al-Din; highest doctrinal weight.",
+      "2": "Directly recorded lessons and authenticated teaching collections from Sidi Fakhr al-Din.",
+      "3": "Official shaykh speeches and lower-ranked primary teaching compilations.",
+      "4": "Internal supporting compilations, liturgical texts, and close commentaries.",
+      "5": "External, administrative, uncertain-attribution, or general supporting sources."
+    },
+    "books": {
+      "b01": 4, "b02": 5, "b03": 4, "b04": 4, "b05": 5,
+      "b06": 5, "b07": 1, "b08": 4, "b09": 4, "b10": 1,
+      "b11": 1, "b12": 1, "b13": 1, "b14": 1, "b15": 2,
+      "b16": 5, "b17": 4, "b18": 4, "b19": 4, "b20": 4,
+      "b21": 4, "b22": 4, "b23": 4, "b24": 4, "b25": 4,
+      "b26": 2, "b27": 2, "b28": 2, "b29": 2, "b30": 2,
+      "b31": 2, "b32": 2, "b33": 4, "b36": 5, "b37": 4,
+      "b38": 4, "b39": 2, "b40": 2, "b41": 2, "b42": 3,
+      "b43": 4, "b44": 3, "b45": 3
+    }
+  },
   "books": {
     "b01": {
       "grade": "ثانوي",

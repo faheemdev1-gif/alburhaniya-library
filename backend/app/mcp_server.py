@@ -94,6 +94,7 @@ def list_books(include_legend: bool = False) -> dict:
             "title": book["title"],
             "pages": book["page_count"],
             "source": book["source_code"],
+            "tier": book["source_tier"],
         }
         for book in db.list_books()
     ]
@@ -105,6 +106,7 @@ def list_books(include_legend: bool = False) -> dict:
 
     if include_legend:
         result["grades"] = db.get_grades()
+        result["tiers"] = db.get_tiers()
 
     return result
 
@@ -162,12 +164,15 @@ def get_page(
             "book_id": page["book_id"],
             "book_title": page["book_title"],
             "source": page["source_code"],
+            "tier": page["source_tier"],
             "seq": page["seq"],
             "text": page["text"],
         }
 
         if page["printed_page"] is not None:
             result["printed_page"] = page["printed_page"]
+        elif page.get("citation_label"):
+            result["citation_label"] = page["citation_label"]
 
         if page["has_next"]:
             result["next_seq"] = page["seq"] + 1
@@ -209,7 +214,7 @@ def search_library(
     page_to: Optional[int] = None,
     context_chars: int = 120,
     mode: ResponseMode = "compact",
-    search_mode: Literal["exact_phrase", "all_words", "any_word"] = "exact_phrase",
+    search_mode: Literal["exact_phrase", "all_words", "any_word", "lexeme"] = "exact_phrase",
     ranking: Literal["relevance", "primary_first", "chronological", "book_order"] = "primary_first",
     diversify_books: bool = True,
     max_per_book: int = 2,
@@ -230,7 +235,9 @@ def search_library(
         context_chars: Context on each side of the match. Defaults to 120 and
             is restricted to 40–300.
         mode: compact, ultra_compact, or standard.
-        search_mode: exact_phrase, all_words, or any_word.
+        search_mode: exact_phrase, all_words, any_word, or lexeme. Lexeme mode
+            accepts one Arabic word per query and expands common proclitics,
+            suffixes, and weak-final ي/ا forms for recall-oriented census work.
         ranking: relevance, primary_first, chronological, or book_order.
     """
     limit = max(1, min(limit, 20))
@@ -272,6 +279,11 @@ def search_library(
         source_code=source_code, page_from=page_from, page_to=page_to,
         search_mode=search_mode,
     )
+    stats = db.search_stats(
+        raw_queries, operator=operator, book_ids=book_ids,
+        source_code=source_code, page_from=page_from, page_to=page_to,
+        search_mode=search_mode,
+    )
 
     rows = db.search(
         query=query,
@@ -300,6 +312,7 @@ def search_library(
             offset=offset,
             has_more=has_more,
             total_hits=total_hits,
+            stats=stats,
             ultra=(mode == "ultra_compact"),
         )
         if total_hits == 0 and len(raw_queries) == 1:
@@ -323,6 +336,9 @@ def search_library(
         "source_code": source_code,
         "returned_count": len(results),
         "total_hits": total_hits,
+        "total_hits_unit": "matching_pages",
+        "total_occurrences": stats["matching_occurrences"],
+        "per_query": stats["per_query"],
         "offset": offset,
         "next_offset": offset + limit if has_more else None,
         "primary_hits": primary_hits,

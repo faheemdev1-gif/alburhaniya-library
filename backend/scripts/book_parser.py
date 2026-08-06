@@ -118,8 +118,15 @@ def split_oversized_pages(
         if buf:
             chunks.append(buf)
 
-        for chunk in chunks:
-            output.append({"printed_page": page.get("printed_page"), "paragraphs": chunk})
+        for chunk_index, chunk in enumerate(chunks, start=1):
+            label = page.get("page_label")
+            if label and len(chunks) > 1:
+                label = f"{label} — مقطع {chunk_index}"
+            output.append({
+                "printed_page": page.get("printed_page"),
+                "page_label": label,
+                "paragraphs": chunk,
+            })
     return output
 
 def parse_utf8_pages(raw_path: str) -> list[dict]:
@@ -143,5 +150,6 @@ def parse_utf8_pages(raw_path: str) -> list[dict]:
         if "paragraphs" not in page:
             raise ValueError(f"{raw_path}: page {i} missing 'paragraphs'")
         page.setdefault("printed_page", None)
+        page.setdefault("page_label", None)
 
     return pages
