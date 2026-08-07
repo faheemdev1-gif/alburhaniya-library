@@ -6,10 +6,11 @@ Claude and ChatGPT.
 
 The recommended retrieval workflow is:
 
-    search_library -> get_page
+    search_library -> get_passage -> get_page (only when necessary)
 
-Search results contain short excerpts. Full text is returned only when the
-client deliberately requests a specific page.
+Search results contain short excerpts and stable match ids. Focused passages
+are the normal second step; full text is returned only when the client
+deliberately requests a specific page.
 
 SOURCE GRADING
 --------------
@@ -32,7 +33,7 @@ Claude:
 """
 from __future__ import annotations
 
-from typing import Literal, Optional
+from typing import Any, Literal, Optional
 
 from mcp.server.fastmcp import FastMCP
 from mcp.server.transport_security import TransportSecuritySettings
@@ -53,7 +54,8 @@ mcp = FastMCP(
     "burhaniya-library",
     instructions=(
         "Arabic Burhaniya library. Always use search_library first, then call "
-        "get_page only for the specific results needed. Do not retrieve pages "
+        "get_passage with a returned match_id. Use get_page only when the whole "
+        "page is genuinely needed. Do not retrieve pages "
         "sequentially unless the question requires adjacent context. Prefer "
         "primary sources; secondary sources are supporting commentary. Never "
         "attribute secondary interpretation directly to a shaykh. Cite the "
@@ -80,8 +82,8 @@ mcp = FastMCP(
 )
 
 
-@mcp.tool()
-def list_books(include_legend: bool = False) -> dict:
+@mcp.tool(structured_output=True)
+def list_books(include_legend: bool = False) -> dict[str, Any]:
     """List books in a compact catalogue, ordered primary-first.
 
     Args:
@@ -111,8 +113,8 @@ def list_books(include_legend: bool = False) -> dict:
     return result
 
 
-@mcp.tool()
-def get_book(book_id: str) -> dict:
+@mcp.tool(structured_output=True)
+def get_book(book_id: str) -> dict[str, Any]:
     """Get the metadata and provenance of one book.
 
     Args:
@@ -128,13 +130,13 @@ def get_book(book_id: str) -> dict:
     return book
 
 
-@mcp.tool()
+@mcp.tool(structured_output=True)
 def get_page(
     book_id: str,
     seq: int,
     mode: ResponseMode = "compact",
     max_chars: int = 6000,
-) -> dict:
+) -> dict[str, Any]:
     """Read one specific full page.
 
     Use this only after search_library identifies a relevant result.
@@ -186,22 +188,20 @@ def get_page(
     return page
 
 
-@mcp.tool()
+@mcp.tool(structured_output=True)
 def get_passage(
-    book_id: str,
-    seq: int,
-    query: str,
-    context_chars: int = 800,
-) -> dict:
-    """Read a bounded passage around a known match instead of a full page."""
+    match_id: str,
+    context_chars: int = 600,
+) -> dict[str, Any]:
+    """Read bounded context for a stable match returned by search_library."""
     context_chars = max(200, min(context_chars, 2000))
-    result = db.get_passage(book_id, seq, query, context_chars)
+    result = db.get_passage_by_match_id(match_id, context_chars)
     if result is None:
-        return {"error": f"no page {seq} in book '{book_id}'"}
+        return {"error": f"invalid or unknown match_id '{match_id}'"}
     return result
 
 
-@mcp.tool()
+@mcp.tool(structured_output=True)
 def search_library(
     query: Optional[str] = None,
     queries: Optional[list[str]] = None,
@@ -209,16 +209,19 @@ def search_library(
     limit: int = 8,
     offset: int = 0,
     book_ids: Optional[list[str]] = None,
+    book_scope: Optional[str] = None,
     source_code: Optional[str] = None,
     page_from: Optional[int] = None,
     page_to: Optional[int] = None,
     context_chars: int = 120,
     mode: ResponseMode = "compact",
-    search_mode: Literal["exact_phrase", "all_words", "any_word", "lexeme"] = "exact_phrase",
+    match_mode: Literal["exact", "terms", "hybrid", "lexeme"] = "exact",
+    search_mode: Optional[Literal["exact_phrase", "all_words", "any_word", "lexeme"]] = None,
     ranking: Literal["relevance", "primary_first", "chronological", "book_order"] = "primary_first",
     diversify_books: bool = True,
     max_per_book: int = 2,
-) -> dict:
+    include_counts: bool = False,
+) -> dict[str, Any]:
     """Search exact Arabic words/phrases, with optional OR/AND alternatives.
 
     Args:
@@ -229,13 +232,14 @@ def search_library(
         limit: Number of results. Defaults to 8 and is capped at 20.
         offset: Zero-based pagination offset.
         book_ids: Optional book IDs to search, such as ["b33"].
+        book_scope: Optional title/series fragment, such as "شرح شراب الوصل".
         source_code: Optional "primary" or "secondary" filter.
         page_from: Optional first page sequence, inclusive.
         page_to: Optional last page sequence, inclusive.
         context_chars: Context on each side of the match. Defaults to 120 and
             is restricted to 40–300.
         mode: compact, ultra_compact, or standard.
-        search_mode: exact_phrase, all_words, any_word, or lexeme. Lexeme mode
+        match_mode: exact, terms, hybrid, or lexeme. Lexeme mode
             accepts one Arabic word per query and expands common proclitics,
             suffixes, and weak-final ي/ا forms for recall-oriented census work.
         ranking: relevance, primary_first, chronological, or book_order.
@@ -249,6 +253,19 @@ def search_library(
     if not raw_queries:
         return {"error": "query or queries cannot be empty"}
     max_per_book = max(1, min(max_per_book, 10))
+
+    if book_scope:
+        scoped_ids = db.resolve_book_scope(book_scope)
+        if not scoped_ids:
+            return {"error": f"no books match scope '{book_scope}'"}
+        book_ids = sorted(set(book_ids or scoped_ids) & set(scoped_ids)) if book_ids else scoped_ids
+        if not book_ids:
+            return {"error": "book_ids and book_scope do not overlap"}
+
+    resolved_search_mode = search_mode or {
+        "exact": "exact_phrase", "terms": "all_words", "lexeme": "lexeme",
+        "hybrid": "all_words",
+    }[match_mode]
 
     if source_code not in (None, "primary", "secondary"):
         return {
@@ -274,22 +291,25 @@ def search_library(
             "error": "page_from cannot be greater than page_to",
         }
 
-    total_hits = db.count_search(
-        raw_queries, operator=operator, book_ids=book_ids,
-        source_code=source_code, page_from=page_from, page_to=page_to,
-        search_mode=search_mode,
-    )
-    stats = db.search_stats(
-        raw_queries, operator=operator, book_ids=book_ids,
-        source_code=source_code, page_from=page_from, page_to=page_to,
-        search_mode=search_mode,
-    )
+    total_hits = stats = None
+    if include_counts:
+        total_hits = db.count_search(
+            raw_queries, operator=operator, book_ids=book_ids,
+            source_code=source_code, page_from=page_from, page_to=page_to,
+            search_mode=resolved_search_mode,
+        )
+        stats = db.search_stats(
+            raw_queries, operator=operator, book_ids=book_ids,
+            source_code=source_code, page_from=page_from, page_to=page_to,
+            search_mode=resolved_search_mode,
+        )
 
-    rows = db.search(
+    search_fn = db.hybrid_search if match_mode == "hybrid" else db.search
+    rows = search_fn(
         query=query,
         queries=raw_queries,
         operator=operator,
-        search_mode=search_mode,
+        search_mode=resolved_search_mode,
         ranking=ranking,
         book_ids=book_ids,
         source_code=source_code,
@@ -315,7 +335,7 @@ def search_library(
             stats=stats,
             ultra=(mode == "ultra_compact"),
         )
-        if total_hits == 0 and len(raw_queries) == 1:
+        if include_counts and total_hits == 0 and len(raw_queries) == 1:
             suggestions = db.suggest_spelling(raw_queries[0])
             if suggestions:
                 payload["suggestions"] = suggestions
@@ -326,19 +346,15 @@ def search_library(
         if result["source_code"] == "primary"
     )
 
-    return {
+    response = {
         "query": query,
         "queries": raw_queries,
         "operator": operator,
-        "search_mode": search_mode,
+        "match_mode": match_mode,
         "ranking": ranking,
         "book_ids": book_ids,
         "source_code": source_code,
         "returned_count": len(results),
-        "total_hits": total_hits,
-        "total_hits_unit": "matching_pages",
-        "total_occurrences": stats["matching_occurrences"],
-        "per_query": stats["per_query"],
         "offset": offset,
         "next_offset": offset + limit if has_more else None,
         "primary_hits": primary_hits,
@@ -346,6 +362,12 @@ def search_library(
         "provenance": _GRADE_REMINDER,
         "results": results,
     }
+    if include_counts:
+        response["total_hits"] = total_hits
+        response["total_hits_unit"] = "matching_pages"
+        response["total_occurrences"] = stats["matching_occurrences"]
+        response["per_query"] = stats["per_query"]
+    return response
 
 
 app = mcp.streamable_http_app()

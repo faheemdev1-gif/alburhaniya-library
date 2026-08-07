@@ -14,7 +14,7 @@ def compact_search_response(
             books.setdefault(row["book_id"], {"title": row["book_title"], "tier": row["source_tier"]})
             hit = {
                 "b": row["book_id"], "s": row["seq"],
-                "o": row["occurrences"], "x": row["snippet"],
+                "m": row["match_id"], "x": row["snippet"], "score": row["score"],
             }
             if row["printed_page"] is not None:
                 hit["p"] = row["printed_page"]
@@ -41,7 +41,7 @@ def compact_search_response(
         )
         hit = {
             "book_id": row["book_id"], "seq": row["seq"],
-            "occurrences": row["occurrences"], "excerpt": row["snippet"],
+            "match_id": row["match_id"], "excerpt": row["snippet"], "score": row["score"],
         }
         if row["printed_page"] is not None:
             hit["printed_page"] = row["printed_page"]

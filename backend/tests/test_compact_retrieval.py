@@ -94,9 +94,35 @@ class CompactRetrievalTests(unittest.TestCase):
 
     def test_get_passage_is_bounded(self):
         hit = db.search("المريد", limit=1)[0]
-        passage = db.get_passage(hit["book_id"], hit["seq"], "المريد", 300)
+        passage = db.get_passage_by_match_id(hit["match_id"], 300)
         self.assertIsNotNone(passage)
         self.assertLessEqual(len(passage["passage"]), 750)
+        self.assertEqual(passage["match_id"], hit["match_id"])
+
+    def test_every_search_hit_has_stable_match_id_and_score(self):
+        first = db.search("المريد", limit=3)
+        second = db.search("المريد", limit=3)
+        self.assertEqual([x["match_id"] for x in first], [x["match_id"] for x in second])
+        self.assertTrue(all("score" in x for x in first))
+
+    def test_title_scope_resolves_series_without_catalogue(self):
+        self.assertEqual(db.resolve_book_scope("شرح شراب الوصل"), [
+            "b20", "b21", "b22", "b23", "b24", "b25"
+        ])
+        self.assertEqual(db.resolve_book_scope("تبرئة الذمة"), ["b10", "b11", "b12", "b13"])
+
+    def test_hybrid_recovers_separated_terms(self):
+        exact = db.search("الصلاة في وقتها", search_mode="exact_phrase", limit=5)
+        hybrid = db.hybrid_search(queries=["الصلاة في وقتها"], limit=5)
+        self.assertFalse(exact)
+        self.assertTrue(hybrid)
+
+    def test_compact_response_omits_counts_by_default(self):
+        rows = db.search("الله", limit=2)
+        payload = compact_search_response(rows, limit=2, offset=0, has_more=True)
+        self.assertNotIn("total_hits", payload)
+        self.assertNotIn("total_occurrences", payload)
+        self.assertIn("next_offset", payload)
 
     def test_single_book_search_is_not_diversified(self):
         total = db.count_search(["الله"], book_ids=["b14"])

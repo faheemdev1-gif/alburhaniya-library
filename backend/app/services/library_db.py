@@ -142,6 +142,30 @@ def get_book(book_id: str) -> dict | None:
     return dict(row) if row else None
 
 
+def resolve_book_scope(scope: str) -> list[str]:
+    """Resolve an Arabic title/series fragment to book ids.
+
+    Matching uses the same Arabic normalization as page search, so callers do
+    not need to list the catalogue merely to discover ids.  A scope such as
+    ``شرح شراب الوصل`` deliberately resolves every volume in that series.
+    """
+    needle = normalize_arabic(scope or "", aggressive=True).strip()
+    if not needle:
+        return []
+    rows = _connection().execute(
+        "SELECT book_id, title, source_tier FROM books ORDER BY source_tier, book_id"
+    ).fetchall()
+    exact, partial = [], []
+    for row in rows:
+        title = normalize_arabic(row["title"], aggressive=True)
+        if title == needle:
+            exact.append(row["book_id"])
+        elif needle in title:
+            partial.append(row["book_id"])
+    # An exact title names one work; a partial title commonly names a series.
+    return exact or partial
+
+
 @lru_cache(maxsize=64)
 def _book_grade(book_id: str) -> tuple[str | None, str | None, int]:
     """(grade, code, page_count) — cheap, cached, used on hot paths."""
@@ -449,7 +473,10 @@ def search(
             "printed_page": row["printed_page"], "occurrences": occ,
             "citation_label": row["citation_label"],
             "snippet": snippet,
+            "score": round(1.0 / (1.0 + abs(float(row["relevance"]))), 6),
         }
+        first_match = min((m.start() for m, _ in matches), default=0)
+        result["match_id"] = f"{row['book_id']}-p{row['seq']}-c{first_match}"
         if include_full_text:
             safe_text = _esc(plain_text)
             for pattern in patterns:
@@ -458,6 +485,44 @@ def search(
             result["text"] = plain_text
         results.append(result)
     return results
+
+
+def hybrid_search(**kwargs) -> list[dict]:
+    """Local hybrid lexical retrieval using reciprocal-rank fusion.
+
+    The exact phrase, all-terms and any-term signals complement one another:
+    exact wording receives the strongest vote while concept-like queries still
+    recover pages whose words are separated.  This remains fully local and
+    deterministic; an external embedding service is therefore not required at
+    request time.
+    """
+    queries = kwargs.get("queries") or ([kwargs.get("query")] if kwargs.get("query") else [])
+    limit = int(kwargs.get("limit", 10))
+    offset = int(kwargs.get("offset", 0))
+    pool = min(max((offset + limit) * 8, 40), 400)
+    scores: dict[tuple[str, int], float] = {}
+    records: dict[tuple[str, int], dict] = {}
+    for mode, weight in (("exact_phrase", 1.0), ("all_words", 0.8), ("any_word", 0.35)):
+        call = dict(kwargs)
+        call.update(search_mode=mode, limit=pool, offset=0, diversify_books=False)
+        call.pop("query", None)
+        call["queries"] = queries
+        for rank, row in enumerate(search(**call), start=1):
+            key = (row["book_id"], row["seq"])
+            scores[key] = scores.get(key, 0.0) + weight / (60 + rank)
+            records.setdefault(key, row)
+    ordered = sorted(
+        records,
+        key=lambda key: (
+            records[key]["source_tier"], -scores[key], records[key]["book_id"], records[key]["seq"]
+        ),
+    )
+    fused = []
+    for key in ordered[offset: offset + limit]:
+        row = records[key]
+        row["score"] = round(scores[key], 6)
+        fused.append(row)
+    return fused
 
 
 def _paragraph_window(text: str, match_start: int, match_end: int, context_chars: int) -> tuple[int, int]:
@@ -471,15 +536,27 @@ def _paragraph_window(text: str, match_start: int, match_end: int, context_chars
     return start, end
 
 
-def get_passage(book_id: str, seq: int, query: str, context_chars: int = 800) -> dict | None:
+_MATCH_ID_RE = re.compile(r"^(b\d+)-p(\d+)-c(\d+)$")
+
+
+def get_passage(
+    book_id: str, seq: int, query: str | None = None, context_chars: int = 800,
+    match_start: int | None = None,
+) -> dict | None:
     """Return coherent bounded context around a normalized Arabic match."""
     page = get_page(book_id, seq)
     if page is None:
         return None
-    pattern = _build_highlight_regex(query.strip())
+    pattern = _build_highlight_regex(query.strip()) if query else None
     text = page["text"]
-    match = pattern.search(text)
-    if match:
+    match = pattern.search(text) if pattern else None
+    if match is None and match_start is not None:
+        match_start = max(0, min(match_start, len(text)))
+        match_end = min(len(text), match_start + 1)
+        start, end = _paragraph_window(text, match_start, match_end, context_chars)
+        passage = ("…" if start else "") + text[start:end] + ("…" if end < len(text) else "")
+        occurrences = None
+    elif match:
         start, end = _paragraph_window(text, match.start(), match.end(), context_chars)
         passage = text[start:end]
         prefix, suffix = ("…" if start else ""), ("…" if end < len(text) else "")
@@ -496,6 +573,17 @@ def get_passage(book_id: str, seq: int, query: str, context_chars: int = 800) ->
         "passage": passage, "page_chars": len(text),
         "truncated": len(passage) < len(text),
     }
+
+
+def get_passage_by_match_id(match_id: str, context_chars: int = 800) -> dict | None:
+    match = _MATCH_ID_RE.fullmatch(match_id or "")
+    if not match:
+        return None
+    book_id, seq, start = match.group(1), int(match.group(2)), int(match.group(3))
+    result = get_passage(book_id, seq, context_chars=context_chars, match_start=start)
+    if result is not None:
+        result["match_id"] = match_id
+    return result
 
 
 @lru_cache(maxsize=1)
