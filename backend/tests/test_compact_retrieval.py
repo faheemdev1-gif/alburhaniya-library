@@ -97,7 +97,9 @@ class CompactRetrievalTests(unittest.TestCase):
         passage = db.get_passage_by_match_id(hit["match_id"], 300)
         self.assertIsNotNone(passage)
         self.assertLessEqual(len(passage["passage"]), 750)
-        self.assertEqual(passage["match_id"], hit["match_id"])
+        self.assertNotIn("match_id", passage)
+        self.assertNotIn("source", passage)
+        self.assertNotIn("occurrences", passage)
 
     def test_every_search_hit_has_stable_match_id_and_score(self):
         first = db.search("المريد", limit=3)
@@ -116,6 +118,17 @@ class CompactRetrievalTests(unittest.TestCase):
         hybrid = db.hybrid_search(queries=["الصلاة في وقتها"], limit=5)
         self.assertFalse(exact)
         self.assertTrue(hybrid)
+        self.assertTrue(all(0 <= row["score"] <= 1 for row in hybrid))
+
+    def test_exact_expands_definite_article(self):
+        bare = db.search_stats(["معرفة"])
+        definite = db.search_stats(["المعرفة"])
+        self.assertGreaterEqual(bare["matching_pages"], definite["matching_pages"])
+
+    def test_passage_query_restores_highlighting(self):
+        hit = db.search("المريد", limit=1)[0]
+        passage = db.get_passage(hit["book_id"], hit["seq"], query="المريد", context_chars=300)
+        self.assertIn("<mark>", passage["passage"])
 
     def test_compact_response_omits_counts_by_default(self):
         rows = db.search("الله", limit=2)
@@ -139,6 +152,18 @@ class CompactRetrievalTests(unittest.TestCase):
         self.assertTrue(all_words)
         self.assertTrue(any_word)
 
+    def test_terms_ignore_arabic_stopwords(self):
+        with_stopword = db.search("الصلاة في وقتها", search_mode="all_words", limit=5)
+        without_stopword = db.search("الصلاة وقتها", search_mode="all_words", limit=5)
+        self.assertEqual(
+            [(x["book_id"], x["seq"]) for x in with_stopword],
+            [(x["book_id"], x["seq"]) for x in without_stopword],
+        )
+
+    def test_hybrid_min_score_filters(self):
+        rows = db.hybrid_search(query="الصلاة في وقتها", limit=20, min_score=0.9)
+        self.assertTrue(all(row["score"] >= 0.9 for row in rows))
+
     def test_lexeme_mode_recovers_affixed_hima_forms(self):
         exact = db.search_stats(["حمى"], book_ids=["b14"])
         enumerated = db.search_stats(
@@ -146,8 +171,8 @@ class CompactRetrievalTests(unittest.TestCase):
             operator="OR", book_ids=["b14"],
         )
         lexeme = db.search_stats(["حمى"], book_ids=["b14"], search_mode="lexeme")
-        self.assertEqual(exact["matching_pages"], 7)
-        self.assertEqual(enumerated["matching_pages"], 16)
+        self.assertGreaterEqual(exact["matching_pages"], 14)
+        self.assertGreaterEqual(enumerated["matching_pages"], 16)
         self.assertGreaterEqual(lexeme["matching_pages"], enumerated["matching_pages"])
 
     def test_search_stats_distinguish_pages_occurrences_and_terms(self):

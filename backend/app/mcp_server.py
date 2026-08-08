@@ -192,13 +192,42 @@ def get_page(
 def get_passage(
     match_id: str,
     context_chars: int = 600,
+    query: Optional[str] = None,
 ) -> dict[str, Any]:
     """Read bounded context for a stable match returned by search_library."""
     context_chars = max(200, min(context_chars, 2000))
-    result = db.get_passage_by_match_id(match_id, context_chars)
+    if query:
+        match = db._MATCH_ID_RE.fullmatch(match_id or "")
+        result = (db.get_passage(match.group(1), int(match.group(2)), query=query,
+                                 context_chars=context_chars) if match else None)
+    else:
+        result = db.get_passage_by_match_id(match_id, context_chars)
     if result is None:
         return {"error": f"invalid or unknown match_id '{match_id}'"}
     return result
+
+
+@mcp.tool(structured_output=True)
+def get_passages(
+    match_ids: list[str],
+    context_chars: int = 600,
+    query: Optional[str] = None,
+) -> dict[str, Any]:
+    """Read several bounded passages in one round trip (maximum 20)."""
+    context_chars = max(200, min(context_chars, 2000))
+    ids = match_ids[:20]
+    results = []
+    for match_id in ids:
+        match = db._MATCH_ID_RE.fullmatch(match_id or "")
+        if not match:
+            results.append({"error": f"invalid or unknown match_id '{match_id}'"})
+            continue
+        result = db.get_passage(
+            match.group(1), int(match.group(2)), query=query,
+            context_chars=context_chars, match_start=int(match.group(3)),
+        )
+        results.append(result or {"error": f"invalid or unknown match_id '{match_id}'"})
+    return {"returned_count": len(results), "results": results}
 
 
 @mcp.tool(structured_output=True)
@@ -221,6 +250,7 @@ def search_library(
     diversify_books: bool = True,
     max_per_book: int = 2,
     include_counts: bool = False,
+    min_score: float = 0.0,
 ) -> dict[str, Any]:
     """Search exact Arabic words/phrases, with optional OR/AND alternatives.
 
@@ -253,6 +283,7 @@ def search_library(
     if not raw_queries:
         return {"error": "query or queries cannot be empty"}
     max_per_book = max(1, min(max_per_book, 10))
+    min_score = max(0.0, min(min_score, 1.0))
 
     if book_scope:
         scoped_ids = db.resolve_book_scope(book_scope)
@@ -305,7 +336,7 @@ def search_library(
         )
 
     search_fn = db.hybrid_search if match_mode == "hybrid" else db.search
-    rows = search_fn(
+    search_args = dict(
         query=query,
         queries=raw_queries,
         operator=operator,
@@ -321,6 +352,9 @@ def search_library(
         diversify_books=diversify_books,
         max_per_book=max_per_book,
     )
+    if match_mode == "hybrid":
+        search_args["min_score"] = min_score
+    rows = search_fn(**search_args)
 
     has_more = len(rows) > limit
     results = rows[:limit]

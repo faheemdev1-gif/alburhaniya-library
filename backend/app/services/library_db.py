@@ -22,6 +22,7 @@ import sqlite3
 from difflib import get_close_matches
 from functools import lru_cache
 from html import escape as _esc
+from itertools import product
 
 from app.core.config import get_settings
 from app.core.arabic_utils import normalize_arabic
@@ -32,6 +33,9 @@ _DIACRITIC_CLASS = (
 _ALEF = "\u0622\u0623\u0625\u0671\u0627"     # آأإٱا
 _YA = "\u0649\u064a"                         # ىي
 _TA = "\u0629\u0647"                         # ةه
+_ARABIC_STOPWORDS = frozenset({"في", "على", "من", "الى", "عن", "ما", "ان", "الذي"})
+_CHUNK_CHARS = 700
+_CHUNK_OVERLAP = 120
 
 
 @lru_cache(maxsize=1)
@@ -249,9 +253,22 @@ def _query_expression(query: str, search_mode: str = "exact_phrase") -> str:
         })
         return " OR ".join('"' + v.replace('"', '""') + '"' for v in variants)
     if search_mode == "exact_phrase":
-        return '"' + normalized.replace('"', '""') + '"'
+        # FTS token boundaries make معرفة and المعرفة distinct. Search both
+        # definite and indefinite forms so exact mode does not silently lose
+        # matches merely because the article is attached.
+        choices = []
+        for word in words:
+            variants = {word}
+            if word.startswith("ال") and len(word) > 4:
+                variants.add(word[2:])
+            elif len(word) >= 3:
+                variants.add("ال" + word)
+            choices.append(sorted(variants))
+        phrases = [" ".join(parts) for parts in product(*choices)]
+        return " OR ".join('"' + phrase.replace('"', '""') + '"' for phrase in phrases)
     if search_mode == "all_words":
-        return " AND ".join('"' + w.replace('"', '""') + '"' for w in words)
+        content_words = [w for w in words if w not in _ARABIC_STOPWORDS] or words
+        return " AND ".join('"' + w.replace('"', '""') + '"' for w in content_words)
     if search_mode == "any_word":
         return " OR ".join('"' + w.replace('"', '""') + '"' for w in words)
     raise ValueError("search_mode must be exact_phrase, all_words, any_word, or lexeme")
@@ -389,6 +406,22 @@ def _ranking_order(ranking: str, diversified: bool = False) -> str:
     raise ValueError("ranking must be relevance, primary_first, chronological, or book_order")
 
 
+def _best_chunk_score(text: str, terms: list[str]) -> float:
+    """Return 0..1 co-occurrence quality inside overlapping character chunks."""
+    if not terms:
+        return 0.0
+    normalized = normalize_arabic(text, aggressive=True)
+    best = 0.0
+    step = _CHUNK_CHARS - _CHUNK_OVERLAP
+    for start in range(0, max(1, len(normalized)), step):
+        chunk = normalized[start:start + _CHUNK_CHARS]
+        present = sum(1 for term in terms if term in chunk)
+        coverage = present / len(terms)
+        density = min(1.0, sum(chunk.count(term) for term in terms) / len(terms))
+        best = max(best, 0.8 * coverage + 0.2 * density)
+    return best
+
+
 def search(
     query: str | None = None,
     queries: list[str] | None = None,
@@ -497,20 +530,35 @@ def hybrid_search(**kwargs) -> list[dict]:
     request time.
     """
     queries = kwargs.get("queries") or ([kwargs.get("query")] if kwargs.get("query") else [])
+    filtered_queries = []
+    for query in queries:
+        words = [w for w in normalize_arabic(query, aggressive=True).split()
+                 if w and w not in _ARABIC_STOPWORDS]
+        if words:
+            filtered_queries.append(" ".join(words))
+    queries = filtered_queries or queries
     limit = int(kwargs.get("limit", 10))
     offset = int(kwargs.get("offset", 0))
     pool = min(max((offset + limit) * 8, 40), 400)
     scores: dict[tuple[str, int], float] = {}
     records: dict[tuple[str, int], dict] = {}
-    for mode, weight in (("exact_phrase", 1.0), ("all_words", 0.8), ("any_word", 0.35)):
+    # Candidate generation stays page-level (the shipped index has pages), but
+    # final co-occurrence is measured in overlapping local chunks.
+    for mode, weight in (("exact_phrase", 1.0), ("all_words", 0.8), ("any_word", 0.2)):
         call = dict(kwargs)
         call.update(search_mode=mode, limit=pool, offset=0, diversify_books=False)
         call.pop("query", None)
+        call.pop("min_score", None)
         call["queries"] = queries
         for rank, row in enumerate(search(**call), start=1):
             key = (row["book_id"], row["seq"])
             scores[key] = scores.get(key, 0.0) + weight / (60 + rank)
             records.setdefault(key, row)
+    terms = sorted({w for q in queries for w in normalize_arabic(q, aggressive=True).split()})
+    for key, row in records.items():
+        page = get_page(row["book_id"], row["seq"])
+        best = _best_chunk_score(page["text"], terms) if page else 0.0
+        scores[key] = scores.get(key, 0.0) + best
     ordered = sorted(
         records,
         key=lambda key: (
@@ -518,10 +566,14 @@ def hybrid_search(**kwargs) -> list[dict]:
         ),
     )
     fused = []
-    for key in ordered[offset: offset + limit]:
+    max_raw = max(scores.values(), default=1.0)
+    min_score = max(0.0, min(float(kwargs.get("min_score", 0.0)), 1.0))
+    eligible = [key for key in ordered if scores[key] / max_raw >= min_score]
+    for key in eligible[offset: offset + limit]:
         row = records[key]
-        row["score"] = round(scores[key], 6)
-        fused.append(row)
+        row["score"] = round(scores[key] / max_raw, 6)
+        if row["score"] >= min_score:
+            fused.append(row)
     return fused
 
 
@@ -565,14 +617,14 @@ def get_passage(
     else:
         passage = text[: context_chars * 2]
         occurrences = 0
-    return {
+    return {key: value for key, value in {
         "book_id": page["book_id"], "book_title": page["book_title"],
-        "source": page["source_code"], "seq": page["seq"],
+        "tier": page["source_tier"], "seq": page["seq"],
         "printed_page": page["printed_page"], "citation_label": page["citation_label"],
         "occurrences": occurrences,
         "passage": passage, "page_chars": len(text),
         "truncated": len(passage) < len(text),
-    }
+    }.items() if value is not None}
 
 
 def get_passage_by_match_id(match_id: str, context_chars: int = 800) -> dict | None:
@@ -580,10 +632,7 @@ def get_passage_by_match_id(match_id: str, context_chars: int = 800) -> dict | N
     if not match:
         return None
     book_id, seq, start = match.group(1), int(match.group(2)), int(match.group(3))
-    result = get_passage(book_id, seq, context_chars=context_chars, match_start=start)
-    if result is not None:
-        result["match_id"] = match_id
-    return result
+    return get_passage(book_id, seq, context_chars=context_chars, match_start=start)
 
 
 @lru_cache(maxsize=1)
