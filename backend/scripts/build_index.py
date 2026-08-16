@@ -29,6 +29,7 @@ import json
 import os
 import sqlite3
 import sys
+import re
 
 sys.path.insert(0, os.path.dirname(__file__))
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "app", "core"))
@@ -75,11 +76,16 @@ CREATE TABLE pages (
     seq           INTEGER NOT NULL,
     printed_page  TEXT,
     citation_label TEXT,
+    qasida_number INTEGER,
+    qasida_title TEXT,
+    bayt_from INTEGER,
+    bayt_to INTEGER,
     text          TEXT NOT NULL,
     norm_text     TEXT NOT NULL,
     FOREIGN KEY (book_id) REFERENCES books(book_id)
 );
 CREATE INDEX idx_pages_book_seq ON pages(book_id, seq);
+CREATE INDEX idx_pages_qasida ON pages(book_id, qasida_number, bayt_from);
 
 CREATE VIRTUAL TABLE pages_fts USING fts5(
     norm_text,
@@ -92,6 +98,34 @@ CREATE VIRTUAL TABLE pages_fts USING fts5(
 
 def slug_for(n: int) -> str:
     return f"b{n:02d}"
+
+
+_QASIDA_HEADING = re.compile(r"الْ?قَ?صِ?يدَ?ة\s+[^:]{2,80}:\s*([^\n]+)")
+_BAYT_NUMBER = re.compile(r"(?<![\d-])(\d{1,3})\s*-\s*(?=[\u0621-\u064A])")
+
+
+def annotate_diwan_pages(pages: list[dict]) -> list[dict]:
+    """Carry qasida and bayt structure across b14 page boundaries."""
+    qasida_number, qasida_title, last_bayt = 0, None, None
+    for page in pages:
+        text = "\n\n".join(page["paragraphs"])
+        heading = _QASIDA_HEADING.search(text)
+        if heading:
+            qasida_number += 1
+            qasida_title = heading.group(1).strip()
+            last_bayt = None
+        bayts = [int(n) for n in _BAYT_NUMBER.findall(text)]
+        page["qasida_number"] = qasida_number or None
+        page["qasida_title"] = qasida_title
+        page["bayt_from"] = bayts[0] if bayts else last_bayt
+        page["bayt_to"] = bayts[-1] if bayts else last_bayt
+        if bayts:
+            last_bayt = bayts[-1]
+        if qasida_number and page["bayt_from"] is not None:
+            span = (f"البيت {page['bayt_from']}" if page["bayt_from"] == page["bayt_to"]
+                    else f"الأبيات {page['bayt_from']}–{page['bayt_to']}")
+            page["page_label"] = f"القصيدة {qasida_number}، {span}"
+    return pages
 
 
 def build():
@@ -145,6 +179,8 @@ def build():
         # whose source export has no real page markers). Ordinary pages are
         # unchanged; only oversized records are segmented.
         pages = split_oversized_pages(pages)
+        if slug == "b14":
+            pages = annotate_diwan_pages(pages)
 
         src = book_sources.get(slug)
         if src is None:
@@ -183,9 +219,12 @@ def build():
             text = "\n\n".join(page["paragraphs"])
             norm = normalize_arabic(text, aggressive=True)
             conn.execute(
-                "INSERT INTO pages (book_id, seq, printed_page, citation_label, text, norm_text) "
-                "VALUES (?, ?, ?, ?, ?, ?)",
-                (slug, seq, page["printed_page"], page.get("page_label"), text, norm),
+                "INSERT INTO pages (book_id, seq, printed_page, citation_label, qasida_number, "
+                "qasida_title, bayt_from, bayt_to, text, norm_text) "
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                (slug, seq, page["printed_page"], page.get("page_label"),
+                 page.get("qasida_number"), page.get("qasida_title"),
+                 page.get("bayt_from"), page.get("bayt_to"), text, norm),
             )
         total_pages += len(pages)
         print(f"{slug}  [{grades[grade]['code']:<9}] {len(pages):4d} pages  {title}")

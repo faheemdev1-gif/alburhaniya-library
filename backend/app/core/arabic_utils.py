@@ -25,6 +25,21 @@ _DIACRITICS = re.compile(
 
 _PUNCT_WS = re.compile(r"[\u060c\u061b\u061f،؛؟!\"#$%&'()*+,\-./:;<=>?@\[\\\]^_`{|}~\s]+")
 
+# Function words never contribute to lexical relevance.  Keep this in the
+# canonical text module so terms, hybrid ranking and future indexers cannot
+# silently acquire different lists.
+ARABIC_STOPWORDS = frozenset({"في", "على", "من", "الى", "عن", "ما", "ان", "الذي"})
+
+# Conservative concept aliases used by proximity/terms retrieval.  These are
+# lexical families, not a claim of semantic equivalence; they only generate
+# candidates which are still ranked by chunk-local co-occurrence.
+_LEXICAL_FAMILIES = {
+    "المحافظه": ("حافظ", "حفظ", "المحافظه"),
+    "محافظه": ("حافظ", "حفظ", "محافظه"),
+    "الصلاه": ("الصلاه", "صلاه"),
+    "وقتها": ("وقتها", "وقت"),
+}
+
 
 def strip_diacritics(text: str) -> str:
     return _DIACRITICS.sub("", text)
@@ -76,6 +91,24 @@ def normalize_arabic(text: str, *, aggressive: bool = False) -> str:
     # collapse whitespace
     text = re.sub(r"\s+", " ", text).strip()
     return text
+
+
+def normalized_tokens(text: str, *, drop_stopwords: bool = False) -> list[str]:
+    """Return canonical Arabic tokens for every retrieval subsystem."""
+    words = normalize_arabic(text, aggressive=True).split()
+    return [w for w in words if not drop_stopwords or w not in ARABIC_STOPWORDS]
+
+
+def lexical_variants(token: str) -> tuple[str, ...]:
+    """Small, deterministic lexical expansion for proximity retrieval."""
+    token = normalize_arabic(token, aggressive=True)
+    variants = {token}
+    if token.startswith("ال") and len(token) > 4:
+        variants.add(token[2:])
+    elif len(token) >= 3:
+        variants.add("ال" + token)
+    variants.update(_LEXICAL_FAMILIES.get(token, ()))
+    return tuple(sorted(variants))
 
 
 def split_into_chunks(text: str, chunk_size: int = 400, overlap: int = 80) -> list[str]:

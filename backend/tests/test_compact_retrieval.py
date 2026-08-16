@@ -205,6 +205,40 @@ class CompactRetrievalTests(unittest.TestCase):
         from app.core.arabic_utils import normalize_arabic
         self.assertEqual(normalize_arabic("ک ی ے"), "ك ي ي")
 
+    def test_report_terms_query_recovers_results(self):
+        rows = db.search("المحافظة الصلاة وقتها", search_mode="all_words", limit=5)
+        self.assertTrue(rows)
+        self.assertTrue(all(row["match_type"] == "terms" for row in rows))
+
+    def test_scores_are_higher_is_better_in_every_relevance_mode(self):
+        exact = db.search("المريد", ranking="relevance", limit=8)
+        hybrid = db.hybrid_search(query="الصلاة في وقتها", limit=8)
+        self.assertEqual([x["score"] for x in exact],
+                         sorted((x["score"] for x in exact), reverse=True))
+        self.assertEqual([x["score"] for x in hybrid],
+                         sorted((x["score"] for x in hybrid), reverse=True))
+
+    def test_normalized_and_surface_occurrences_are_explicit(self):
+        bare = db.search_stats(["معرفة"])
+        definite = db.search_stats(["المعرفة"])
+        self.assertEqual(bare["normalized_occurrences"], definite["normalized_occurrences"])
+        self.assertNotEqual(bare["surface_occurrences"], definite["surface_occurrences"])
+
+    def test_hybrid_uses_real_local_match_offsets(self):
+        rows = db.hybrid_search(query="المحافظة على الصلاة في وقتها", limit=5)
+        self.assertTrue(rows)
+        self.assertTrue(any(not row["match_id"].endswith("-c0") for row in rows))
+        self.assertTrue(all(row["match_type"] == "hybrid" for row in rows))
+
+    def test_diwan_structure_and_qasida_scope(self):
+        page = db.get_page("b14", 43)
+        self.assertEqual(page["qasida_number"], 3)
+        self.assertIsNotNone(page["qasida_title"])
+        self.assertIsNotNone(page["bayt_from"])
+        rows = db.search("الله", book_ids=["b14"], qasida_number=3, limit=3)
+        self.assertTrue(rows)
+        self.assertTrue(all(row["qasida_number"] == 3 for row in rows))
+
 
 if __name__ == "__main__":
     unittest.main()

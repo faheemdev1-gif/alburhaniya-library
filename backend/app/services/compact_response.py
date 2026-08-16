@@ -15,6 +15,7 @@ def compact_search_response(
             hit = {
                 "b": row["book_id"], "s": row["seq"],
                 "m": row["match_id"], "x": row["snippet"], "score": row["score"],
+                "type": row["match_type"],
             }
             if row["printed_page"] is not None:
                 hit["p"] = row["printed_page"]
@@ -42,12 +43,15 @@ def compact_search_response(
         hit = {
             "book_id": row["book_id"], "seq": row["seq"],
             "match_id": row["match_id"], "excerpt": row["snippet"], "score": row["score"],
+            "match_type": row["match_type"],
         }
         if row["printed_page"] is not None:
             hit["printed_page"] = row["printed_page"]
         elif row.get("citation_label"):
             hit["citation_label"] = row["citation_label"]
         hits.append(hit)
+        if row.get("expanded_passage"):
+            hit["expanded_passage"] = row["expanded_passage"]
 
     response = {"returned_count": len(hits), "books": books, "results": hits}
     if total_hits is not None:

@@ -45,7 +45,7 @@ from app.services.compact_response import compact_search_response
 
 _RENDER_HOST = "burhaniya-library-backend.onrender.com"
 
-ResponseMode = Literal["compact", "ultra_compact", "standard"]
+ResponseMode = Literal["compact", "ultra_compact"]
 
 _GRADE_REMINDER = "primary=authoritative; secondary=supporting only"
 
@@ -190,12 +190,24 @@ def get_page(
 
 @mcp.tool(structured_output=True)
 def get_passage(
-    match_id: str,
+    match_id: Optional[str] = None,
+    match_ids: Optional[list[str]] = None,
     context_chars: int = 600,
     query: Optional[str] = None,
 ) -> dict[str, Any]:
-    """Read bounded context for a stable match returned by search_library."""
+    """Read one or several bounded passages returned by search_library."""
     context_chars = max(200, min(context_chars, 2000))
+    if match_ids:
+        results = []
+        for item in match_ids[:20]:
+            match = db._MATCH_ID_RE.fullmatch(item or "")
+            result = (db.get_passage(match.group(1), int(match.group(2)), query=query,
+                      context_chars=context_chars, match_start=int(match.group(3)))
+                      if match else None)
+            results.append(result or {"error": f"invalid or unknown match_id '{item}'"})
+        return {"returned_count": len(results), "results": results}
+    if not match_id:
+        return {"error": "match_id or match_ids is required"}
     if query:
         match = db._MATCH_ID_RE.fullmatch(match_id or "")
         result = (db.get_passage(match.group(1), int(match.group(2)), query=query,
@@ -205,29 +217,6 @@ def get_passage(
     if result is None:
         return {"error": f"invalid or unknown match_id '{match_id}'"}
     return result
-
-
-@mcp.tool(structured_output=True)
-def get_passages(
-    match_ids: list[str],
-    context_chars: int = 600,
-    query: Optional[str] = None,
-) -> dict[str, Any]:
-    """Read several bounded passages in one round trip (maximum 20)."""
-    context_chars = max(200, min(context_chars, 2000))
-    ids = match_ids[:20]
-    results = []
-    for match_id in ids:
-        match = db._MATCH_ID_RE.fullmatch(match_id or "")
-        if not match:
-            results.append({"error": f"invalid or unknown match_id '{match_id}'"})
-            continue
-        result = db.get_passage(
-            match.group(1), int(match.group(2)), query=query,
-            context_chars=context_chars, match_start=int(match.group(3)),
-        )
-        results.append(result or {"error": f"invalid or unknown match_id '{match_id}'"})
-    return {"returned_count": len(results), "results": results}
 
 
 @mcp.tool(structured_output=True)
@@ -242,15 +231,18 @@ def search_library(
     source_code: Optional[str] = None,
     page_from: Optional[int] = None,
     page_to: Optional[int] = None,
-    context_chars: int = 120,
+    context_chars: int = 60,
     mode: ResponseMode = "compact",
-    match_mode: Literal["exact", "terms", "hybrid", "lexeme"] = "exact",
+    match_mode: Literal["auto", "exact", "terms", "hybrid", "lexeme"] = "auto",
     search_mode: Optional[Literal["exact_phrase", "all_words", "any_word", "lexeme"]] = None,
     ranking: Literal["relevance", "primary_first", "chronological", "book_order"] = "primary_first",
     diversify_books: bool = True,
     max_per_book: int = 2,
     include_counts: bool = False,
     min_score: float = 0.0,
+    qasida_number: Optional[int] = None,
+    expand_top: int = 0,
+    expand_chars: int = 600,
 ) -> dict[str, Any]:
     """Search exact Arabic words/phrases, with optional OR/AND alternatives.
 
@@ -268,8 +260,9 @@ def search_library(
         page_to: Optional last page sequence, inclusive.
         context_chars: Context on each side of the match. Defaults to 120 and
             is restricted to 40–300.
-        mode: compact, ultra_compact, or standard.
-        match_mode: exact, terms, hybrid, or lexeme. Lexeme mode
+        mode: compact or ultra_compact.
+        match_mode: auto, exact, terms, hybrid, or lexeme. Auto cascades
+            exact, terms, then hybrid. Every hit declares match_type. Lexeme
             accepts one Arabic word per query and expands common proclitics,
             suffixes, and weak-final ي/ا forms for recall-oriented census work.
         ranking: relevance, primary_first, chronological, or book_order.
@@ -294,6 +287,7 @@ def search_library(
             return {"error": "book_ids and book_scope do not overlap"}
 
     resolved_search_mode = search_mode or {
+        "auto": "exact_phrase",
         "exact": "exact_phrase", "terms": "all_words", "lexeme": "lexeme",
         "hybrid": "all_words",
     }[match_mode]
@@ -335,7 +329,26 @@ def search_library(
             search_mode=resolved_search_mode,
         )
 
-    search_fn = db.hybrid_search if match_mode == "hybrid" else db.search
+    effective_match_mode = match_mode
+    if match_mode == "auto":
+        cascade = (("exact", "exact_phrase", db.search),
+                   ("terms", "all_words", db.search),
+                   ("hybrid", "all_words", db.hybrid_search))
+        rows = []
+        for effective_match_mode, resolved_search_mode, candidate_fn in cascade:
+            probe = dict(query=query, queries=raw_queries, operator=operator,
+                         search_mode=resolved_search_mode, ranking=ranking,
+                         book_ids=book_ids, source_code=source_code,
+                         page_from=page_from, page_to=page_to, limit=limit + 1,
+                         offset=offset, context_chars=context_chars,
+                         diversify_books=diversify_books, max_per_book=max_per_book,
+                         qasida_number=qasida_number)
+            if candidate_fn is db.hybrid_search:
+                probe["min_score"] = min_score
+            rows = candidate_fn(**probe)
+            if rows:
+                break
+    search_fn = db.hybrid_search if effective_match_mode == "hybrid" else db.search
     search_args = dict(
         query=query,
         queries=raw_queries,
@@ -351,13 +364,21 @@ def search_library(
         context_chars=context_chars,
         diversify_books=diversify_books,
         max_per_book=max_per_book,
+        qasida_number=qasida_number,
     )
-    if match_mode == "hybrid":
+    if effective_match_mode == "hybrid":
         search_args["min_score"] = min_score
-    rows = search_fn(**search_args)
+    if match_mode != "auto":
+        rows = search_fn(**search_args)
 
     has_more = len(rows) > limit
     results = rows[:limit]
+    expand_top = max(0, min(expand_top, len(results)))
+    expand_chars = max(200, min(expand_chars, 2000))
+    for row in results[:expand_top]:
+        row["expanded_passage"] = db.get_passage_by_match_id(
+            row["match_id"], expand_chars
+        )
 
     if mode in ("compact", "ultra_compact"):
         payload = compact_search_response(

@@ -25,7 +25,9 @@ from html import escape as _esc
 from itertools import product
 
 from app.core.config import get_settings
-from app.core.arabic_utils import normalize_arabic
+from app.core.arabic_utils import (
+    ARABIC_STOPWORDS, lexical_variants, normalize_arabic, normalized_tokens,
+)
 
 _DIACRITIC_CLASS = (
     "[\u064b-\u065f\u0610-\u061a\u06d6-\u06dc\u06df-\u06e4\u06e7\u06e8\u06ea-\u06ed\u0640]*"
@@ -33,7 +35,6 @@ _DIACRITIC_CLASS = (
 _ALEF = "\u0622\u0623\u0625\u0671\u0627"     # آأإٱا
 _YA = "\u0649\u064a"                         # ىي
 _TA = "\u0629\u0647"                         # ةه
-_ARABIC_STOPWORDS = frozenset({"في", "على", "من", "الى", "عن", "ما", "ان", "الذي"})
 _CHUNK_CHARS = 700
 _CHUNK_OVERLAP = 120
 
@@ -189,7 +190,8 @@ def get_page(book_id: str, seq: int) -> dict | None:
     conn = _connection()
     row = conn.execute(
         """
-        SELECT p.book_id, p.seq, p.printed_page, p.citation_label, p.text,
+        SELECT p.book_id, p.seq, p.printed_page, p.citation_label,
+               p.qasida_number, p.qasida_title, p.bayt_from, p.bayt_to, p.text,
                b.title AS book_title, b.page_count AS total_pages,
                b.source_grade, b.source_code, b.source_tier
         FROM pages p
@@ -267,8 +269,14 @@ def _query_expression(query: str, search_mode: str = "exact_phrase") -> str:
         phrases = [" ".join(parts) for parts in product(*choices)]
         return " OR ".join('"' + phrase.replace('"', '""') + '"' for phrase in phrases)
     if search_mode == "all_words":
-        content_words = [w for w in words if w not in _ARABIC_STOPWORDS] or words
-        return " AND ".join('"' + w.replace('"', '""') + '"' for w in content_words)
+        content_words = normalized_tokens(query, drop_stopwords=True) or words
+        groups = []
+        for word in content_words:
+            variants = lexical_variants(word)
+            groups.append("(" + " OR ".join(
+                '"' + v.replace('"', '""') + '"' for v in variants
+            ) + ")")
+        return " AND ".join(groups)
     if search_mode == "any_word":
         return " OR ".join('"' + w.replace('"', '""') + '"' for w in words)
     raise ValueError("search_mode must be exact_phrase, all_words, any_word, or lexeme")
@@ -315,7 +323,8 @@ def _fts_expression(
     return joiner.join(f"({e})" for e in expressions)
 
 def _search_filters(
-    *, book_ids=None, source_code=None, page_from=None, page_to=None
+    *, book_ids=None, source_code=None, page_from=None, page_to=None,
+    qasida_number=None
 ) -> tuple[str, list]:
     sql, params = "", []
     if book_ids:
@@ -331,6 +340,9 @@ def _search_filters(
     if page_to is not None:
         sql += " AND p.seq <= ?"
         params.append(page_to)
+    if qasida_number is not None:
+        sql += " AND p.qasida_number = ?"
+        params.append(qasida_number)
     return sql, params
 
 
@@ -365,7 +377,8 @@ def search_stats(
     """Return explicit page and occurrence census, including each alternative."""
     expression = _fts_expression(queries, operator, search_mode)
     if not expression:
-        return {"matching_pages": 0, "matching_occurrences": 0, "per_query": []}
+        return {"matching_pages": 0, "normalized_occurrences": 0,
+                "surface_occurrences": 0, "per_query": []}
     filters, params = _search_filters(
         book_ids=book_ids, source_code=source_code,
         page_from=page_from, page_to=page_to,
@@ -375,22 +388,44 @@ def search_stats(
              JOIN books b ON b.book_id = p.book_id
              WHERE pages_fts MATCH ?""" + filters
     rows = _connection().execute(sql, [expression, *params]).fetchall()
-    aggregate_patterns = [_pattern_for_query(q, search_mode) for q in queries]
+    aggregate_patterns = [
+        _pattern_for_query(q, "lexeme" if len(normalized_tokens(q)) == 1 else search_mode)
+        for q in queries
+    ]
     per_query = []
     for query in queries:
         q_expression = _fts_expression([query], "OR", search_mode)
         q_rows = _connection().execute(sql, [q_expression, *params]).fetchall()
-        pattern = _pattern_for_query(query, search_mode)
+        pattern = _pattern_for_query(
+            query, "lexeme" if len(normalized_tokens(query)) == 1 else search_mode
+        )
+        surface_pattern = re.compile(re.escape(normalize_arabic(query, aggressive=False)))
         per_query.append({
             "query": query,
             "matching_pages": len(q_rows),
-            "occurrences": sum(_unique_occurrence_count(r["text"], [pattern]) for r in q_rows),
+            "normalized_occurrences": sum(
+                _unique_occurrence_count(r["text"], [pattern]) for r in q_rows
+            ),
+            "surface_occurrences": sum(
+                len(surface_pattern.findall(normalize_arabic(r["text"], aggressive=False)))
+                for r in q_rows
+            ),
         })
+        per_query[-1]["occurrences"] = per_query[-1]["normalized_occurrences"]
+    normalized_occurrences = sum(
+        _unique_occurrence_count(r["text"], aggregate_patterns) for r in rows
+    )
+    surface_occurrences = sum(
+        sum(normalize_arabic(r["text"], aggressive=False).count(
+            normalize_arabic(q, aggressive=False)) for q in queries)
+        for r in rows
+    )
     return {
         "matching_pages": len(rows),
-        "matching_occurrences": sum(
-            _unique_occurrence_count(r["text"], aggregate_patterns) for r in rows
-        ),
+        "normalized_occurrences": normalized_occurrences,
+        "surface_occurrences": surface_occurrences,
+        # Compatibility alias; unlike the old field its polarity is explicit.
+        "matching_occurrences": normalized_occurrences,
         "per_query": per_query,
     }
 
@@ -406,20 +441,24 @@ def _ranking_order(ranking: str, diversified: bool = False) -> str:
     raise ValueError("ranking must be relevance, primary_first, chronological, or book_order")
 
 
-def _best_chunk_score(text: str, terms: list[str]) -> float:
-    """Return 0..1 co-occurrence quality inside overlapping character chunks."""
-    if not terms:
-        return 0.0
+def _best_chunk_score(text: str, term_groups: list[tuple[str, ...]]) -> tuple[float, int]:
+    """Return (0..1 quality, chunk start) for the best local window."""
+    if not term_groups:
+        return (0.0, 0)
     normalized = normalize_arabic(text, aggressive=True)
     best = 0.0
     step = _CHUNK_CHARS - _CHUNK_OVERLAP
     for start in range(0, max(1, len(normalized)), step):
         chunk = normalized[start:start + _CHUNK_CHARS]
-        present = sum(1 for term in terms if term in chunk)
-        coverage = present / len(terms)
-        density = min(1.0, sum(chunk.count(term) for term in terms) / len(terms))
-        best = max(best, 0.8 * coverage + 0.2 * density)
-    return best
+        hits = [max((chunk.count(term) for term in group), default=0) for group in term_groups]
+        coverage = sum(1 for n in hits if n) / len(term_groups)
+        density = min(1.0, sum(hits) / len(term_groups))
+        score = 0.8 * coverage + 0.2 * density
+        if score > best:
+            positions = [chunk.find(term) for group in term_groups for term in group
+                         if chunk.find(term) >= 0]
+            best, best_start = score, start + (min(positions) if positions else 0)
+    return (best, locals().get("best_start", 0))
 
 
 def search(
@@ -438,6 +477,7 @@ def search(
     include_full_text: bool = False,
     diversify_books: bool = True,
     max_per_book: int = 2,
+    qasida_number: int | None = None,
 ) -> list[dict]:
     """Arabic FTS search with explicit modes, ranking, and safe diversity."""
     raw_queries = queries or ([query] if query else [])
@@ -447,7 +487,7 @@ def search(
     conn = _connection()
     filters, filter_params = _search_filters(
         book_ids=book_ids, source_code=source_code,
-        page_from=page_from, page_to=page_to,
+        page_from=page_from, page_to=page_to, qasida_number=qasida_number,
     )
 
     # Diversification is useful across a library, but it must never truncate a
@@ -456,7 +496,8 @@ def search(
 
     base = """
         SELECT p.book_id, b.title AS book_title, b.source_grade, b.source_code,
-               b.source_tier, p.seq, p.printed_page, p.citation_label, p.text,
+               b.source_tier, p.seq, p.printed_page, p.citation_label,
+               p.qasida_number, p.qasida_title, p.bayt_from, p.bayt_to, p.text,
                bm25(pages_fts) AS relevance
         FROM pages_fts
         JOIN pages p ON p.id = pages_fts.rowid
@@ -505,8 +546,14 @@ def search(
             "seq": row["seq"], "page_number": row["seq"], "page_label": label,
             "printed_page": row["printed_page"], "occurrences": occ,
             "citation_label": row["citation_label"],
+            "qasida_number": row["qasida_number"], "qasida_title": row["qasida_title"],
+            "bayt_from": row["bayt_from"], "bayt_to": row["bayt_to"],
             "snippet": snippet,
-            "score": round(1.0 / (1.0 + abs(float(row["relevance"]))), 6),
+            "_raw_relevance": -float(row["relevance"]),
+            "match_type": {
+                "exact_phrase": "exact", "all_words": "terms",
+                "any_word": "terms", "lexeme": "lexeme",
+            }[search_mode],
         }
         first_match = min((m.start() for m, _ in matches), default=0)
         result["match_id"] = f"{row['book_id']}-p{row['seq']}-c{first_match}"
@@ -517,6 +564,11 @@ def search(
             result["highlight"] = safe_text
             result["text"] = plain_text
         results.append(result)
+    raw_scores = [item.pop("_raw_relevance") for item in results]
+    if raw_scores:
+        low, high = min(raw_scores), max(raw_scores)
+        for item, raw in zip(results, raw_scores):
+            item["score"] = round((raw - low) / (high - low), 6) if high > low else 1.0
     return results
 
 
@@ -532,8 +584,7 @@ def hybrid_search(**kwargs) -> list[dict]:
     queries = kwargs.get("queries") or ([kwargs.get("query")] if kwargs.get("query") else [])
     filtered_queries = []
     for query in queries:
-        words = [w for w in normalize_arabic(query, aggressive=True).split()
-                 if w and w not in _ARABIC_STOPWORDS]
+        words = normalized_tokens(query, drop_stopwords=True)
         if words:
             filtered_queries.append(" ".join(words))
     queries = filtered_queries or queries
@@ -554,15 +605,19 @@ def hybrid_search(**kwargs) -> list[dict]:
             key = (row["book_id"], row["seq"])
             scores[key] = scores.get(key, 0.0) + weight / (60 + rank)
             records.setdefault(key, row)
-    terms = sorted({w for q in queries for w in normalize_arabic(q, aggressive=True).split()})
+    term_groups = [lexical_variants(w) for q in queries
+                   for w in normalized_tokens(q, drop_stopwords=True)]
+    chunk_starts = {}
     for key, row in records.items():
         page = get_page(row["book_id"], row["seq"])
-        best = _best_chunk_score(page["text"], terms) if page else 0.0
+        best, chunk_start = _best_chunk_score(page["text"], term_groups) if page else (0.0, 0)
+        chunk_starts[key] = chunk_start
         scores[key] = scores.get(key, 0.0) + best
     ordered = sorted(
         records,
         key=lambda key: (
-            records[key]["source_tier"], -scores[key], records[key]["book_id"], records[key]["seq"]
+            -scores[key] + 0.035 * (records[key]["source_tier"] - 1),
+            records[key]["book_id"], records[key]["seq"]
         ),
     )
     fused = []
@@ -572,6 +627,8 @@ def hybrid_search(**kwargs) -> list[dict]:
     for key in eligible[offset: offset + limit]:
         row = records[key]
         row["score"] = round(scores[key] / max_raw, 6)
+        row["match_id"] = f"{row['book_id']}-p{row['seq']}-c{chunk_starts[key]}"
+        row["match_type"] = "hybrid"
         if row["score"] >= min_score:
             fused.append(row)
     return fused
@@ -621,6 +678,8 @@ def get_passage(
         "book_id": page["book_id"], "book_title": page["book_title"],
         "tier": page["source_tier"], "seq": page["seq"],
         "printed_page": page["printed_page"], "citation_label": page["citation_label"],
+        "qasida_number": page.get("qasida_number"), "qasida_title": page.get("qasida_title"),
+        "bayt_from": page.get("bayt_from"), "bayt_to": page.get("bayt_to"),
         "occurrences": occurrences,
         "passage": passage, "page_chars": len(text),
         "truncated": len(passage) < len(text),
