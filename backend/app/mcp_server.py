@@ -144,8 +144,8 @@ def get_page(
     Args:
         book_id: Book ID returned by search_library or list_books.
         seq: Page sequence number, starting at 1.
-        mode: "compact" by default. Use "standard" only when legacy navigation
-            metadata is required.
+        mode: Response shape. Supported values are "compact" and
+            "ultra_compact" only.
     """
     page = db.get_page(book_id, seq)
 
@@ -258,13 +258,15 @@ def search_library(
         source_code: Optional "primary" or "secondary" filter.
         page_from: Optional first page sequence, inclusive.
         page_to: Optional last page sequence, inclusive.
-        context_chars: Context on each side of the match. Defaults to 120 and
+        context_chars: Context on each side of the match. Defaults to 60 and
             is restricted to 40–300.
         mode: compact or ultra_compact.
         match_mode: auto, exact, terms, hybrid, or lexeme. Auto cascades
             exact, terms, then hybrid. Every hit declares match_type. Lexeme
             accepts one Arabic word per query and expands common proclitics,
             suffixes, and weak-final ي/ا forms for recall-oriented census work.
+            Every hit also includes a normalized relevance score from 0 to 1;
+            higher scores indicate stronger relevance within that result set.
         ranking: relevance, primary_first, chronological, or book_order.
     """
     limit = max(1, min(limit, 20))

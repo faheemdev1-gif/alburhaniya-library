@@ -102,6 +102,9 @@ def slug_for(n: int) -> str:
 
 _QASIDA_HEADING = re.compile(r"الْ?قَ?صِ?يدَ?ة\s+[^:]{2,80}:\s*([^\n]+)")
 _BAYT_NUMBER = re.compile(r"(?<![\d-])(\d{1,3})\s*-\s*(?=[\u0621-\u064A])")
+_QASIDA_TITLE_END = re.compile(
+    r"\s+التّ?اريخ\s*:|\s+\d{1,3}\s*-\s*(?=[ء-ي])"
+)
 
 
 def annotate_diwan_pages(pages: list[dict]) -> list[dict]:
@@ -112,7 +115,9 @@ def annotate_diwan_pages(pages: list[dict]) -> list[dict]:
         heading = _QASIDA_HEADING.search(text)
         if heading:
             qasida_number += 1
-            qasida_title = heading.group(1).strip()
+            qasida_title = _QASIDA_TITLE_END.split(
+                heading.group(1), maxsplit=1
+            )[0].strip()
             last_bayt = None
         bayts = [int(n) for n in _BAYT_NUMBER.findall(text)]
         page["qasida_number"] = qasida_number or None

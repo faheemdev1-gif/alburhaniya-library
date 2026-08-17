@@ -39,6 +39,18 @@ _CHUNK_CHARS = 700
 _CHUNK_OVERLAP = 120
 
 
+def _concise_qasida_title(value: str | None) -> str | None:
+    """Trim source records where a heading and the first bayts share one line."""
+    if not value:
+        return value
+    title = re.split(
+        r"\s+التّ?اريخ\s*:|\s+\d{1,3}\s*-\s*(?=[ء-ي])",
+        value,
+        maxsplit=1,
+    )[0].strip()
+    return title or value.strip()
+
+
 @lru_cache(maxsize=1)
 def _connection() -> sqlite3.Connection:
     s = get_settings()
@@ -203,6 +215,7 @@ def get_page(book_id: str, seq: int) -> dict | None:
     if not row:
         return None
     d = dict(row)
+    d["qasida_title"] = _concise_qasida_title(d.get("qasida_title"))
     d["has_prev"] = seq > 1
     d["has_next"] = seq < d["total_pages"]
     return d
@@ -546,7 +559,8 @@ def search(
             "seq": row["seq"], "page_number": row["seq"], "page_label": label,
             "printed_page": row["printed_page"], "occurrences": occ,
             "citation_label": row["citation_label"],
-            "qasida_number": row["qasida_number"], "qasida_title": row["qasida_title"],
+            "qasida_number": row["qasida_number"],
+            "qasida_title": _concise_qasida_title(row["qasida_title"]),
             "bayt_from": row["bayt_from"], "bayt_to": row["bayt_to"],
             "snippet": snippet,
             "_raw_relevance": -float(row["relevance"]),

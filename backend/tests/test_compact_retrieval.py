@@ -234,10 +234,29 @@ class CompactRetrievalTests(unittest.TestCase):
         page = db.get_page("b14", 43)
         self.assertEqual(page["qasida_number"], 3)
         self.assertIsNotNone(page["qasida_title"])
+        self.assertLess(len(page["qasida_title"]), 200)
         self.assertIsNotNone(page["bayt_from"])
         rows = db.search("الله", book_ids=["b14"], qasida_number=3, limit=3)
         self.assertTrue(rows)
         self.assertTrue(all(row["qasida_number"] == 3 for row in rows))
+
+        compact = compact_search_response(
+            rows, limit=3, offset=0, has_more=False
+        )
+        for hit in compact["results"]:
+            self.assertEqual(hit["qasida_number"], 3)
+            self.assertIsNotNone(hit["qasida_title"])
+            self.assertIsNotNone(hit["bayt_from"])
+            self.assertIsNotNone(hit["bayt_to"])
+
+        ultra = compact_search_response(
+            rows, limit=3, offset=0, has_more=False, ultra=True
+        )
+        for hit in ultra["results"]:
+            self.assertEqual(hit["q"], 3)
+            self.assertIn("qt", hit)
+            self.assertIn("bf", hit)
+            self.assertIn("bt", hit)
 
 
 if __name__ == "__main__":

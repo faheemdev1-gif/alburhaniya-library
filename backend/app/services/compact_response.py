@@ -21,6 +21,14 @@ def compact_search_response(
                 hit["p"] = row["printed_page"]
             elif row.get("citation_label"):
                 hit["c"] = row["citation_label"]
+            if row.get("qasida_number") is not None:
+                hit["q"] = row["qasida_number"]
+            if row.get("qasida_title"):
+                hit["qt"] = row["qasida_title"]
+            if row.get("bayt_from") is not None:
+                hit["bf"] = row["bayt_from"]
+            if row.get("bayt_to") is not None:
+                hit["bt"] = row["bayt_to"]
             hits.append(hit)
         response = {"n": len(hits), "books": books, "results": hits}
         if total_hits is not None:
@@ -49,6 +57,9 @@ def compact_search_response(
             hit["printed_page"] = row["printed_page"]
         elif row.get("citation_label"):
             hit["citation_label"] = row["citation_label"]
+        for field in ("qasida_number", "qasida_title", "bayt_from", "bayt_to"):
+            if row.get(field) is not None:
+                hit[field] = row[field]
         hits.append(hit)
         if row.get("expanded_passage"):
             hit["expanded_passage"] = row["expanded_passage"]
