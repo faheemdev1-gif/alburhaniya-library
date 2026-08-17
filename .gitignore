@@ -4,3 +4,8 @@ node_modules/
 .next/
 *.db
 .env
+backend/.venv/
+backend/semantic_embeddings.npy
+backend/semantic_manifest.json
+**/__pycache__/
+*.pyc

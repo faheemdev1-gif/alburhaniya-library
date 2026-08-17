@@ -32,10 +32,17 @@ class Settings(BaseSettings):
     hybrid_semantic_weight: float = 0.6
     default_result_limit: int = 2000
 
-    # Semantic (Qdrant/embedding) search is OFF by default — search is pure
-    # exact/keyword matching, grouped one-card-per-page.
-    # Flip to True (and keep Qdrant running) to restore the old hybrid mode.
+    # Dormant legacy Qdrant switch. The production semantic path below is
+    # local and does not require Qdrant or persistent disk.
     enable_semantic_search: bool = False
+
+    # Local E5 semantic index. It activates only when both artifacts exist;
+    # otherwise auto mode falls back to the existing lexical cascade.
+    enable_local_semantic_search: bool = True
+    semantic_embeddings_path: str = "semantic_embeddings.npy"
+    semantic_manifest_path: str = "semantic_manifest.json"
+    semantic_min_score: float = 0.0
+    semantic_candidate_pool: int = 50
 
     # Meilisearch caps how many total hits a single query can return
     # (default 1000). Raised so a common word can return every matching
@@ -43,8 +50,8 @@ class Settings(BaseSettings):
     meili_max_total_hits: int = 100_000
 
     # Model — MiniLM is 4x faster than large models on CPU, good Arabic support
-    embedding_model: str = "paraphrase-multilingual-MiniLM-L12-v2"
-    embedding_dim: int = 384
+    embedding_model: str = "intfloat/multilingual-e5-base"
+    embedding_dim: int = 768
 
     class Config:
         env_file = ".env"

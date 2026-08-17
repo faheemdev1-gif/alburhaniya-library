@@ -29,6 +29,10 @@ def compact_search_response(
                 hit["bf"] = row["bayt_from"]
             if row.get("bayt_to") is not None:
                 hit["bt"] = row["bayt_to"]
+            if row.get("semantic_score") is not None:
+                hit["semantic_score"] = row["semantic_score"]
+                hit["citation_verified"] = bool(row.get("citation_verified"))
+                hit["verification_required"] = bool(row.get("verification_required"))
             hits.append(hit)
         response = {"n": len(hits), "books": books, "results": hits}
         if total_hits is not None:
@@ -60,6 +64,10 @@ def compact_search_response(
         for field in ("qasida_number", "qasida_title", "bayt_from", "bayt_to"):
             if row.get(field) is not None:
                 hit[field] = row[field]
+        if row.get("semantic_score") is not None:
+            hit["semantic_score"] = row["semantic_score"]
+            hit["citation_verified"] = bool(row.get("citation_verified"))
+            hit["verification_required"] = bool(row.get("verification_required"))
         hits.append(hit)
         if row.get("expanded_passage"):
             hit["expanded_passage"] = row["expanded_passage"]

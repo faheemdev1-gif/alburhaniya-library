@@ -1,6 +1,6 @@
-# Lean image for the default deployment: FastAPI + SQLite FTS5.
-# No CUDA/PyTorch, no model download — search.db is built once at
-# image-build time from the shamela .htm exports baked into the image.
+# SQLite FTS5 plus a local multilingual E5 semantic index. The model and
+# corpus vectors are built into the image; no vector database or persistent
+# disk is required.
 FROM python:3.11-slim
 
 WORKDIR /app
@@ -18,6 +18,7 @@ COPY . .
 # Build library.db (SQLite FTS5) from data/raw_htm — baked into this image,
 # so no persistent disk is needed at runtime. Any redeploy rebuilds it fresh.
 RUN python scripts/build_index.py
+RUN python scripts/build_semantic_index.py
 
 EXPOSE 8000
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]

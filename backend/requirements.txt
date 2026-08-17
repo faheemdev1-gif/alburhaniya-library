@@ -20,3 +20,9 @@ python-docx==1.1.2
 python-magic==0.4.27
 chardet==5.2.0
 tqdm==4.66.4
+
+# Local multilingual semantic retrieval (no vector database required)
+numpy==1.26.4
+torch==2.2.2
+transformers==4.41.2
+sentence-transformers==5.1.2

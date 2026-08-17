@@ -261,8 +261,10 @@ def search_library(
         context_chars: Context on each side of the match. Defaults to 60 and
             is restricted to 40–300.
         mode: compact or ultra_compact.
-        match_mode: auto, exact, terms, hybrid, or lexeme. Auto cascades
-            exact, terms, then hybrid. Every hit declares match_type. Lexeme
+        match_mode: auto, exact, terms, hybrid, or lexeme. When a local
+            semantic index is present, auto unions exact, terms, lexeme and
+            semantic candidates and reranks them. Otherwise it falls back to
+            exact, terms, then lexical hybrid. Every hit declares match_type. Lexeme
             accepts one Arabic word per query and expands common proclitics,
             suffixes, and weak-final ي/ا forms for recall-oriented census work.
             Every hit also includes a normalized relevance score from 0 to 1;
@@ -333,23 +335,35 @@ def search_library(
 
     effective_match_mode = match_mode
     if match_mode == "auto":
-        cascade = (("exact", "exact_phrase", db.search),
-                   ("terms", "all_words", db.search),
-                   ("hybrid", "all_words", db.hybrid_search))
-        rows = []
-        for effective_match_mode, resolved_search_mode, candidate_fn in cascade:
-            probe = dict(query=query, queries=raw_queries, operator=operator,
-                         search_mode=resolved_search_mode, ranking=ranking,
-                         book_ids=book_ids, source_code=source_code,
-                         page_from=page_from, page_to=page_to, limit=limit + 1,
-                         offset=offset, context_chars=context_chars,
-                         diversify_books=diversify_books, max_per_book=max_per_book,
-                         qasida_number=qasida_number)
-            if candidate_fn is db.hybrid_search:
-                probe["min_score"] = min_score
-            rows = candidate_fn(**probe)
-            if rows:
-                break
+        from app.services import semantic_search as semantic
+        if semantic.semantic_available():
+            rows = semantic.auto_search(
+                query=query, queries=raw_queries, operator=operator,
+                search_mode=resolved_search_mode, ranking=ranking,
+                book_ids=book_ids, source_code=source_code,
+                page_from=page_from, page_to=page_to, limit=limit + 1,
+                offset=offset, context_chars=context_chars,
+                diversify_books=diversify_books, max_per_book=max_per_book,
+                qasida_number=qasida_number, min_score=min_score,
+            )
+        else:
+            cascade = (("exact", "exact_phrase", db.search),
+                       ("terms", "all_words", db.search),
+                       ("hybrid", "all_words", db.hybrid_search))
+            rows = []
+            for effective_match_mode, resolved_search_mode, candidate_fn in cascade:
+                probe = dict(query=query, queries=raw_queries, operator=operator,
+                             search_mode=resolved_search_mode, ranking=ranking,
+                             book_ids=book_ids, source_code=source_code,
+                             page_from=page_from, page_to=page_to, limit=limit + 1,
+                             offset=offset, context_chars=context_chars,
+                             diversify_books=diversify_books, max_per_book=max_per_book,
+                             qasida_number=qasida_number)
+                if candidate_fn is db.hybrid_search:
+                    probe["min_score"] = min_score
+                rows = candidate_fn(**probe)
+                if rows:
+                    break
     search_fn = db.hybrid_search if effective_match_mode == "hybrid" else db.search
     search_args = dict(
         query=query,
