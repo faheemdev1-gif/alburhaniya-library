@@ -9,8 +9,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-
+ENV PIP_DEFAULT_TIMEOUT=120
+RUN python -m pip install \
+    --no-cache-dir \
+    --retries 10 \
+    --timeout 120 \
+    -r requirements.txt
 # Keep the model inside the Docker image.
 # This downloads the model but does not rebuild corpus embeddings.
 ENV HF_HOME=/app/.cache/huggingface
