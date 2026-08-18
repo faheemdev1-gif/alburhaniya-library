@@ -1,11 +1,9 @@
-# SQLite FTS5 plus a local multilingual E5 semantic index. The model and
-# corpus vectors are built into the image; no vector database or persistent
-# disk is required.
+# SQLite FTS5 plus a prebuilt multilingual E5 semantic index.
 FROM python:3.11-slim
 
 WORKDIR /app
 
-# libmagic/poppler kept for the optional legacy PDF/DOCX ingestion pipeline
+# Optional legacy PDF/DOCX ingestion dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libmagic1 poppler-utils \
     && rm -rf /var/lib/apt/lists/*
@@ -13,12 +11,18 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
+# Keep the model inside the Docker image.
+# This downloads the model but does not rebuild corpus embeddings.
+ENV HF_HOME=/app/.cache/huggingface
+RUN python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('intfloat/multilingual-e5-base')"
+
 COPY . .
 
-# Build library.db (SQLite FTS5) from data/raw_htm — baked into this image,
-# so no persistent disk is needed at runtime. Any redeploy rebuilds it fresh.
-RUN python scripts/build_index.py
-RUN python scripts/build_semantic_index.py
+# Fail immediately if prebuilt artifacts are missing from Git/Docker context
+RUN test -s library.db \
+    && test -s semantic_embeddings.npy \
+    && test -s semantic_manifest.json
 
 EXPOSE 8000
+
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]

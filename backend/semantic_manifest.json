@@ -1,0 +1,10 @@
+{
+  "model": "intfloat/multilingual-e5-base",
+  "dimensions": 768,
+  "corpus_version": "2026-08-17-b26ed9bcfa23",
+  "corpus_sha256": "b26ed9bcfa2315f17e4c58d82bf57b3b2a774f3930758fa101953ce9fed2c84a",
+  "chunk_count": 29124,
+  "normalized": true,
+  "query_prefix": "query: ",
+  "document_prefix": "passage: "
+}
