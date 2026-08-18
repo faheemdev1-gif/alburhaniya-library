@@ -1,0 +1,49 @@
+import unittest
+
+from scripts.build_index import annotate_diwan_pages
+
+
+class QasidaNumberingTests(unittest.TestCase):
+    def test_explanatory_qasida_note_does_not_advance_number(self):
+        pages = [
+            {
+                "printed_page": "56",
+                "paragraphs": [
+                    "الْقَصِيدَة الرّابِعَة: (تَاللَّهِ مَا نَضَبَ الْمَعِينُ)\n"
+                    "التّاريخ: الأربعاء\n1 - تَاللَّهِ مَا نَضَبَ الْمَعِينُ"
+                ],
+            },
+            {
+                "printed_page": "58",
+                "paragraphs": [
+                    "ملحوظة: هذه القصيدة لها ثلاث قوافي: الياء والنون والباء"
+                ],
+            },
+            {
+                "printed_page": "59",
+                "paragraphs": [
+                    "الْقَصِيدَة الْخَامِسَة: (اللَّهُ مِنْ بَعْدِ الزِّيَادَةِ زَادَنِي)\n"
+                    "التّاريخ: الجمعة\n1 - اللَّهُ مِنْ بَعْدِ الزِّيَادَةِ زَادَنِي"
+                ],
+            },
+        ]
+
+        annotated = annotate_diwan_pages(pages)
+
+        self.assertEqual(annotated[0]["qasida_number"], 1)
+        self.assertEqual(annotated[1]["qasida_number"], 1)
+        self.assertEqual(annotated[2]["qasida_number"], 2)
+
+    def test_heading_without_date_is_not_counted(self):
+        pages = [{
+            "printed_page": "1",
+            "paragraphs": ["القصيدة هي: كلام توضيحي لا عنوان مطبوع"],
+        }]
+
+        annotated = annotate_diwan_pages(pages)
+
+        self.assertIsNone(annotated[0]["qasida_number"])
+
+
+if __name__ == "__main__":
+    unittest.main()

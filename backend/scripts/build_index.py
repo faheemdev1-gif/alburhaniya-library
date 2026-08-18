@@ -100,7 +100,15 @@ def slug_for(n: int) -> str:
     return f"b{n:02d}"
 
 
-_QASIDA_HEADING = re.compile(r"الْ?قَ?صِ?يدَ?ة\s+[^:]{2,80}:\s*([^\n]+)")
+# A real Diwan heading is followed by its date.  Requiring that marker keeps
+# prose such as "هذه القصيدة لها ثلاث قوافي: ..." from being mistaken for a
+# new Qasida.  That note occurs after Qasida 4 in b14 and previously shifted
+# every subsequent qasida_number by one (printed 62 was consequently indexed
+# as 63).
+_QASIDA_HEADING = re.compile(
+    r"الْ?قَ?صِ?يدَ?ة\s+[^:\n]{2,80}:\s*([^\n]+?)"
+    r"(?=\s+التّ?اريخ\s*:)"
+)
 _BAYT_NUMBER = re.compile(r"(?<![\d-])(\d{1,3})\s*-\s*(?=[\u0621-\u064A])")
 _QASIDA_TITLE_END = re.compile(
     r"\s+التّ?اريخ\s*:|\s+\d{1,3}\s*-\s*(?=[ء-ي])"

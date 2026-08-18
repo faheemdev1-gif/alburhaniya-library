@@ -38,7 +38,7 @@ class Settings(BaseSettings):
 
     # Local E5 semantic index. It activates only when both artifacts exist;
     # otherwise auto mode falls back to the existing lexical cascade.
-    enable_local_semantic_search: bool = True
+    enable_local_semantic_search: bool = False
     semantic_embeddings_path: str = "semantic_embeddings.npy"
     semantic_manifest_path: str = "semantic_manifest.json"
     semantic_min_score: float = 0.0
