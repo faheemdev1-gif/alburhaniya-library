@@ -124,8 +124,15 @@ def slug_for(n: int) -> str:
 # every subsequent qasida_number by one (printed 62 was consequently indexed
 # as 63).
 _QASIDA_HEADING = re.compile(
-    r"الْ?قَ?صِ?يدَ?ة\s+[^:\n]{2,80}:\s*([^\n]+?)"
+    r"الْ?قَ?صِ?يدَ?ة\s+([^:\n]{1,80}):\s*([^\n]+?)"
     r"(?=\s+التّ?اريخ\s*:)"
+)
+_QASIDA_NUMERIC_DESIGNATOR = re.compile(
+    r"^\s*(?:رقم\s*)?([0-9٠-٩۰-۹]{1,3})\s*$"
+)
+_DIGIT_TRANSLATION = str.maketrans(
+    "٠١٢٣٤٥٦٧٨٩۰۱۲۳۴۵۶۷۸۹",
+    "01234567890123456789",
 )
 _BAYT_NUMBER = re.compile(r"(?<![\d-])(\d{1,3})\s*-\s*(?=[\u0621-\u064A])")
 _QASIDA_TITLE_END = re.compile(
@@ -149,9 +156,20 @@ def annotate_diwan_pages(pages: list[dict]) -> list[dict]:
         text = "\n\n".join(page["paragraphs"])
         heading = _QASIDA_HEADING.search(text)
         if heading:
-            qasida_number += 1
+            numeric = _QASIDA_NUMERIC_DESIGNATOR.fullmatch(heading.group(1))
+            if numeric:
+                # An explicit printed number is authoritative.  Do not feed
+                # it through the sequential fallback: skipped single-digit
+                # headings would otherwise shift every later qaṣīda.
+                qasida_number = int(
+                    numeric.group(1).translate(_DIGIT_TRANSLATION)
+                )
+            else:
+                # Backward compatibility for older source files whose
+                # headings use written Arabic ordinals.
+                qasida_number += 1
             qasida_title = _QASIDA_TITLE_END.split(
-                heading.group(1), maxsplit=1
+                heading.group(2), maxsplit=1
             )[0].strip()
             last_bayt = None
         bayts = [int(n) for n in _BAYT_NUMBER.findall(text)]
