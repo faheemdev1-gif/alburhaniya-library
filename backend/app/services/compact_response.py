@@ -29,6 +29,10 @@ def compact_search_response(
                 hit["bf"] = row["bayt_from"]
             if row.get("bayt_to") is not None:
                 hit["bt"] = row["bayt_to"]
+            if row.get("bayt_number") is not None:
+                hit["bn"] = row["bayt_number"]
+            if row.get("stable_id"):
+                hit["id"] = row["stable_id"]
             if row.get("semantic_score") is not None:
                 hit["semantic_score"] = row["semantic_score"]
                 hit["citation_verified"] = bool(row.get("citation_verified"))
@@ -61,7 +65,8 @@ def compact_search_response(
             hit["printed_page"] = row["printed_page"]
         elif row.get("citation_label"):
             hit["citation_label"] = row["citation_label"]
-        for field in ("qasida_number", "qasida_title", "bayt_from", "bayt_to"):
+        for field in ("qasida_number", "qasida_title", "bayt_from", "bayt_to",
+                      "bayt_number", "stable_id", "block_type"):
             if row.get(field) is not None:
                 hit[field] = row[field]
         if row.get("semantic_score") is not None:

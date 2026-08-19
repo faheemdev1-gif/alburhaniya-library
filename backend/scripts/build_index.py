@@ -80,12 +80,30 @@ CREATE TABLE pages (
     qasida_title TEXT,
     bayt_from INTEGER,
     bayt_to INTEGER,
+    block_type TEXT NOT NULL DEFAULT 'body' CHECK (block_type IN ('body', 'toc')),
     text          TEXT NOT NULL,
     norm_text     TEXT NOT NULL,
     FOREIGN KEY (book_id) REFERENCES books(book_id)
 );
 CREATE INDEX idx_pages_book_seq ON pages(book_id, seq);
 CREATE INDEX idx_pages_qasida ON pages(book_id, qasida_number, bayt_from);
+CREATE INDEX idx_pages_block_type ON pages(block_type);
+
+CREATE TABLE bayts (
+    stable_id TEXT PRIMARY KEY,
+    page_id INTEGER NOT NULL,
+    book_id TEXT NOT NULL,
+    qasida_number INTEGER NOT NULL,
+    bayt_number INTEGER NOT NULL,
+    start_char INTEGER NOT NULL,
+    end_char INTEGER NOT NULL,
+    text TEXT NOT NULL,
+    norm_text TEXT NOT NULL,
+    FOREIGN KEY (page_id) REFERENCES pages(id),
+    UNIQUE (book_id, qasida_number, bayt_number)
+);
+CREATE INDEX idx_bayts_page ON bayts(page_id, start_char);
+CREATE INDEX idx_bayts_structure ON bayts(book_id, qasida_number, bayt_number);
 
 CREATE VIRTUAL TABLE pages_fts USING fts5(
     norm_text,
@@ -113,6 +131,15 @@ _BAYT_NUMBER = re.compile(r"(?<![\d-])(\d{1,3})\s*-\s*(?=[\u0621-\u064A])")
 _QASIDA_TITLE_END = re.compile(
     r"\s+التّ?اريخ\s*:|\s+\d{1,3}\s*-\s*(?=[ء-ي])"
 )
+_TOC_DOT_LEADER = re.compile(r"\.{5,}|…{3,}")
+
+
+def classify_block(text: str) -> str:
+    """Identify contents pages structurally instead of learning them from rank."""
+    normalized = normalize_arabic(text, aggressive=True)
+    if re.search(r"(?:^|\s)(?:الفهرس|فهرس المحتويات)(?:\s|$)", normalized):
+        return "toc"
+    return "toc" if len(_TOC_DOT_LEADER.findall(text)) >= 3 else "body"
 
 
 def annotate_diwan_pages(pages: list[dict]) -> list[dict]:
@@ -132,6 +159,7 @@ def annotate_diwan_pages(pages: list[dict]) -> list[dict]:
         page["qasida_title"] = qasida_title
         page["bayt_from"] = bayts[0] if bayts else last_bayt
         page["bayt_to"] = bayts[-1] if bayts else last_bayt
+        page["block_type"] = classify_block(text)
         if bayts:
             last_bayt = bayts[-1]
         if qasida_number and page["bayt_from"] is not None:
@@ -233,12 +261,28 @@ def build():
             norm = normalize_arabic(text, aggressive=True)
             conn.execute(
                 "INSERT INTO pages (book_id, seq, printed_page, citation_label, qasida_number, "
-                "qasida_title, bayt_from, bayt_to, text, norm_text) "
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                "qasida_title, bayt_from, bayt_to, block_type, text, norm_text) "
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                 (slug, seq, page["printed_page"], page.get("page_label"),
                  page.get("qasida_number"), page.get("qasida_title"),
-                 page.get("bayt_from"), page.get("bayt_to"), text, norm),
+                 page.get("bayt_from"), page.get("bayt_to"),
+                 page.get("block_type", classify_block(text)), text, norm),
             )
+            page_id = conn.execute("SELECT last_insert_rowid()").fetchone()[0]
+            if slug == "b14" and page.get("qasida_number"):
+                markers = list(_BAYT_NUMBER.finditer(text))
+                for i, marker in enumerate(markers):
+                    number = int(marker.group(1))
+                    start = marker.start()
+                    end = markers[i + 1].start() if i + 1 < len(markers) else len(text)
+                    bayt_text = text[start:end].strip()
+                    stable_id = f"{slug}-q{page['qasida_number']:03d}-b{number:03d}"
+                    conn.execute(
+                        "INSERT OR REPLACE INTO bayts (stable_id, page_id, book_id, qasida_number, "
+                        "bayt_number, start_char, end_char, text, norm_text) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                        (stable_id, page_id, slug, page["qasida_number"], number,
+                         start, end, bayt_text, normalize_arabic(bayt_text, aggressive=True)),
+                    )
         total_pages += len(pages)
         print(f"{slug}  [{grades[grade]['code']:<9}] {len(pages):4d} pages  {title}")
 

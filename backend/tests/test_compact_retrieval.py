@@ -230,6 +230,38 @@ class CompactRetrievalTests(unittest.TestCase):
         self.assertTrue(any(not row["match_id"].endswith("-c0") for row in rows))
         self.assertTrue(all(row["match_type"] == "hybrid" for row in rows))
 
+    def test_terms_anchor_to_minimum_covering_span(self):
+        rows = db.search("المحافظة الصلاة وقتها", search_mode="all_words", limit=7)
+        self.assertTrue(rows)
+        self.assertTrue(all(not row["match_id"].endswith("-c0") for row in rows))
+        self.assertTrue(all(0 < row["score"] < 1 for row in rows))
+
+    def test_weak_lexical_hybrid_can_return_no_answer(self):
+        rows = db.hybrid_search(
+            query="الصلاة خير من النوم", book_ids=["b29"], limit=5,
+        )
+        self.assertEqual(rows, [])
+
+    def test_body_heading_outranks_contents_copy(self):
+        rows = db.search(
+            "مشروعية الذكر للنساء", book_ids=["b29"],
+            ranking="relevance", limit=5, diversify_books=False,
+        )
+        self.assertGreaterEqual(len(rows), 2)
+        self.assertEqual(rows[0]["seq"], 21)
+        toc = next(row for row in rows if row["seq"] == 2)
+        self.assertEqual(toc["block_type"], "toc")
+        self.assertLess(toc["score"], rows[0]["score"])
+
+    def test_exact_bayt_number_and_stable_id(self):
+        rows = db.search(
+            "فَمَا طَلَعَتْ إِلَّا وَغَابَ ضِيَاؤُهَا",
+            book_ids=["b14"], qasida_number=91, limit=3,
+        )
+        self.assertTrue(rows)
+        self.assertEqual(rows[0]["bayt_number"], 9)
+        self.assertEqual(rows[0]["stable_id"], "b14-q091-b009")
+
     def test_diwan_structure_and_qasida_scope(self):
         page = db.get_page("b14", 43)
         self.assertEqual(page["qasida_number"], 3)

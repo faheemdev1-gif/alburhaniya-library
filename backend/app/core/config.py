@@ -43,6 +43,7 @@ class Settings(BaseSettings):
     semantic_manifest_path: str = "semantic_manifest.json"
     semantic_min_score: float = 0.0
     semantic_candidate_pool: int = 50
+    hybrid_min_relevance: float = 0.55
 
     # Meilisearch caps how many total hits a single query can return
     # (default 1000). Raised so a common word can return every matching

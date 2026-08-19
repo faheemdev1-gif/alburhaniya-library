@@ -130,6 +130,12 @@ class SemanticRetrievalTests(unittest.TestCase):
         self.assertTrue(compact["verification_required"])
 
     def test_vector_metadata_filters_book_and_qasida_before_scoring(self):
+        from app.services import library_db
+        table = library_db._connection().execute(
+            "SELECT 1 FROM sqlite_master WHERE type='table' AND name='semantic_chunks'"
+        ).fetchone()
+        if table is None:
+            self.skipTest("local semantic index is disabled")
         rows = semantic_search._candidate_rows(
             book_ids=["b14"], source_code="primary",
             page_from=None, page_to=None, qasida_number=3,

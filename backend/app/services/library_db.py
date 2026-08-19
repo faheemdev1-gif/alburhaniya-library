@@ -203,7 +203,8 @@ def get_page(book_id: str, seq: int) -> dict | None:
     row = conn.execute(
         """
         SELECT p.book_id, p.seq, p.printed_page, p.citation_label,
-               p.qasida_number, p.qasida_title, p.bayt_from, p.bayt_to, p.text,
+               p.qasida_number, p.qasida_title, p.bayt_from, p.bayt_to,
+               p.block_type, p.text,
                b.title AS book_title, b.page_count AS total_pages,
                b.source_grade, b.source_code, b.source_tier
         FROM pages p
@@ -474,6 +475,61 @@ def _best_chunk_score(text: str, term_groups: list[tuple[str, ...]]) -> tuple[fl
     return (best, locals().get("best_start", 0))
 
 
+def _minimum_covering_span(
+    text: str, term_groups: list[tuple[str, ...]]
+) -> tuple[float, int, int]:
+    """Return calibrated relevance and the smallest original-text term span."""
+    if not term_groups:
+        return (0.0, 0, 0)
+    occurrences: list[tuple[int, int, int]] = []
+    for group_index, variants in enumerate(term_groups):
+        seen: set[tuple[int, int]] = set()
+        for variant in variants:
+            for match in _build_highlight_regex(variant).finditer(text):
+                if match.span() not in seen:
+                    occurrences.append((match.start(), match.end(), group_index))
+                    seen.add(match.span())
+    occurrences.sort()
+    present = len({item[2] for item in occurrences})
+    coverage = present / len(term_groups)
+    if not occurrences:
+        return (0.0, 0, 0)
+    counts: dict[int, int] = {}
+    left = 0
+    best_span: tuple[int, int] | None = None
+    for _, (_, end, group_index) in enumerate(occurrences):
+        counts[group_index] = counts.get(group_index, 0) + 1
+        while len(counts) == len(term_groups):
+            start = occurrences[left][0]
+            candidate = (start, end)
+            if best_span is None or candidate[1] - candidate[0] < best_span[1] - best_span[0]:
+                best_span = candidate
+            left_group = occurrences[left][2]
+            counts[left_group] -= 1
+            if counts[left_group] == 0:
+                del counts[left_group]
+            left += 1
+    if best_span is None:
+        start, end, _ = occurrences[0]
+        return (round(0.75 * coverage, 6), start, end)
+    start, end = best_span
+    span_length = max(1, end - start)
+    term_length = sum(min(len(v) for v in group) for group in term_groups)
+    proximity = 1.0 / (1.0 + span_length / max(80.0, term_length * 4.0))
+    return (round(0.45 * coverage + 0.55 * proximity, 6), start, end)
+
+
+def _bayt_at_offset(text: str, offset: int, qasida_number: int | None) -> tuple[int | None, str | None]:
+    if qasida_number is None:
+        return (None, None)
+    markers = list(re.finditer(r"(?<![\d-])(\d{1,3})\s*-\s*(?=[\u0621-\u064A])", text))
+    preceding = [m for m in markers if m.start() <= offset]
+    if not preceding:
+        return (None, None)
+    number = int(preceding[-1].group(1))
+    return (number, f"b14-q{qasida_number:03d}-b{number:03d}")
+
+
 def search(
     query: str | None = None,
     queries: list[str] | None = None,
@@ -503,14 +559,22 @@ def search(
         page_from=page_from, page_to=page_to, qasida_number=qasida_number,
     )
 
+    requested_limit, requested_offset = limit, offset
+    terms_pool = search_mode == "all_words"
+    sql_limit = min(max((offset + limit) * 20, 100), 400) if terms_pool else limit
+    sql_offset = 0 if terms_pool else offset
+
     # Diversification is useful across a library, but it must never truncate a
     # deliberately selected single book.
-    apply_diversity = bool(diversify_books and (not book_ids or len(book_ids) > 1))
+    apply_diversity = bool(
+        diversify_books and not terms_pool and (not book_ids or len(book_ids) > 1)
+    )
 
     base = """
         SELECT p.book_id, b.title AS book_title, b.source_grade, b.source_code,
                b.source_tier, p.seq, p.printed_page, p.citation_label,
-               p.qasida_number, p.qasida_title, p.bayt_from, p.bayt_to, p.text,
+               p.qasida_number, p.qasida_title, p.bayt_from, p.bayt_to,
+               p.block_type, p.text,
                bm25(pages_fts) AS relevance
         FROM pages_fts
         JOIN pages p ON p.id = pages_fts.rowid
@@ -528,11 +592,11 @@ def search(
         )
         SELECT * FROM ranked WHERE book_rank <= ?
         ORDER BY """ + order + " LIMIT ? OFFSET ?"
-        params.extend((max(1, max_per_book), limit, offset))
+        params.extend((max(1, max_per_book), sql_limit, sql_offset))
     else:
         order = _ranking_order(ranking, diversified=False)
         sql = base + " ORDER BY " + order + " LIMIT ? OFFSET ?"
-        params.extend((limit, offset))
+        params.extend((sql_limit, sql_offset))
     rows = conn.execute(sql, params).fetchall()
 
     patterns = [_pattern_for_query(q.strip(), search_mode) for q in raw_queries if q and q.strip()]
@@ -562,6 +626,7 @@ def search(
             "qasida_number": row["qasida_number"],
             "qasida_title": _concise_qasida_title(row["qasida_title"]),
             "bayt_from": row["bayt_from"], "bayt_to": row["bayt_to"],
+            "block_type": row["block_type"],
             "snippet": snippet,
             "_raw_relevance": -float(row["relevance"]),
             "match_type": {
@@ -570,6 +635,20 @@ def search(
             }[search_mode],
         }
         first_match = min((m.start() for m, _ in matches), default=0)
+        if search_mode == "all_words":
+            groups = [lexical_variants(w) for q in raw_queries
+                      for w in normalized_tokens(q, drop_stopwords=True)]
+            local_score, span_start, span_end = _minimum_covering_span(plain_text, groups)
+            first_match = span_start
+            result["_local_score"] = local_score
+            if span_end > span_start:
+                centre = (span_start + span_end) // 2
+                result["snippet"] = _esc(plain_text[max(0, centre-context_chars):
+                                                    min(len(plain_text), centre+context_chars)])
+        bayt_number, stable_id = _bayt_at_offset(plain_text, first_match, row["qasida_number"])
+        if row["book_id"] == "b14" and bayt_number is not None:
+            result["bayt_number"] = bayt_number
+            result["stable_id"] = stable_id
         result["match_id"] = f"{row['book_id']}-p{row['seq']}-c{first_match}"
         if include_full_text:
             safe_text = _esc(plain_text)
@@ -578,11 +657,34 @@ def search(
             result["highlight"] = safe_text
             result["text"] = plain_text
         results.append(result)
-    raw_scores = [item.pop("_raw_relevance") for item in results]
+    if search_mode == "all_words":
+        results.sort(key=lambda item: (
+            item.get("block_type") == "toc", -item.get("_local_score", 0.0),
+            item["source_tier"], item["book_id"], item["seq"]
+        ))
+    else:
+        results.sort(key=lambda item: (
+            item.get("block_type") == "toc", -item["_raw_relevance"],
+            item["source_tier"], item["book_id"], item["seq"]
+        ))
+    raw_scores = [item.pop("_local_score", item.get("_raw_relevance", 0.0)) for item in results]
+    for item in results:
+        item.pop("_raw_relevance", None)
     if raw_scores:
-        low, high = min(raw_scores), max(raw_scores)
-        for item, raw in zip(results, raw_scores):
-            item["score"] = round((raw - low) / (high - low), 6) if high > low else 1.0
+        for rank, (item, raw) in enumerate(zip(results, raw_scores)):
+            structural = 0.15 if item.get("block_type") == "toc" else 1.0
+            item["score"] = (round(raw * structural, 6) if search_mode == "all_words"
+                             else round(structural / (1.0 + 0.12 * rank), 6))
+    if terms_pool:
+        if diversify_books and not (book_ids and len(book_ids) == 1):
+            counts: dict[str, int] = {}
+            diversified = []
+            for item in results:
+                if counts.get(item["book_id"], 0) < max(1, max_per_book):
+                    diversified.append(item)
+                    counts[item["book_id"]] = counts.get(item["book_id"], 0) + 1
+            results = diversified
+        results = results[requested_offset: requested_offset + requested_limit]
     return results
 
 
@@ -624,23 +726,23 @@ def hybrid_search(**kwargs) -> list[dict]:
     chunk_starts = {}
     for key, row in records.items():
         page = get_page(row["book_id"], row["seq"])
-        best, chunk_start = _best_chunk_score(page["text"], term_groups) if page else (0.0, 0)
+        best, chunk_start, _ = _minimum_covering_span(page["text"], term_groups) if page else (0.0, 0, 0)
         chunk_starts[key] = chunk_start
         scores[key] = scores.get(key, 0.0) + best
+        if page and page.get("block_type") == "toc":
+            scores[key] *= 0.15
     ordered = sorted(
         records,
-        key=lambda key: (
-            -scores[key] + 0.035 * (records[key]["source_tier"] - 1),
-            records[key]["book_id"], records[key]["seq"]
-        ),
+        key=lambda key: (-scores[key], records[key]["source_tier"],
+                         records[key]["book_id"], records[key]["seq"]),
     )
     fused = []
-    max_raw = max(scores.values(), default=1.0)
-    min_score = max(0.0, min(float(kwargs.get("min_score", 0.0)), 1.0))
-    eligible = [key for key in ordered if scores[key] / max_raw >= min_score]
+    configured_threshold = getattr(get_settings(), "hybrid_min_relevance", 0.55)
+    min_score = max(0.0, min(float(kwargs.get("min_score") or configured_threshold), 1.0))
+    eligible = [key for key in ordered if scores[key] >= min_score]
     for key in eligible[offset: offset + limit]:
         row = records[key]
-        row["score"] = round(scores[key] / max_raw, 6)
+        row["score"] = round(min(1.0, scores[key]), 6)
         row["match_id"] = f"{row['book_id']}-p{row['seq']}-c{chunk_starts[key]}"
         row["match_type"] = "hybrid"
         if row["score"] >= min_score:
