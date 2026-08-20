@@ -27,6 +27,7 @@ from itertools import product
 from app.core.config import get_settings
 from app.core.arabic_utils import (
     ARABIC_STOPWORDS, lexical_variants, normalize_arabic, normalized_tokens,
+    term_variants,
 )
 
 _DIACRITIC_CLASS = (
@@ -286,7 +287,7 @@ def _query_expression(query: str, search_mode: str = "exact_phrase") -> str:
         content_words = normalized_tokens(query, drop_stopwords=True) or words
         groups = []
         for word in content_words:
-            variants = lexical_variants(word)
+            variants = term_variants(word)
             groups.append("(" + " OR ".join(
                 '"' + v.replace('"', '""') + '"' for v in variants
             ) + ")")
@@ -403,7 +404,11 @@ def search_stats(
              WHERE pages_fts MATCH ?""" + filters
     rows = _connection().execute(sql, [expression, *params]).fetchall()
     aggregate_patterns = [
-        _pattern_for_query(q, "lexeme" if len(normalized_tokens(q)) == 1 else search_mode)
+        _pattern_for_query(
+            q,
+            "lexeme" if search_mode == "exact_phrase" and len(normalized_tokens(q)) == 1
+            else search_mode,
+        )
         for q in queries
     ]
     per_query = []
@@ -411,7 +416,10 @@ def search_stats(
         q_expression = _fts_expression([query], "OR", search_mode)
         q_rows = _connection().execute(sql, [q_expression, *params]).fetchall()
         pattern = _pattern_for_query(
-            query, "lexeme" if len(normalized_tokens(query)) == 1 else search_mode
+            query,
+            "lexeme"
+            if search_mode == "exact_phrase" and len(normalized_tokens(query)) == 1
+            else search_mode,
         )
         surface_pattern = re.compile(re.escape(normalize_arabic(query, aggressive=False)))
         per_query.append({
@@ -517,6 +525,43 @@ def _minimum_covering_span(
     term_length = sum(min(len(v) for v in group) for group in term_groups)
     proximity = 1.0 / (1.0 + span_length / max(80.0, term_length * 4.0))
     return (round(0.45 * coverage + 0.55 * proximity, 6), start, end)
+
+
+_ARABIC_TOKEN_RE = re.compile(r"[\u0621-\u06ff]+")
+
+
+def _content_query_terms(raw_queries: list[str]) -> list[tuple[str, str]]:
+    """Return (display form, normalized form) for non-stopword query terms."""
+    terms: list[tuple[str, str]] = []
+    for query in raw_queries:
+        for match in _ARABIC_TOKEN_RE.finditer(query):
+            display = match.group(0)
+            normalized = normalize_arabic(display, aggressive=True)
+            if normalized and normalized not in ARABIC_STOPWORDS:
+                terms.append((display, normalized))
+    return terms
+
+
+def _matched_terms(text: str, raw_queries: list[str]) -> dict[str, dict[str, str]]:
+    """Explain the corpus token that satisfied every strict terms token."""
+    corpus_tokens = [match.group(0) for match in _ARABIC_TOKEN_RE.finditer(text)]
+    normalized_corpus = [normalize_arabic(token, aggressive=True) for token in corpus_tokens]
+    evidence: dict[str, dict[str, str]] = {}
+    for display, normalized in _content_query_terms(raw_queries):
+        allowed = set(term_variants(normalized))
+        for corpus_form, corpus_normalized in zip(corpus_tokens, normalized_corpus):
+            if corpus_normalized not in allowed:
+                continue
+            same_form = (
+                normalize_arabic(corpus_form, aggressive=False)
+                == normalize_arabic(display, aggressive=False)
+            )
+            evidence[display] = {
+                "corpus_form": corpus_form,
+                "relation": "exact" if same_form else "normalized",
+            }
+            break
+    return evidence
 
 
 def _bayt_at_offset(text: str, offset: int, qasida_number: int | None) -> tuple[int | None, str | None]:
@@ -636,11 +681,12 @@ def search(
         }
         first_match = min((m.start() for m, _ in matches), default=0)
         if search_mode == "all_words":
-            groups = [lexical_variants(w) for q in raw_queries
+            groups = [term_variants(w) for q in raw_queries
                       for w in normalized_tokens(q, drop_stopwords=True)]
             local_score, span_start, span_end = _minimum_covering_span(plain_text, groups)
             first_match = span_start
             result["_local_score"] = local_score
+            result["matched_terms"] = _matched_terms(plain_text, raw_queries)
             if span_end > span_start:
                 centre = (span_start + span_end) // 2
                 result["snippet"] = _esc(plain_text[max(0, centre-context_chars):

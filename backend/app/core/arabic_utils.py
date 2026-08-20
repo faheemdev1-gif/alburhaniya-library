@@ -100,14 +100,30 @@ def normalized_tokens(text: str, *, drop_stopwords: bool = False) -> list[str]:
 
 
 def lexical_variants(token: str) -> tuple[str, ...]:
-    """Small, deterministic lexical expansion for proximity retrieval."""
+    """Concept-oriented variants for hybrid/proximity retrieval only.
+
+    This deliberately includes a few derivational relatives.  Callers that
+    promise literal term presence must use :func:`term_variants` instead.
+    """
+    token = normalize_arabic(token, aggressive=True)
+    variants = set(term_variants(token))
+    variants.update(_LEXICAL_FAMILIES.get(token, ()))
+    return tuple(sorted(variants))
+
+
+def term_variants(token: str) -> tuple[str, ...]:
+    """Strict variants for ``terms`` retrieval.
+
+    Only the normalized token and its definite/indefinite article form are
+    allowed.  Root, derivational, synonym and concept expansion belongs to
+    lexeme or hybrid retrieval and must never leak into ``terms`` results.
+    """
     token = normalize_arabic(token, aggressive=True)
     variants = {token}
     if token.startswith("ال") and len(token) > 4:
         variants.add(token[2:])
     elif len(token) >= 3:
         variants.add("ال" + token)
-    variants.update(_LEXICAL_FAMILIES.get(token, ()))
     return tuple(sorted(variants))
 
 

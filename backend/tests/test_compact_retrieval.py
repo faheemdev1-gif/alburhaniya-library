@@ -205,10 +205,26 @@ class CompactRetrievalTests(unittest.TestCase):
         from app.core.arabic_utils import normalize_arabic
         self.assertEqual(normalize_arabic("ک ی ے"), "ك ي ي")
 
-    def test_report_terms_query_recovers_results(self):
+    def test_terms_do_not_promote_root_or_concept_relatives(self):
         rows = db.search("المحافظة الصلاة وقتها", search_mode="all_words", limit=5)
+        self.assertFalse(any(
+            row["book_id"] == "b39" and row["seq"] == 23 for row in rows
+        ))
+        expression = db._query_expression("المحافظة الصلاة وقتها", "all_words")
+        self.assertNotIn('"حافظ"', expression)
+        self.assertNotIn('"حفظ"', expression)
+        self.assertNotIn('"وقت"', expression)
+
+    def test_terms_expose_exact_or_normalized_match_evidence(self):
+        rows = db.search("المريد الشيخ", search_mode="all_words", limit=5)
         self.assertTrue(rows)
-        self.assertTrue(all(row["match_type"] == "terms" for row in rows))
+        for row in rows:
+            self.assertEqual(row["match_type"], "terms")
+            self.assertEqual(set(row["matched_terms"]), {"المريد", "الشيخ"})
+            self.assertTrue(all(
+                item["relation"] in {"exact", "normalized"}
+                for item in row["matched_terms"].values()
+            ))
 
     def test_scores_are_higher_is_better_in_every_relevance_mode(self):
         exact = db.search("المريد", ranking="relevance", limit=8)
@@ -231,7 +247,7 @@ class CompactRetrievalTests(unittest.TestCase):
         self.assertTrue(all(row["match_type"] == "hybrid" for row in rows))
 
     def test_terms_anchor_to_minimum_covering_span(self):
-        rows = db.search("المحافظة الصلاة وقتها", search_mode="all_words", limit=7)
+        rows = db.search("المريد الشيخ", search_mode="all_words", limit=7)
         self.assertTrue(rows)
         self.assertTrue(all(not row["match_id"].endswith("-c0") for row in rows))
         self.assertTrue(all(0 < row["score"] < 1 for row in rows))
