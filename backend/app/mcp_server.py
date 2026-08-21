@@ -211,7 +211,8 @@ def get_passage(
     if query:
         match = db._MATCH_ID_RE.fullmatch(match_id or "")
         result = (db.get_passage(match.group(1), int(match.group(2)), query=query,
-                                 context_chars=context_chars) if match else None)
+                                 context_chars=context_chars,
+                                 match_start=int(match.group(3))) if match else None)
     else:
         result = db.get_passage_by_match_id(match_id, context_chars)
     if result is None:
@@ -359,8 +360,7 @@ def search_library(
                              offset=offset, context_chars=context_chars,
                              diversify_books=diversify_books, max_per_book=max_per_book,
                              qasida_number=qasida_number)
-                if candidate_fn is db.hybrid_search:
-                    probe["min_score"] = min_score
+                probe["min_score"] = min_score
                 rows = candidate_fn(**probe)
                 if rows:
                     break
@@ -382,8 +382,7 @@ def search_library(
         max_per_book=max_per_book,
         qasida_number=qasida_number,
     )
-    if effective_match_mode == "hybrid":
-        search_args["min_score"] = min_score
+    search_args["min_score"] = min_score
     if match_mode != "auto":
         rows = search_fn(**search_args)
 

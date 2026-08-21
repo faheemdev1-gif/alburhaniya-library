@@ -26,8 +26,8 @@ from itertools import product
 
 from app.core.config import get_settings
 from app.core.arabic_utils import (
-    ARABIC_STOPWORDS, lexical_variants, normalize_arabic, normalized_tokens,
-    term_variants,
+    ARABIC_STOPWORDS, hybrid_tokens, lexical_root, lexical_variants,
+    normalize_arabic, normalized_tokens, term_variants,
 )
 
 _DIACRITIC_CLASS = (
@@ -78,6 +78,17 @@ def _build_highlight_regex(raw_query: str) -> re.Pattern:
     parts = [_tolerant_char_pattern(c) for c in normalized_query.strip()]
     pattern = _DIACRITIC_CLASS.join(parts)
     return re.compile(pattern, re.IGNORECASE)
+
+
+def _build_exact_variant_regex(raw_query: str) -> re.Pattern:
+    """Locate the same article-normalized forms accepted by exact FTS."""
+    words = normalized_tokens(raw_query)
+    if not words:
+        return _build_highlight_regex(raw_query)
+    patterns = []
+    for parts in product(*(term_variants(word) for word in words)):
+        patterns.append(_build_highlight_regex(" ".join(parts)).pattern)
+    return re.compile("(?:" + "|".join(patterns) + ")", re.IGNORECASE)
 
 
 def _highlight(text: str, pattern: re.Pattern) -> tuple[str, int]:
@@ -244,12 +255,14 @@ def _lexeme_stems(token: str) -> list[str]:
     weak-final forms such as حمى/حماك/حماية without pretending to be a full
     Arabic root analyser.
     """
-    bare = _bare_lexeme(token)
-    stems = {bare}
-    if bare.endswith("ي"):
-        stems.add(bare[:-1] + "ا")
-    elif bare.endswith("ا"):
-        stems.add(bare[:-1] + "ي")
+    stems = set()
+    for variant in lexical_variants(token):
+        bare = _bare_lexeme(variant)
+        stems.add(bare)
+        if bare.endswith("ي"):
+            stems.add(bare[:-1] + "ا")
+        elif bare.endswith("ا"):
+            stems.add(bare[:-1] + "ي")
     return sorted(stems)
 
 
@@ -298,6 +311,8 @@ def _query_expression(query: str, search_mode: str = "exact_phrase") -> str:
 
 
 def _pattern_for_query(query: str, search_mode: str) -> re.Pattern:
+    if search_mode == "exact_phrase":
+        return _build_exact_variant_regex(query)
     if search_mode != "lexeme":
         return _build_highlight_regex(query)
     normalized = normalize_arabic(query, aggressive=True)
@@ -519,12 +534,31 @@ def _minimum_covering_span(
             left += 1
     if best_span is None:
         start, end, _ = occurrences[0]
-        return (round(0.75 * coverage, 6), start, end)
+        # Partial coverage remains useful for candidate generation but must not
+        # cross the production relevance threshold on its own.
+        return (round(0.70 * coverage, 6), start, end)
     start, end = best_span
     span_length = max(1, end - start)
     term_length = sum(min(len(v) for v in group) for group in term_groups)
-    proximity = 1.0 / (1.0 + span_length / max(80.0, term_length * 4.0))
+    # Concept evidence often spans two or three adjacent sentences.  A
+    # sentence-scale baseline avoids treating that as equivalent to terms
+    # scattered across an entire page.
+    proximity = 1.0 / (1.0 + span_length / max(180.0, term_length * 8.0))
     return (round(0.45 * coverage + 0.55 * proximity, 6), start, end)
+
+
+def _evidence_excerpt(text: str, start: int, end: int, radius: int) -> str:
+    """Return a bounded excerpt centred on the actual retrieval evidence."""
+    radius = max(60, min(radius, 300))
+    evidence_end = min(max(end, start + 1), start + radius)
+    centre = (start + evidence_end) // 2
+    left = max(0, centre - radius)
+    right = min(len(text), centre + radius)
+    return (
+        ("…" if left else "")
+        + _esc(text[left:right])
+        + ("…" if right < len(text) else "")
+    )
 
 
 _ARABIC_TOKEN_RE = re.compile(r"[\u0621-\u06ff]+")
@@ -564,6 +598,30 @@ def _matched_terms(text: str, raw_queries: list[str]) -> dict[str, dict[str, str
     return evidence
 
 
+def _matched_lexeme(text: str, raw_query: str) -> dict[str, dict[str, str]]:
+    """Explain the surface form and relation used by a one-word lexeme hit."""
+    query_terms = _content_query_terms([raw_query])
+    if len(query_terms) != 1:
+        return {}
+    display, normalized = query_terms[0]
+    match = _pattern_for_query(raw_query, "lexeme").search(text)
+    if not match:
+        return {}
+    corpus_form = match.group(0)
+    corpus_normalized = normalize_arabic(corpus_form, aggressive=True)
+    if corpus_normalized == normalized:
+        relation = "exact"
+    elif corpus_normalized in set(term_variants(normalized)):
+        relation = "normalized"
+    else:
+        relation = "root" if lexical_root(normalized) else "inflection"
+    item = {"corpus_form": corpus_form, "relation": relation}
+    root = lexical_root(normalized)
+    if relation == "root" and root:
+        item["root"] = root
+    return {display: item}
+
+
 def _bayt_at_offset(text: str, offset: int, qasida_number: int | None) -> tuple[int | None, str | None]:
     if qasida_number is None:
         return (None, None)
@@ -592,6 +650,7 @@ def search(
     diversify_books: bool = True,
     max_per_book: int = 2,
     qasida_number: int | None = None,
+    min_score: float = 0.0,
 ) -> list[dict]:
     """Arabic FTS search with explicit modes, ranking, and safe diversity."""
     raw_queries = queries or ([query] if query else [])
@@ -605,9 +664,20 @@ def search(
     )
 
     requested_limit, requested_offset = limit, offset
+    requested_min = max(0.0, min(float(min_score or 0.0), 1.0))
     terms_pool = search_mode == "all_words"
-    sql_limit = min(max((offset + limit) * 20, 100), 400) if terms_pool else limit
-    sql_offset = 0 if terms_pool else offset
+    needs_post_filter = terms_pool or requested_min > 0.0
+    if terms_pool:
+        sql_limit = min(max((offset + limit) * 20, 100), 400)
+    elif requested_min > 0.0:
+        # Exact/lexeme scores are reciprocal-rank scores. No result beyond
+        # this rank can satisfy the threshold, so retrieve precisely the
+        # qualifying prefix and paginate only after filtering it.
+        qualifying_ranks = int(((1.0 / requested_min) - 1.0) / 0.12) + 1
+        sql_limit = min(max(1, qualifying_ranks), 400)
+    else:
+        sql_limit = limit
+    sql_offset = 0 if needs_post_filter else offset
 
     # Diversification is useful across a library, but it must never truncate a
     # deliberately selected single book.
@@ -691,6 +761,8 @@ def search(
                 centre = (span_start + span_end) // 2
                 result["snippet"] = _esc(plain_text[max(0, centre-context_chars):
                                                     min(len(plain_text), centre+context_chars)])
+        elif search_mode == "lexeme" and raw_queries:
+            result["matched_terms"] = _matched_lexeme(plain_text, raw_queries[0])
         bayt_number, stable_id = _bayt_at_offset(plain_text, first_match, row["qasida_number"])
         if row["book_id"] == "b14" and bayt_number is not None:
             result["bayt_number"] = bayt_number
@@ -721,6 +793,8 @@ def search(
             structural = 0.15 if item.get("block_type") == "toc" else 1.0
             item["score"] = (round(raw * structural, 6) if search_mode == "all_words"
                              else round(structural / (1.0 + 0.12 * rank), 6))
+    if requested_min > 0.0:
+        results = [item for item in results if item["score"] >= requested_min]
     if terms_pool:
         if diversify_books and not (book_ids and len(book_ids) == 1):
             counts: dict[str, int] = {}
@@ -730,6 +804,8 @@ def search(
                     diversified.append(item)
                     counts[item["book_id"]] = counts.get(item["book_id"], 0) + 1
             results = diversified
+        results = results[requested_offset: requested_offset + requested_limit]
+    elif requested_min > 0.0:
         results = results[requested_offset: requested_offset + requested_limit]
     return results
 
@@ -746,7 +822,7 @@ def hybrid_search(**kwargs) -> list[dict]:
     queries = kwargs.get("queries") or ([kwargs.get("query")] if kwargs.get("query") else [])
     filtered_queries = []
     for query in queries:
-        words = normalized_tokens(query, drop_stopwords=True)
+        words = hybrid_tokens(query)
         if words:
             filtered_queries.append(" ".join(words))
     queries = filtered_queries or queries
@@ -757,23 +833,32 @@ def hybrid_search(**kwargs) -> list[dict]:
     records: dict[tuple[str, int], dict] = {}
     # Candidate generation stays page-level (the shipped index has pages), but
     # final co-occurrence is measured in overlapping local chunks.
+    term_groups = [lexical_variants(w) for q in queries for w in q.split()]
+    concept_queries = sorted({variant for group in term_groups for variant in group})
     for mode, weight in (("exact_phrase", 1.0), ("all_words", 0.8), ("any_word", 0.2)):
         call = dict(kwargs)
         call.update(search_mode=mode, limit=pool, offset=0, diversify_books=False)
         call.pop("query", None)
         call.pop("min_score", None)
-        call["queries"] = queries
+        call["queries"] = concept_queries if mode == "any_word" else queries
+        if mode == "any_word":
+            call["operator"] = "OR"
         for rank, row in enumerate(search(**call), start=1):
             key = (row["book_id"], row["seq"])
             scores[key] = scores.get(key, 0.0) + weight / (60 + rank)
             records.setdefault(key, row)
-    term_groups = [lexical_variants(w) for q in queries
-                   for w in normalized_tokens(q, drop_stopwords=True)]
     chunk_starts = {}
+    chunk_ends = {}
+    local_scores = {}
     for key, row in records.items():
         page = get_page(row["book_id"], row["seq"])
-        best, chunk_start, _ = _minimum_covering_span(page["text"], term_groups) if page else (0.0, 0, 0)
+        best, chunk_start, chunk_end = (
+            _minimum_covering_span(page["text"], term_groups)
+            if page else (0.0, 0, 0)
+        )
         chunk_starts[key] = chunk_start
+        chunk_ends[key] = chunk_end
+        local_scores[key] = best
         scores[key] = scores.get(key, 0.0) + best
         if page and page.get("block_type") == "toc":
             scores[key] *= 0.15
@@ -784,15 +869,38 @@ def hybrid_search(**kwargs) -> list[dict]:
     )
     fused = []
     configured_threshold = getattr(get_settings(), "hybrid_min_relevance", 0.55)
-    min_score = max(0.0, min(float(kwargs.get("min_score") or configured_threshold), 1.0))
-    eligible = [key for key in ordered if scores[key] >= min_score]
-    for key in eligible[offset: offset + limit]:
+    eligible = [key for key in ordered if local_scores.get(key, 0.0) >= configured_threshold]
+    raw_values = [scores[key] for key in eligible]
+    raw_low = min(raw_values, default=configured_threshold)
+    raw_high = max(raw_values, default=configured_threshold)
+    spread = raw_high - raw_low
+    requested_min = max(0.0, min(float(kwargs.get("min_score") or 0.0), 1.0))
+    calibrated: list[tuple[tuple[str, int], float]] = []
+    for key in eligible:
+        raw = scores[key]
+        absolute = max(0.0, min(1.0, (raw - configured_threshold) /
+                                max(0.05, 1.0 - configured_threshold)))
+        relative = ((raw - raw_low) / spread) if spread > 1e-9 else 0.5
+        score = round(min(1.0, 0.55 + 0.25 * absolute + 0.20 * relative), 6)
+        if score >= requested_min:
+            calibrated.append((key, score))
+    for key, calibrated_score in calibrated[offset: offset + limit]:
         row = records[key]
-        row["score"] = round(min(1.0, scores[key]), 6)
+        row["score"] = calibrated_score
         row["match_id"] = f"{row['book_id']}-p{row['seq']}-c{chunk_starts[key]}"
         row["match_type"] = "hybrid"
-        if row["score"] >= min_score:
-            fused.append(row)
+        page = get_page(row["book_id"], row["seq"])
+        if page:
+            row["snippet"] = _evidence_excerpt(
+                page["text"], chunk_starts[key], chunk_ends[key],
+                int(kwargs.get("context_chars", 160)),
+            )
+            row["evidence_span"] = {
+                "start": chunk_starts[key],
+                "end": chunk_ends[key],
+                "excerpt": row["snippet"],
+            }
+        fused.append(row)
     return fused
 
 

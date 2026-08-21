@@ -28,16 +28,31 @@ _PUNCT_WS = re.compile(r"[\u060c\u061b\u061f،؛؟!\"#$%&'()*+,\-./:;<=>?@\[\\\]
 # Function words never contribute to lexical relevance.  Keep this in the
 # canonical text module so terms, hybrid ranking and future indexers cannot
 # silently acquire different lists.
-ARABIC_STOPWORDS = frozenset({"في", "على", "من", "الى", "عن", "ما", "ان", "الذي"})
+ARABIC_STOPWORDS = frozenset({"في", "علي", "من", "الي", "عن", "ما", "ان", "الذي"})
 
-# Conservative concept aliases used by proximity/terms retrieval.  These are
+# Concept retrieval may ignore explicit nominal negation while retaining the
+# meaningful verb/noun that follows it.  Strict terms retrieval never uses
+# this set and therefore remains literal.
+HYBRID_STOPWORDS = ARABIC_STOPWORDS | frozenset({"عدم"})
+
+# Conservative concept aliases used by hybrid/proximity retrieval.  These are
 # lexical families, not a claim of semantic equivalence; they only generate
 # candidates which are still ranked by chunk-local co-occurrence.
 _LEXICAL_FAMILIES = {
-    "المحافظه": ("حافظ", "حفظ", "المحافظه"),
-    "محافظه": ("حافظ", "حفظ", "محافظه"),
-    "الصلاه": ("الصلاه", "صلاه"),
-    "وقتها": ("وقتها", "وقت"),
+    "المحافظه": ("حافظ", "حافظوا", "حفظ", "يحافظ", "يحافظون", "المحافظه"),
+    "محافظه": ("حافظ", "حافظوا", "حفظ", "يحافظ", "يحافظون", "محافظه"),
+    "حفظ": ("حافظ", "حافظوا", "حفظ", "يحافظ", "يحافظون", "محافظه", "المحافظه"),
+    "الصلاه": ("الصلاه", "صلاه", "صلوات", "صلواته", "الصلوات"),
+    "صلاه": ("الصلاه", "صلاه", "صلوات", "صلواته", "الصلوات"),
+    "وقتها": ("وقتها", "وقت", "اوقات", "اوقاتها"),
+    "الوقتها": ("وقتها", "وقت", "اوقات", "اوقاتها"),
+    "تاخيرها": ("تاخير", "تاخيرها", "يؤخر", "يوخر", "اخر"),
+}
+
+_LEXICAL_ROOTS = {
+    "المحافظه": "حفظ",
+    "محافظه": "حفظ",
+    "حفظ": "حفظ",
 }
 
 
@@ -99,6 +114,20 @@ def normalized_tokens(text: str, *, drop_stopwords: bool = False) -> list[str]:
     return [w for w in words if not drop_stopwords or w not in ARABIC_STOPWORDS]
 
 
+def hybrid_tokens(text: str) -> list[str]:
+    """Content tokens for conceptual retrieval, with common clitics removed."""
+    tokens: list[str] = []
+    for word in normalized_tokens(text):
+        base = (
+            word[1:]
+            if word not in _LEXICAL_FAMILIES and word[:1] in {"و", "ف"} and len(word) > 3
+            else word
+        )
+        if base and base not in HYBRID_STOPWORDS:
+            tokens.append(base)
+    return tokens
+
+
 def lexical_variants(token: str) -> tuple[str, ...]:
     """Concept-oriented variants for hybrid/proximity retrieval only.
 
@@ -109,6 +138,11 @@ def lexical_variants(token: str) -> tuple[str, ...]:
     variants = set(term_variants(token))
     variants.update(_LEXICAL_FAMILIES.get(token, ()))
     return tuple(sorted(variants))
+
+
+def lexical_root(token: str) -> str | None:
+    """Return a declared root for curated lexeme families, when available."""
+    return _LEXICAL_ROOTS.get(normalize_arabic(token, aggressive=True))
 
 
 def term_variants(token: str) -> tuple[str, ...]:

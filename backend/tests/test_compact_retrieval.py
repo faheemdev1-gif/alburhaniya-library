@@ -164,6 +164,30 @@ class CompactRetrievalTests(unittest.TestCase):
         rows = db.hybrid_search(query="الصلاة في وقتها", limit=20, min_score=0.9)
         self.assertTrue(all(row["score"] >= 0.9 for row in rows))
 
+    def test_exact_min_score_filters_before_pagination(self):
+        unfiltered = db.search("المحافظة", search_mode="exact_phrase", limit=5)
+        filtered = db.search(
+            "المحافظة", search_mode="exact_phrase", limit=5, min_score=0.99,
+        )
+        self.assertGreater(len(unfiltered), len(filtered))
+        self.assertEqual(len(filtered), 1)
+        self.assertTrue(all(row["score"] >= 0.99 for row in filtered))
+
+    def test_exact_min_score_preserves_filtered_pagination(self):
+        first = db.search(
+            "المحافظة", search_mode="exact_phrase", limit=1, offset=0,
+            min_score=0.8,
+        )
+        second = db.search(
+            "المحافظة", search_mode="exact_phrase", limit=1, offset=1,
+            min_score=0.8,
+        )
+        self.assertEqual(len(first), 1)
+        self.assertEqual(len(second), 1)
+        self.assertNotEqual(first[0]["match_id"], second[0]["match_id"])
+        self.assertGreaterEqual(first[0]["score"], 0.8)
+        self.assertGreaterEqual(second[0]["score"], 0.8)
+
     def test_lexeme_mode_recovers_affixed_hima_forms(self):
         exact = db.search_stats(["حمى"], book_ids=["b14"])
         enumerated = db.search_stats(
@@ -246,6 +270,42 @@ class CompactRetrievalTests(unittest.TestCase):
         self.assertTrue(any(not row["match_id"].endswith("-c0") for row in rows))
         self.assertTrue(all(row["match_type"] == "hybrid" for row in rows))
 
+    def test_short_concept_query_recovers_relevant_prayer_evidence(self):
+        rows = db.hybrid_search(query="المحافظة الصلاة وقتها", limit=5)
+        self.assertGreaterEqual(len(rows), 2)
+        self.assertTrue(all(row["book_id"] == "b44" for row in rows))
+        self.assertTrue(all(row["seq"] in {46, 55} for row in rows))
+        self.assertTrue(any("أوقاتها" in row["snippet"] for row in rows))
+
+    def test_hybrid_evidence_span_drives_match_id_and_passage(self):
+        query = "المحافظة على الصلاة وعدم تأخيرها عن وقتها"
+        row = db.hybrid_search(query=query, limit=1)[0]
+        self.assertIn("evidence_span", row)
+        self.assertEqual(
+            row["match_id"].rsplit("c", 1)[1],
+            str(row["evidence_span"]["start"]),
+        )
+        passage = db.get_passage_by_match_id(row["match_id"], 400)
+        self.assertIn("يؤخر صلاته", passage["passage"])
+
+    def test_hybrid_scores_have_useful_corpus_relative_separation(self):
+        rows = db.hybrid_search(query="المحافظة الصلاة وقتها", limit=5)
+        self.assertGreaterEqual(len(rows), 2)
+        self.assertGreater(rows[0]["score"] - rows[1]["score"], 0.05)
+
+    def test_exact_article_variant_has_real_offset_and_visible_evidence(self):
+        row = db.search("المحافظة", search_mode="exact_phrase", limit=1)[0]
+        self.assertFalse(row["match_id"].endswith("-c0"))
+        self.assertIn("<mark>محافظة</mark>", row["snippet"])
+
+    def test_lexeme_root_relation_is_explicit(self):
+        rows = db.search("المحافظة", search_mode="lexeme", limit=5)
+        self.assertTrue(rows)
+        for row in rows:
+            evidence = row["matched_terms"]["المحافظة"]
+            self.assertEqual(evidence["relation"], "root")
+            self.assertEqual(evidence["root"], "حفظ")
+
     def test_terms_anchor_to_minimum_covering_span(self):
         rows = db.search("المريد الشيخ", search_mode="all_words", limit=7)
         self.assertTrue(rows)
@@ -279,7 +339,7 @@ class CompactRetrievalTests(unittest.TestCase):
         self.assertEqual(rows[0]["stable_id"], "b14-q091-b009")
 
     def test_diwan_structure_and_qasida_scope(self):
-        page = db.get_page("b14", 43)
+        page = db.get_page("b14", 44)
         self.assertEqual(page["qasida_number"], 3)
         self.assertIsNotNone(page["qasida_title"])
         self.assertLess(len(page["qasida_title"]), 200)

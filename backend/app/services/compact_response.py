@@ -39,6 +39,8 @@ def compact_search_response(
                 hit["verification_required"] = bool(row.get("verification_required"))
             if row.get("matched_terms"):
                 hit["matched_terms"] = row["matched_terms"]
+            if row.get("evidence_span"):
+                hit["evidence_span"] = row["evidence_span"]
             hits.append(hit)
         response = {"n": len(hits), "books": books, "results": hits}
         if total_hits is not None:
@@ -68,7 +70,8 @@ def compact_search_response(
         elif row.get("citation_label"):
             hit["citation_label"] = row["citation_label"]
         for field in ("qasida_number", "qasida_title", "bayt_from", "bayt_to",
-                      "bayt_number", "stable_id", "block_type", "matched_terms"):
+                      "bayt_number", "stable_id", "block_type", "matched_terms",
+                      "evidence_span"):
             if row.get(field) is not None:
                 hit[field] = row[field]
         if row.get("semantic_score") is not None:
