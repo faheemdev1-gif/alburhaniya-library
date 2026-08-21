@@ -468,14 +468,33 @@ def search_stats(
 
 
 def _ranking_order(ranking: str, diversified: bool = False) -> str:
-    prefix = "source_code, " if ranking == "primary_first" else ""
+    """Return deterministic SQL ordering with unambiguous column names."""
+    book = "book_id" if diversified else "p.book_id"
+    seq = "seq" if diversified else "p.seq"
+    title = "book_title" if diversified else "b.title"
+    source = "source_code" if diversified else "b.source_code"
+    block = "block_type" if diversified else "p.block_type"
+    structural = f"CASE WHEN {block} = 'toc' THEN 1 ELSE 0 END"
     if ranking == "relevance":
-        return prefix + ("book_rank, relevance, book_title, seq" if diversified else "relevance, book_title, seq")
+        prefix = "book_rank, " if diversified else ""
+        return f"{structural}, {prefix}relevance, {title}, {book}, {seq}"
     if ranking == "primary_first":
-        return "source_code, " + ("book_rank, relevance, book_title, seq" if diversified else "relevance, book_title, seq")
+        prefix = "book_rank, " if diversified else ""
+        return f"{source}, {structural}, {prefix}relevance, {title}, {book}, {seq}"
     if ranking in {"book_order", "chronological"}:
-        return prefix + "book_id, seq"
+        return f"{book}, {seq}"
     raise ValueError("ranking must be relevance, primary_first, chronological, or book_order")
+
+
+def _bounded_bm25(raw_relevance: float) -> float:
+    """Map positive FTS5 BM25 strength to a stable 0..1 lexical score.
+
+    This fixed transform is query-independent and monotonic.  Unlike the old
+    reciprocal-rank value, it does not change merely because ``limit`` or
+    ``offset`` changes.
+    """
+    raw = max(0.0, float(raw_relevance))
+    return raw / (raw + 5.0) if raw else 0.0
 
 
 def _best_chunk_score(text: str, term_groups: list[tuple[str, ...]]) -> tuple[float, int]:
@@ -547,18 +566,21 @@ def _minimum_covering_span(
     return (round(0.45 * coverage + 0.55 * proximity, 6), start, end)
 
 
-def _evidence_excerpt(text: str, start: int, end: int, radius: int) -> str:
+def _evidence_excerpt(
+    text: str, start: int, end: int, radius: int,
+    patterns: list[re.Pattern] | None = None,
+) -> str:
     """Return a bounded excerpt centred on the actual retrieval evidence."""
     radius = max(60, min(radius, 300))
     evidence_end = min(max(end, start + 1), start + radius)
     centre = (start + evidence_end) // 2
     left = max(0, centre - radius)
     right = min(len(text), centre + radius)
-    return (
-        ("…" if left else "")
-        + _esc(text[left:right])
-        + ("…" if right < len(text) else "")
-    )
+    excerpt = _esc(text[left:right])
+    if patterns:
+        union = re.compile("(?:" + "|".join(p.pattern for p in patterns) + ")", re.IGNORECASE)
+        excerpt, _ = _highlight(excerpt, union)
+    return ("…" if left else "") + excerpt + ("…" if right < len(text) else "")
 
 
 _ARABIC_TOKEN_RE = re.compile(r"[\u0621-\u06ff]+")
@@ -576,9 +598,29 @@ def _content_query_terms(raw_queries: list[str]) -> list[tuple[str, str]]:
     return terms
 
 
-def _matched_terms(text: str, raw_queries: list[str]) -> dict[str, dict[str, str]]:
+def _term_highlight_patterns(raw_queries: list[str]) -> list[re.Pattern]:
+    """Build non-root, article-aware patterns for strict term evidence."""
+    patterns: list[re.Pattern] = []
+    seen: set[str] = set()
+    for _, normalized in _content_query_terms(raw_queries):
+        variants = sorted(set(term_variants(normalized)), key=len, reverse=True)
+        pattern = re.compile(
+            "(?:" + "|".join(_build_highlight_regex(v).pattern for v in variants) + ")",
+            re.IGNORECASE,
+        )
+        if pattern.pattern not in seen:
+            patterns.append(pattern)
+            seen.add(pattern.pattern)
+    return patterns
+
+
+def _matched_terms(
+    text: str, raw_queries: list[str], start: int | None = None,
+    end: int | None = None,
+) -> dict[str, dict[str, str]]:
     """Explain the corpus token that satisfied every strict terms token."""
-    corpus_tokens = [match.group(0) for match in _ARABIC_TOKEN_RE.finditer(text)]
+    evidence_text = text[start:end] if start is not None and end is not None and end > start else text
+    corpus_tokens = [match.group(0) for match in _ARABIC_TOKEN_RE.finditer(evidence_text)]
     normalized_corpus = [normalize_arabic(token, aggressive=True) for token in corpus_tokens]
     evidence: dict[str, dict[str, str]] = {}
     for display, normalized in _content_query_terms(raw_queries):
@@ -633,6 +675,28 @@ def _bayt_at_offset(text: str, offset: int, qasida_number: int | None) -> tuple[
     return (number, f"b14-q{qasida_number:03d}-b{number:03d}")
 
 
+def _structural_identity(
+    text: str, start: int, end: int, qasida_number: int | None,
+) -> dict[str, object]:
+    """Return a stable qasida container and bayt identity for an evidence span."""
+    if qasida_number is None:
+        return {}
+    identity: dict[str, object] = {"container_id": f"b14-q{qasida_number:03d}"}
+    start_number, start_id = _bayt_at_offset(text, start, qasida_number)
+    end_number, end_id = _bayt_at_offset(text, max(start, end - 1), qasida_number)
+    if start_number is None:
+        return identity
+    if end_number is None or end_number == start_number:
+        identity.update({"bayt_number": start_number, "stable_id": start_id})
+        return identity
+    low, high = sorted((start_number, end_number))
+    identity["stable_ids"] = [
+        f"b14-q{qasida_number:03d}-b{number:03d}"
+        for number in range(low, high + 1)
+    ]
+    return identity
+
+
 def search(
     query: str | None = None,
     queries: list[str] | None = None,
@@ -668,13 +732,11 @@ def search(
     terms_pool = search_mode == "all_words"
     needs_post_filter = terms_pool or requested_min > 0.0
     if terms_pool:
-        sql_limit = min(max((offset + limit) * 20, 100), 400)
+        sql_limit = min(max((offset + limit) * 20, 100), 10_000)
     elif requested_min > 0.0:
-        # Exact/lexeme scores are reciprocal-rank scores. No result beyond
-        # this rank can satisfy the threshold, so retrieve precisely the
-        # qualifying prefix and paginate only after filtering it.
-        qualifying_ranks = int(((1.0 / requested_min) - 1.0) / 0.12) + 1
-        sql_limit = min(max(1, qualifying_ranks), 400)
+        # A score threshold is applied to stable lexical evidence, not rank.
+        # The complete 6,934-page corpus fits safely under this ceiling.
+        sql_limit = 10_000
     else:
         sql_limit = limit
     sql_offset = 0 if needs_post_filter else offset
@@ -715,6 +777,7 @@ def search(
     rows = conn.execute(sql, params).fetchall()
 
     patterns = [_pattern_for_query(q.strip(), search_mode) for q in raw_queries if q and q.strip()]
+    term_patterns = _term_highlight_patterns(raw_queries) if search_mode == "all_words" else []
     results = []
     for row in rows:
         plain_text = row["text"]
@@ -755,19 +818,31 @@ def search(
                       for w in normalized_tokens(q, drop_stopwords=True)]
             local_score, span_start, span_end = _minimum_covering_span(plain_text, groups)
             first_match = span_start
+            evidence_end = span_end
             result["_local_score"] = local_score
-            result["matched_terms"] = _matched_terms(plain_text, raw_queries)
+            result["occurrences"] = _unique_occurrence_count(plain_text, term_patterns)
+            result["matched_terms"] = _matched_terms(
+                plain_text, raw_queries, span_start, span_end,
+            )
             if span_end > span_start:
-                centre = (span_start + span_end) // 2
-                result["snippet"] = _esc(plain_text[max(0, centre-context_chars):
-                                                    min(len(plain_text), centre+context_chars)])
+                result["snippet"] = _evidence_excerpt(
+                    plain_text, span_start, span_end, context_chars, term_patterns,
+                )
         elif search_mode == "lexeme" and raw_queries:
             result["matched_terms"] = _matched_lexeme(plain_text, raw_queries[0])
-        bayt_number, stable_id = _bayt_at_offset(plain_text, first_match, row["qasida_number"])
-        if row["book_id"] == "b14" and bayt_number is not None:
-            result["bayt_number"] = bayt_number
-            result["stable_id"] = stable_id
+            evidence_end = min((m.end() for m, _ in matches), default=first_match + 1)
+        else:
+            evidence_end = min((m.end() for m, _ in matches), default=first_match + 1)
+        if row["book_id"] == "b14":
+            result.update(_structural_identity(
+                plain_text, first_match, evidence_end, row["qasida_number"],
+            ))
         result["match_id"] = f"{row['book_id']}-p{row['seq']}-c{first_match}"
+        result["evidence_span"] = {
+            "start": first_match,
+            "end": evidence_end,
+            "excerpt": result["snippet"],
+        }
         if include_full_text:
             safe_text = _esc(plain_text)
             for pattern in patterns:
@@ -775,24 +850,38 @@ def search(
             result["highlight"] = safe_text
             result["text"] = plain_text
         results.append(result)
-    if search_mode == "all_words":
-        results.sort(key=lambda item: (
-            item.get("block_type") == "toc", -item.get("_local_score", 0.0),
-            item["source_tier"], item["book_id"], item["seq"]
-        ))
-    else:
-        results.sort(key=lambda item: (
-            item.get("block_type") == "toc", -item["_raw_relevance"],
-            item["source_tier"], item["book_id"], item["seq"]
-        ))
-    raw_scores = [item.pop("_local_score", item.get("_raw_relevance", 0.0)) for item in results]
     for item in results:
-        item.pop("_raw_relevance", None)
-    if raw_scores:
-        for rank, (item, raw) in enumerate(zip(results, raw_scores)):
-            structural = 0.15 if item.get("block_type") == "toc" else 1.0
-            item["score"] = (round(raw * structural, 6) if search_mode == "all_words"
-                             else round(structural / (1.0 + 0.12 * rank), 6))
+        raw_bm25 = item.pop("_raw_relevance", 0.0)
+        bm25_score = _bounded_bm25(raw_bm25)
+        structural = 0.15 if item.get("block_type") == "toc" else 1.0
+        if search_mode == "all_words":
+            local_score = item.pop("_local_score", 0.0)
+            occurrence_score = item.get("occurrences", 0) / (item.get("occurrences", 0) + 2.0)
+            score = structural * (
+                0.55 * local_score + 0.35 * bm25_score + 0.10 * occurrence_score
+            )
+            item["score_kind"] = "term_proximity_bm25"
+        else:
+            score = structural * bm25_score
+            item["score_kind"] = {
+                "exact_phrase": "bm25_phrase",
+                "any_word": "bm25_any_term",
+                "lexeme": "bm25_lexeme",
+            }[search_mode]
+        item["score"] = round(max(0.0, min(1.0, score)), 6)
+    if search_mode == "all_words":
+        if ranking in {"book_order", "chronological"}:
+            results.sort(key=lambda item: (item["book_id"], item["seq"]))
+        elif ranking == "primary_first":
+            results.sort(key=lambda item: (
+                item["source_code"] != "primary", item.get("block_type") == "toc",
+                -item["score"], item["source_tier"], item["book_id"], item["seq"],
+            ))
+        else:
+            results.sort(key=lambda item: (
+                item.get("block_type") == "toc", -item["score"],
+                item["source_tier"], item["book_id"], item["seq"],
+            ))
     if requested_min > 0.0:
         results = [item for item in results if item["score"] >= requested_min]
     if terms_pool:
@@ -807,6 +896,8 @@ def search(
         results = results[requested_offset: requested_offset + requested_limit]
     elif requested_min > 0.0:
         results = results[requested_offset: requested_offset + requested_limit]
+    for rank, item in enumerate(results, start=requested_offset + 1):
+        item["rank"] = rank
     return results
 
 
@@ -829,7 +920,8 @@ def hybrid_search(**kwargs) -> list[dict]:
     limit = int(kwargs.get("limit", 10))
     offset = int(kwargs.get("offset", 0))
     pool = min(max((offset + limit) * 8, 40), 400)
-    scores: dict[tuple[str, int], float] = {}
+    rrf_scores: dict[tuple[str, int], float] = {}
+    mode_scores: dict[tuple[str, int], dict[str, float]] = {}
     records: dict[tuple[str, int], dict] = {}
     # Candidate generation stays page-level (the shipped index has pages), but
     # final co-occurrence is measured in overlapping local chunks.
@@ -845,7 +937,10 @@ def hybrid_search(**kwargs) -> list[dict]:
             call["operator"] = "OR"
         for rank, row in enumerate(search(**call), start=1):
             key = (row["book_id"], row["seq"])
-            scores[key] = scores.get(key, 0.0) + weight / (60 + rank)
+            rrf_scores[key] = rrf_scores.get(key, 0.0) + weight / (60 + rank)
+            mode_scores.setdefault(key, {})[mode] = max(
+                mode_scores.get(key, {}).get(mode, 0.0), float(row["score"]),
+            )
             records.setdefault(key, row)
     chunk_starts = {}
     chunk_ends = {}
@@ -859,48 +954,74 @@ def hybrid_search(**kwargs) -> list[dict]:
         chunk_starts[key] = chunk_start
         chunk_ends[key] = chunk_end
         local_scores[key] = best
-        scores[key] = scores.get(key, 0.0) + best
+    max_rrf = sum(weight / 61.0 for weight in (1.0, 0.8, 0.2))
+    calibrated_scores: dict[tuple[str, int], float] = {}
+    for key, row in records.items():
+        supports = mode_scores.get(key, {})
+        lexical_support = (
+            0.50 * supports.get("exact_phrase", 0.0)
+            + 0.30 * supports.get("all_words", 0.0)
+            + 0.20 * supports.get("any_word", 0.0)
+        )
+        fusion_support = min(1.0, rrf_scores.get(key, 0.0) / max_rrf) if max_rrf else 0.0
+        score = 0.62 * local_scores.get(key, 0.0) + 0.28 * lexical_support + 0.10 * fusion_support
+        page = get_page(row["book_id"], row["seq"])
         if page and page.get("block_type") == "toc":
-            scores[key] *= 0.15
+            score *= 0.15
+        calibrated_scores[key] = round(max(0.0, min(1.0, score)), 6)
     ordered = sorted(
         records,
-        key=lambda key: (-scores[key], records[key]["source_tier"],
+        key=lambda key: (-calibrated_scores[key], records[key]["source_tier"],
                          records[key]["book_id"], records[key]["seq"]),
     )
+    ranking = kwargs.get("ranking", "relevance")
+    if ranking in {"book_order", "chronological"}:
+        ordered.sort(key=lambda key: (records[key]["book_id"], records[key]["seq"]))
+    elif ranking == "primary_first":
+        ordered.sort(key=lambda key: (
+            records[key]["source_code"] != "primary", -calibrated_scores[key],
+            records[key]["source_tier"], records[key]["book_id"], records[key]["seq"],
+        ))
     fused = []
     configured_threshold = getattr(get_settings(), "hybrid_min_relevance", 0.55)
     eligible = [key for key in ordered if local_scores.get(key, 0.0) >= configured_threshold]
-    raw_values = [scores[key] for key in eligible]
-    raw_low = min(raw_values, default=configured_threshold)
-    raw_high = max(raw_values, default=configured_threshold)
-    spread = raw_high - raw_low
     requested_min = max(0.0, min(float(kwargs.get("min_score") or 0.0), 1.0))
-    calibrated: list[tuple[tuple[str, int], float]] = []
-    for key in eligible:
-        raw = scores[key]
-        absolute = max(0.0, min(1.0, (raw - configured_threshold) /
-                                max(0.05, 1.0 - configured_threshold)))
-        relative = ((raw - raw_low) / spread) if spread > 1e-9 else 0.5
-        score = round(min(1.0, 0.55 + 0.25 * absolute + 0.20 * relative), 6)
-        if score >= requested_min:
-            calibrated.append((key, score))
+    calibrated = [
+        (key, calibrated_scores[key]) for key in eligible
+        if calibrated_scores[key] >= requested_min
+    ]
+    hybrid_patterns = [
+        re.compile(
+            "(?:" + "|".join(_build_highlight_regex(v).pattern for v in group) + ")",
+            re.IGNORECASE,
+        )
+        for group in term_groups
+    ]
     for key, calibrated_score in calibrated[offset: offset + limit]:
         row = records[key]
         row["score"] = calibrated_score
+        row["score_kind"] = "hybrid_evidence"
         row["match_id"] = f"{row['book_id']}-p{row['seq']}-c{chunk_starts[key]}"
         row["match_type"] = "hybrid"
         page = get_page(row["book_id"], row["seq"])
         if page:
             row["snippet"] = _evidence_excerpt(
                 page["text"], chunk_starts[key], chunk_ends[key],
-                int(kwargs.get("context_chars", 160)),
+                int(kwargs.get("context_chars", 160)), hybrid_patterns,
             )
             row["evidence_span"] = {
                 "start": chunk_starts[key],
                 "end": chunk_ends[key],
                 "excerpt": row["snippet"],
             }
+            if row["book_id"] == "b14":
+                row.update(_structural_identity(
+                    page["text"], chunk_starts[key], chunk_ends[key],
+                    row.get("qasida_number"),
+                ))
         fused.append(row)
+    for rank, row in enumerate(fused, start=offset + 1):
+        row["rank"] = rank
     return fused
 
 

@@ -37,6 +37,16 @@ def run() -> dict:
         set(row.get("matched_terms", {})) == {"المريد", "الشيخ"}
         for row in genuine_terms
     )
+    tests["terms_highlight_evidence"] = bool(genuine_terms) and all(
+        "<mark>" in row["snippet"] for row in genuine_terms
+    )
+    single_terms = db.search(
+        "البصيرة", search_mode="all_words", ranking="relevance", limit=10,
+    )
+    tests["single_terms_score_discrimination"] = (
+        len({row["score"] for row in single_terms}) > 3
+        and all(row["score_kind"] == "term_proximity_bm25" for row in single_terms)
+    )
     short_hybrid = db.hybrid_search(query="المحافظة الصلاة وقتها", limit=5)
     tests["short_hybrid_recall"] = bool(short_hybrid) and all(
         row["book_id"] == "b44" for row in short_hybrid
@@ -45,9 +55,12 @@ def run() -> dict:
         row.get("evidence_span") and not row["match_id"].endswith("-c0")
         for row in short_hybrid
     )
-    tests["hybrid_score_separation"] = (
-        len(short_hybrid) >= 2
-        and short_hybrid[0]["score"] - short_hybrid[1]["score"] > 0.05
+    calibrated_hybrid = db.hybrid_search(query="الحقيقة المحمدية", limit=10)
+    tests["hybrid_score_calibration"] = (
+        len(calibrated_hybrid) >= 5
+        and max(row["score"] for row in calibrated_hybrid) < 0.95
+        and max(row["score"] for row in calibrated_hybrid)
+        - min(row["score"] for row in calibrated_hybrid) > 0.02
     )
     tests["bad_hybrid_suppressed"] = db.hybrid_search(
         query="الصلاة خير من النوم", book_ids=["b29"], limit=5
@@ -57,17 +70,52 @@ def run() -> dict:
         not exact_article[0]["match_id"].endswith("-c0")
         and "<mark>محافظة</mark>" in exact_article[0]["snippet"]
     )
+    exact_rows = db.search(
+        "المحافظة", search_mode="exact_phrase", ranking="relevance",
+        diversify_books=False, limit=20,
+    )
+    threshold = (exact_rows[0]["score"] + exact_rows[1]["score"]) / 2
     exact_pruned = db.search(
-        "المحافظة", search_mode="exact_phrase", limit=5, min_score=0.99,
+        "المحافظة", search_mode="exact_phrase", ranking="relevance",
+        diversify_books=False, limit=20, min_score=threshold,
     )
     tests["exact_min_score_prunes"] = len(exact_pruned) == 1 and (
-        exact_pruned[0]["score"] >= 0.99
+        exact_pruned[0]["score"] >= threshold
+    )
+    truth_scores = [row["score"] for row in db.search(
+        "الحقيقة", ranking="relevance", diversify_books=False, limit=10,
+    )]
+    night_scores = [row["score"] for row in db.search(
+        "قيام الليل", ranking="relevance", diversify_books=False, limit=10,
+    )]
+    tests["exact_scores_are_not_reciprocal_rank"] = truth_scores != night_scores
+    bare_pages = db.search(
+        "معرفة", ranking="book_order", diversify_books=False, limit=1000,
+    )
+    definite_pages = db.search(
+        "المعرفة", ranking="book_order", diversify_books=False, limit=1000,
+    )
+    tests["article_normalized_page_sets"] = (
+        {(row["book_id"], row["seq"]) for row in bare_pages}
+        == {(row["book_id"], row["seq"]) for row in definite_pages}
+        and len(bare_pages) == db.count_search(["معرفة"])
+    )
+    ordered_first = db.search(
+        "معرفة", ranking="book_order", diversify_books=False, limit=20,
+    )
+    ordered_second = db.search(
+        "معرفة", ranking="book_order", diversify_books=False, limit=20, offset=20,
+    )
+    tests["deterministic_book_order_pagination"] = not (
+        {(row["book_id"], row["seq"]) for row in ordered_first}
+        & {(row["book_id"], row["seq"]) for row in ordered_second}
     )
     diwan = db.search(
         "فما طلعت إلا وغاب ضياؤها", book_ids=["b14"], limit=1
     )
     tests["diwan_stable_structural_id"] = bool(diwan) and (
         diwan[0].get("stable_id") == "b14-q091-b009"
+        and diwan[0].get("container_id") == "b14-q091"
     )
     toc = db.search(
         "مشروعية الذكر للنساء", book_ids=["b29"],

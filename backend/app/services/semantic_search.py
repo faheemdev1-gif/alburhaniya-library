@@ -138,7 +138,7 @@ def semantic_search(
     selected = _top_indices(scores, limit)
     results = []
     excerpt_chars = max(40, min(int(context_chars), 300)) * 2
-    for local_index in selected:
+    for rank, local_index in enumerate(selected, start=1):
         raw_score = float(scores[local_index])
         if raw_score < threshold:
             continue
@@ -147,6 +147,7 @@ def semantic_search(
         snippet = _esc(text[:excerpt_chars])
         if len(text) > excerpt_chars:
             snippet += "…"
+        bounded_score = max(0.0, min(1.0, raw_score))
         result = {
             "book_id": row["book_id"], "book_title": row["book_title"],
             "source_grade": row["source_grade"], "source_code": row["source_code"],
@@ -160,10 +161,13 @@ def semantic_search(
             "qasida_title": row["qasida_title"],
             "bayt_from": row["bayt_from"], "bayt_to": row["bayt_to"],
             "snippet": snippet, "match_id": row["chunk_id"],
-            "match_type": "semantic", "score": round(raw_score, 6),
+            "match_type": "semantic", "score": round(bounded_score, 6),
+            "score_kind": "semantic_cosine", "rank": rank,
             "semantic_score": round(raw_score, 6),
             "citation_verified": False, "verification_required": True,
         }
+        if row["book_id"] == "b14" and row["qasida_number"] is not None:
+            result["container_id"] = f"b14-q{int(row['qasida_number']):03d}"
         results.append(result)
     return results
 
@@ -213,14 +217,13 @@ def combine_candidates(
     ranked = []
     for item in candidates.values():
         row = dict(item["row"])
-        tier_weight = (6 - int(row["source_tier"])) / 5
         quality = _coverage(query, row.get("snippet", ""))
         semantic = item["semantic_score"]
         lexical = item["lexical_score"]
         if item["exact"]:
-            final = 0.55 * lexical + 0.20 * semantic + 0.15 * tier_weight + 0.10 * quality
+            final = 0.60 * lexical + 0.30 * semantic + 0.10 * quality
         else:
-            final = 0.50 * semantic + 0.30 * lexical + 0.15 * tier_weight + 0.05 * quality
+            final = 0.55 * semantic + 0.35 * lexical + 0.10 * quality
         row["_combined_score"] = max(0.0, final)
         if semantic:
             row["semantic_score"] = round(semantic, 6)
@@ -232,9 +235,9 @@ def combine_candidates(
     ranked.sort(key=lambda row: (
         -row["_combined_score"], row["source_tier"], row["book_id"], row["seq"]
     ))
-    high = max((row["_combined_score"] for row in ranked), default=1.0)
     for row in ranked:
-        row["score"] = round(row.pop("_combined_score") / high, 6) if high else 0.0
+        row["score"] = round(min(1.0, row.pop("_combined_score")), 6)
+        row["score_kind"] = "auto_fusion"
     return ranked
 
 
@@ -264,7 +267,7 @@ def auto_search(**kwargs) -> list[dict]:
         page_from=kwargs.get("page_from"), page_to=kwargs.get("page_to"),
         qasida_number=kwargs.get("qasida_number"), limit=pool,
         context_chars=kwargs.get("context_chars", 60),
-        min_score=kwargs.get("min_score"),
+        min_score=0.0,
     )
     rows = combine_candidates(combined_query, groups, semantic_rows)
 
@@ -272,7 +275,8 @@ def auto_search(**kwargs) -> list[dict]:
         rows.sort(key=lambda row: (row["book_id"], row["seq"]))
     elif kwargs.get("ranking") == "primary_first":
         rows.sort(key=lambda row: (
-            row["source_tier"], -row["score"], row["book_id"], row["seq"]
+            row["source_code"] != "primary", -row["score"],
+            row["source_tier"], row["book_id"], row["seq"]
         ))
 
     if kwargs.get("diversify_books", True) and not (
@@ -286,4 +290,10 @@ def auto_search(**kwargs) -> list[dict]:
                 diversified.append(row)
                 counts[row["book_id"]] = count + 1
         rows = diversified
-    return rows[offset: offset + limit]
+    requested_min = max(0.0, min(float(kwargs.get("min_score") or 0.0), 1.0))
+    if requested_min > 0.0:
+        rows = [row for row in rows if row["score"] >= requested_min]
+    page = rows[offset: offset + limit]
+    for rank, row in enumerate(page, start=offset + 1):
+        row["rank"] = rank
+    return page

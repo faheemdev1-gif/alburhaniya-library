@@ -268,8 +268,13 @@ def search_library(
             exact, terms, then lexical hybrid. Every hit declares match_type. Lexeme
             accepts one Arabic word per query and expands common proclitics,
             suffixes, and weak-final ي/ا forms for recall-oriented census work.
-            Every hit also includes a normalized relevance score from 0 to 1;
-            higher scores indicate stronger relevance within that result set.
+            Every hit includes rank, score, and score_kind. Scores are stable
+            evidence measures rather than reciprocal rank: bounded BM25 for
+            exact/lexeme, proximity plus BM25 for terms, fixed evidence fusion
+            for hybrid, and cosine/fusion scores for semantic auto retrieval.
+            Higher means stronger evidence under the declared score_kind.
+        min_score: Filter by the declared evidence score before pagination.
+            It never acts as a disguised result-rank cutoff.
         ranking: relevance, primary_first, chronological, or book_order.
     """
     limit = max(1, min(limit, 20))
@@ -409,6 +414,8 @@ def search_library(
             suggestions = db.suggest_spelling(raw_queries[0])
             if suggestions:
                 payload["suggestions"] = suggestions
+        if include_counts and min_score > 0.0:
+            payload["total_hits_scope"] = "lexical_matches_before_score_filter"
         return payload
 
     primary_hits = sum(
@@ -435,6 +442,8 @@ def search_library(
     if include_counts:
         response["total_hits"] = total_hits
         response["total_hits_unit"] = "matching_pages"
+        if min_score > 0.0:
+            response["total_hits_scope"] = "lexical_matches_before_score_filter"
         response["total_occurrences"] = stats["matching_occurrences"]
         response["per_query"] = stats["per_query"]
     return response

@@ -15,7 +15,8 @@ def compact_search_response(
             hit = {
                 "b": row["book_id"], "s": row["seq"],
                 "m": row["match_id"], "x": row["snippet"], "score": row["score"],
-                "type": row["match_type"],
+                "type": row["match_type"], "sk": row.get("score_kind"),
+                "r": row.get("rank"),
             }
             if row["printed_page"] is not None:
                 hit["p"] = row["printed_page"]
@@ -33,6 +34,10 @@ def compact_search_response(
                 hit["bn"] = row["bayt_number"]
             if row.get("stable_id"):
                 hit["id"] = row["stable_id"]
+            if row.get("stable_ids"):
+                hit["ids"] = row["stable_ids"]
+            if row.get("container_id"):
+                hit["cid"] = row["container_id"]
             if row.get("semantic_score") is not None:
                 hit["semantic_score"] = row["semantic_score"]
                 hit["citation_verified"] = bool(row.get("citation_verified"))
@@ -40,7 +45,10 @@ def compact_search_response(
             if row.get("matched_terms"):
                 hit["matched_terms"] = row["matched_terms"]
             if row.get("evidence_span"):
-                hit["evidence_span"] = row["evidence_span"]
+                hit["evidence_span"] = {
+                    "start": row["evidence_span"]["start"],
+                    "end": row["evidence_span"]["end"],
+                }
             hits.append(hit)
         response = {"n": len(hits), "books": books, "results": hits}
         if total_hits is not None:
@@ -63,6 +71,7 @@ def compact_search_response(
         hit = {
             "book_id": row["book_id"], "seq": row["seq"],
             "match_id": row["match_id"], "excerpt": row["snippet"], "score": row["score"],
+            "score_kind": row.get("score_kind"), "rank": row.get("rank"),
             "match_type": row["match_type"],
         }
         if row["printed_page"] is not None:
@@ -70,10 +79,15 @@ def compact_search_response(
         elif row.get("citation_label"):
             hit["citation_label"] = row["citation_label"]
         for field in ("qasida_number", "qasida_title", "bayt_from", "bayt_to",
-                      "bayt_number", "stable_id", "block_type", "matched_terms",
-                      "evidence_span"):
+                      "bayt_number", "stable_id", "stable_ids", "container_id",
+                      "block_type", "matched_terms"):
             if row.get(field) is not None:
                 hit[field] = row[field]
+        if row.get("evidence_span"):
+            hit["evidence_span"] = {
+                "start": row["evidence_span"]["start"],
+                "end": row["evidence_span"]["end"],
+            }
         if row.get("semantic_score") is not None:
             hit["semantic_score"] = row["semantic_score"]
             hit["citation_verified"] = bool(row.get("citation_verified"))

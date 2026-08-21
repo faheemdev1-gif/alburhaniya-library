@@ -3,6 +3,7 @@ import sys
 import types
 import unittest
 import json
+import re
 
 BACKEND_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 sys.path.insert(0, BACKEND_DIR)
@@ -61,6 +62,8 @@ class CompactRetrievalTests(unittest.TestCase):
             self.assertNotIn("page_number", hit)
             self.assertNotIn("page_label", hit)
             self.assertIn(hit["book_id"], payload["books"])
+            self.assertIn("rank", hit)
+            self.assertIn("score_kind", hit)
 
     def test_v2_payload_is_smaller_than_standard_rows(self):
         rows = db.search("الله", limit=8, context_chars=120)
@@ -164,29 +167,62 @@ class CompactRetrievalTests(unittest.TestCase):
         rows = db.hybrid_search(query="الصلاة في وقتها", limit=20, min_score=0.9)
         self.assertTrue(all(row["score"] >= 0.9 for row in rows))
 
-    def test_exact_min_score_filters_before_pagination(self):
-        unfiltered = db.search("المحافظة", search_mode="exact_phrase", limit=5)
+    def test_exact_scores_are_stable_bm25_not_reciprocal_rank(self):
+        truth = db.search(
+            "الحقيقة", search_mode="exact_phrase", ranking="relevance",
+            diversify_books=False, limit=10,
+        )
+        night = db.search(
+            "قيام الليل", search_mode="exact_phrase", ranking="relevance",
+            diversify_books=False, limit=10,
+        )
+        self.assertNotEqual(
+            [row["score"] for row in truth], [row["score"] for row in night],
+        )
+        self.assertTrue(all(row["score_kind"] == "bm25_phrase" for row in truth))
+        self.assertEqual([row["rank"] for row in truth], list(range(1, 11)))
+
+    def test_exact_min_score_filters_lexical_strength_before_pagination(self):
+        unfiltered = db.search(
+            "المحافظة", search_mode="exact_phrase", ranking="relevance",
+            diversify_books=False, limit=20,
+        )
+        threshold = (unfiltered[0]["score"] + unfiltered[1]["score"]) / 2
         filtered = db.search(
-            "المحافظة", search_mode="exact_phrase", limit=5, min_score=0.99,
+            "المحافظة", search_mode="exact_phrase", ranking="relevance",
+            diversify_books=False, limit=20, min_score=threshold,
         )
         self.assertGreater(len(unfiltered), len(filtered))
         self.assertEqual(len(filtered), 1)
-        self.assertTrue(all(row["score"] >= 0.99 for row in filtered))
+        self.assertEqual(filtered[0]["match_id"], unfiltered[0]["match_id"])
+        self.assertGreaterEqual(filtered[0]["score"], threshold)
 
     def test_exact_min_score_preserves_filtered_pagination(self):
-        first = db.search(
-            "المحافظة", search_mode="exact_phrase", limit=1, offset=0,
-            min_score=0.8,
+        kwargs = dict(
+            query="المحافظة", search_mode="exact_phrase", ranking="relevance",
+            diversify_books=False, min_score=0.55,
         )
-        second = db.search(
-            "المحافظة", search_mode="exact_phrase", limit=1, offset=1,
-            min_score=0.8,
-        )
+        first = db.search(limit=1, offset=0, **kwargs)
+        second = db.search(limit=1, offset=1, **kwargs)
         self.assertEqual(len(first), 1)
         self.assertEqual(len(second), 1)
         self.assertNotEqual(first[0]["match_id"], second[0]["match_id"])
-        self.assertGreaterEqual(first[0]["score"], 0.8)
-        self.assertGreaterEqual(second[0]["score"], 0.8)
+        self.assertGreaterEqual(first[0]["score"], 0.55)
+        self.assertGreaterEqual(second[0]["score"], 0.55)
+
+    def test_book_order_is_unambiguous_stable_and_non_overlapping(self):
+        first = db.search(
+            "معرفة", ranking="book_order", diversify_books=False,
+            limit=20, offset=0,
+        )
+        second = db.search(
+            "معرفة", ranking="book_order", diversify_books=False,
+            limit=20, offset=20,
+        )
+        first_keys = [(row["book_id"], row["seq"]) for row in first]
+        second_keys = [(row["book_id"], row["seq"]) for row in second]
+        self.assertEqual(first_keys, sorted(first_keys))
+        self.assertFalse(set(first_keys) & set(second_keys))
 
     def test_lexeme_mode_recovers_affixed_hima_forms(self):
         exact = db.search_stats(["حمى"], book_ids=["b14"])
@@ -250,6 +286,21 @@ class CompactRetrievalTests(unittest.TestCase):
                 for item in row["matched_terms"].values()
             ))
 
+    def test_terms_highlight_every_evidence_excerpt(self):
+        rows = db.search(
+            "المريد الشيخ", search_mode="all_words", ranking="relevance", limit=10,
+        )
+        self.assertTrue(rows)
+        self.assertTrue(all("<mark>" in row["snippet"] for row in rows))
+        self.assertTrue(all(row["evidence_span"]["excerpt"] == row["snippet"] for row in rows))
+
+    def test_single_term_scores_discriminate_using_bm25(self):
+        rows = db.search(
+            "البصيرة", search_mode="all_words", ranking="relevance", limit=10,
+        )
+        self.assertGreater(len({row["score"] for row in rows}), 3)
+        self.assertTrue(all(row["score_kind"] == "term_proximity_bm25" for row in rows))
+
     def test_scores_are_higher_is_better_in_every_relevance_mode(self):
         exact = db.search("المريد", ranking="relevance", limit=8)
         hybrid = db.hybrid_search(query="الصلاة في وقتها", limit=8)
@@ -258,11 +309,34 @@ class CompactRetrievalTests(unittest.TestCase):
         self.assertEqual([x["score"] for x in hybrid],
                          sorted((x["score"] for x in hybrid), reverse=True))
 
+    def test_primary_first_uses_provenance_then_relevance_not_tier(self):
+        rows = db.search(
+            "الحقيقة", ranking="primary_first", diversify_books=False, limit=30,
+        )
+        sources = [row["source_code"] for row in rows]
+        first_secondary = sources.index("secondary") if "secondary" in sources else len(sources)
+        self.assertTrue(all(source == "primary" for source in sources[:first_secondary]))
+        for source in {row["source_code"] for row in rows}:
+            scores = [row["score"] for row in rows if row["source_code"] == source]
+            self.assertEqual(scores, sorted(scores, reverse=True))
+
     def test_normalized_and_surface_occurrences_are_explicit(self):
         bare = db.search_stats(["معرفة"])
         definite = db.search_stats(["المعرفة"])
         self.assertEqual(bare["normalized_occurrences"], definite["normalized_occurrences"])
         self.assertNotEqual(bare["surface_occurrences"], definite["surface_occurrences"])
+
+    def test_complete_exact_article_page_sets_are_identical(self):
+        bare = db.search(
+            "معرفة", ranking="book_order", diversify_books=False, limit=1000,
+        )
+        definite = db.search(
+            "المعرفة", ranking="book_order", diversify_books=False, limit=1000,
+        )
+        bare_keys = {(row["book_id"], row["seq"]) for row in bare}
+        definite_keys = {(row["book_id"], row["seq"]) for row in definite}
+        self.assertEqual(len(bare_keys), db.count_search(["معرفة"]))
+        self.assertEqual(bare_keys, definite_keys)
 
     def test_hybrid_uses_real_local_match_offsets(self):
         rows = db.hybrid_search(query="المحافظة على الصلاة في وقتها", limit=5)
@@ -270,12 +344,30 @@ class CompactRetrievalTests(unittest.TestCase):
         self.assertTrue(any(not row["match_id"].endswith("-c0") for row in rows))
         self.assertTrue(all(row["match_type"] == "hybrid" for row in rows))
 
+    def test_every_retrieval_mode_localizes_and_highlights_evidence(self):
+        rows = [
+            db.search("الحقيقة", search_mode="exact_phrase", limit=1)[0],
+            db.search("المريد الشيخ", search_mode="all_words", limit=1)[0],
+            db.search("المحافظة", search_mode="lexeme", limit=1)[0],
+            db.hybrid_search(query="الحقيقة المحمدية", limit=1)[0],
+        ]
+        for row in rows:
+            self.assertGreater(row["evidence_span"]["end"], row["evidence_span"]["start"])
+            self.assertEqual(
+                row["match_id"].rsplit("c", 1)[1],
+                str(row["evidence_span"]["start"]),
+            )
+            self.assertIn("<mark>", row["snippet"])
+
     def test_short_concept_query_recovers_relevant_prayer_evidence(self):
         rows = db.hybrid_search(query="المحافظة الصلاة وقتها", limit=5)
         self.assertGreaterEqual(len(rows), 2)
         self.assertTrue(all(row["book_id"] == "b44" for row in rows))
         self.assertTrue(all(row["seq"] in {46, 55} for row in rows))
-        self.assertTrue(any("أوقاتها" in row["snippet"] for row in rows))
+        self.assertTrue(any(
+            "أوقاتها" in re.sub(r"</?mark>", "", row["snippet"])
+            for row in rows
+        ))
 
     def test_hybrid_evidence_span_drives_match_id_and_passage(self):
         query = "المحافظة على الصلاة وعدم تأخيرها عن وقتها"
@@ -288,10 +380,12 @@ class CompactRetrievalTests(unittest.TestCase):
         passage = db.get_passage_by_match_id(row["match_id"], 400)
         self.assertIn("يؤخر صلاته", passage["passage"])
 
-    def test_hybrid_scores_have_useful_corpus_relative_separation(self):
-        rows = db.hybrid_search(query="المحافظة الصلاة وقتها", limit=5)
-        self.assertGreaterEqual(len(rows), 2)
-        self.assertGreater(rows[0]["score"] - rows[1]["score"], 0.05)
+    def test_hybrid_scores_are_fixed_evidence_scores_not_saturated(self):
+        rows = db.hybrid_search(query="الحقيقة المحمدية", limit=10)
+        self.assertGreaterEqual(len(rows), 5)
+        self.assertGreater(max(row["score"] for row in rows) - min(row["score"] for row in rows), 0.02)
+        self.assertLess(max(row["score"] for row in rows), 0.95)
+        self.assertTrue(all(row["score_kind"] == "hybrid_evidence" for row in rows))
 
     def test_exact_article_variant_has_real_offset_and_visible_evidence(self):
         row = db.search("المحافظة", search_mode="exact_phrase", limit=1)[0]
@@ -337,6 +431,15 @@ class CompactRetrievalTests(unittest.TestCase):
         self.assertTrue(rows)
         self.assertEqual(rows[0]["bayt_number"], 9)
         self.assertEqual(rows[0]["stable_id"], "b14-q091-b009")
+        self.assertEqual(rows[0]["container_id"], "b14-q091")
+
+    def test_qasida_heading_has_stable_container_identity(self):
+        rows = db.search(
+            "كم لي على أهل الحقيقة من يد", book_ids=["b14"],
+            qasida_number=6, limit=1,
+        )
+        self.assertTrue(rows)
+        self.assertEqual(rows[0]["container_id"], "b14-q006")
 
     def test_diwan_structure_and_qasida_scope(self):
         page = db.get_page("b14", 44)
