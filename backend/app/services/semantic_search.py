@@ -274,10 +274,7 @@ def auto_search(**kwargs) -> list[dict]:
     if kwargs.get("ranking") in {"book_order", "chronological"}:
         rows.sort(key=lambda row: (row["book_id"], row["seq"]))
     elif kwargs.get("ranking") == "primary_first":
-        rows.sort(key=lambda row: (
-            row["source_code"] != "primary", -row["score"],
-            row["source_tier"], row["book_id"], row["seq"]
-        ))
+        rows.sort(key=db.primary_first_sort_key)
 
     if kwargs.get("diversify_books", True) and not (
         kwargs.get("book_ids") and len(kwargs["book_ids"]) == 1

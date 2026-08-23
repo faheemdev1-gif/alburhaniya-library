@@ -27,7 +27,8 @@ from itertools import product
 from app.core.config import get_settings
 from app.core.arabic_utils import (
     ARABIC_STOPWORDS, hybrid_tokens, lexical_root, lexical_variants,
-    normalize_arabic, normalized_tokens, term_variants,
+    normalize_arabic, normalized_tokens, remove_tatweel, strip_diacritics,
+    term_variants,
 )
 
 _DIACRITIC_CLASS = (
@@ -38,6 +39,54 @@ _YA = "\u0649\u064a"                         # ىي
 _TA = "\u0629\u0647"                         # ةه
 _CHUNK_CHARS = 700
 _CHUNK_OVERLAP = 120
+_BAYT_MARKER_RE = re.compile(
+    r"(?<![\d-])(\d{1,3})\s*-\s*(?=[\s(（\[\{«\"']{0,12}[\u0621-\u064A])"
+)
+
+# Authority affects ordering, never the evidence score itself.  The maximum
+# adjustment is 0.10, so a substantial relevance gap always wins.  Keeping a
+# separate rank_score prevents source policy from corrupting score semantics.
+_PRIMARY_SOURCE_BOOST = 0.05
+_TIER_BOOST_STEP = 0.01
+
+
+def authority_adjusted_score(
+    score: float, source_code: str, source_tier: int,
+) -> float:
+    """Return the documented primary-first ordering score."""
+    tier = max(1, min(int(source_tier), 5))
+    source_boost = _PRIMARY_SOURCE_BOOST if source_code == "primary" else 0.0
+    tier_boost = (6 - tier) * _TIER_BOOST_STEP
+    return round(float(score) + source_boost + tier_boost, 6)
+
+
+def _set_rank_score(item: dict) -> float:
+    value = authority_adjusted_score(
+        item["score"], item["source_code"], item["source_tier"],
+    )
+    item["rank_score"] = value
+    return value
+
+
+def primary_first_sort_key(item: dict) -> tuple:
+    """Deterministic authority-adjusted ordering used across all modes."""
+    return (
+        item.get("block_type") == "toc",
+        -_set_rank_score(item),
+        -float(item["score"]),
+        item["source_tier"],
+        item["book_id"],
+        item["seq"],
+    )
+
+
+def ranking_policy(ranking: str) -> str:
+    """Short public explanation of the active result-ordering policy."""
+    if ranking == "primary_first":
+        return "authority_adjusted_relevance_v1"
+    if ranking == "relevance":
+        return "evidence_score_descending"
+    return "stable_book_sequence"
 
 
 def _concise_qasida_title(value: str | None) -> str | None:
@@ -474,13 +523,17 @@ def _ranking_order(ranking: str, diversified: bool = False) -> str:
     title = "book_title" if diversified else "b.title"
     source = "source_code" if diversified else "b.source_code"
     block = "block_type" if diversified else "p.block_type"
+    tier = "source_tier" if diversified else "b.source_tier"
     structural = f"CASE WHEN {block} = 'toc' THEN 1 ELSE 0 END"
     if ranking == "relevance":
-        prefix = "book_rank, " if diversified else ""
-        return f"{structural}, {prefix}relevance, {title}, {book}, {seq}"
+        return f"{structural}, relevance, {title}, {book}, {seq}"
     if ranking == "primary_first":
-        prefix = "book_rank, " if diversified else ""
-        return f"{source}, {structural}, {prefix}relevance, {title}, {book}, {seq}"
+        body_factor = f"CASE WHEN {block} = 'toc' THEN 0.15 ELSE 1.0 END"
+        bounded = "CASE WHEN -relevance > 0 THEN (-relevance)/((-relevance)+5.0) ELSE 0.0 END"
+        source_boost = f"CASE WHEN {source} = 'primary' THEN 0.05 ELSE 0.0 END"
+        tier_boost = f"(6 - {tier}) * 0.01"
+        rank_score = f"(({body_factor}) * ({bounded}) + ({source_boost}) + ({tier_boost}))"
+        return f"{rank_score} DESC, {structural}, relevance, {title}, {book}, {seq}"
     if ranking in {"book_order", "chronological"}:
         return f"{book}, {seq}"
     raise ValueError("ranking must be relevance, primary_first, chronological, or book_order")
@@ -598,6 +651,37 @@ def _content_query_terms(raw_queries: list[str]) -> list[tuple[str, str]]:
     return terms
 
 
+def _all_query_terms(raw_queries: list[str]) -> list[tuple[str, str]]:
+    """Return every Arabic query token, including citation-relevant particles."""
+    return [
+        (match.group(0), normalize_arabic(match.group(0), aggressive=True))
+        for query in raw_queries
+        for match in _ARABIC_TOKEN_RE.finditer(query)
+    ]
+
+
+def _surface_key(value: str) -> str:
+    """Compare visible spelling while ignoring only tashkil and tatweel."""
+    return strip_diacritics(remove_tatweel(value))
+
+
+def _term_evidence(
+    display: str, normalized: str, corpus_form: str, relation: str,
+) -> dict[str, str]:
+    item = {
+        "corpus_form": corpus_form,
+        "surface_form": corpus_form,
+        "normalized_form": normalize_arabic(corpus_form, aggressive=True),
+        "query_normalized": normalized,
+        "relation": relation,
+    }
+    if ({"ى", "ي"} & set(display)) and ({"ى", "ي"} & set(corpus_form)) and (
+        _surface_key(display) != _surface_key(corpus_form)
+    ):
+        item["normalization_warning"] = "ى/ي ambiguity; surface_form is authoritative"
+    return item
+
+
 def _term_highlight_patterns(raw_queries: list[str]) -> list[re.Pattern]:
     """Build non-root, article-aware patterns for strict term evidence."""
     patterns: list[re.Pattern] = []
@@ -629,13 +713,33 @@ def _matched_terms(
             if corpus_normalized not in allowed:
                 continue
             same_form = (
-                normalize_arabic(corpus_form, aggressive=False)
-                == normalize_arabic(display, aggressive=False)
+                _surface_key(corpus_form) == _surface_key(display)
             )
-            evidence[display] = {
-                "corpus_form": corpus_form,
-                "relation": "exact" if same_form else "normalized",
-            }
+            evidence[display] = _term_evidence(
+                display, normalized, corpus_form,
+                "exact" if same_form else "normalized",
+            )
+            break
+    return evidence
+
+
+def _matched_literal_terms(
+    text: str, raw_queries: list[str], start: int, end: int,
+) -> dict[str, dict[str, str]]:
+    """Expose authoritative surface spelling for exact/any-term evidence."""
+    evidence_text = text[start:end] if end > start else text
+    corpus_tokens = [m.group(0) for m in _ARABIC_TOKEN_RE.finditer(evidence_text)]
+    normalized_corpus = [normalize_arabic(t, aggressive=True) for t in corpus_tokens]
+    evidence: dict[str, dict[str, str]] = {}
+    for display, normalized in _all_query_terms(raw_queries):
+        allowed = set(term_variants(normalized))
+        for corpus_form, corpus_normalized in zip(corpus_tokens, normalized_corpus):
+            if corpus_normalized not in allowed:
+                continue
+            relation = "exact" if _surface_key(corpus_form) == _surface_key(display) else "normalized"
+            evidence[display] = _term_evidence(
+                display, normalized, corpus_form, relation,
+            )
             break
     return evidence
 
@@ -657,7 +761,7 @@ def _matched_lexeme(text: str, raw_query: str) -> dict[str, dict[str, str]]:
         relation = "normalized"
     else:
         relation = "root" if lexical_root(normalized) else "inflection"
-    item = {"corpus_form": corpus_form, "relation": relation}
+    item = _term_evidence(display, normalized, corpus_form, relation)
     root = lexical_root(normalized)
     if relation == "root" and root:
         item["root"] = root
@@ -667,7 +771,7 @@ def _matched_lexeme(text: str, raw_query: str) -> dict[str, dict[str, str]]:
 def _bayt_at_offset(text: str, offset: int, qasida_number: int | None) -> tuple[int | None, str | None]:
     if qasida_number is None:
         return (None, None)
-    markers = list(re.finditer(r"(?<![\d-])(\d{1,3})\s*-\s*(?=[\u0621-\u064A])", text))
+    markers = list(_BAYT_MARKER_RE.finditer(text))
     preceding = [m for m in markers if m.start() <= offset]
     if not preceding:
         return (None, None)
@@ -833,6 +937,9 @@ def search(
             evidence_end = min((m.end() for m, _ in matches), default=first_match + 1)
         else:
             evidence_end = min((m.end() for m, _ in matches), default=first_match + 1)
+            result["matched_terms"] = _matched_literal_terms(
+                plain_text, raw_queries, first_match, evidence_end,
+            )
         if row["book_id"] == "b14":
             result.update(_structural_identity(
                 plain_text, first_match, evidence_end, row["qasida_number"],
@@ -869,14 +976,13 @@ def search(
                 "lexeme": "bm25_lexeme",
             }[search_mode]
         item["score"] = round(max(0.0, min(1.0, score)), 6)
+        if ranking == "primary_first":
+            _set_rank_score(item)
     if search_mode == "all_words":
         if ranking in {"book_order", "chronological"}:
             results.sort(key=lambda item: (item["book_id"], item["seq"]))
         elif ranking == "primary_first":
-            results.sort(key=lambda item: (
-                item["source_code"] != "primary", item.get("block_type") == "toc",
-                -item["score"], item["source_tier"], item["book_id"], item["seq"],
-            ))
+            results.sort(key=primary_first_sort_key)
         else:
             results.sort(key=lambda item: (
                 item.get("block_type") == "toc", -item["score"],
@@ -978,10 +1084,9 @@ def hybrid_search(**kwargs) -> list[dict]:
     if ranking in {"book_order", "chronological"}:
         ordered.sort(key=lambda key: (records[key]["book_id"], records[key]["seq"]))
     elif ranking == "primary_first":
-        ordered.sort(key=lambda key: (
-            records[key]["source_code"] != "primary", -calibrated_scores[key],
-            records[key]["source_tier"], records[key]["book_id"], records[key]["seq"],
-        ))
+        for key in ordered:
+            records[key]["score"] = calibrated_scores[key]
+        ordered.sort(key=lambda key: primary_first_sort_key(records[key]))
     fused = []
     configured_threshold = getattr(get_settings(), "hybrid_min_relevance", 0.55)
     eligible = [key for key in ordered if local_scores.get(key, 0.0) >= configured_threshold]

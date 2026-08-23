@@ -309,16 +309,32 @@ class CompactRetrievalTests(unittest.TestCase):
         self.assertEqual([x["score"] for x in hybrid],
                          sorted((x["score"] for x in hybrid), reverse=True))
 
-    def test_primary_first_uses_provenance_then_relevance_not_tier(self):
+    def test_primary_first_uses_bounded_authority_adjustment(self):
         rows = db.search(
             "الحقيقة", ranking="primary_first", diversify_books=False, limit=30,
         )
-        sources = [row["source_code"] for row in rows]
-        first_secondary = sources.index("secondary") if "secondary" in sources else len(sources)
-        self.assertTrue(all(source == "primary" for source in sources[:first_secondary]))
-        for source in {row["source_code"] for row in rows}:
-            scores = [row["score"] for row in rows if row["source_code"] == source]
-            self.assertEqual(scores, sorted(scores, reverse=True))
+        rank_scores = [row["rank_score"] for row in rows]
+        self.assertEqual(rank_scores, sorted(rank_scores, reverse=True))
+        self.assertTrue(all(
+            row["rank_score"] == db.authority_adjusted_score(
+                row["score"], row["source_code"], row["source_tier"],
+            )
+            for row in rows
+        ))
+
+        # Authority is bounded: strong secondary evidence may outrank a much
+        # weaker primary mention, so provenance never hides a relevance gap.
+        mixed = db.search(
+            "حافظوا على الصلوات", ranking="primary_first",
+            diversify_books=False, limit=20,
+        )
+        strong_secondary = next(row for row in mixed if row["source_code"] == "secondary")
+        weak_primary = next(
+            row for row in mixed
+            if row["source_code"] == "primary"
+            and strong_secondary["score"] - row["score"] > 0.10
+        )
+        self.assertLess(mixed.index(strong_secondary), mixed.index(weak_primary))
 
     def test_normalized_and_surface_occurrences_are_explicit(self):
         bare = db.search_stats(["معرفة"])

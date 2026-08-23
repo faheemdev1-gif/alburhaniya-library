@@ -39,8 +39,15 @@ from mcp.server.fastmcp import FastMCP
 from mcp.server.transport_security import TransportSecuritySettings
 
 from app.core.text_format import format_page
+from app.mcp_contract import (
+    REQUIRED_TOOLS,
+    TOOL_CONTRACT_ID,
+    TOOL_CONTRACT_VERSION,
+    TOOL_META,
+    validate_registered_tools,
+)
 from app.services import library_db as db
-from app.services.compact_response import compact_search_response
+from app.services.compact_response import attach_expanded_passages, compact_search_response
 
 
 _RENDER_HOST = "burhaniya-library-backend.onrender.com"
@@ -53,14 +60,24 @@ _GRADE_REMINDER = "primary=authoritative; secondary=supporting only"
 mcp = FastMCP(
     "burhaniya-library",
     instructions=(
-        "Arabic Burhaniya library. Always use search_library first, then call "
-        "get_passage with a returned match_id. Use get_page only when the whole "
+        "Al Burhania exposes exactly five research tools: search_library, "
+        "get_passage, get_page, get_book, and list_books. If fewer than these "
+        "five tools are available, connector discovery is incomplete: report "
+        "the missing tool instead of redefining Al Burhania as having fewer "
+        "tools. Always use search_library first, then call get_passage with a "
+        "returned match_id. Use get_page only when the whole "
         "page is genuinely needed. Do not retrieve pages "
         "sequentially unless the question requires adjacent context. Prefer "
         "primary sources; secondary sources are supporting commentary. Never "
         "attribute secondary interpretation directly to a shaykh. Cite the "
-        "book and printed page, or seq when no printed page exists. Book b35 "
-        "contains multiple speakers: verify the speaker before attribution."
+        "book and printed page, or seq when no printed page exists. Exact and "
+        "explicitly audited lexeme results are citation-capable. Auto results "
+        "are citation-capable only when match_type and matched_terms establish "
+        "the evidence relation. Surface text is authoritative for quotation; "
+        "normalization can collapse distinct ى/ي forms. Book b35 contains "
+        "multiple speakers: verify the speaker before attribution. "
+        f"Tool contract: {TOOL_CONTRACT_ID}; contract version: "
+        f"{TOOL_CONTRACT_VERSION}; required tool count: {len(REQUIRED_TOOLS)}."
     ),
     stateless_http=True,
     streamable_http_path="/",
@@ -82,9 +99,11 @@ mcp = FastMCP(
 )
 
 
-@mcp.tool(structured_output=True)
+@mcp.tool(structured_output=True, meta=TOOL_META)
 def list_books(include_legend: bool = False) -> dict[str, Any]:
-    """List books in a compact catalogue, ordered primary-first.
+    """List books in a compact catalogue, ordered by source authority.
+
+    This is one of the five required Al Burhania research tools.
 
     Args:
         include_legend: Include full source-grade definitions. Leave false
@@ -113,9 +132,11 @@ def list_books(include_legend: bool = False) -> dict[str, Any]:
     return result
 
 
-@mcp.tool(structured_output=True)
+@mcp.tool(structured_output=True, meta=TOOL_META)
 def get_book(book_id: str) -> dict[str, Any]:
     """Get the metadata and provenance of one book.
+
+    This is one of the five required Al Burhania research tools.
 
     Args:
         book_id: Book ID returned by list_books, such as "b33".
@@ -130,7 +151,7 @@ def get_book(book_id: str) -> dict[str, Any]:
     return book
 
 
-@mcp.tool(structured_output=True)
+@mcp.tool(structured_output=True, meta=TOOL_META)
 def get_page(
     book_id: str,
     seq: int,
@@ -139,7 +160,8 @@ def get_page(
 ) -> dict[str, Any]:
     """Read one specific full page.
 
-    Use this only after search_library identifies a relevant result.
+    Use this only after search_library identifies a relevant result. Use
+    get_passage instead when a precise structural passage is sufficient.
 
     Args:
         book_id: Book ID returned by search_library or list_books.
@@ -188,14 +210,18 @@ def get_page(
     return page
 
 
-@mcp.tool(structured_output=True)
+@mcp.tool(structured_output=True, meta=TOOL_META)
 def get_passage(
     match_id: Optional[str] = None,
     match_ids: Optional[list[str]] = None,
     context_chars: int = 600,
     query: Optional[str] = None,
 ) -> dict[str, Any]:
-    """Read one or several bounded passages returned by search_library."""
+    """Read one or several bounded passages returned by search_library.
+
+    This is the preferred second step after search_library when a result
+    identifies a precise passage and a full page is unnecessary.
+    """
     context_chars = max(200, min(context_chars, 2000))
     if match_ids:
         results = []
@@ -220,7 +246,7 @@ def get_passage(
     return result
 
 
-@mcp.tool(structured_output=True)
+@mcp.tool(structured_output=True, meta=TOOL_META)
 def search_library(
     query: Optional[str] = None,
     queries: Optional[list[str]] = None,
@@ -245,7 +271,15 @@ def search_library(
     expand_top: int = 0,
     expand_chars: int = 600,
 ) -> dict[str, Any]:
-    """Search exact Arabic words/phrases, with optional OR/AND alternatives.
+    """Search the Al Burhania Library.
+
+    Typical workflow:
+    1. search_library
+    2. get_passage for the precise passage identified by a result
+    3. get_page only when broader page context is required
+
+    The complete toolset is exactly: search_library, get_passage, get_page,
+    get_book, and list_books.
 
     Args:
         query: One Arabic word or phrase.
@@ -274,8 +308,17 @@ def search_library(
             for hybrid, and cosine/fusion scores for semantic auto retrieval.
             Higher means stronger evidence under the declared score_kind.
         min_score: Filter by the declared evidence score before pagination.
+            Exact textual presence is independent of BM25 magnitude: a common
+            literal hit can legitimately have score 0.0. Leave this at 0.0 for
+            exact occurrence censuses and decide literal presence from the
+            returned evidence, match_type, and matched_terms.
             It never acts as a disguised result-rank cutoff.
         ranking: relevance, primary_first, chronological, or book_order.
+            primary_first uses a bounded authority adjustment: a primary
+            source and a stronger source tier win when relevance is comparable,
+            but they do not override a substantial relevance gap. The lexical
+            evidence score remains separate from the authority-adjusted
+            rank_score.
     """
     limit = max(1, min(limit, 20))
     offset = max(0, offset)
@@ -395,10 +438,12 @@ def search_library(
     results = rows[:limit]
     expand_top = max(0, min(expand_top, len(results)))
     expand_chars = max(200, min(expand_chars, 2000))
-    for row in results[:expand_top]:
-        row["expanded_passage"] = db.get_passage_by_match_id(
-            row["match_id"], expand_chars
-        )
+    attach_expanded_passages(
+        results,
+        expand_top=expand_top,
+        expand_chars=expand_chars,
+        passage_loader=db.get_passage_by_match_id,
+    )
 
     if mode in ("compact", "ultra_compact"):
         payload = compact_search_response(
@@ -416,6 +461,7 @@ def search_library(
                 payload["suggestions"] = suggestions
         if include_counts and min_score > 0.0:
             payload["total_hits_scope"] = "lexical_matches_before_score_filter"
+        payload["ranking_policy"] = db.ranking_policy(ranking)
         return payload
 
     primary_hits = sum(
@@ -448,5 +494,10 @@ def search_library(
         response["per_query"] = stats["per_query"]
     return response
 
+
+# This examines the same FastMCP registry used to answer protocol tools/list.
+# A missing decorator, unexpected tool, or stale conditional registration now
+# prevents the application from starting instead of silently shipping drift.
+DISCOVERABLE_TOOLS = validate_registered_tools(mcp)
 
 app = mcp.streamable_http_app()

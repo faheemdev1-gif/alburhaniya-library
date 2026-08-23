@@ -16,7 +16,6 @@ so build_index.py doesn't need to care which path a given book came from.
 from __future__ import annotations
 import json
 import re
-from bs4 import BeautifulSoup
 
 ANCHOR = "</div></ul></td></tr></table><ul><p>"
 PAGE_MARK_RE = re.compile(
@@ -27,6 +26,10 @@ PAGE_MARK_RE = re.compile(
 
 
 def clean_fragment_to_paragraphs(html_fragment: str) -> list[str]:
+    # Import lazily so structure-only parser tests can run without loading the
+    # optional HTML stack. Production builds still install beautifulsoup4/lxml.
+    from bs4 import BeautifulSoup
+
     soup = BeautifulSoup(html_fragment, "lxml")
     for br in soup.find_all("br"):
         br.replace_with("\n")

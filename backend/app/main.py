@@ -9,6 +9,7 @@ from fastapi.responses import HTMLResponse
 
 from app.core.config import get_settings
 from app.core.html_templates import page_shell, nav_bar
+from app.mcp_contract import SERVER_VERSION, contract_metadata, validate_registered_tools
 from app.api import books, search, files
 from app.mcp_server import mcp
 
@@ -61,7 +62,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="Arabic Library Search",
     description="Exact-word search over the Burhaniya Arabic book collection",
-    version="2.1.0",
+    version=SERVER_VERSION,
     lifespan=lifespan,
 )
 
@@ -82,7 +83,8 @@ app.mount("/mcp", mcp.streamable_http_app())
 
 @app.get("/health")
 def health():
-    return {"status": "ok"}
+    tools = validate_registered_tools(mcp)
+    return {"status": "ok", **contract_metadata(tools)}
 
 
 @app.get("/", response_class=HTMLResponse)

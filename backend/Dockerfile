@@ -15,17 +15,16 @@ RUN python -m pip install \
     --retries 10 \
     --timeout 120 \
     -r requirements.txt
-# Keep the model inside the Docker image.
-# This downloads the model but does not rebuild corpus embeddings.
-ENV HF_HOME=/app/.cache/huggingface
-RUN python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('intfloat/multilingual-e5-base')"
-
 COPY . .
 
-# Fail immediately if prebuilt artifacts are missing from Git/Docker context
+# The lexical corpus is authoritative. Semantic artifacts are optional and
+# activate only when explicitly supplied and ENABLE_LOCAL_SEMANTIC_SEARCH=true.
 RUN test -s library.db \
-    && test -s semantic_embeddings.npy \
-    && test -s semantic_manifest.json
+    && test -s data/raw_htm/book_14.htm
+
+# Deployment gate: hard citation/structure failures and retrieval-quality
+# regressions fail the image build; efficiency issues are reported separately.
+RUN python scripts/run_regression_suite.py
 
 EXPOSE 8000
 

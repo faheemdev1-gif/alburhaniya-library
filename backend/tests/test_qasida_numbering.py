@@ -1,6 +1,6 @@
 import unittest
 
-from scripts.build_index import annotate_diwan_pages
+from scripts.build_index import _BAYT_NUMBER, annotate_diwan_pages
 
 
 class QasidaNumberingTests(unittest.TestCase):
@@ -93,6 +93,17 @@ class QasidaNumberingTests(unittest.TestCase):
         annotated = annotate_diwan_pages(pages)
 
         self.assertIsNone(annotated[0]["qasida_number"])
+
+    def test_parenthesized_bayt_openings_are_indexed(self):
+        text = (
+            "16- وَإِلَى رَسُولِ اللَّهِ شَدُّ رِحَالِنَا "
+            "17- ( قُلْ هَذِهِ ) أَدْعُو إِلَيْهِ عَلَى هُدىً "
+            "18- إِنَّ الشَّفَاعَةَ لِلْكِرَامِ"
+        )
+        self.assertEqual(
+            [int(match.group(1)) for match in _BAYT_NUMBER.finditer(text)],
+            [16, 17, 18],
+        )
 
 
 if __name__ == "__main__":

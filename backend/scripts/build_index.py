@@ -26,6 +26,7 @@ Two source formats (added):
 """
 from __future__ import annotations
 import json
+import hashlib
 import os
 import sqlite3
 import sys
@@ -134,11 +135,16 @@ _DIGIT_TRANSLATION = str.maketrans(
     "٠١٢٣٤٥٦٧٨٩۰۱۲۳۴۵۶۷۸۹",
     "01234567890123456789",
 )
-_BAYT_NUMBER = re.compile(r"(?<![\d-])(\d{1,3})\s*-\s*(?=[\u0621-\u064A])")
+_BAYT_NUMBER = re.compile(
+    r"(?<![\d-])(\d{1,3})\s*-\s*(?=[\s(（\[\{«\"']{0,12}[\u0621-\u064A])"
+)
 _QASIDA_TITLE_END = re.compile(
     r"\s+التّ?اريخ\s*:|\s+\d{1,3}\s*-\s*(?=[ء-ي])"
 )
 _TOC_DOT_LEADER = re.compile(r"\.{5,}|…{3,}")
+_DIWAN_QASIDA_COUNT = 95
+_DIWAN_BAYT_COUNT = 2682
+_DIWAN_ORDINAL_DIGEST = "c354110999fb08d95a8d8d090fa63cc9eb47ddb62e4ea77e25b7261b66676a8d"
 
 
 def classify_block(text: str) -> str:
@@ -185,6 +191,57 @@ def annotate_diwan_pages(pages: list[dict]) -> list[dict]:
                     else f"الأبيات {page['bayt_from']}–{page['bayt_to']}")
             page["page_label"] = f"القصيدة {qasida_number}، {span}"
     return pages
+
+
+def validate_diwan_structure(conn: sqlite3.Connection) -> None:
+    """Hard deployment gate for b14 structural and source-text integrity."""
+    rows = conn.execute(
+        "SELECT qasida_number, bayt_number FROM bayts "
+        "WHERE book_id='b14' ORDER BY qasida_number, bayt_number"
+    ).fetchall()
+    qasidas: dict[int, list[int]] = {}
+    for qasida_number, bayt_number in rows:
+        qasidas.setdefault(int(qasida_number), []).append(int(bayt_number))
+    expected_qasidas = list(range(1, _DIWAN_QASIDA_COUNT + 1))
+    if sorted(qasidas) != expected_qasidas:
+        raise RuntimeError(
+            "D9 FAIL: expected qasidas 1..95, received "
+            f"{sorted(qasidas)}"
+        )
+    if len(rows) != _DIWAN_BAYT_COUNT:
+        raise RuntimeError(
+            f"D9 FAIL: expected {_DIWAN_BAYT_COUNT} abyat, received {len(rows)}"
+        )
+    for number, bayt_numbers in qasidas.items():
+        expected = list(range(1, max(bayt_numbers) + 1))
+        if bayt_numbers != expected:
+            missing = sorted(set(expected) - set(bayt_numbers))
+            raise RuntimeError(
+                f"D9 FAIL: qasida {number} has non-contiguous bayts; missing={missing}"
+            )
+
+    heading_rows = conn.execute(
+        "SELECT qasida_number, text FROM pages WHERE book_id='b14' "
+        "AND text LIKE '%الْقَصِيدَة%' ORDER BY seq"
+    ).fetchall()
+    designators: list[str] = []
+    seen: set[int] = set()
+    for qasida_number, text in heading_rows:
+        heading = _QASIDA_HEADING.search(text)
+        if not heading or qasida_number in seen:
+            continue
+        designator = heading.group(1).strip()
+        if _QASIDA_NUMERIC_DESIGNATOR.fullmatch(designator):
+            raise RuntimeError(
+                f"D9 FAIL: qasida {qasida_number} display text rewrites its written ordinal"
+            )
+        seen.add(int(qasida_number))
+        designators.append(designator)
+    digest = hashlib.sha256("\n".join(designators).encode("utf-8")).hexdigest()
+    if len(designators) != _DIWAN_QASIDA_COUNT or digest != _DIWAN_ORDINAL_DIGEST:
+        raise RuntimeError(
+            "D9 FAIL: written qasida ordinals do not match the canonical source"
+        )
 
 
 def build():
@@ -310,6 +367,8 @@ def build():
             + ", ".join(missing)
             + "\nAdd them (with a grade) before building."
         )
+
+    validate_diwan_structure(conn)
 
     # NOTE: only `pages` feeds the FTS index. Grades / notes / authors
     # deliberately stay out of it.

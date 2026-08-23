@@ -1,6 +1,29 @@
 """Small, model-friendly MCP response builders."""
 from __future__ import annotations
 
+from collections.abc import Callable
+
+
+def attach_expanded_passages(
+    rows: list[dict], *, expand_top: int, expand_chars: int,
+    passage_loader: Callable[[str, int], dict | None],
+) -> int:
+    """Attach exactly the requested number of valid focused passages.
+
+    Invalid/unknown match ids are made explicit instead of silently reducing
+    the number of expansions, which previously made ``expand_top`` difficult
+    for clients to reason about.
+    """
+    requested = max(0, min(int(expand_top), len(rows)))
+    bounded_chars = max(200, min(int(expand_chars), 2000))
+    for row in rows[:requested]:
+        match_id = row.get("match_id")
+        passage = passage_loader(match_id, bounded_chars) if match_id else None
+        row["expanded_passage"] = passage or {
+            "error": f"invalid or unknown match_id '{match_id}'"
+        }
+    return requested
+
 
 def compact_search_response(
     rows: list[dict], *, limit: int, offset: int, has_more: bool,
@@ -18,6 +41,8 @@ def compact_search_response(
                 "type": row["match_type"], "sk": row.get("score_kind"),
                 "r": row.get("rank"),
             }
+            if row.get("rank_score") is not None:
+                hit["rs"] = row["rank_score"]
             if row["printed_page"] is not None:
                 hit["p"] = row["printed_page"]
             elif row.get("citation_label"):
@@ -74,6 +99,8 @@ def compact_search_response(
             "score_kind": row.get("score_kind"), "rank": row.get("rank"),
             "match_type": row["match_type"],
         }
+        if row.get("rank_score") is not None:
+            hit["rank_score"] = row["rank_score"]
         if row["printed_page"] is not None:
             hit["printed_page"] = row["printed_page"]
         elif row.get("citation_label"):

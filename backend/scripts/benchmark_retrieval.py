@@ -141,7 +141,6 @@ def run() -> dict:
         )
     """).fetchone()[0]
     total_pages = conn.execute("SELECT COUNT(*) FROM pages").fetchone()[0]
-    passed = sum(bool(v) for v in tests.values())
     timings = []
     for _ in range(7):
         started = time.perf_counter()
@@ -149,9 +148,24 @@ def run() -> dict:
         for row in rows[:2]:
             db.get_passage_by_match_id(row["match_id"], 600)
         timings.append((time.perf_counter() - started) * 1000)
+    quality_names = {"short_hybrid_recall", "bad_hybrid_suppressed"}
+    diagnostic_names = {"hybrid_score_calibration", "large_segment_detection"}
+    hard_gates = {
+        name: value for name, value in tests.items()
+        if name not in quality_names | diagnostic_names
+    }
+    quality_gates = {name: tests[name] for name in quality_names}
+    diagnostics = {name: tests[name] for name in diagnostic_names}
+    hard_failures = sorted(name for name, value in hard_gates.items() if not value)
+    quality_failures = sorted(name for name, value in quality_gates.items() if not value)
     return {
-        "tests_passed": f"{passed}/{len(tests)}",
-        "tests": tests,
+        "hard_gates": {"status": "pass" if not hard_failures else "fail", "failed": hard_failures},
+        "retrieval_quality_gates": {
+            "status": "pass" if not quality_failures else "fail",
+            "failed": quality_failures,
+        },
+        "diagnostics": diagnostics,
+        "deployment_blocked": bool(hard_failures or quality_failures),
         "largest_segment_chars": largest,
         "average_segment_chars": round(statistics.mean(lengths), 1),
         "duplicate_page_rate_percent": round((duplicate_rows / total_pages) * 100, 3),
