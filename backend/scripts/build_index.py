@@ -143,10 +143,21 @@ _BAYT_NUMBER = re.compile(
 _QASIDA_TITLE_END = re.compile(
     r"\s+التّ?اريخ\s*:|\s+\d{1,3}\s*-\s*(?=[ء-ي])"
 )
-_TOC_DOT_LEADER = re.compile(r"\.{3,}|…{2,}")
-_TOC_NUMBERED_ENTRY = re.compile(
-    r"(?:^|\s)[0-9٠-٩۰-۹]{1,3}\s*-\s*[^\n]{3,160}?(?=\.{3,}|…{2,}|$)"
+_TOC_DOT_LEADER_SOURCE = r"(?:\.{3,}(?:\s+\.{1,3})*|…{2,})"
+_TOC_DOT_LEADER = re.compile(_TOC_DOT_LEADER_SOURCE)
+_TOC_TRAILING_PAGE_ENTRY = re.compile(
+    _TOC_DOT_LEADER_SOURCE
+    + r"\s*([0-9٠-٩۰-۹]{1,4})(?=\s|$)"
 )
+_TOC_EXPLICIT_HEADING = re.compile(
+    r"(?:"
+    r"الفهرس\s+الموضوع|"
+    r"فهرس\s*(?:\([^)]{1,40}\)|-\s*)?\s*"
+    r"(?:الجزء|المبحث|الموضوعات|المراجع|الصلوات|معاني|رقم\s+الجوهرة)|"
+    r"انته[ىي]\s+فهرس"
+    r")"
+)
+_TOC_MIN_ENTRY_DENSITY = 0.004
 _PRINTED_PAGE_FOOTER = re.compile(
     r"(?:\[\s*([0-9٠-٩۰-۹]{1,4})\s*\]|-\s*([0-9٠-٩۰-۹]{1,4})\s*-)\s*$"
 )
@@ -155,16 +166,24 @@ _DIWAN_BAYT_COUNT = 2682
 _DIWAN_ORDINAL_DIGEST = "c354110999fb08d95a8d8d090fa63cc9eb47ddb62e4ea77e25b7261b66676a8d"
 
 
-def classify_block(text: str) -> str:
-    """Identify contents pages structurally instead of learning them from rank."""
+def classify_block(
+    text: str, *, seq: int | None = None, page_count: int | None = None,
+) -> str:
+    """Identify contents pages without treating decorative dots as TOCs."""
     normalized = normalize_arabic(text, aggressive=True)
-    if re.search(r"(?:^|\s)(?:الفهرس|فهرس)(?:\s|$)", normalized):
+    if _TOC_EXPLICIT_HEADING.search(normalized):
         return "toc"
-    dot_leaders = len(_TOC_DOT_LEADER.findall(text))
-    numbered_entries = len(_TOC_NUMBERED_ENTRY.findall(text))
-    if dot_leaders >= 2 or (dot_leaders >= 1 and numbered_entries >= 3):
-        return "toc"
-    return "body"
+
+    entries = len(_TOC_TRAILING_PAGE_ENTRY.findall(text))
+    if entries < 2 or entries / max(len(text), 1) < _TOC_MIN_ENTRY_DENSITY:
+        return "body"
+
+    if seq is not None and page_count is not None and page_count > 0:
+        in_front_matter = seq <= 5
+        in_back_matter = seq / page_count >= 0.85
+        if not (in_front_matter or in_back_matter):
+            return "body"
+    return "toc"
 
 
 def _source_footer_page(text: str) -> str | None:
@@ -187,7 +206,8 @@ def _qasida_bayt_count(text: str) -> int | None:
 def annotate_diwan_pages(pages: list[dict]) -> list[dict]:
     """Carry qasida and bayt structure across b14 page boundaries."""
     qasida_number, qasida_title, qasida_bayt_count, last_bayt = 0, None, None, None
-    for page in pages:
+    page_count = len(pages)
+    for seq, page in enumerate(pages, start=1):
         text = "\n\n".join(page["paragraphs"])
         source_page = _source_footer_page(text)
         if source_page is not None:
@@ -220,7 +240,9 @@ def annotate_diwan_pages(pages: list[dict]) -> list[dict]:
         page["qasida_bayt_count"] = qasida_bayt_count
         page["bayt_from"] = bayts[0] if bayts else last_bayt
         page["bayt_to"] = bayts[-1] if bayts else last_bayt
-        page["block_type"] = classify_block(text)
+        page["block_type"] = classify_block(
+            text, seq=seq, page_count=page_count,
+        )
         if bayts:
             last_bayt = bayts[-1]
         if qasida_number and page["bayt_from"] is not None:
@@ -393,7 +415,9 @@ def build():
                  page.get("qasida_number"), page.get("qasida_title"),
                  page.get("qasida_bayt_count"),
                  page.get("bayt_from"), page.get("bayt_to"),
-                 page.get("block_type", classify_block(text)), text, norm),
+                 page.get("block_type", classify_block(
+                     text, seq=seq, page_count=len(pages),
+                 )), text, norm),
             )
             page_id = conn.execute("SELECT last_insert_rowid()").fetchone()[0]
             if slug == "b14" and page.get("qasida_number"):

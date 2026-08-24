@@ -1,7 +1,7 @@
 # Al Burhania Research Library MCP — Final implementation
 
-Release: **2.3.2**  
-Tool-contract version: **5.3**  
+Release: **2.3.3**  
+Tool-contract version: **5.4**  
 Contract identifier: **`alburhaniya-tools-v5`**
 
 ## Outcome
@@ -24,7 +24,7 @@ Startup and health checks fail if a required tool is missing, an unexpected tool
 - Added startup validation against the actual FastMCP registry—not just a constant or count.
 - Added contract/version/tool details to `/health`.
 - Added contract metadata to all five MCP tool definitions.
-- Made MCP `initialize` report application version `2.3.2` instead of the SDK package version.
+- Made MCP `initialize` report application version `2.3.3` instead of the SDK package version.
 - Reinforced the semantic workflow in tool descriptions: `search_library` → `get_passage` → `get_page`.
 - Added `scripts/production_mcp_regression.py`, which connects to the public endpoint, validates the live corpus/health contract, follows `tools/list` pagination, rejects duplicate/missing/unexpected tools, checks schemas, application version and metadata, explicitly verifies `get_passage`, and smoke-invokes all five tools.
 
@@ -70,6 +70,22 @@ Startup and health checks fail if a required tool is missing, an unexpected tool
 - Added score-semantic, normalization, Dīwān identity, evidence, trap-query, paraphrase, expansion, ranking-policy, manifest, and schema regressions.
 - The Docker build now runs the complete local deployment gate.
 
+### Contents-page classifier correction
+
+- Removed the unsafe rule that treated two decorative dot-runs as proof of a
+  table of contents. It had mislabeled 1,105 pages, including substantive
+  b29 page 35.
+- Implicit contents pages now require repeated dotted leaders followed by
+  trailing destination page numbers, sufficient entry density, and a
+  front/back-matter location.
+- Contextual headings such as `فهرس الجزء` remain authoritative, while prose
+  mentions of a work named `الفهرس` do not trigger classification.
+- A full-corpus audit now leaves 67 genuine contents pages. New hard gates
+  protect b29 page 35 and validate every implicit TOC structurally.
+- Increased the internal hybrid candidate pool so restored body pages cannot
+  crowd known relevant evidence out before local evidence scoring. Public
+  thresholds and response limits are unchanged.
+
 ### GitHub-safe deployment packaging
 
 - `library.db` is generated and ignored instead of committed. Its research indexes make it approximately 212 MB, above GitHub's 100 MB per-file limit.
@@ -90,11 +106,11 @@ Result:
 
 | Gate class | Passed | Failed | Skipped |
 |---|---:|---:|---:|
-| Hard gates | 92 | 0 | 1 |
+| Hard gates | 103 | 0 | 1 |
 | Retrieval-quality gates | 3 | 0 | 0 |
 | Efficiency checks | 2 | 0 | 0 |
 
-Total: **98 tests**, **0 failures**, `deployment_blocked: false`.
+Total: **109 tests**, **0 failures**, `deployment_blocked: false`.
 
 The single skip is the optional local semantic-vector metadata check because local semantic search is disabled and no semantic artifact is shipped. This does not affect the exact, terms, lexeme, or hybrid production paths tested here.
 
@@ -114,14 +130,14 @@ Additional checks:
 ## Deployment and live verification
 
 1. Deploy this package normally. The Docker build will run the local gate.
-2. Confirm `/health` reports server `2.3.2`, tool-contract `5.3`, tool count `5`, and `corpus_contract.status: ok`.
+2. Confirm `/health` reports server `2.3.3`, tool-contract `5.4`, tool count `5`, and `corpus_contract.status: ok`.
 3. From a networked environment with the project dependencies installed, run:
 
    ```bash
    python scripts/production_mcp_regression.py https://burhaniya-library-backend.onrender.com/mcp/
    ```
 
-4. Reconnect the ChatGPT connector and begin a new session so the host retrieves the `2.3.2`/`5.3` catalogue and corrected descriptions.
+4. Reconnect the ChatGPT connector and begin a new session so the host retrieves the `2.3.3`/`5.4` catalogue and corrected descriptions.
 
 The live public MCP gate cannot be truthfully completed before this modified build is deployed. The supplied script is the final post-deployment acceptance test and should be added to CI/CD as MCP-000/MCP-001.
 

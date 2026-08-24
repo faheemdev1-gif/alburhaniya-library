@@ -270,6 +270,44 @@ class FinalRegressionGates(unittest.TestCase):
         self.assertEqual(fihris["block_type"], "toc")
         self.assertLess(fihris["score"], rows[0]["score"])
 
+    def test_hard_f4_decorative_dots_do_not_hide_substantive_page(self):
+        rows = db.search(
+            "هدى", book_ids=["b29"], ranking="relevance",
+            diversify_books=False, limit=10,
+        )
+        page = next(row for row in rows if row["seq"] == 35)
+        self.assertEqual(page["block_type"], "body")
+        self.assertGreater(page["score"], 0.5)
+
+    def test_hard_f5_every_implicit_toc_is_structural_and_at_boundary(self):
+        from scripts.build_index import (
+            _TOC_EXPLICIT_HEADING, _TOC_MIN_ENTRY_DENSITY,
+            _TOC_TRAILING_PAGE_ENTRY,
+        )
+        from app.core.arabic_utils import normalize_arabic
+
+        pages = db._connection().execute(
+            "SELECT p.book_id, p.seq, p.text, b.page_count "
+            "FROM pages p JOIN books b USING(book_id) "
+            "WHERE p.block_type='toc'"
+        ).fetchall()
+        self.assertTrue(pages)
+        for page in pages:
+            normalized = normalize_arabic(page["text"], aggressive=True)
+            if _TOC_EXPLICIT_HEADING.search(normalized):
+                continue
+            entries = len(_TOC_TRAILING_PAGE_ENTRY.findall(page["text"]))
+            self.assertGreaterEqual(entries, 2, (page["book_id"], page["seq"]))
+            self.assertGreaterEqual(
+                entries / max(len(page["text"]), 1),
+                _TOC_MIN_ENTRY_DENSITY,
+                (page["book_id"], page["seq"]),
+            )
+            self.assertTrue(
+                page["seq"] <= 5 or page["seq"] / page["page_count"] >= 0.85,
+                (page["book_id"], page["seq"]),
+            )
+
     def test_hard_d10_heading_identity_and_page_scoped_bayt_range(self):
         row = db.search(
             "بأحمد حيث الأحمدية يهتدي", book_ids=["b14"],

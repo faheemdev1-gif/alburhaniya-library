@@ -1112,7 +1112,9 @@ def hybrid_search(**kwargs) -> list[dict]:
     queries = filtered_queries or queries
     limit = int(kwargs.get("limit", 10))
     offset = int(kwargs.get("offset", 0))
-    pool = min(max((offset + limit) * 8, 40), 400)
+    # Keep a broad enough lexical pool that restoring falsely penalized body
+    # pages cannot crowd known relevant evidence out before local scoring.
+    pool = min(max((offset + limit) * 12, 80), 400)
     rrf_scores: dict[tuple[str, int], float] = {}
     mode_scores: dict[tuple[str, int], dict[str, float]] = {}
     records: dict[tuple[str, int], dict] = {}

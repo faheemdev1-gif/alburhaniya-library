@@ -128,6 +128,25 @@ class QasidaNumberingTests(unittest.TestCase):
         )
         self.assertEqual(classify_block(text), "toc")
 
+    def test_decorative_poetry_dots_are_not_a_toc(self):
+        text = (
+            "الهدي هدي الله بإيد النبي، واللي بيحب النبي بيهتدي. "
+            "كل شيء له من الغيب ظل ... ............................. "
+            "ثم استمر الشيخ في شرح سورة الإنسان."
+        )
+        self.assertEqual(
+            classify_block(text, seq=35, page_count=122), "body",
+        )
+
+    def test_implicit_toc_requires_trailing_page_numbers(self):
+        toc = (
+            "الدرس الأول ........................................ 5 "
+            "الدرس الثاني ....................................... 12 "
+            "الدرس الثالث ....................................... 19"
+        )
+        self.assertEqual(classify_block(toc, seq=2, page_count=122), "toc")
+        self.assertEqual(classify_block(toc, seq=35, page_count=122), "body")
+
 
 if __name__ == "__main__":
     unittest.main()

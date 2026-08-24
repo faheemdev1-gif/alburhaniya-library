@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Backfill v2.3.2 citation metadata into an existing generated library.db.
+"""Backfill v2.3.3 citation metadata into an existing generated library.db.
 
 Fresh deployments receive the same fields directly from build_index.py. This
 migration exists for local verification and for operators who retain a built
@@ -34,8 +34,9 @@ def migrate(db_path: str = DB_PATH) -> None:
     }
     current_qasida_count = None
     rows = conn.execute(
-        "SELECT id, book_id, seq, printed_page, qasida_number, bayt_from, "
-        "bayt_to, text FROM pages ORDER BY book_id, seq"
+        "SELECT p.id, p.book_id, p.seq, p.printed_page, p.qasida_number, "
+        "p.bayt_from, p.bayt_to, p.text, b.page_count "
+        "FROM pages p JOIN books b USING(book_id) ORDER BY p.book_id, p.seq"
     ).fetchall()
     for row in rows:
         printed_page = row["printed_page"]
@@ -73,7 +74,10 @@ def migrate(db_path: str = DB_PATH) -> None:
                 printed_page,
                 citation_label,
                 qasida_count,
-                classify_block(row["text"]),
+                classify_block(
+                    row["text"], seq=row["seq"],
+                    page_count=row["page_count"],
+                ),
                 row["id"],
             ),
         )
