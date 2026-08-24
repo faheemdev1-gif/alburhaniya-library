@@ -1,0 +1,63 @@
+name: Connector regression gates
+
+on:
+  push:
+    paths:
+      - "app/**"
+      - "data/**"
+      - "scripts/**"
+      - "tests/**"
+      - "requirements.txt"
+      - ".github/workflows/connector-regression.yml"
+  pull_request:
+    paths:
+      - "app/**"
+      - "data/**"
+      - "scripts/**"
+      - "tests/**"
+      - "requirements.txt"
+      - ".github/workflows/connector-regression.yml"
+  workflow_dispatch:
+    inputs:
+      production_endpoint:
+        description: "Live MCP endpoint to verify after deployment"
+        required: false
+        default: "https://burhaniya-library-backend.onrender.com/mcp/"
+
+jobs:
+  independent-corpus-and-regression:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: backend/requirements.txt
+      - run: python -m pip install -r requirements.txt
+      - run: python scripts/build_index.py
+      - name: Independent corpus and stable-ID audit
+        run: python scripts/independent_corpus_audit.py
+      - name: Classified regression suite
+        run: python scripts/run_regression_suite.py
+
+  live-production-contract:
+    if: github.event_name == 'workflow_dispatch'
+    needs: independent-corpus-and-regression
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: backend/requirements.txt
+      - run: python -m pip install -r requirements.txt
+      - name: MCP-000 / MCP-001 and smoke execution
+        run: python scripts/production_mcp_regression.py "${{ inputs.production_endpoint }}"
