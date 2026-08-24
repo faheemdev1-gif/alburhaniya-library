@@ -28,12 +28,23 @@ PAGE_MARK_RE = re.compile(
 def clean_fragment_to_paragraphs(html_fragment: str) -> list[str]:
     # Import lazily so structure-only parser tests can run without loading the
     # optional HTML stack. Production builds still install beautifulsoup4/lxml.
-    from bs4 import BeautifulSoup
+    try:
+        from bs4 import BeautifulSoup
+    except ModuleNotFoundError:
+        # Minimal CI/workspace environments may provide lxml without the bs4
+        # convenience wrapper. Preserve the same <br>-to-newline contract so
+        # index output remains deterministic instead of blocking the build.
+        from lxml import html
 
-    soup = BeautifulSoup(html_fragment, "lxml")
-    for br in soup.find_all("br"):
-        br.replace_with("\n")
-    text = soup.get_text()
+        root = html.fragment_fromstring(html_fragment, create_parent="div")
+        for br in root.xpath(".//br"):
+            br.tail = "\n" + (br.tail or "")
+        text = root.text_content()
+    else:
+        soup = BeautifulSoup(html_fragment, "lxml")
+        for br in soup.find_all("br"):
+            br.replace_with("\n")
+        text = soup.get_text()
 
     paragraphs, buf = [], []
     for line in text.split("\n"):

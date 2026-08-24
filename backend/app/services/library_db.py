@@ -42,6 +42,10 @@ _CHUNK_OVERLAP = 120
 _BAYT_MARKER_RE = re.compile(
     r"(?<![\d-])(\d{1,3})\s*-\s*(?=[\s(（\[\{«\"']{0,12}[\u0621-\u064A])"
 )
+_QASIDA_HEADING_RE = re.compile(
+    r"الْ?قَ?صِ?يدَ?ة\s+[^:\n]{1,80}:\s*[^\n]+?(?=\s+التّ?اريخ\s*:)"
+)
+_COMPARISON_PREFIXES = ("وال", "فال", "بال", "كال", "لل", "ال")
 
 # Authority affects ordering, never the evidence score itself.  The maximum
 # adjustment is 0.10, so a substantial relevance gap always wins.  Keeping a
@@ -264,7 +268,8 @@ def get_page(book_id: str, seq: int) -> dict | None:
     row = conn.execute(
         """
         SELECT p.book_id, p.seq, p.printed_page, p.citation_label,
-               p.qasida_number, p.qasida_title, p.bayt_from, p.bayt_to,
+               p.qasida_number, p.qasida_title, p.qasida_bayt_count,
+               p.bayt_from, p.bayt_to,
                p.block_type, p.text,
                b.title AS book_title, b.page_count AS total_pages,
                b.source_grade, b.source_code, b.source_tier
@@ -665,6 +670,14 @@ def _surface_key(value: str) -> str:
     return strip_diacritics(remove_tatweel(value))
 
 
+def _ya_comparison_stem(value: str) -> str:
+    """Remove an attached article/proclitic only for ى/ي comparison."""
+    for prefix in _COMPARISON_PREFIXES:
+        if value.startswith(prefix) and len(value) - len(prefix) >= 2:
+            return value[len(prefix):]
+    return value
+
+
 def _term_evidence(
     display: str, normalized: str, corpus_form: str, relation: str,
 ) -> dict[str, str]:
@@ -678,8 +691,8 @@ def _term_evidence(
     # Warn only when ى/ي normalization itself explains the surface mismatch.
     # The old condition warned on unrelated differences (for example a
     # definite article) whenever both words happened to contain ي.
-    query_surface = _surface_key(display)
-    corpus_surface = _surface_key(corpus_form)
+    query_surface = _ya_comparison_stem(_surface_key(display))
+    corpus_surface = _ya_comparison_stem(_surface_key(corpus_form))
     ya_variants = set("ىيیے")
     if (
         query_surface != corpus_surface
@@ -712,22 +725,34 @@ def _matched_terms(
 ) -> dict[str, dict[str, str]]:
     """Explain the corpus token that satisfied every strict terms token."""
     evidence_text = text[start:end] if start is not None and end is not None and end > start else text
-    corpus_tokens = [match.group(0) for match in _ARABIC_TOKEN_RE.finditer(evidence_text)]
-    normalized_corpus = [normalize_arabic(token, aggressive=True) for token in corpus_tokens]
+    pools = [evidence_text]
+    if evidence_text is not text:
+        # Offset-localized evidence is preferred, but normalization and HTML
+        # source boundaries can place the final character of a term just
+        # outside the minimum span. The FTS all-words gate already proves the
+        # term occurs on this page, so fall back to the authoritative page.
+        pools.append(text)
     evidence: dict[str, dict[str, str]] = {}
     for display, normalized in _content_query_terms(raw_queries):
         allowed = set(term_variants(normalized))
-        for corpus_form, corpus_normalized in zip(corpus_tokens, normalized_corpus):
-            if corpus_normalized not in allowed:
-                continue
-            same_form = (
-                _surface_key(corpus_form) == _surface_key(display)
-            )
-            evidence[display] = _term_evidence(
-                display, normalized, corpus_form,
-                "exact" if same_form else "normalized",
-            )
-            break
+        for pool in pools:
+            corpus_tokens = [
+                match.group(0) for match in _ARABIC_TOKEN_RE.finditer(pool)
+            ]
+            for corpus_form in corpus_tokens:
+                corpus_normalized = normalize_arabic(
+                    corpus_form, aggressive=True,
+                )
+                if corpus_normalized not in allowed:
+                    continue
+                same_form = _surface_key(corpus_form) == _surface_key(display)
+                evidence[display] = _term_evidence(
+                    display, normalized, corpus_form,
+                    "exact" if same_form else "normalized",
+                )
+                break
+            if display in evidence:
+                break
     return evidence
 
 
@@ -825,14 +850,25 @@ def _bayt_at_offset(text: str, offset: int, qasida_number: int | None) -> tuple[
 
 def _structural_identity(
     text: str, start: int, end: int, qasida_number: int | None,
+    qasida_bayt_count: int | None = None,
 ) -> dict[str, object]:
     """Return a stable qasida container and bayt identity for an evidence span."""
     if qasida_number is None:
         return {}
     identity: dict[str, object] = {"container_id": f"b14-q{qasida_number:03d}"}
+    if qasida_bayt_count is not None:
+        identity["qasida_bayt_count"] = int(qasida_bayt_count)
     start_number, start_id = _bayt_at_offset(text, start, qasida_number)
     end_number, end_id = _bayt_at_offset(text, max(start, end - 1), qasida_number)
     if start_number is None:
+        heading = _QASIDA_HEADING_RE.search(text)
+        if heading and start < heading.end() and end > heading.start():
+            heading_id = f"b14-q{qasida_number:03d}-h"
+            identity.update({
+                "stable_id": heading_id,
+                "stable_id_kind": "qasida_heading",
+                "heading_id": heading_id,
+            })
         return identity
     if end_number is None or end_number == start_number:
         identity.update({"bayt_number": start_number, "stable_id": start_id})
@@ -898,7 +934,8 @@ def search(
     base = """
         SELECT p.book_id, b.title AS book_title, b.source_grade, b.source_code,
                b.source_tier, p.seq, p.printed_page, p.citation_label,
-               p.qasida_number, p.qasida_title, p.bayt_from, p.bayt_to,
+               p.qasida_number, p.qasida_title, p.qasida_bayt_count,
+               p.bayt_from, p.bayt_to,
                p.block_type, p.text,
                bm25(pages_fts) AS relevance
         FROM pages_fts
@@ -951,7 +988,11 @@ def search(
             "citation_label": row["citation_label"],
             "qasida_number": row["qasida_number"],
             "qasida_title": _concise_qasida_title(row["qasida_title"]),
+            "qasida_bayt_count": row["qasida_bayt_count"],
             "bayt_from": row["bayt_from"], "bayt_to": row["bayt_to"],
+            "page_bayt_from": row["bayt_from"],
+            "page_bayt_to": row["bayt_to"],
+            "bayt_range_scope": "page" if row["bayt_from"] is not None else None,
             "block_type": row["block_type"],
             "snippet": snippet,
             "_raw_relevance": -float(row["relevance"]),
@@ -987,6 +1028,7 @@ def search(
         if row["book_id"] == "b14":
             result.update(_structural_identity(
                 plain_text, first_match, evidence_end, row["qasida_number"],
+                row["qasida_bayt_count"],
             ))
         result["match_id"] = f"{row['book_id']}-p{row['seq']}-c{first_match}"
         result["evidence_span"] = {
@@ -1170,7 +1212,7 @@ def hybrid_search(**kwargs) -> list[dict]:
             if row["book_id"] == "b14":
                 row.update(_structural_identity(
                     page["text"], chunk_starts[key], chunk_ends[key],
-                    row.get("qasida_number"),
+                    row.get("qasida_number"), row.get("qasida_bayt_count"),
                 ))
         fused.append(row)
     for rank, row in enumerate(fused, start=offset + 1):
@@ -1223,7 +1265,11 @@ def get_passage(
         "tier": page["source_tier"], "seq": page["seq"],
         "printed_page": page["printed_page"], "citation_label": page["citation_label"],
         "qasida_number": page.get("qasida_number"), "qasida_title": page.get("qasida_title"),
+        "qasida_bayt_count": page.get("qasida_bayt_count"),
         "bayt_from": page.get("bayt_from"), "bayt_to": page.get("bayt_to"),
+        "page_bayt_from": page.get("bayt_from"),
+        "page_bayt_to": page.get("bayt_to"),
+        "bayt_range_scope": "page" if page.get("bayt_from") is not None else None,
         "occurrences": occurrences,
         "passage": passage, "page_chars": len(text),
         "truncated": len(passage) < len(text),

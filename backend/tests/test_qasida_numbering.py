@@ -1,6 +1,6 @@
 import unittest
 
-from scripts.build_index import _BAYT_NUMBER, annotate_diwan_pages
+from scripts.build_index import _BAYT_NUMBER, annotate_diwan_pages, classify_block
 
 
 class QasidaNumberingTests(unittest.TestCase):
@@ -104,6 +104,29 @@ class QasidaNumberingTests(unittest.TestCase):
             [int(match.group(1)) for match in _BAYT_NUMBER.finditer(text)],
             [16, 17, 18],
         )
+
+    def test_diwan_footer_and_qasida_total_are_authoritative(self):
+        pages = [{
+            "printed_page": "261",
+            "paragraphs": [
+                "الْقَصِيدَة الْحَادِيَة والتِّسْعُون: "
+                "(بِأَحْمَدَ حَيْثُ الأَحْمَدِيَّةُ يَهْتَدِي)\n"
+                "التّاريخ: الخميس\nعَدَد الأبيات: 22\n"
+                "1 - بِأَحْمَدَ حَيْثُ الأَحْمَدِيَّةُ يَهْتَدِي\n[242]"
+            ],
+        }]
+        page = annotate_diwan_pages(pages)[0]
+        self.assertEqual(page["printed_page"], "242")
+        self.assertEqual(page["qasida_bayt_count"], 22)
+        self.assertIn("من 22", page["page_label"])
+
+    def test_numbered_fihris_page_is_explicitly_toc(self):
+        text = (
+            "174 - فصل فى مقام الفراسة ... 175 - منزلة الرسول ... "
+            "176 - خصاله ... 177 - فصل فى العلم ... 178 - فصل فى النور ... "
+            "انتهى فهرس الجزء الثالث"
+        )
+        self.assertEqual(classify_block(text), "toc")
 
 
 if __name__ == "__main__":

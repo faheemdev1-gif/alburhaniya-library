@@ -36,6 +36,7 @@ MANIFEST_PATH = os.environ.get(
 
 
 SCHEMA = """
+DROP TABLE IF EXISTS semantic_chunks;
 CREATE TABLE IF NOT EXISTS semantic_chunks (
     chunk_id       TEXT PRIMARY KEY,
     vector_index   INTEGER NOT NULL UNIQUE,
@@ -48,6 +49,7 @@ CREATE TABLE IF NOT EXISTS semantic_chunks (
     text           TEXT NOT NULL,
     qasida_number  INTEGER,
     qasida_title   TEXT,
+    qasida_bayt_count INTEGER,
     bayt_from      INTEGER,
     bayt_to        INTEGER,
     source_tier    INTEGER NOT NULL,
@@ -67,7 +69,8 @@ def build_chunk_metadata(conn: sqlite3.Connection) -> tuple[list[str], str]:
     conn.execute("DELETE FROM semantic_chunks")
     rows = conn.execute(
         """SELECT p.book_id, p.seq, p.printed_page, p.citation_label,
-                  p.qasida_number, p.qasida_title, p.bayt_from, p.bayt_to,
+                  p.qasida_number, p.qasida_title, p.qasida_bayt_count,
+                  p.bayt_from, p.bayt_to,
                   p.text, b.source_tier
              FROM pages p JOIN books b ON b.book_id = p.book_id
             ORDER BY p.book_id, p.seq"""
@@ -78,7 +81,7 @@ def build_chunk_metadata(conn: sqlite3.Connection) -> tuple[list[str], str]:
     inserts = []
     vector_index = 0
     for row in rows:
-        page_text = row[8]
+        page_text = row[9]
         corpus_hash.update(row[0].encode("utf-8"))
         corpus_hash.update(str(row[1]).encode("ascii"))
         corpus_hash.update(page_text.encode("utf-8"))
@@ -87,7 +90,7 @@ def build_chunk_metadata(conn: sqlite3.Connection) -> tuple[list[str], str]:
             inserts.append((
                 chunk_id, vector_index, row[0], row[1], row[2], row[3],
                 chunk.start_char, chunk.end_char, chunk.text,
-                row[4], row[5], row[6], row[7], row[9],
+                row[4], row[5], row[6], row[7], row[8], row[10],
             ))
             chunk_texts.append(chunk.text)
             vector_index += 1
@@ -96,8 +99,8 @@ def build_chunk_metadata(conn: sqlite3.Connection) -> tuple[list[str], str]:
         """INSERT INTO semantic_chunks (
                chunk_id, vector_index, book_id, seq, printed_page,
                citation_label, start_char, end_char, text, qasida_number,
-               qasida_title, bayt_from, bayt_to, source_tier
-           ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+               qasida_title, qasida_bayt_count, bayt_from, bayt_to, source_tier
+           ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
         inserts,
     )
     conn.commit()

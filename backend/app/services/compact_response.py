@@ -45,7 +45,7 @@ def compact_search_response(
                 hit["rs"] = row["rank_score"]
             if row["printed_page"] is not None:
                 hit["p"] = row["printed_page"]
-            elif row.get("citation_label"):
+            if row.get("citation_label"):
                 hit["c"] = row["citation_label"]
             if row.get("qasida_number") is not None:
                 hit["q"] = row["qasida_number"]
@@ -55,10 +55,18 @@ def compact_search_response(
                 hit["bf"] = row["bayt_from"]
             if row.get("bayt_to") is not None:
                 hit["bt"] = row["bayt_to"]
+            if row.get("qasida_bayt_count") is not None:
+                hit["qbc"] = row["qasida_bayt_count"]
+            if row.get("bayt_range_scope"):
+                hit["brs"] = row["bayt_range_scope"]
             if row.get("bayt_number") is not None:
                 hit["bn"] = row["bayt_number"]
             if row.get("stable_id"):
                 hit["id"] = row["stable_id"]
+            if row.get("stable_id_kind"):
+                hit["id_kind"] = row["stable_id_kind"]
+            if row.get("heading_id"):
+                hit["hid"] = row["heading_id"]
             if row.get("stable_ids"):
                 hit["ids"] = row["stable_ids"]
             if row.get("container_id"):
@@ -103,10 +111,12 @@ def compact_search_response(
             hit["rank_score"] = row["rank_score"]
         if row["printed_page"] is not None:
             hit["printed_page"] = row["printed_page"]
-        elif row.get("citation_label"):
+        if row.get("citation_label"):
             hit["citation_label"] = row["citation_label"]
-        for field in ("qasida_number", "qasida_title", "bayt_from", "bayt_to",
-                      "bayt_number", "stable_id", "stable_ids", "container_id",
+        for field in ("qasida_number", "qasida_title", "qasida_bayt_count",
+                      "bayt_from", "bayt_to", "page_bayt_from", "page_bayt_to",
+                      "bayt_range_scope", "bayt_number", "stable_id",
+                      "stable_id_kind", "heading_id", "stable_ids", "container_id",
                       "block_type", "matched_terms"):
             if row.get(field) is not None:
                 hit[field] = row[field]

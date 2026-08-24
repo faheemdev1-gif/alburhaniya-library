@@ -75,8 +75,11 @@ mcp = FastMCP(
         "explicitly audited lexeme results are citation-capable. Auto results "
         "are citation-capable only when match_type and matched_terms establish "
         "the evidence relation. Surface text is authoritative for quotation; "
-        "normalization can collapse distinct ى/ي forms. Book b35 contains "
-        "multiple speakers: verify the speaker before attribution. "
+        "normalization can collapse distinct ى/ي forms. "
+        "For Dīwān results, bayt_from and bayt_to are page-scoped; use "
+        "qasida_bayt_count for the complete qaṣīda length. TOC/fihris hits "
+        "are explicitly typed and downranked. "
+        "Book b35 contains multiple speakers: verify the speaker before attribution. "
         f"Tool contract: {TOOL_CONTRACT_ID}; contract version: "
         f"{TOOL_CONTRACT_VERSION}; required tool count: {len(REQUIRED_TOOLS)}."
     ),
@@ -203,8 +206,19 @@ def get_page(
 
         if page["printed_page"] is not None:
             result["printed_page"] = page["printed_page"]
-        elif page.get("citation_label"):
+        if page.get("citation_label"):
             result["citation_label"] = page["citation_label"]
+
+        for field in (
+            "qasida_number", "qasida_title", "qasida_bayt_count",
+            "bayt_from", "bayt_to", "block_type",
+        ):
+            if page.get(field) is not None:
+                result[field] = page[field]
+        if page.get("bayt_from") is not None:
+            result["page_bayt_from"] = page["bayt_from"]
+            result["page_bayt_to"] = page["bayt_to"]
+            result["bayt_range_scope"] = "page"
 
         if page["has_next"]:
             result["next_seq"] = page["seq"] + 1
@@ -288,6 +302,11 @@ def search_library(
 
     The complete toolset is exactly: search_library, get_passage, get_page,
     get_book, and list_books.
+
+    Citation metadata is explicit: citation_label is universal; Dīwān
+    bayt_from/bayt_to are page-scoped and qasida_bayt_count is the complete
+    qaṣīda length. A heading hit has a stable qasida-heading identifier rather
+    than being misrepresented as bayt 1. TOC/fihris pages declare block_type=toc.
 
     Args:
         query: One Arabic word or phrase.

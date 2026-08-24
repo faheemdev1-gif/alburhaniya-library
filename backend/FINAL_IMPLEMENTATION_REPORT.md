@@ -1,7 +1,7 @@
 # Al Burhania Research Library MCP — Final implementation
 
-Release: **2.3.1**  
-Tool-contract version: **5.2**  
+Release: **2.3.2**  
+Tool-contract version: **5.3**  
 Contract identifier: **`alburhaniya-tools-v5`**
 
 ## Outcome
@@ -24,7 +24,7 @@ Startup and health checks fail if a required tool is missing, an unexpected tool
 - Added startup validation against the actual FastMCP registry—not just a constant or count.
 - Added contract/version/tool details to `/health`.
 - Added contract metadata to all five MCP tool definitions.
-- Made MCP `initialize` report application version `2.3.1` instead of the SDK package version.
+- Made MCP `initialize` report application version `2.3.2` instead of the SDK package version.
 - Reinforced the semantic workflow in tool descriptions: `search_library` → `get_passage` → `get_page`.
 - Added `scripts/production_mcp_regression.py`, which connects to the public endpoint, validates the live corpus/health contract, follows `tools/list` pagination, rejects duplicate/missing/unexpected tools, checks schemas, application version and metadata, explicitly verifies `get_passage`, and smoke-invokes all five tools.
 
@@ -114,14 +114,14 @@ Additional checks:
 ## Deployment and live verification
 
 1. Deploy this package normally. The Docker build will run the local gate.
-2. Confirm `/health` reports server `2.3.1`, tool-contract `5.2`, tool count `5`, and `corpus_contract.status: ok`.
+2. Confirm `/health` reports server `2.3.2`, tool-contract `5.3`, tool count `5`, and `corpus_contract.status: ok`.
 3. From a networked environment with the project dependencies installed, run:
 
    ```bash
    python scripts/production_mcp_regression.py https://burhaniya-library-backend.onrender.com/mcp/
    ```
 
-4. Reconnect the ChatGPT connector and begin a new session so the host retrieves the `2.3.1`/`5.2` catalogue and corrected descriptions.
+4. Reconnect the ChatGPT connector and begin a new session so the host retrieves the `2.3.2`/`5.3` catalogue and corrected descriptions.
 
 The live public MCP gate cannot be truthfully completed before this modified build is deployed. The supplied script is the final post-deployment acceptance test and should be added to CI/CD as MCP-000/MCP-001.
 

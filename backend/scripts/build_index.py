@@ -80,6 +80,7 @@ CREATE TABLE pages (
     citation_label TEXT,
     qasida_number INTEGER,
     qasida_title TEXT,
+    qasida_bayt_count INTEGER,
     bayt_from INTEGER,
     bayt_to INTEGER,
     block_type TEXT NOT NULL DEFAULT 'body' CHECK (block_type IN ('body', 'toc')),
@@ -142,7 +143,13 @@ _BAYT_NUMBER = re.compile(
 _QASIDA_TITLE_END = re.compile(
     r"\s+التّ?اريخ\s*:|\s+\d{1,3}\s*-\s*(?=[ء-ي])"
 )
-_TOC_DOT_LEADER = re.compile(r"\.{5,}|…{3,}")
+_TOC_DOT_LEADER = re.compile(r"\.{3,}|…{2,}")
+_TOC_NUMBERED_ENTRY = re.compile(
+    r"(?:^|\s)[0-9٠-٩۰-۹]{1,3}\s*-\s*[^\n]{3,160}?(?=\.{3,}|…{2,}|$)"
+)
+_PRINTED_PAGE_FOOTER = re.compile(
+    r"(?:\[\s*([0-9٠-٩۰-۹]{1,4})\s*\]|-\s*([0-9٠-٩۰-۹]{1,4})\s*-)\s*$"
+)
 _DIWAN_QASIDA_COUNT = 95
 _DIWAN_BAYT_COUNT = 2682
 _DIWAN_ORDINAL_DIGEST = "c354110999fb08d95a8d8d090fa63cc9eb47ddb62e4ea77e25b7261b66676a8d"
@@ -151,16 +158,43 @@ _DIWAN_ORDINAL_DIGEST = "c354110999fb08d95a8d8d090fa63cc9eb47ddb62e4ea77e25b7261
 def classify_block(text: str) -> str:
     """Identify contents pages structurally instead of learning them from rank."""
     normalized = normalize_arabic(text, aggressive=True)
-    if re.search(r"(?:^|\s)(?:الفهرس|فهرس المحتويات)(?:\s|$)", normalized):
+    if re.search(r"(?:^|\s)(?:الفهرس|فهرس)(?:\s|$)", normalized):
         return "toc"
-    return "toc" if len(_TOC_DOT_LEADER.findall(text)) >= 3 else "body"
+    dot_leaders = len(_TOC_DOT_LEADER.findall(text))
+    numbered_entries = len(_TOC_NUMBERED_ENTRY.findall(text))
+    if dot_leaders >= 2 or (dot_leaders >= 1 and numbered_entries >= 3):
+        return "toc"
+    return "body"
+
+
+def _source_footer_page(text: str) -> str | None:
+    """Return the source-visible footer page, which is authoritative for b14."""
+    match = _PRINTED_PAGE_FOOTER.search(text)
+    if not match:
+        return None
+    return (match.group(1) or match.group(2)).translate(_DIGIT_TRANSLATION)
+
+
+def _qasida_bayt_count(text: str) -> int | None:
+    """Extract the qaṣīda-wide count declared in its source heading."""
+    normalized = normalize_arabic(
+        text.translate(_DIGIT_TRANSLATION), aggressive=True,
+    )
+    match = re.search(r"عدد\s+الابيات\s*[:：]?\s*(\d{1,3})", normalized)
+    return int(match.group(1)) if match else None
 
 
 def annotate_diwan_pages(pages: list[dict]) -> list[dict]:
     """Carry qasida and bayt structure across b14 page boundaries."""
-    qasida_number, qasida_title, last_bayt = 0, None, None
+    qasida_number, qasida_title, qasida_bayt_count, last_bayt = 0, None, None, None
     for page in pages:
         text = "\n\n".join(page["paragraphs"])
+        source_page = _source_footer_page(text)
+        if source_page is not None:
+            # The visible source footer is the printed-page authority.  The
+            # Shamela HTML marker is an export coordinate and is inconsistent
+            # with the Dīwān's own page footer.
+            page["printed_page"] = source_page
         heading = _QASIDA_HEADING.search(text)
         if heading:
             numeric = _QASIDA_NUMERIC_DESIGNATOR.fullmatch(heading.group(1))
@@ -178,10 +212,12 @@ def annotate_diwan_pages(pages: list[dict]) -> list[dict]:
             qasida_title = _QASIDA_TITLE_END.split(
                 heading.group(2), maxsplit=1
             )[0].strip()
+            qasida_bayt_count = _qasida_bayt_count(text)
             last_bayt = None
         bayts = [int(n) for n in _BAYT_NUMBER.findall(text)]
         page["qasida_number"] = qasida_number or None
         page["qasida_title"] = qasida_title
+        page["qasida_bayt_count"] = qasida_bayt_count
         page["bayt_from"] = bayts[0] if bayts else last_bayt
         page["bayt_to"] = bayts[-1] if bayts else last_bayt
         page["block_type"] = classify_block(text)
@@ -190,7 +226,17 @@ def annotate_diwan_pages(pages: list[dict]) -> list[dict]:
         if qasida_number and page["bayt_from"] is not None:
             span = (f"البيت {page['bayt_from']}" if page["bayt_from"] == page["bayt_to"]
                     else f"الأبيات {page['bayt_from']}–{page['bayt_to']}")
-            page["page_label"] = f"القصيدة {qasida_number}، {span}"
+            locator = (
+                f"الصفحة {page['printed_page']}، "
+                if page.get("printed_page") else ""
+            )
+            total = (
+                f" من {qasida_bayt_count}"
+                if qasida_bayt_count is not None else ""
+            )
+            page["page_label"] = (
+                f"القصيدة {qasida_number}، {locator}{span}{total}"
+            )
     return pages
 
 
@@ -337,10 +383,15 @@ def build():
             norm = normalize_arabic(text, aggressive=True)
             conn.execute(
                 "INSERT INTO pages (book_id, seq, printed_page, citation_label, qasida_number, "
-                "qasida_title, bayt_from, bayt_to, block_type, text, norm_text) "
-                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                (slug, seq, page["printed_page"], page.get("page_label"),
+                "qasida_title, qasida_bayt_count, bayt_from, bayt_to, block_type, text, norm_text) "
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                (slug, seq, page["printed_page"], page.get("page_label") or (
+                    f"{title}، الصفحة {page['printed_page']}"
+                    if page.get("printed_page")
+                    else f"{title}، المقطع {seq}"
+                 ),
                  page.get("qasida_number"), page.get("qasida_title"),
+                 page.get("qasida_bayt_count"),
                  page.get("bayt_from"), page.get("bayt_to"),
                  page.get("block_type", classify_block(text)), text, norm),
             )

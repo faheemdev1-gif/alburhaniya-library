@@ -62,6 +62,14 @@ def _top_indices(scores: np.ndarray, limit: int) -> np.ndarray:
     return selected[np.argsort(scores[selected])[::-1]]
 
 
+def _optional_field(row, key: str):
+    """Read optional metadata from sqlite rows or test dictionaries."""
+    try:
+        return row[key]
+    except (KeyError, IndexError):
+        return None
+
+
 def _candidate_rows(
     *, book_ids: list[str] | None, source_code: str | None,
     page_from: int | None, page_to: int | None, qasida_number: int | None,
@@ -159,7 +167,11 @@ def semantic_search(
             "citation_label": row["citation_label"],
             "qasida_number": row["qasida_number"],
             "qasida_title": row["qasida_title"],
+            "qasida_bayt_count": _optional_field(row, "qasida_bayt_count"),
             "bayt_from": row["bayt_from"], "bayt_to": row["bayt_to"],
+            "page_bayt_from": row["bayt_from"],
+            "page_bayt_to": row["bayt_to"],
+            "bayt_range_scope": "page" if row["bayt_from"] is not None else None,
             "snippet": snippet, "match_id": row["chunk_id"],
             "match_type": "semantic", "score": round(bounded_score, 6),
             "score_kind": "semantic_cosine", "rank": rank,

@@ -187,7 +187,9 @@ class FinalRegressionGates(unittest.TestCase):
             evidence = row["matched_terms"]["المحافظة"]
             self.assertEqual(evidence["relation"], "root")
             self.assertEqual(evidence["root"], "حفظ")
-            self.assertIn(evidence["corpus_form"], {"حَافِظ", "للحفظ", "لحفظ", "الحفظة", "ويحافظك"})
+            self.assertIn(evidence["corpus_form"], {
+                "حَافِظ", "للحفظ", "لحفظ", "الحفظة", "ويحافظك", "الحفظ",
+            })
 
     def test_quality_h1_h2_hybrid_threshold_discriminates(self):
         query = "الحقيقة المحمدية والحقيقة الأحمدية"
@@ -257,6 +259,63 @@ class FinalRegressionGates(unittest.TestCase):
         self.assertEqual(rows[0]["block_type"], "body")
         toc = next(row for row in rows if row["block_type"] == "toc")
         self.assertLess(toc["score"], rows[0]["score"])
+
+    def test_hard_f3_fihris_heading_phrase_is_typed_and_downranked(self):
+        rows = db.search(
+            "مرتبة الإنسان الكامل", book_ids=["b12"],
+            ranking="relevance", diversify_books=False, limit=10,
+        )
+        self.assertEqual(rows[0]["seq"], 255)
+        fihris = next(row for row in rows if row["seq"] == 271)
+        self.assertEqual(fihris["block_type"], "toc")
+        self.assertLess(fihris["score"], rows[0]["score"])
+
+    def test_hard_d10_heading_identity_and_page_scoped_bayt_range(self):
+        row = db.search(
+            "بأحمد حيث الأحمدية يهتدي", book_ids=["b14"],
+            qasida_number=91, ranking="relevance",
+            diversify_books=False, limit=1,
+        )[0]
+        self.assertEqual(row["stable_id"], "b14-q091-h")
+        self.assertEqual(row["stable_id_kind"], "qasida_heading")
+        self.assertEqual(row["heading_id"], "b14-q091-h")
+        self.assertEqual(row["qasida_bayt_count"], 22)
+        self.assertEqual(row["bayt_range_scope"], "page")
+        self.assertEqual((row["page_bayt_from"], row["page_bayt_to"]), (1, 12))
+        self.assertNotIn("bayt_number", row)
+
+    def test_hard_d11_diwan_printed_page_comes_from_source_footer(self):
+        expected = {120: "116", 175: "171", 210: "206", 246: "242", 254: "250"}
+        self.assertEqual(
+            {seq: db.get_page("b14", seq)["printed_page"] for seq in expected},
+            expected,
+        )
+
+    def test_hard_c1_citation_label_is_universal(self):
+        for book_id, seq in (("b14", 246), ("b12", 271), ("b12", 255)):
+            page = db.get_page(book_id, seq)
+            self.assertTrue(page["citation_label"])
+            passage = db.get_passage(book_id, seq, context_chars=250)
+            self.assertEqual(passage["citation_label"], page["citation_label"])
+
+    def test_hard_n6_article_prefix_does_not_hide_ya_warning(self):
+        huda_rows = db.search(
+            "هدى", ranking="relevance", diversify_books=False, limit=100,
+        )
+        huda = next(
+            row["matched_terms"]["هدى"] for row in huda_rows
+            if row.get("matched_terms", {}).get("هدى", {}).get("surface_form") == "الهدي"
+        )
+        self.assertIn("ى/ي", huda["normalization_warning"])
+
+        ali_rows = db.search(
+            "علي", ranking="relevance", diversify_books=False, limit=100,
+        )
+        ali = next(
+            row["matched_terms"]["علي"] for row in ali_rows
+            if row.get("matched_terms", {}).get("علي", {}).get("surface_form") == "العلى"
+        )
+        self.assertIn("ى/ي", ali["normalization_warning"])
 
     def test_hard_r1_r3_ranking_policy_is_explainable(self):
         relevance = db.search(
