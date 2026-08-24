@@ -81,7 +81,8 @@ class MCPContractTests(unittest.TestCase):
 
     def test_hard_versioned_instructions_explain_incomplete_discovery(self):
         self.assertEqual(TOOL_CONTRACT_ID, "alburhaniya-tools-v5")
-        self.assertEqual(TOOL_CONTRACT_VERSION, "5.1")
+        self.assertEqual(TOOL_CONTRACT_VERSION, "5.2")
+        self.assertIn("mcp._mcp_server.version = SERVER_VERSION", self.source)
         self.assertIn("connector discovery is incomplete", self.source)
         self.assertIn("get_passage for the precise passage", self.source)
         self.assertIn("surface text is authoritative", self.source.lower())

@@ -36,6 +36,7 @@ sys.path.insert(0, os.path.dirname(__file__))
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "app", "core"))
 from book_parser import parse_book, parse_utf8_pages, split_oversized_pages   # noqa: E402
 from arabic_utils import normalize_arabic             # noqa: E402
+from research_indexes import build_research_indexes   # noqa: E402
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.join(HERE, "..", "data")
@@ -369,6 +370,7 @@ def build():
         )
 
     validate_diwan_structure(conn)
+    research_stats = build_research_indexes(conn)
 
     # NOTE: only `pages` feeds the FTS index. Grades / notes / authors
     # deliberately stay out of it.
@@ -381,7 +383,9 @@ def build():
     n_secondary = len(book_sources) - n_primary
     print(
         f"\nBuilt {DB_PATH} — {len(mapping)} books "
-        f"({n_primary} primary / {n_secondary} secondary), {total_pages} pages"
+        f"({n_primary} primary / {n_secondary} secondary), {total_pages} pages, "
+        f"{research_stats['tokens']} tokens, "
+        f"{research_stats['parallel_candidates']} Dīwān parallel candidates"
     )
 
 

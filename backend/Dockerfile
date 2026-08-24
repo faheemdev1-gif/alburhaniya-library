@@ -1,4 +1,4 @@
-# SQLite FTS5 plus a prebuilt multilingual E5 semantic index.
+# SQLite FTS5 plus citation-safe research indexes. Semantic vectors remain optional.
 FROM python:3.11-slim
 
 WORKDIR /app
@@ -17,10 +17,11 @@ RUN python -m pip install \
     -r requirements.txt
 COPY . .
 
-# The lexical corpus is authoritative. Semantic artifacts are optional and
-# activate only when explicitly supplied and ENABLE_LOCAL_SEMANTIC_SEARCH=true.
-RUN test -s library.db \
-    && test -s data/raw_htm/book_14.htm
+# library.db is a generated build artifact (over 100 MiB with research
+# indexes), so it is never committed to Git. Build it reproducibly from the
+# authoritative source texts inside the image instead.
+RUN test -s data/raw_htm/book_14.htm \
+    && python scripts/build_index.py
 
 # Deployment gate: hard citation/structure failures and retrieval-quality
 # regressions fail the image build; efficiency issues are reported separately.

@@ -5,13 +5,14 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, JSONResponse
 
 from app.core.config import get_settings
 from app.core.html_templates import page_shell, nav_bar
 from app.mcp_contract import SERVER_VERSION, contract_metadata, validate_registered_tools
 from app.api import books, search, files
 from app.mcp_server import mcp
+from app.services.corpus_contract import corpus_contract_snapshot
 
 logger = logging.getLogger(__name__)
 s = get_settings()
@@ -51,6 +52,9 @@ def _init_search_backend():
 async def lifespan(app: FastAPI):
     # Run the same startup checks as before.
     _init_search_backend()
+    corpus = corpus_contract_snapshot()
+    if corpus["status"] != "ok":
+        raise RuntimeError(f"BROKEN CORPUS CONTRACT: {corpus}")
     # FastMCP's streamable-HTTP transport needs its session manager's task
     # group started as part of the ASGI lifespan — app.mount() alone does
     # NOT forward a sub-app's lifespan, so without this the MCP endpoint
@@ -84,7 +88,15 @@ app.mount("/mcp", mcp.streamable_http_app())
 @app.get("/health")
 def health():
     tools = validate_registered_tools(mcp)
-    return {"status": "ok", **contract_metadata(tools)}
+    corpus = corpus_contract_snapshot()
+    payload = {
+        "status": "ok" if corpus["status"] == "ok" else "broken",
+        **contract_metadata(tools),
+        "corpus_contract": corpus,
+    }
+    if corpus["status"] != "ok":
+        return JSONResponse(payload, status_code=503)
+    return payload
 
 
 @app.get("/", response_class=HTMLResponse)

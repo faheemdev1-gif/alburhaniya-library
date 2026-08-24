@@ -102,6 +102,17 @@ class FinalRegressionGates(unittest.TestCase):
         self.assertEqual(ambiguous["relation"], "normalized")
         self.assertIn("ى/ي", ambiguous["normalization_warning"])
 
+        unrelated = db.search(
+            "المريد", ranking="relevance", diversify_books=False, limit=20,
+        )
+        article_variant = next(
+            evidence for row in unrelated
+            for evidence in row.get("matched_terms", {}).values()
+            if evidence.get("surface_form") == "مُريد"
+            and evidence.get("relation") == "normalized"
+        )
+        self.assertNotIn("normalization_warning", article_variant)
+
     def test_hard_d1_d7_qasida_boundaries_and_titles(self):
         expected = {
             1: "أَنَا فِي أَنَا إِنِّي وَإِنِّيَ فِي أَنَا",
@@ -225,6 +236,18 @@ class FinalRegressionGates(unittest.TestCase):
             self.assertGreaterEqual(span["start"], 0)
             self.assertGreater(span["end"], span["start"])
             self.assertLessEqual(span["end"], len(page["text"]))
+
+    def test_hard_h13_every_hybrid_hit_explains_matched_terms(self):
+        rows = db.hybrid_search(
+            query="الحقيقة المحمدية والحقيقة الأحمدية", limit=20,
+        )
+        self.assertTrue(rows)
+        for row in rows:
+            self.assertTrue(row.get("matched_terms"), row["match_id"])
+            self.assertTrue(all(
+                item.get("surface_form") and item.get("relation")
+                for item in row["matched_terms"].values()
+            ))
 
     def test_hard_f1_f2_toc_is_typed_and_downranked(self):
         rows = db.search(

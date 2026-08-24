@@ -5,8 +5,8 @@ from collections.abc import Iterable
 from typing import Any
 
 
-SERVER_VERSION = "2.2.0"
-TOOL_CONTRACT_VERSION = "5.1"
+SERVER_VERSION = "2.3.1"
+TOOL_CONTRACT_VERSION = "5.2"
 TOOL_CONTRACT_ID = "alburhaniya-tools-v5"
 
 REQUIRED_TOOLS = frozenset({

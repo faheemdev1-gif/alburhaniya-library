@@ -9,3 +9,5 @@ backend/semantic_embeddings.npy
 backend/semantic_manifest.json
 **/__pycache__/
 *.pyc
+backend/library.db
+backend/library.db-*

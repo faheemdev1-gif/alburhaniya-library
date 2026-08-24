@@ -9,7 +9,9 @@ import os
 import sys
 from pathlib import Path
 from typing import Any
+from urllib.parse import urlsplit, urlunsplit
 
+import httpx
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
@@ -18,7 +20,9 @@ from mcp.client.streamable_http import streamable_http_client
 
 from app.mcp_contract import (
     REQUIRED_TOOLS,
+    SERVER_VERSION,
     TOOL_CONTRACT_ID,
+    TOOL_CONTRACT_VERSION,
     validate_tool_names,
 )
 
@@ -30,6 +34,34 @@ SEARCH_REQUIRED_PROPERTIES = {
 }
 MATCH_MODES = {"auto", "exact", "terms", "hybrid", "lexeme"}
 RESPONSE_MODES = {"compact", "ultra_compact"}
+
+
+async def _validate_live_health(endpoint: str) -> dict[str, Any]:
+    parts = urlsplit(endpoint)
+    health_url = urlunsplit((parts.scheme, parts.netloc, "/health", "", ""))
+    async with httpx.AsyncClient(timeout=30.0, follow_redirects=True) as client:
+        response = await client.get(health_url)
+        response.raise_for_status()
+    payload = response.json()
+    if payload.get("server_version") != SERVER_VERSION:
+        raise AssertionError("live health server version is stale")
+    if payload.get("tool_contract_version") != TOOL_CONTRACT_VERSION:
+        raise AssertionError("live health tool-contract version is stale")
+    if set(payload.get("tools") or []) != REQUIRED_TOOLS:
+        raise AssertionError("live health tool set violates the five-tool contract")
+    corpus = payload.get("corpus_contract") or {}
+    diwan = corpus.get("diwan") or {}
+    research = corpus.get("research_indexes") or {}
+    if not (
+        corpus.get("status") == "ok"
+        and diwan.get("qasidas") == 95
+        and diwan.get("bayts") == 2682
+        and diwan.get("continuous_bayt_numbering") is True
+        and research.get("status") == "ok"
+        and research.get("parallel_semantics") == "unverified_candidates_only"
+    ):
+        raise AssertionError(f"live corpus contract is broken or incomplete: {corpus}")
+    return payload
 
 
 def _enum_values(schema: Any) -> set[str]:
@@ -105,9 +137,16 @@ async def _discover_all(session: ClientSession) -> list[Any]:
 
 
 async def run(endpoint: str, discovery_only: bool = False) -> dict[str, Any]:
+    health = await _validate_live_health(endpoint)
     async with streamable_http_client(endpoint) as (read_stream, write_stream, _):
         async with ClientSession(read_stream, write_stream) as session:
             init = await session.initialize()
+            if getattr(init.serverInfo, "version", None) != SERVER_VERSION:
+                raise AssertionError(
+                    "MCP initialize serverInfo.version mismatch: "
+                    f"expected {SERVER_VERSION}, received "
+                    f"{getattr(init.serverInfo, 'version', None)}"
+                )
             discovered = await _discover_all(session)
             names = [tool.name for tool in discovered]
             validate_tool_names(names)
@@ -163,6 +202,13 @@ async def run(endpoint: str, discovery_only: bool = False) -> dict[str, Any]:
                 "smoke": smoke,
                 "server_name": getattr(init.serverInfo, "name", None),
                 "server_version": getattr(init.serverInfo, "version", None),
+                "health": {
+                    "server_version": health["server_version"],
+                    "tool_contract_version": health["tool_contract_version"],
+                    "corpus_status": health["corpus_contract"]["status"],
+                    "diwan": health["corpus_contract"]["diwan"],
+                    "research_indexes": health["corpus_contract"]["research_indexes"],
+                },
             }
 
 

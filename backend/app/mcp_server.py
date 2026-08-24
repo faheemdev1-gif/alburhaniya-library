@@ -41,6 +41,7 @@ from mcp.server.transport_security import TransportSecuritySettings
 from app.core.text_format import format_page
 from app.mcp_contract import (
     REQUIRED_TOOLS,
+    SERVER_VERSION,
     TOOL_CONTRACT_ID,
     TOOL_CONTRACT_VERSION,
     TOOL_META,
@@ -97,6 +98,13 @@ mcp = FastMCP(
         ],
     ),
 )
+
+# FastMCP 1.x otherwise reports the SDK package version during initialize,
+# which makes connector-cache diagnostics misleading.  The low-level server
+# owns the protocol serverInfo object, so set the application release there.
+mcp._mcp_server.version = SERVER_VERSION
+if mcp._mcp_server.version != SERVER_VERSION:  # pragma: no cover - fail loud
+    raise RuntimeError("MCP application version was not applied to serverInfo")
 
 
 @mcp.tool(structured_output=True, meta=TOOL_META)

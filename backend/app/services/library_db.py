@@ -27,7 +27,7 @@ from itertools import product
 from app.core.config import get_settings
 from app.core.arabic_utils import (
     ARABIC_STOPWORDS, hybrid_tokens, lexical_root, lexical_variants,
-    normalize_arabic, normalized_tokens, remove_tatweel, strip_diacritics,
+    normalize_arabic, normalize_ya, normalized_tokens, remove_tatweel, strip_diacritics,
     term_variants,
 )
 
@@ -675,8 +675,16 @@ def _term_evidence(
         "query_normalized": normalized,
         "relation": relation,
     }
-    if ({"ى", "ي"} & set(display)) and ({"ى", "ي"} & set(corpus_form)) and (
-        _surface_key(display) != _surface_key(corpus_form)
+    # Warn only when ى/ي normalization itself explains the surface mismatch.
+    # The old condition warned on unrelated differences (for example a
+    # definite article) whenever both words happened to contain ي.
+    query_surface = _surface_key(display)
+    corpus_surface = _surface_key(corpus_form)
+    ya_variants = set("ىيیے")
+    if (
+        query_surface != corpus_surface
+        and bool((set(query_surface) | set(corpus_surface)) & ya_variants)
+        and normalize_ya(query_surface) == normalize_ya(corpus_surface)
     ):
         item["normalization_warning"] = "ى/ي ambiguity; surface_form is authoritative"
     return item
@@ -766,6 +774,42 @@ def _matched_lexeme(text: str, raw_query: str) -> dict[str, dict[str, str]]:
     if relation == "root" and root:
         item["root"] = root
     return {display: item}
+
+
+def _matched_hybrid_terms(
+    text: str, raw_queries: list[str], start: int, end: int,
+) -> dict[str, dict[str, str]]:
+    """Explain every content token supporting a hybrid evidence window.
+
+    Hybrid may use curated derivational relatives, so its evidence relation
+    is allowed to be ``root`` or ``concept``.  This function never upgrades
+    those relations to literal evidence and always preserves the corpus form.
+    """
+    evidence_text = text[start:end] if end > start else text
+    corpus_tokens = [m.group(0) for m in _ARABIC_TOKEN_RE.finditer(evidence_text)]
+    normalized_corpus = [normalize_arabic(t, aggressive=True) for t in corpus_tokens]
+    evidence: dict[str, dict[str, str]] = {}
+    for display, normalized in _content_query_terms(raw_queries):
+        variants = set(lexical_variants(normalized))
+        strict_variants = set(term_variants(normalized))
+        for corpus_form, corpus_normalized in zip(corpus_tokens, normalized_corpus):
+            if corpus_normalized not in variants:
+                continue
+            if _surface_key(corpus_form) == _surface_key(display):
+                relation = "exact"
+            elif corpus_normalized in strict_variants:
+                relation = "normalized"
+            elif lexical_root(normalized):
+                relation = "root"
+            else:
+                relation = "concept"
+            item = _term_evidence(display, normalized, corpus_form, relation)
+            root = lexical_root(normalized)
+            if relation == "root" and root:
+                item["root"] = root
+            evidence[display] = item
+            break
+    return evidence
 
 
 def _bayt_at_offset(text: str, offset: int, qasida_number: int | None) -> tuple[int | None, str | None]:
@@ -1016,7 +1060,8 @@ def hybrid_search(**kwargs) -> list[dict]:
     deterministic; an external embedding service is therefore not required at
     request time.
     """
-    queries = kwargs.get("queries") or ([kwargs.get("query")] if kwargs.get("query") else [])
+    raw_queries = kwargs.get("queries") or ([kwargs.get("query")] if kwargs.get("query") else [])
+    queries = list(raw_queries)
     filtered_queries = []
     for query in queries:
         words = hybrid_tokens(query)
@@ -1119,6 +1164,9 @@ def hybrid_search(**kwargs) -> list[dict]:
                 "end": chunk_ends[key],
                 "excerpt": row["snippet"],
             }
+            row["matched_terms"] = _matched_hybrid_terms(
+                page["text"], raw_queries, chunk_starts[key], chunk_ends[key],
+            )
             if row["book_id"] == "b14":
                 row.update(_structural_identity(
                     page["text"], chunk_starts[key], chunk_ends[key],

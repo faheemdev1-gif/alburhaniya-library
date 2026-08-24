@@ -15,6 +15,7 @@ sys.path.insert(0, str(ROOT / "scripts"))
 
 from arabic_utils import normalize_arabic  # noqa: E402
 from build_index import _BAYT_NUMBER, validate_diwan_structure  # noqa: E402
+from research_indexes import build_research_indexes  # noqa: E402
 
 
 _SOURCE_HEADING = re.compile(r"الْ?قَ?صِ?يدَ?ة\s+([^:<\n]{1,80})\s*:")
@@ -92,11 +93,15 @@ def migrate(db_path: Path, source_path: Path) -> dict[str, int]:
         # ordinal restoration and normalized text stay synchronized.
         conn.execute("INSERT INTO pages_fts(pages_fts) VALUES('rebuild')")
         validate_diwan_structure(conn)
+        research_stats = build_research_indexes(conn)
         total = conn.execute(
             "SELECT COUNT(*) FROM bayts WHERE book_id='b14'"
         ).fetchone()[0]
         conn.commit()
-        return {"headings_restored": replaced, "qasidas": 95, "bayts": int(total)}
+        return {
+            "headings_restored": replaced, "qasidas": 95, "bayts": int(total),
+            **research_stats,
+        }
     except Exception:
         conn.rollback()
         raise
