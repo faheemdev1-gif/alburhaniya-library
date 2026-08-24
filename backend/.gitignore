@@ -1,0 +1,21 @@
+# Generated corpus/index artifacts. Build with: python scripts/build_index.py
+library.db
+library.db-*
+.library.db.*
+*.db-shm
+*.db-wal
+
+# Optional generated semantic artifacts
+semantic_embeddings.npy
+semantic_manifest.json
+
+# Local/runtime files
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+.env
+.DS_Store
+__MACOSX/
+.ci-artifacts/

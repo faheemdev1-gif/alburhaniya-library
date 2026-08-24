@@ -120,19 +120,25 @@ def list_books(include_legend: bool = False) -> dict[str, Any]:
     also reports the live connector and corpus contracts so an MCP-only client
     can verify the release, five-tool manifest, corpus totals, Dīwān sweep,
     and stable-ID integrity without access to the HTTP health endpoint.
+    Non-canonical editions remain listed with canonical_book_id and
+    searchable_by_default metadata.
 
     Args:
         include_legend: Include full source-grade definitions. Leave false
             unless the detailed definitions are specifically required.
     """
     books = [
-        {
+        ({
             "id": book["book_id"],
             "title": book["title"],
             "pages": book["page_count"],
             "source": book["source_code"],
             "tier": book["source_tier"],
-        }
+        } | ({
+            "canonical_book_id": book["canonical_book_id"],
+            "edition_relation": book["edition_relation"],
+            "searchable_by_default": bool(book["searchable_by_default"]),
+        } if book["canonical_book_id"] != book["book_id"] else {}))
         for book in db.list_books()
     ]
 
@@ -169,6 +175,7 @@ def get_book(book_id: str) -> dict[str, Any]:
             "error": f"no book with id '{book_id}'",
         }
 
+    book["searchable_by_default"] = bool(book["searchable_by_default"])
     book["connector_contract"] = contract_metadata(REQUIRED_TOOLS)
     return book
 
@@ -222,7 +229,8 @@ def get_page(
 
         for field in (
             "qasida_number", "qasida_title", "qasida_bayt_count",
-            "bayt_from", "bayt_to", "block_type",
+            "bayt_from", "bayt_to", "block_type", "canonical_book_id",
+            "edition_relation", "searchable_by_default",
         ):
             if page.get(field) is not None:
                 result[field] = page[field]
@@ -326,7 +334,11 @@ def search_library(
         operator: Combine alternatives with OR (default) or AND.
         limit: Number of results. Defaults to 8 and is capped at 20.
         offset: Zero-based pagination offset.
-        book_ids: Optional book IDs to search, such as ["b33"].
+        book_ids: Optional book IDs to search, such as ["b33"]. Ordinary
+            whole-library search excludes editions marked
+            searchable_by_default=false so repeated editions do not duplicate
+            results or counts. Passing that edition's ID explicitly searches
+            it and preserves its own printed-page citations.
         book_scope: Optional title/series fragment, such as "شرح شراب الوصل".
         source_code: Optional "primary" or "secondary" filter.
         page_from: Optional first page sequence, inclusive.

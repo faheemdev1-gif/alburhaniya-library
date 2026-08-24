@@ -69,8 +69,14 @@ CREATE TABLE books (
     source_tier    INTEGER NOT NULL CHECK (source_tier BETWEEN 1 AND 5),
     source_author  TEXT,
     source_note    TEXT,
+    canonical_book_id TEXT NOT NULL,
+    edition_relation TEXT NOT NULL DEFAULT 'canonical',
+    searchable_by_default INTEGER NOT NULL DEFAULT 1
+        CHECK (searchable_by_default IN (0, 1)),
     FOREIGN KEY (source_grade) REFERENCES grades(grade)
 );
+CREATE INDEX idx_books_default_search
+    ON books(searchable_by_default, canonical_book_id);
 
 CREATE TABLE pages (
     id            INTEGER PRIMARY KEY,
@@ -386,8 +392,9 @@ def build():
 
         conn.execute(
             "INSERT INTO books "
-            "(book_id, title, page_count, source_grade, source_code, source_tier, source_author, source_note) "
-            "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+            "(book_id, title, page_count, source_grade, source_code, source_tier, "
+            "source_author, source_note, canonical_book_id, edition_relation, "
+            "searchable_by_default) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
             (
                 slug,
                 title,
@@ -397,6 +404,9 @@ def build():
                 tier,
                 src.get("author"),
                 src.get("note"),
+                src.get("canonical_book_id", slug),
+                src.get("edition_relation", "canonical"),
+                int(src.get("searchable_by_default", True)),
             ),
         )
 
@@ -442,6 +452,18 @@ def build():
             "\nERROR: these books have no entry in data/sources.json: "
             + ", ".join(missing)
             + "\nAdd them (with a grade) before building."
+        )
+
+    broken_editions = conn.execute(
+        "SELECT b.book_id, b.canonical_book_id FROM books b "
+        "LEFT JOIN books c ON c.book_id=b.canonical_book_id "
+        "WHERE c.book_id IS NULL OR "
+        "(b.searchable_by_default=0 AND b.canonical_book_id=b.book_id)"
+    ).fetchall()
+    if broken_editions:
+        raise SystemExit(
+            "ERROR: invalid canonical edition metadata: "
+            + ", ".join(f"{row[0]}->{row[1]}" for row in broken_editions)
         )
 
     validate_diwan_structure(conn)

@@ -318,6 +318,23 @@ class FinalRegressionGates(unittest.TestCase):
                 (page["book_id"], page["seq"]),
             )
 
+    def test_hard_e1_duplicate_edition_is_suppressed_by_default_but_addressable(self):
+        phrase = "عندما كنت أحشد الأجهزة الإعلامية المحلية و العالمية"
+        default_rows = db.search(
+            phrase, ranking="relevance", diversify_books=False, limit=20,
+        )
+        self.assertTrue(any(row["book_id"] == "b37" for row in default_rows))
+        self.assertFalse(any(row["book_id"] == "b38" for row in default_rows))
+        self.assertEqual(db.count_search([phrase]), 1)
+        self.assertEqual(db.count_search([phrase], book_ids=["b37", "b38"]), 2)
+        edition_rows = db.search(
+            phrase, book_ids=["b38"], ranking="relevance",
+            diversify_books=False, limit=20,
+        )
+        self.assertTrue(edition_rows)
+        self.assertTrue(all(row["canonical_book_id"] == "b37" for row in edition_rows))
+        self.assertTrue(all(not row["searchable_by_default"] for row in edition_rows))
+
     def test_hard_d10_heading_identity_and_page_scoped_bayt_range(self):
         row = db.search(
             "بأحمد حيث الأحمدية يهتدي", book_ids=["b14"],

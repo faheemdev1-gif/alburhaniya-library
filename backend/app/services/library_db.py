@@ -206,7 +206,8 @@ def list_books() -> list[dict]:
     """Every book with its source grade (short form — no note/author)."""
     conn = _connection()
     rows = conn.execute(
-        "SELECT book_id, title, page_count, source_grade, source_code, source_tier "
+        "SELECT book_id, title, page_count, source_grade, source_code, source_tier, "
+        "canonical_book_id, edition_relation, searchable_by_default "
         "FROM books ORDER BY source_tier, title"
     ).fetchall()
     return [dict(r) for r in rows]
@@ -217,7 +218,8 @@ def get_book(book_id: str) -> dict | None:
     conn = _connection()
     row = conn.execute(
         "SELECT book_id, title, page_count, source_grade, source_code, source_tier, "
-        "       source_author, source_note "
+        "       source_author, source_note, canonical_book_id, edition_relation, "
+        "       searchable_by_default "
         "FROM books WHERE book_id = ?",
         (book_id,),
     ).fetchone()
@@ -272,7 +274,9 @@ def get_page(book_id: str, seq: int) -> dict | None:
                p.bayt_from, p.bayt_to,
                p.block_type, p.text,
                b.title AS book_title, b.page_count AS total_pages,
-               b.source_grade, b.source_code, b.source_tier
+               b.source_grade, b.source_code, b.source_tier,
+               b.canonical_book_id, b.edition_relation,
+               b.searchable_by_default
         FROM pages p
         JOIN books b ON b.book_id = p.book_id
         WHERE p.book_id = ? AND p.seq = ?
@@ -415,6 +419,11 @@ def _search_filters(
         placeholders = ",".join("?" for _ in book_ids)
         sql += f" AND p.book_id IN ({placeholders})"
         params.extend(book_ids)
+    else:
+        # Non-canonical editions remain directly searchable by explicit ID or
+        # exact title scope, but must not duplicate hits and occurrence counts
+        # in an ordinary whole-library search.
+        sql += " AND b.searchable_by_default = 1"
     if source_code:
         sql += " AND b.source_code = ?"
         params.append(source_code)
@@ -935,7 +944,8 @@ def search(
 
     base = """
         SELECT p.book_id, b.title AS book_title, b.source_grade, b.source_code,
-               b.source_tier, p.seq, p.printed_page, p.citation_label,
+               b.source_tier, b.canonical_book_id, b.edition_relation,
+               b.searchable_by_default, p.seq, p.printed_page, p.citation_label,
                p.qasida_number, p.qasida_title, p.qasida_bayt_count,
                p.bayt_from, p.bayt_to,
                p.block_type, p.text,
@@ -985,6 +995,9 @@ def search(
             "book_id": row["book_id"], "book_title": row["book_title"],
             "source_grade": row["source_grade"], "source_code": row["source_code"],
             "source_tier": row["source_tier"],
+            "canonical_book_id": row["canonical_book_id"],
+            "edition_relation": row["edition_relation"],
+            "searchable_by_default": bool(row["searchable_by_default"]),
             "seq": row["seq"], "page_number": row["seq"], "page_label": label,
             "printed_page": row["printed_page"], "occurrences": occ,
             "citation_label": row["citation_label"],
@@ -1267,6 +1280,9 @@ def get_passage(
     return {key: value for key, value in {
         "book_id": page["book_id"], "book_title": page["book_title"],
         "tier": page["source_tier"], "seq": page["seq"],
+        "canonical_book_id": page.get("canonical_book_id"),
+        "edition_relation": page.get("edition_relation"),
+        "searchable_by_default": bool(page.get("searchable_by_default")),
         "printed_page": page["printed_page"], "citation_label": page["citation_label"],
         "qasida_number": page.get("qasida_number"), "qasida_title": page.get("qasida_title"),
         "qasida_bayt_count": page.get("qasida_bayt_count"),

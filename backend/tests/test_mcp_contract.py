@@ -81,15 +81,16 @@ class MCPContractTests(unittest.TestCase):
         self.assertIn('ResponseMode = Literal["compact", "ultra_compact"]', self.source)
 
     def test_hard_versioned_instructions_explain_incomplete_discovery(self):
-        self.assertEqual(SERVER_VERSION, "2.3.6")
+        self.assertEqual(SERVER_VERSION, "2.3.7")
         self.assertEqual(TOOL_CONTRACT_ID, "alburhaniya-tools-v5")
-        self.assertEqual(TOOL_CONTRACT_VERSION, "5.7")
+        self.assertEqual(TOOL_CONTRACT_VERSION, "5.8")
         self.assertIn("mcp._mcp_server.version = SERVER_VERSION", self.source)
         self.assertIn("connector discovery is incomplete", self.source)
         self.assertIn("get_passage for the precise passage", self.source)
         self.assertIn("surface text is authoritative", self.source.lower())
         self.assertIn("abbreviated key ep", self.source)
         self.assertIn("block_type as blk", self.source)
+        self.assertIn("searchable_by_default=false", self.source)
 
     def test_hard_mcp_only_clients_receive_live_contract_evidence(self):
         self.assertIn('"connector_contract": contract_metadata(REQUIRED_TOOLS)', self.source)

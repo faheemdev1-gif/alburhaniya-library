@@ -51,6 +51,9 @@ def compact_search_response(
             # Keep structural classification unambiguous under ``blk``.
             if row.get("block_type"):
                 hit["blk"] = row["block_type"]
+            if row.get("canonical_book_id") and row["canonical_book_id"] != row["book_id"]:
+                hit["canon"] = row["canonical_book_id"]
+                hit["er"] = row.get("edition_relation")
             if row.get("qasida_number") is not None:
                 hit["q"] = row["qasida_number"]
             if row.get("qasida_title"):
@@ -128,6 +131,10 @@ def compact_search_response(
                       "block_type", "matched_terms"):
             if row.get(field) is not None:
                 hit[field] = row[field]
+        if row.get("canonical_book_id") and row["canonical_book_id"] != row["book_id"]:
+            hit["canonical_book_id"] = row["canonical_book_id"]
+            hit["edition_relation"] = row.get("edition_relation")
+            hit["searchable_by_default"] = bool(row.get("searchable_by_default"))
         if row.get("evidence_span"):
             hit["evidence_span"] = {
                 "start": row["evidence_span"]["start"],

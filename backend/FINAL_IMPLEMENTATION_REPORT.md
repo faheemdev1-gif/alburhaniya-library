@@ -1,7 +1,7 @@
 # Al Burhania Research Library MCP — Final implementation
 
-Release: **2.3.6**  
-Tool-contract version: **5.7**  
+Release: **2.3.7**  
+Tool-contract version: **5.8**  
 Contract identifier: **`alburhaniya-tools-v5`**
 
 ## Outcome
@@ -24,7 +24,7 @@ Startup and health checks fail if a required tool is missing, an unexpected tool
 - Added startup validation against the actual FastMCP registry—not just a constant or count.
 - Added contract/version/tool details to `/health`.
 - Added contract metadata to all five MCP tool definitions.
-- Made MCP `initialize` report application version `2.3.6` instead of the SDK package version.
+- Made MCP `initialize` report application version `2.3.7` instead of the SDK package version.
 - Exposed the live connector and computed corpus contracts through
   `list_books`, and the connector contract through `get_book`, so MCP-only
   clients can verify the release, 43/6,935 corpus totals, 95/2,682 Dīwān
@@ -124,6 +124,33 @@ Startup and health checks fail if a required tool is missing, an unexpected tool
   post-deployment MCP test. This makes `malformed_stable_ids: 0` independently
   reproducible rather than relying only on the server's self-report.
 
+### Canonical-edition deduplication
+
+- Confirmed that all 50 pages of `b38` are substantially contained in `b37`,
+  including 33 exact normalized full-page matches.
+- Kept both records in the 43-book catalogue, preserving edition-specific
+  pagination and direct `book_ids=["b38"]` retrieval.
+- Marked `b37` canonical and `b38` a `duplicate_excerpt`. Whole-library
+  retrieval and occurrence counts now use 42 canonical/default-search books
+  and 6,885 pages, preventing duplicated evidence and inflated censuses.
+- Exposed the edition relationship through `list_books`, `get_book`, explicit
+  compact results, ultra-compact `canon`/`er`, and the corpus contract.
+
+### CI enforcement and diagnostics
+
+- Corrected repository-root path filters to monitor `backend/**` on pushes and
+  pull requests to `main`.
+- Added a Monday 03:00 UTC schedule that runs the independent corpus gate and
+  the live production contract in sequence.
+- Updated official JavaScript actions to their Node 24-based v7 releases.
+- Added 30-day downloadable audit, negative-control, regression, and live MCP
+  artifacts.
+- Added a safe negative control that corrupts only a temporary database copy
+  and proves the independent audit reports the malformed ID and fails.
+- Added branch-protection instructions; GitHub repository rules must require
+  `independent-corpus-and-regression` because a workflow file cannot protect
+  `main` by itself.
+
 ### GitHub-safe deployment packaging
 
 - `library.db` is generated and ignored instead of committed. Its research indexes make it approximately 212 MB, above GitHub's 100 MB per-file limit.
@@ -144,11 +171,11 @@ Result:
 
 | Gate class | Passed | Failed | Skipped |
 |---|---:|---:|---:|
-| Hard gates | 108 | 0 | 1 |
+| Hard gates | 110 | 0 | 1 |
 | Retrieval-quality gates | 3 | 0 | 0 |
 | Efficiency checks | 2 | 0 | 0 |
 
-Total: **114 tests**, **0 failures**, `deployment_blocked: false`.
+Total: **116 tests**, **0 failures**, `deployment_blocked: false`.
 
 The single skip is the optional local semantic-vector metadata check because local semantic search is disabled and no semantic artifact is shipped. This does not affect the exact, terms, lexeme, or hybrid production paths tested here.
 
@@ -168,14 +195,14 @@ Additional checks:
 ## Deployment and live verification
 
 1. Deploy this package normally. The Docker build will run the local gate.
-2. Confirm `/health` reports server `2.3.6`, tool-contract `5.7`, tool count `5`, and `corpus_contract.status: ok`.
+2. Confirm `/health` reports server `2.3.7`, tool-contract `5.8`, tool count `5`, and `corpus_contract.status: ok`.
 3. From a networked environment with the project dependencies installed, run:
 
    ```bash
    python scripts/production_mcp_regression.py https://burhaniya-library-backend.onrender.com/mcp/
    ```
 
-4. Reconnect the ChatGPT connector and begin a new session so the host retrieves the `2.3.6`/`5.7` catalogue and corrected descriptions.
+4. Reconnect the ChatGPT connector and begin a new session so the host retrieves the `2.3.7`/`5.8` catalogue and corrected descriptions.
 
 The live public MCP gate cannot be truthfully completed before this modified build is deployed. The supplied script is the final post-deployment acceptance test and should be added to CI/CD as MCP-000/MCP-001.
 

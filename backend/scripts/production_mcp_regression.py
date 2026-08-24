@@ -61,6 +61,16 @@ async def _validate_live_health(endpoint: str) -> dict[str, Any]:
         and research.get("parallel_semantics") == "unverified_candidates_only"
     ):
         raise AssertionError(f"live corpus contract is broken or incomplete: {corpus}")
+    editions = corpus.get("edition_deduplication") or {}
+    if not (
+        editions.get("status") == "ok"
+        and editions.get("catalogue_books") == 43
+        and editions.get("default_search_books") == 42
+        and editions.get("default_search_pages") == 6885
+        and editions.get("suppressed_editions") == ["b38"]
+        and editions.get("canonical_aliases") == {"b38": "b37"}
+    ):
+        raise AssertionError(f"live edition-deduplication contract is broken: {editions}")
     return payload
 
 
@@ -174,6 +184,17 @@ async def run(endpoint: str, discovery_only: bool = False) -> dict[str, Any]:
                     raise AssertionError("list_books corpus evidence differs from /health")
                 smoke["list_books"] = "pass"
 
+                catalogue_by_id = {
+                    item.get("id"): item for item in catalogue.get("books") or []
+                }
+                b38 = catalogue_by_id.get("b38") or {}
+                if not (
+                    b38.get("canonical_book_id") == "b37"
+                    and b38.get("edition_relation") == "duplicate_excerpt"
+                    and b38.get("searchable_by_default") is False
+                ):
+                    raise AssertionError("list_books does not expose the b38->b37 edition policy")
+
                 book = _structured(await session.call_tool("get_book", {"book_id": "b14"}))
                 if (book.get("connector_contract") or {}).get("server_version") != SERVER_VERSION:
                     raise AssertionError("get_book does not expose the live connector version")
@@ -193,6 +214,39 @@ async def run(endpoint: str, discovery_only: bool = False) -> dict[str, Any]:
                 if not match_id:
                     raise AssertionError("search_library smoke returned no match_id")
                 smoke["search_library"] = "pass"
+
+                edition_phrase = "عندما كنت أحشد الأجهزة الإعلامية المحلية و العالمية"
+                canonical_search = _structured(await session.call_tool(
+                    "search_library",
+                    {
+                        "query": edition_phrase, "match_mode": "exact",
+                        "limit": 10, "mode": "compact", "context_chars": 60,
+                        "ranking": "relevance",
+                    },
+                ))
+                canonical_ids = {
+                    item.get("book_id") for item in canonical_search.get("results") or []
+                }
+                if "b37" not in canonical_ids or "b38" in canonical_ids:
+                    raise AssertionError(
+                        f"default search did not suppress duplicate edition b38: {canonical_ids}"
+                    )
+                explicit_edition = _structured(await session.call_tool(
+                    "search_library",
+                    {
+                        "query": edition_phrase, "book_ids": ["b38"],
+                        "match_mode": "exact", "limit": 10,
+                        "mode": "ultra_compact", "context_chars": 60,
+                        "ranking": "relevance",
+                    },
+                ))
+                edition_rows = explicit_edition.get("results") or []
+                if not edition_rows or any(
+                    row.get("canon") != "b37" or row.get("er") != "duplicate_excerpt"
+                    for row in edition_rows
+                ):
+                    raise AssertionError("explicit b38 search lost canonical-edition metadata")
+                smoke["edition_deduplication"] = "pass"
 
                 scoped_census = _structured(await session.call_tool(
                     "search_library",

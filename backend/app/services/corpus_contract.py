@@ -32,6 +32,22 @@ def corpus_contract_snapshot(db_path: str | None = None) -> dict[str, Any]:
     try:
         book_count = int(conn.execute("SELECT COUNT(*) FROM books").fetchone()[0])
         page_count = int(conn.execute("SELECT COUNT(*) FROM pages").fetchone()[0])
+        edition_rows = conn.execute(
+            "SELECT book_id, canonical_book_id, edition_relation, "
+            "searchable_by_default, page_count FROM books ORDER BY book_id"
+        ).fetchall()
+        default_search_books = sum(int(row[3]) for row in edition_rows)
+        default_search_pages = sum(int(row[4]) for row in edition_rows if int(row[3]))
+        edition_aliases = {
+            row[0]: row[1] for row in edition_rows if row[0] != row[1]
+        }
+        suppressed_editions = [row[0] for row in edition_rows if not int(row[3])]
+        edition_ok = (
+            default_search_books == 42
+            and default_search_pages == 6885
+            and edition_aliases == {"b38": "b37"}
+            and suppressed_editions == ["b38"]
+        )
         rows = conn.execute(
             "SELECT qasida_number, bayt_number, stable_id FROM bayts "
             "WHERE book_id='b14' ORDER BY qasida_number, bayt_number"
@@ -93,11 +109,20 @@ def corpus_contract_snapshot(db_path: str | None = None) -> dict[str, Any]:
             and ordinal_digest == DIWAN_ORDINAL_DIGEST
         )
         research_ok = research_tables and token_count > 0 and rooted_token_count > 0 and parallel_count > 0
-        status = "ok" if book_count == 43 and diwan_ok and research_ok else "broken"
+        status = "ok" if book_count == 43 and edition_ok and diwan_ok and research_ok else "broken"
         return {
             "status": status,
             "books": book_count,
             "pages": page_count,
+            "edition_deduplication": {
+                "status": "ok" if edition_ok else "broken",
+                "catalogue_books": book_count,
+                "default_search_books": default_search_books,
+                "default_search_pages": default_search_pages,
+                "suppressed_editions": suppressed_editions,
+                "canonical_aliases": edition_aliases,
+                "policy": "canonical_by_default_explicit_edition_opt_in",
+            },
             "diwan": {
                 "status": "ok" if diwan_ok else "broken",
                 "qasidas": len(grouped),

@@ -80,6 +80,8 @@ def _candidate_rows(
     if book_ids:
         where.append("c.book_id IN (" + ",".join("?" for _ in book_ids) + ")")
         params.extend(book_ids)
+    else:
+        where.append("b.searchable_by_default = 1")
     if source_code:
         where.append("b.source_code = ?")
         params.append(source_code)
@@ -94,7 +96,9 @@ def _candidate_rows(
         params.append(qasida_number)
     clause = " WHERE " + " AND ".join(where) if where else ""
     return db._connection().execute(
-        """SELECT c.*, b.title AS book_title, b.source_grade, b.source_code
+        """SELECT c.*, b.title AS book_title, b.source_grade, b.source_code,
+                    b.canonical_book_id, b.edition_relation,
+                    b.searchable_by_default
              FROM semantic_chunks c
              JOIN books b ON b.book_id = c.book_id""" + clause +
         " ORDER BY c.vector_index",
@@ -160,6 +164,12 @@ def semantic_search(
             "book_id": row["book_id"], "book_title": row["book_title"],
             "source_grade": row["source_grade"], "source_code": row["source_code"],
             "source_tier": row["source_tier"], "seq": row["seq"],
+            "canonical_book_id": _optional_field(row, "canonical_book_id") or row["book_id"],
+            "edition_relation": _optional_field(row, "edition_relation") or "canonical",
+            "searchable_by_default": (
+                True if _optional_field(row, "searchable_by_default") is None
+                else bool(_optional_field(row, "searchable_by_default"))
+            ),
             "page_number": row["seq"],
             "page_label": (f"الصفحة {row['printed_page']}" if row["printed_page"]
                            else f"المقطع {row['seq']}"),

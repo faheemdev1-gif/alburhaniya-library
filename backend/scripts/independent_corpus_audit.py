@@ -19,6 +19,8 @@ EXPECTED = {
     "pages": 6935,
     "qasidas": 95,
     "bayts": 2682,
+    "default_search_books": 42,
+    "default_search_pages": 6885,
     "ordinal_digest": "c354110999fb08d95a8d8d090fa63cc9eb47ddb62e4ea77e25b7261b66676a8d",
 }
 QASIDA_HEADING = re.compile(
@@ -36,6 +38,21 @@ def audit(db_path: Path) -> dict:
     try:
         books = int(conn.execute("SELECT COUNT(*) FROM books").fetchone()[0])
         pages = int(conn.execute("SELECT COUNT(*) FROM pages").fetchone()[0])
+        edition_rows = conn.execute(
+            "SELECT book_id, canonical_book_id, edition_relation, "
+            "searchable_by_default, page_count FROM books ORDER BY book_id"
+        ).fetchall()
+        default_search_books = sum(int(row[3]) for row in edition_rows)
+        default_search_pages = sum(int(row[4]) for row in edition_rows if int(row[3]))
+        edition_aliases = {
+            row[0]: row[1] for row in edition_rows if row[0] != row[1]
+        }
+        suppressed_editions = [row[0] for row in edition_rows if not int(row[3])]
+        exact_edition_page_matches = int(conn.execute(
+            "SELECT COUNT(*) FROM pages excerpt JOIN pages canonical "
+            "ON excerpt.norm_text=canonical.norm_text "
+            "WHERE excerpt.book_id='b38' AND canonical.book_id='b37'"
+        ).fetchone()[0])
         bayts = conn.execute(
             "SELECT qasida_number, bayt_number, stable_id FROM bayts "
             "WHERE book_id='b14' ORDER BY qasida_number, bayt_number"
@@ -88,6 +105,11 @@ def audit(db_path: Path) -> dict:
         report = {
             "books": books,
             "pages": pages,
+            "default_search_books": default_search_books,
+            "default_search_pages": default_search_pages,
+            "suppressed_editions": suppressed_editions,
+            "canonical_aliases": edition_aliases,
+            "b38_b37_exact_page_matches": exact_edition_page_matches,
             "qasidas": len(grouped),
             "bayts": len(bayts),
             "continuous_bayt_numbering": continuous,
@@ -111,6 +133,22 @@ def audit(db_path: Path) -> dict:
             failures.append(f"written ordinals: expected 95, got {len(ordinals)}")
         if suspicious_toc:
             failures.append(f"suspicious mid-book TOC pages: {suspicious_toc[:10]}")
+        if default_search_books != EXPECTED["default_search_books"]:
+            failures.append(
+                f"default search books: expected 42, got {default_search_books}"
+            )
+        if default_search_pages != EXPECTED["default_search_pages"]:
+            failures.append(
+                f"default search pages: expected 6885, got {default_search_pages}"
+            )
+        if edition_aliases != {"b38": "b37"} or suppressed_editions != ["b38"]:
+            failures.append(
+                "edition policy mismatch: expected suppressed b38->b37 alias"
+            )
+        if exact_edition_page_matches < 30:
+            failures.append(
+                "b38 no longer has sufficient exact-page evidence for its b37 alias"
+            )
         report["status"] = "pass" if not failures else "fail"
         report["failures"] = failures
         return report

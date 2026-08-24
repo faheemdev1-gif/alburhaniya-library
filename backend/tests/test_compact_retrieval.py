@@ -303,6 +303,27 @@ class CompactRetrievalTests(unittest.TestCase):
         self.assertEqual(qasida["blk"], "body")
         self.assertIsInstance(qasida["bt"], int)
 
+    def test_noncanonical_edition_is_explicit_and_ultra_compact_safe(self):
+        phrase = "عندما كنت أحشد الأجهزة الإعلامية المحلية و العالمية"
+        default_rows = db.search(
+            phrase, ranking="relevance", diversify_books=False, limit=10,
+        )
+        self.assertTrue(any(row["book_id"] == "b37" for row in default_rows))
+        self.assertFalse(any(row["book_id"] == "b38" for row in default_rows))
+
+        edition_rows = db.search(
+            phrase, book_ids=["b38"], ranking="relevance",
+            diversify_books=False, limit=10,
+        )
+        self.assertTrue(edition_rows)
+        self.assertTrue(all(row["canonical_book_id"] == "b37" for row in edition_rows))
+        self.assertTrue(all(row["edition_relation"] == "duplicate_excerpt" for row in edition_rows))
+        ultra = compact_search_response(
+            edition_rows, limit=10, offset=0, has_more=False, ultra=True,
+        )
+        self.assertTrue(all(hit["canon"] == "b37" for hit in ultra["results"]))
+        self.assertTrue(all(hit["er"] == "duplicate_excerpt" for hit in ultra["results"]))
+
     def test_ultra_compact_preserves_explicit_expansions(self):
         rows = db.search("المريد", limit=4)
         from app.services.compact_response import attach_expanded_passages

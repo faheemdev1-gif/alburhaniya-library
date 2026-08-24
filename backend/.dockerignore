@@ -1,0 +1,16 @@
+library.db
+library.db-*
+.library.db.*
+*.db-shm
+*.db-wal
+semantic_embeddings.npy
+semantic_manifest.json
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+.git/
+.DS_Store
+__MACOSX/
+.ci-artifacts/
