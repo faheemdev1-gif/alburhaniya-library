@@ -1,7 +1,7 @@
 # Fix GitHub GH001 for `backend/library.db`
 
 GitHub rejected the push because `backend/library.db` is 211.59 MB. Release
-2.3.5 does not track that generated file: Docker builds it from the source
+2.3.6 does not track that generated file: Docker builds it from the source
 books before running the regression gate.
 
 The rejected commits never reached GitHub, so rewrite only the local unpushed
@@ -14,7 +14,7 @@ git reset --soft origin/main
 git rm --cached --ignore-unmatch backend/library.db
 git add .
 git status
-git commit -m "Deploy Al Burhania connector v2.3.5"
+git commit -m "Deploy Al Burhania connector v2.3.6"
 git push origin main
 ```
 

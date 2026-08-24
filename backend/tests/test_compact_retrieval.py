@@ -278,6 +278,30 @@ class CompactRetrievalTests(unittest.TestCase):
         self.assertIn("books", payload)
         self.assertIn("b", payload["results"][0])
         self.assertIn("x", payload["results"][0])
+        self.assertIn(payload["results"][0]["blk"], {"body", "toc"})
+
+    def test_ultra_compact_block_type_does_not_collide_with_bayt_to(self):
+        rows = db.search(
+            "مرتبة الإنسان الكامل", book_ids=["b12"],
+            ranking="relevance", diversify_books=False, limit=10,
+        )
+        payload = compact_search_response(
+            rows, limit=10, offset=0, has_more=False, ultra=True,
+        )
+        by_seq = {hit["s"]: hit for hit in payload["results"]}
+        self.assertEqual(by_seq[255]["blk"], "body")
+        self.assertEqual(by_seq[271]["blk"], "toc")
+
+        qasida_rows = db.search(
+            "بأحمد حيث الأحمدية يهتدي", book_ids=["b14"],
+            qasida_number=91, ranking="relevance",
+            diversify_books=False, limit=1,
+        )
+        qasida = compact_search_response(
+            qasida_rows, limit=1, offset=0, has_more=False, ultra=True,
+        )["results"][0]
+        self.assertEqual(qasida["blk"], "body")
+        self.assertIsInstance(qasida["bt"], int)
 
     def test_ultra_compact_preserves_explicit_expansions(self):
         rows = db.search("المريد", limit=4)

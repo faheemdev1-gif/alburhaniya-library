@@ -1,7 +1,7 @@
 # Al Burhania Research Library MCP — Final implementation
 
-Release: **2.3.5**  
-Tool-contract version: **5.6**  
+Release: **2.3.6**  
+Tool-contract version: **5.7**  
 Contract identifier: **`alburhaniya-tools-v5`**
 
 ## Outcome
@@ -24,7 +24,7 @@ Startup and health checks fail if a required tool is missing, an unexpected tool
 - Added startup validation against the actual FastMCP registry—not just a constant or count.
 - Added contract/version/tool details to `/health`.
 - Added contract metadata to all five MCP tool definitions.
-- Made MCP `initialize` report application version `2.3.5` instead of the SDK package version.
+- Made MCP `initialize` report application version `2.3.6` instead of the SDK package version.
 - Exposed the live connector and computed corpus contracts through
   `list_books`, and the connector contract through `get_book`, so MCP-only
   clients can verify the release, 43/6,935 corpus totals, 95/2,682 Dīwān
@@ -111,6 +111,19 @@ Startup and health checks fail if a required tool is missing, an unexpected tool
 - Local and production hard gates require exactly two `ep` objects when
   `expand_top=2`.
 
+### Ultra-compact structural visibility and independent audit
+
+- Ultra-compact hits now expose `block_type` under `blk`, allowing low-token
+  clients to distinguish `body` from `toc` evidence. The pre-existing `bt`
+  key remains `bayt_to`, so Dīwān verse ranges remain backward-compatible.
+- Added an independent corpus audit that does not import the server's contract
+  checker. It validates canonical and duplicate stable IDs, continuous bayt
+  numbering, written ordinals and digest, corpus totals, and suspicious
+  mid-book TOC classifications directly from the rebuilt SQLite corpus.
+- Added GitHub Actions gates for every relevant push/pull request and a manual
+  post-deployment MCP test. This makes `malformed_stable_ids: 0` independently
+  reproducible rather than relying only on the server's self-report.
+
 ### GitHub-safe deployment packaging
 
 - `library.db` is generated and ignored instead of committed. Its research indexes make it approximately 212 MB, above GitHub's 100 MB per-file limit.
@@ -131,11 +144,11 @@ Result:
 
 | Gate class | Passed | Failed | Skipped |
 |---|---:|---:|---:|
-| Hard gates | 107 | 0 | 1 |
+| Hard gates | 108 | 0 | 1 |
 | Retrieval-quality gates | 3 | 0 | 0 |
 | Efficiency checks | 2 | 0 | 0 |
 
-Total: **113 tests**, **0 failures**, `deployment_blocked: false`.
+Total: **114 tests**, **0 failures**, `deployment_blocked: false`.
 
 The single skip is the optional local semantic-vector metadata check because local semantic search is disabled and no semantic artifact is shipped. This does not affect the exact, terms, lexeme, or hybrid production paths tested here.
 
@@ -155,14 +168,14 @@ Additional checks:
 ## Deployment and live verification
 
 1. Deploy this package normally. The Docker build will run the local gate.
-2. Confirm `/health` reports server `2.3.5`, tool-contract `5.6`, tool count `5`, and `corpus_contract.status: ok`.
+2. Confirm `/health` reports server `2.3.6`, tool-contract `5.7`, tool count `5`, and `corpus_contract.status: ok`.
 3. From a networked environment with the project dependencies installed, run:
 
    ```bash
    python scripts/production_mcp_regression.py https://burhaniya-library-backend.onrender.com/mcp/
    ```
 
-4. Reconnect the ChatGPT connector and begin a new session so the host retrieves the `2.3.5`/`5.6` catalogue and corrected descriptions.
+4. Reconnect the ChatGPT connector and begin a new session so the host retrieves the `2.3.6`/`5.7` catalogue and corrected descriptions.
 
 The live public MCP gate cannot be truthfully completed before this modified build is deployed. The supplied script is the final post-deployment acceptance test and should be added to CI/CD as MCP-000/MCP-001.
 

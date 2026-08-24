@@ -336,6 +336,8 @@ def search_library(
         mode: compact or ultra_compact. When expand_top is requested,
             compact returns expanded_passage and ultra_compact returns the
             same bounded passage object under the abbreviated key ep.
+            Ultra-compact search hits expose citation_label as c and
+            block_type as blk (body or toc). The key bt remains bayt_to.
         match_mode: auto, exact, terms, hybrid, or lexeme. When a local
             semantic index is present, auto unions exact, terms, lexeme and
             semantic candidates and reranks them. Otherwise it falls back to

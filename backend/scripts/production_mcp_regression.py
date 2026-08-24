@@ -228,7 +228,34 @@ async def run(endpoint: str, discovery_only: bool = False) -> dict[str, Any]:
                     raise AssertionError(
                         "ultra_compact silently dropped requested expansions"
                     )
+                if not ultra_rows or any(
+                    row.get("blk") not in {"body", "toc"} for row in ultra_rows
+                ):
+                    raise AssertionError(
+                        "ultra_compact did not expose block_type under blk"
+                    )
                 smoke["ultra_compact_expansion"] = "pass"
+
+                ultra_toc = _structured(await session.call_tool(
+                    "search_library",
+                    {
+                        "query": "مرتبة الإنسان الكامل", "book_ids": ["b12"],
+                        "match_mode": "exact", "ranking": "relevance",
+                        "limit": 10, "mode": "ultra_compact",
+                        "context_chars": 60,
+                    },
+                ))
+                toc_by_seq = {
+                    row.get("s"): row for row in ultra_toc.get("results") or []
+                }
+                if not (
+                    toc_by_seq.get(255, {}).get("blk") == "body"
+                    and toc_by_seq.get(271, {}).get("blk") == "toc"
+                ):
+                    raise AssertionError(
+                        "ultra_compact blk failed the live body/TOC control"
+                    )
+                smoke["ultra_compact_block_type"] = "pass"
 
                 _structured(await session.call_tool(
                     "get_passage", {"match_id": match_id, "context_chars": 300},

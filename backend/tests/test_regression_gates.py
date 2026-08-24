@@ -407,6 +407,9 @@ class FinalRegressionGates(unittest.TestCase):
             rows, limit=6, offset=0, has_more=False, ultra=True,
         )
         self.assertEqual(sum("ep" in hit for hit in ultra["results"]), 2)
+        self.assertTrue(all(
+            hit.get("blk") in {"body", "toc"} for hit in ultra["results"]
+        ))
 
 
 if __name__ == "__main__":

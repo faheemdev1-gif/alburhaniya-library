@@ -47,6 +47,10 @@ def compact_search_response(
                 hit["p"] = row["printed_page"]
             if row.get("citation_label"):
                 hit["c"] = row["citation_label"]
+            # ``bt`` is already the public abbreviation for ``bayt_to``.
+            # Keep structural classification unambiguous under ``blk``.
+            if row.get("block_type"):
+                hit["blk"] = row["block_type"]
             if row.get("qasida_number") is not None:
                 hit["q"] = row["qasida_number"]
             if row.get("qasida_title"):
