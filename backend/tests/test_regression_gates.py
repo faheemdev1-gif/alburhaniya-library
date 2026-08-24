@@ -402,6 +402,11 @@ class FinalRegressionGates(unittest.TestCase):
         )
         self.assertEqual(attached, 2)
         self.assertEqual(sum("expanded_passage" in row for row in rows), 2)
+        from app.services.compact_response import compact_search_response
+        ultra = compact_search_response(
+            rows, limit=6, offset=0, has_more=False, ultra=True,
+        )
+        self.assertEqual(sum("ep" in hit for hit in ultra["results"]), 2)
 
 
 if __name__ == "__main__":

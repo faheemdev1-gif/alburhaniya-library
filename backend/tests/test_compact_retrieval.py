@@ -279,6 +279,23 @@ class CompactRetrievalTests(unittest.TestCase):
         self.assertIn("b", payload["results"][0])
         self.assertIn("x", payload["results"][0])
 
+    def test_ultra_compact_preserves_explicit_expansions(self):
+        rows = db.search("المريد", limit=4)
+        from app.services.compact_response import attach_expanded_passages
+        attached = attach_expanded_passages(
+            rows, expand_top=2, expand_chars=400,
+            passage_loader=db.get_passage_by_match_id,
+        )
+        payload = compact_search_response(
+            rows, limit=4, offset=0, has_more=False, ultra=True,
+        )
+        self.assertEqual(attached, 2)
+        self.assertEqual(sum("ep" in hit for hit in payload["results"]), 2)
+        self.assertTrue(all(
+            hit["ep"].get("passage") or hit["ep"].get("error")
+            for hit in payload["results"][:2]
+        ))
+
     def test_persian_character_normalization(self):
         from app.core.arabic_utils import normalize_arabic
         self.assertEqual(normalize_arabic("ک ی ے"), "ك ي ي")

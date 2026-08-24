@@ -333,7 +333,9 @@ def search_library(
         page_to: Optional last page sequence, inclusive.
         context_chars: Context on each side of the match. Defaults to 60 and
             is restricted to 40–300.
-        mode: compact or ultra_compact.
+        mode: compact or ultra_compact. When expand_top is requested,
+            compact returns expanded_passage and ultra_compact returns the
+            same bounded passage object under the abbreviated key ep.
         match_mode: auto, exact, terms, hybrid, or lexeme. When a local
             semantic index is present, auto unions exact, terms, lexeme and
             semantic candidates and reranks them. Otherwise it falls back to
@@ -493,7 +495,10 @@ def search_library(
             stats=stats,
             ultra=(mode == "ultra_compact"),
         )
-        if include_counts and total_hits == 0 and len(raw_queries) == 1:
+        if (
+            include_counts and total_hits == 0 and len(raw_queries) == 1
+            and qasida_number is None
+        ):
             suggestions = db.suggest_spelling(raw_queries[0])
             if suggestions:
                 payload["suggestions"] = suggestions

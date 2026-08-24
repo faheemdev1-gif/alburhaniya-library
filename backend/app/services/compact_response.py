@@ -82,6 +82,10 @@ def compact_search_response(
                     "start": row["evidence_span"]["start"],
                     "end": row["evidence_span"]["end"],
                 }
+            # Preserve an explicitly requested expansion in every supported
+            # mode. ``ep`` keeps the ultra-compact envelope concise.
+            if row.get("expanded_passage"):
+                hit["ep"] = row["expanded_passage"]
             hits.append(hit)
         response = {"n": len(hits), "books": books, "results": hits}
         if total_hits is not None:

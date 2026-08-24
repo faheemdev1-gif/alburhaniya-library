@@ -207,12 +207,28 @@ async def run(endpoint: str, discovery_only: bool = False) -> dict[str, Any]:
                     scoped_census.get("returned_count") == 0
                     and scoped_census.get("total_hits") == 0
                     and scoped_census.get("total_occurrences") == 0
+                    and not scoped_census.get("suggestions")
                 ):
                     raise AssertionError(
                         "qasida-scoped census leaked whole-book counts: "
                         f"{scoped_census}"
                     )
                 smoke["qasida_scoped_counts"] = "pass"
+
+                ultra_expansion = _structured(await session.call_tool(
+                    "search_library",
+                    {
+                        "query": "المريد", "match_mode": "auto", "limit": 6,
+                        "expand_top": 2, "expand_chars": 500,
+                        "mode": "ultra_compact", "context_chars": 60,
+                    },
+                ))
+                ultra_rows = ultra_expansion.get("results") or []
+                if sum("ep" in row for row in ultra_rows) != 2:
+                    raise AssertionError(
+                        "ultra_compact silently dropped requested expansions"
+                    )
+                smoke["ultra_compact_expansion"] = "pass"
 
                 _structured(await session.call_tool(
                     "get_passage", {"match_id": match_id, "context_chars": 300},
