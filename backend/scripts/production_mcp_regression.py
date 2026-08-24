@@ -162,9 +162,21 @@ async def run(endpoint: str, discovery_only: bool = False) -> dict[str, Any]:
                     raise AssertionError(
                         f"list_books smoke expected 43, received {catalogue.get('total')}"
                     )
+                if catalogue.get("connector_contract") != {
+                    "server_version": SERVER_VERSION,
+                    "tool_contract_version": TOOL_CONTRACT_VERSION,
+                    "tool_contract": TOOL_CONTRACT_ID,
+                    "tool_count": 5,
+                    "tools": sorted(REQUIRED_TOOLS),
+                }:
+                    raise AssertionError("list_books MCP contract evidence is stale")
+                if catalogue.get("corpus_contract") != health["corpus_contract"]:
+                    raise AssertionError("list_books corpus evidence differs from /health")
                 smoke["list_books"] = "pass"
 
-                _structured(await session.call_tool("get_book", {"book_id": "b14"}))
+                book = _structured(await session.call_tool("get_book", {"book_id": "b14"}))
+                if (book.get("connector_contract") or {}).get("server_version") != SERVER_VERSION:
+                    raise AssertionError("get_book does not expose the live connector version")
                 smoke["get_book"] = "pass"
 
                 search = _structured(await session.call_tool(
@@ -181,6 +193,26 @@ async def run(endpoint: str, discovery_only: bool = False) -> dict[str, Any]:
                 if not match_id:
                     raise AssertionError("search_library smoke returned no match_id")
                 smoke["search_library"] = "pass"
+
+                scoped_census = _structured(await session.call_tool(
+                    "search_library",
+                    {
+                        "query": "الله", "book_ids": ["b14"],
+                        "qasida_number": 91, "match_mode": "exact",
+                        "include_counts": True, "limit": 20,
+                        "mode": "compact", "context_chars": 60,
+                    },
+                ))
+                if not (
+                    scoped_census.get("returned_count") == 0
+                    and scoped_census.get("total_hits") == 0
+                    and scoped_census.get("total_occurrences") == 0
+                ):
+                    raise AssertionError(
+                        "qasida-scoped census leaked whole-book counts: "
+                        f"{scoped_census}"
+                    )
+                smoke["qasida_scoped_counts"] = "pass"
 
                 _structured(await session.call_tool(
                     "get_passage", {"match_id": match_id, "context_chars": 300},

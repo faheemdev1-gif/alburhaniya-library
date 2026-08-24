@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Backfill v2.3.3 citation metadata into an existing generated library.db.
+"""Backfill current citation metadata into an existing generated library.db.
 
 Fresh deployments receive the same fields directly from build_index.py. This
 migration exists for local verification and for operators who retain a built

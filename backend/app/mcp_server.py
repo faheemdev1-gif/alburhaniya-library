@@ -45,10 +45,12 @@ from app.mcp_contract import (
     TOOL_CONTRACT_ID,
     TOOL_CONTRACT_VERSION,
     TOOL_META,
+    contract_metadata,
     validate_registered_tools,
 )
 from app.services import library_db as db
 from app.services.compact_response import attach_expanded_passages, compact_search_response
+from app.services.corpus_contract import corpus_contract_snapshot
 
 
 _RENDER_HOST = "burhaniya-library-backend.onrender.com"
@@ -114,7 +116,10 @@ if mcp._mcp_server.version != SERVER_VERSION:  # pragma: no cover - fail loud
 def list_books(include_legend: bool = False) -> dict[str, Any]:
     """List books in a compact catalogue, ordered by source authority.
 
-    This is one of the five required Al Burhania research tools.
+    This is one of the five required Al Burhania research tools. The response
+    also reports the live connector and corpus contracts so an MCP-only client
+    can verify the release, five-tool manifest, corpus totals, Dīwān sweep,
+    and stable-ID integrity without access to the HTTP health endpoint.
 
     Args:
         include_legend: Include full source-grade definitions. Leave false
@@ -134,6 +139,10 @@ def list_books(include_legend: bool = False) -> dict[str, Any]:
     result = {
         "total": len(books),
         "books": books,
+        # MCP-only clients cannot call the HTTP /health route. Publish the
+        # same live-computed evidence here without adding a sixth tool.
+        "connector_contract": contract_metadata(REQUIRED_TOOLS),
+        "corpus_contract": corpus_contract_snapshot(),
     }
 
     if include_legend:
@@ -147,7 +156,8 @@ def list_books(include_legend: bool = False) -> dict[str, Any]:
 def get_book(book_id: str) -> dict[str, Any]:
     """Get the metadata and provenance of one book.
 
-    This is one of the five required Al Burhania research tools.
+    This is one of the five required Al Burhania research tools. The response
+    includes the live connector contract for MCP-only version verification.
 
     Args:
         book_id: Book ID returned by list_books, such as "b33".
@@ -159,6 +169,7 @@ def get_book(book_id: str) -> dict[str, Any]:
             "error": f"no book with id '{book_id}'",
         }
 
+    book["connector_contract"] = contract_metadata(REQUIRED_TOOLS)
     return book
 
 
@@ -401,12 +412,12 @@ def search_library(
         total_hits = db.count_search(
             raw_queries, operator=operator, book_ids=book_ids,
             source_code=source_code, page_from=page_from, page_to=page_to,
-            search_mode=resolved_search_mode,
+            search_mode=resolved_search_mode, qasida_number=qasida_number,
         )
         stats = db.search_stats(
             raw_queries, operator=operator, book_ids=book_ids,
             source_code=source_code, page_from=page_from, page_to=page_to,
-            search_mode=resolved_search_mode,
+            search_mode=resolved_search_mode, qasida_number=qasida_number,
         )
 
     effective_match_mode = match_mode

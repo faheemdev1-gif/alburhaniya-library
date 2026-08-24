@@ -79,6 +79,24 @@ class CompactRetrievalTests(unittest.TestCase):
         rows = db.search("المريد", limit=3)
         self.assertGreaterEqual(total, len(rows))
 
+    def test_counts_respect_qasida_scope(self):
+        whole_book = db.count_search(["الله"], book_ids=["b14"])
+        q32 = db.count_search(
+            ["الله"], book_ids=["b14"], qasida_number=32,
+        )
+        q91 = db.count_search(
+            ["الله"], book_ids=["b14"], qasida_number=91,
+        )
+        self.assertEqual((whole_book, q32, q91), (133, 1, 0))
+
+        stats = db.search_stats(
+            ["الله"], book_ids=["b14"], qasida_number=32,
+        )
+        self.assertEqual(stats["matching_pages"], 1)
+        self.assertEqual(stats["matching_occurrences"], 1)
+        self.assertEqual(stats["per_query"][0]["matching_pages"], 1)
+        self.assertEqual(stats["per_query"][0]["occurrences"], 1)
+
     def test_diversifies_across_books(self):
         rows = db.search("المريد", limit=6, diversify_books=True, max_per_book=2)
         counts = {}

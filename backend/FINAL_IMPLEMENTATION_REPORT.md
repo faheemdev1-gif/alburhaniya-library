@@ -1,7 +1,7 @@
 # Al Burhania Research Library MCP — Final implementation
 
-Release: **2.3.3**  
-Tool-contract version: **5.4**  
+Release: **2.3.4**  
+Tool-contract version: **5.5**  
 Contract identifier: **`alburhaniya-tools-v5`**
 
 ## Outcome
@@ -24,7 +24,11 @@ Startup and health checks fail if a required tool is missing, an unexpected tool
 - Added startup validation against the actual FastMCP registry—not just a constant or count.
 - Added contract/version/tool details to `/health`.
 - Added contract metadata to all five MCP tool definitions.
-- Made MCP `initialize` report application version `2.3.3` instead of the SDK package version.
+- Made MCP `initialize` report application version `2.3.4` instead of the SDK package version.
+- Exposed the live connector and computed corpus contracts through
+  `list_books`, and the connector contract through `get_book`, so MCP-only
+  clients can verify the release, 43/6,935 corpus totals, 95/2,682 Dīwān
+  totals, and zero malformed stable IDs without calling `/health`.
 - Reinforced the semantic workflow in tool descriptions: `search_library` → `get_passage` → `get_page`.
 - Added `scripts/production_mcp_regression.py`, which connects to the public endpoint, validates the live corpus/health contract, follows `tools/list` pagination, rejects duplicate/missing/unexpected tools, checks schemas, application version and metadata, explicitly verifies `get_passage`, and smoke-invokes all five tools.
 
@@ -86,6 +90,15 @@ Startup and health checks fail if a required tool is missing, an unexpected tool
   crowd known relevant evidence out before local evidence scoring. Public
   thresholds and response limits are unchanged.
 
+### Qaṣīda-scoped census correction
+
+- `include_counts` now sends `qasida_number` through both the page-count and
+  occurrence-count paths instead of counting the entire selected book.
+- The permanent gate asserts: `الله` in b14 as a whole is 133 pages / 310
+  occurrences; qaṣīda 32 is 1 / 1; qaṣīda 91 is 0 / 0.
+- The production MCP regression now checks the 0/0 qaṣīda-91 case and fails
+  deployment if whole-book counts leak into a filtered census again.
+
 ### GitHub-safe deployment packaging
 
 - `library.db` is generated and ignored instead of committed. Its research indexes make it approximately 212 MB, above GitHub's 100 MB per-file limit.
@@ -106,11 +119,11 @@ Result:
 
 | Gate class | Passed | Failed | Skipped |
 |---|---:|---:|---:|
-| Hard gates | 103 | 0 | 1 |
+| Hard gates | 106 | 0 | 1 |
 | Retrieval-quality gates | 3 | 0 | 0 |
 | Efficiency checks | 2 | 0 | 0 |
 
-Total: **109 tests**, **0 failures**, `deployment_blocked: false`.
+Total: **112 tests**, **0 failures**, `deployment_blocked: false`.
 
 The single skip is the optional local semantic-vector metadata check because local semantic search is disabled and no semantic artifact is shipped. This does not affect the exact, terms, lexeme, or hybrid production paths tested here.
 
@@ -130,14 +143,14 @@ Additional checks:
 ## Deployment and live verification
 
 1. Deploy this package normally. The Docker build will run the local gate.
-2. Confirm `/health` reports server `2.3.3`, tool-contract `5.4`, tool count `5`, and `corpus_contract.status: ok`.
+2. Confirm `/health` reports server `2.3.4`, tool-contract `5.5`, tool count `5`, and `corpus_contract.status: ok`.
 3. From a networked environment with the project dependencies installed, run:
 
    ```bash
    python scripts/production_mcp_regression.py https://burhaniya-library-backend.onrender.com/mcp/
    ```
 
-4. Reconnect the ChatGPT connector and begin a new session so the host retrieves the `2.3.3`/`5.4` catalogue and corrected descriptions.
+4. Reconnect the ChatGPT connector and begin a new session so the host retrieves the `2.3.4`/`5.5` catalogue and corrected descriptions.
 
 The live public MCP gate cannot be truthfully completed before this modified build is deployed. The supplied script is the final post-deployment acceptance test and should be added to CI/CD as MCP-000/MCP-001.
 

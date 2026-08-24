@@ -68,6 +68,16 @@ class FinalRegressionGates(unittest.TestCase):
         self.assertEqual(hit["score"], 0.0)
         self.assertEqual(hit["score_kind"], "bm25_phrase")
 
+    def test_hard_s5_qasida_filtered_census_matches_filtered_results(self):
+        self.assertEqual(
+            db.count_search(["الله"], book_ids=["b14"], qasida_number=32),
+            1,
+        )
+        self.assertEqual(
+            db.count_search(["الله"], book_ids=["b14"], qasida_number=91),
+            0,
+        )
+
     def test_hard_n1_article_normalization_preserves_surface_counts(self):
         bare = db.search_stats(["معرفة"])
         definite = db.search_stats(["المعرفة"])

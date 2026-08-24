@@ -434,6 +434,7 @@ def count_search(
     queries: list[str], operator: str = "OR", book_ids: list[str] | None = None,
     source_code: str | None = None, page_from: int | None = None,
     page_to: int | None = None, search_mode: str = "exact_phrase",
+    qasida_number: int | None = None,
 ) -> int:
     """Return the true number of matching page/segments."""
     expression = _fts_expression(queries, operator, search_mode)
@@ -441,7 +442,7 @@ def count_search(
         return 0
     filters, params = _search_filters(
         book_ids=book_ids, source_code=source_code,
-        page_from=page_from, page_to=page_to,
+        page_from=page_from, page_to=page_to, qasida_number=qasida_number,
     )
     row = _connection().execute(
         """SELECT COUNT(*) AS n FROM pages_fts
@@ -457,6 +458,7 @@ def search_stats(
     queries: list[str], operator: str = "OR", book_ids: list[str] | None = None,
     source_code: str | None = None, page_from: int | None = None,
     page_to: int | None = None, search_mode: str = "exact_phrase",
+    qasida_number: int | None = None,
 ) -> dict:
     """Return explicit page and occurrence census, including each alternative."""
     expression = _fts_expression(queries, operator, search_mode)
@@ -465,7 +467,7 @@ def search_stats(
                 "surface_occurrences": 0, "per_query": []}
     filters, params = _search_filters(
         book_ids=book_ids, source_code=source_code,
-        page_from=page_from, page_to=page_to,
+        page_from=page_from, page_to=page_to, qasida_number=qasida_number,
     )
     sql = """SELECT p.id, p.text FROM pages_fts
              JOIN pages p ON p.id = pages_fts.rowid

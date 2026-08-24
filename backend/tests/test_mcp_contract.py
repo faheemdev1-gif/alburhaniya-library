@@ -81,11 +81,17 @@ class MCPContractTests(unittest.TestCase):
 
     def test_hard_versioned_instructions_explain_incomplete_discovery(self):
         self.assertEqual(TOOL_CONTRACT_ID, "alburhaniya-tools-v5")
-        self.assertEqual(TOOL_CONTRACT_VERSION, "5.4")
+        self.assertEqual(TOOL_CONTRACT_VERSION, "5.5")
         self.assertIn("mcp._mcp_server.version = SERVER_VERSION", self.source)
         self.assertIn("connector discovery is incomplete", self.source)
         self.assertIn("get_passage for the precise passage", self.source)
         self.assertIn("surface text is authoritative", self.source.lower())
+
+    def test_hard_mcp_only_clients_receive_live_contract_evidence(self):
+        self.assertIn('"connector_contract": contract_metadata(REQUIRED_TOOLS)', self.source)
+        self.assertIn('"corpus_contract": corpus_contract_snapshot()', self.source)
+        self.assertIn('book["connector_contract"] = contract_metadata(REQUIRED_TOOLS)', self.source)
+        self.assertGreaterEqual(self.source.count("qasida_number=qasida_number"), 4)
 
 
 if __name__ == "__main__":
