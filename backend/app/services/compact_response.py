@@ -34,7 +34,11 @@ def compact_search_response(
         books: dict[str, str] = {}
         hits = []
         for row in rows:
-            books.setdefault(row["book_id"], {"title": row["book_title"], "tier": row["source_tier"]})
+            books.setdefault(row["book_id"], {
+                "title": row["book_title"], "tier": row["source_tier"],
+                "am": row.get("authorship_mode"),
+                "ac": row.get("attribution_confidence"),
+            })
             hit = {
                 "b": row["book_id"], "s": row["seq"],
                 "m": row["match_id"], "x": row["snippet"], "score": row["score"],
@@ -51,6 +55,8 @@ def compact_search_response(
             # Keep structural classification unambiguous under ``blk``.
             if row.get("block_type"):
                 hit["blk"] = row["block_type"]
+            if row.get("evidence_type"):
+                hit["et"] = row["evidence_type"]
             if row.get("canonical_book_id") and row["canonical_book_id"] != row["book_id"]:
                 hit["canon"] = row["canonical_book_id"]
                 hit["er"] = row.get("edition_relation")
@@ -100,6 +106,12 @@ def compact_search_response(
             response["total_unit"] = "matching_pages"
         if stats:
             response["occurrences"] = stats["matching_occurrences"]
+            response["count_basis"] = stats["count_basis"]
+            response["count_semantics"] = {
+                "whole_word": stats["whole_word"],
+                "normalization_level": stats["normalization_level"],
+                "footnotes_excluded": stats["footnotes_excluded"],
+            }
             response["per_query"] = stats["per_query"]
         if has_more:
             response["next"] = offset + limit
@@ -112,6 +124,13 @@ def compact_search_response(
             row["book_id"],
             {"title": row["book_title"], "source": row["source_code"], "tier": row["source_tier"]},
         )
+        books[row["book_id"]].update({
+            "source_author": row.get("source_author"),
+            "compiler": row.get("compiler"),
+            "authorship_mode": row.get("authorship_mode"),
+            "attribution_confidence": row.get("attribution_confidence"),
+            "provenance_status": row.get("provenance_status"),
+        })
         hit = {
             "book_id": row["book_id"], "seq": row["seq"],
             "match_id": row["match_id"], "excerpt": row["snippet"], "score": row["score"],
@@ -128,7 +147,8 @@ def compact_search_response(
                       "bayt_from", "bayt_to", "page_bayt_from", "page_bayt_to",
                       "bayt_range_scope", "bayt_number", "stable_id",
                       "stable_id_kind", "heading_id", "stable_ids", "container_id",
-                      "block_type", "matched_terms"):
+                      "block_type", "evidence_type", "matched_terms",
+                      "whole_word", "normalization_level", "footnotes_excluded"):
             if row.get(field) is not None:
                 hit[field] = row[field]
         if row.get("canonical_book_id") and row["canonical_book_id"] != row["book_id"]:
@@ -154,6 +174,12 @@ def compact_search_response(
         response["total_hits_unit"] = "matching_pages"
     if stats:
         response["total_occurrences"] = stats["matching_occurrences"]
+        response["count_basis"] = stats["count_basis"]
+        response["count_semantics"] = {
+            "whole_word": stats["whole_word"],
+            "normalization_level": stats["normalization_level"],
+            "footnotes_excluded": stats["footnotes_excluded"],
+        }
         response["per_query"] = stats["per_query"]
     if has_more:
         response["next_offset"] = offset + limit

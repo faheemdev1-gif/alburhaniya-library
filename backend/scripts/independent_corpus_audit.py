@@ -102,6 +102,43 @@ def audit(db_path: Path) -> dict:
             if not at_boundary and not EXPLICIT_TOC.search(row["text"]):
                 suspicious_toc.append(f"{row['book_id']}-p{row['seq']}")
 
+        book_columns = {
+            row[1] for row in conn.execute("PRAGMA table_info(books)").fetchall()
+        }
+        required_provenance = {
+            "compiler", "authorship_mode", "attribution_confidence",
+            "provenance_status",
+        }
+        missing_provenance_columns = sorted(required_provenance - book_columns)
+        incomplete_provenance = 0
+        if not missing_provenance_columns:
+            incomplete_provenance = int(conn.execute(
+                "SELECT COUNT(*) FROM books WHERE authorship_mode IS NULL "
+                "OR attribution_confidence IS NULL OR provenance_status IS NULL"
+            ).fetchone()[0])
+        b20 = conn.execute(
+            "SELECT source_author, compiler, provenance_status FROM books WHERE book_id='b20'"
+        ).fetchone()
+        b42 = conn.execute(
+            "SELECT compiler, provenance_status FROM books WHERE book_id='b42'"
+        ).fetchone()
+        b13 = conn.execute(
+            "SELECT text, norm_text FROM pages WHERE book_id='b13' AND seq=97"
+        ).fetchone()
+        b14 = conn.execute(
+            "SELECT norm_text FROM pages WHERE book_id='b14' AND seq=246"
+        ).fetchone()
+        sir_token_count = b13["norm_text"].split().count("سر")
+        la_token_count = b14["norm_text"].split().count("لا")
+        footnote_excluded = "كتب الاسم" not in b13["norm_text"]
+        provenance_ok = bool(
+            not missing_provenance_columns and incomplete_provenance == 0
+            and b20 and b20[0] == "عبد الحميد بابكر"
+            and b20[1] == "عبد الحميد بابكر"
+            and b42 and b42[0] is None
+            and "do_not_assume_safwat" in b42[1]
+        )
+
         report = {
             "books": books,
             "pages": pages,
@@ -118,6 +155,19 @@ def audit(db_path: Path) -> dict:
             "written_ordinals": len(ordinals),
             "ordinal_digest": digest,
             "suspicious_mid_book_toc": suspicious_toc,
+            "matching_integrity": {
+                "b13_p97_whole_word_sir_tokens": sir_token_count,
+                "b14_p246_whole_word_la_tokens": la_token_count,
+                "explicit_footnote_excluded": footnote_excluded,
+                "literal_normalization": "safe",
+            },
+            "provenance_integrity": {
+                "status": "pass" if provenance_ok else "fail",
+                "missing_columns": missing_provenance_columns,
+                "incomplete_rows": incomplete_provenance,
+                "b20_compiler": b20[1] if b20 else None,
+                "b42_compiler": b42[0] if b42 else None,
+            },
         }
         failures = []
         for field in ("books", "pages", "qasidas", "bayts", "ordinal_digest"):
@@ -149,6 +199,14 @@ def audit(db_path: Path) -> dict:
             failures.append(
                 "b38 no longer has sufficient exact-page evidence for its b37 alias"
             )
+        if sir_token_count != 1:
+            failures.append(f"b13-p97 whole-word سر token count changed: {sir_token_count}")
+        if la_token_count != 1:
+            failures.append(f"b14-p246 whole-word لا token count changed: {la_token_count}")
+        if not footnote_excluded:
+            failures.append("explicit b13-p97 footnote leaked into norm_text")
+        if not provenance_ok:
+            failures.append("provenance schema or verified metadata is incomplete")
         report["status"] = "pass" if not failures else "fail"
         report["failures"] = failures
         return report

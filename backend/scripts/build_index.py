@@ -35,7 +35,7 @@ import re
 sys.path.insert(0, os.path.dirname(__file__))
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "app", "core"))
 from book_parser import parse_book, parse_utf8_pages, split_oversized_pages   # noqa: E402
-from arabic_utils import normalize_arabic             # noqa: E402
+from arabic_utils import normalize_arabic, normalize_search_text  # noqa: E402
 from research_indexes import build_research_indexes   # noqa: E402
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -68,6 +68,11 @@ CREATE TABLE books (
     source_code    TEXT NOT NULL,   -- 'primary' | 'secondary'  (ASCII-safe)
     source_tier    INTEGER NOT NULL CHECK (source_tier BETWEEN 1 AND 5),
     source_author  TEXT,
+    compiler       TEXT,
+    authorship_mode TEXT NOT NULL,
+    attribution_confidence TEXT NOT NULL
+        CHECK (attribution_confidence IN ('high', 'medium', 'low', 'unverified')),
+    provenance_status TEXT NOT NULL,
     source_note    TEXT,
     canonical_book_id TEXT NOT NULL,
     edition_relation TEXT NOT NULL DEFAULT 'canonical',
@@ -167,6 +172,7 @@ _TOC_MIN_ENTRY_DENSITY = 0.004
 _PRINTED_PAGE_FOOTER = re.compile(
     r"(?:\[\s*([0-9٠-٩۰-۹]{1,4})\s*\]|-\s*([0-9٠-٩۰-۹]{1,4})\s*-)\s*$"
 )
+_FOOTNOTE_SEPARATOR = re.compile(r"(?:_{5,}|ـ{5,}|-{8,})")
 _DIWAN_QASIDA_COUNT = 95
 _DIWAN_BAYT_COUNT = 2682
 _DIWAN_ORDINAL_DIGEST = "c354110999fb08d95a8d8d090fa63cc9eb47ddb62e4ea77e25b7261b66676a8d"
@@ -198,6 +204,12 @@ def _source_footer_page(text: str) -> str | None:
     if not match:
         return None
     return (match.group(1) or match.group(2)).translate(_DIGIT_TRANSLATION)
+
+
+def _indexable_text(text: str) -> str:
+    """Exclude only explicit end-footnote sections from FTS/census text."""
+    marker = _FOOTNOTE_SEPARATOR.search(text or "")
+    return text[:marker.start()].rstrip() if marker else (text or "")
 
 
 def _qasida_bayt_count(text: str) -> int | None:
@@ -393,8 +405,9 @@ def build():
         conn.execute(
             "INSERT INTO books "
             "(book_id, title, page_count, source_grade, source_code, source_tier, "
-            "source_author, source_note, canonical_book_id, edition_relation, "
-            "searchable_by_default) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            "source_author, compiler, authorship_mode, attribution_confidence, "
+            "provenance_status, source_note, canonical_book_id, edition_relation, "
+            "searchable_by_default) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
             (
                 slug,
                 title,
@@ -403,6 +416,10 @@ def build():
                 grades[grade]["code"],
                 tier,
                 src.get("author"),
+                src.get("compiler"),
+                src.get("authorship_mode", "unresolved"),
+                src.get("attribution_confidence", "unverified"),
+                src.get("provenance_status", "needs_review"),
                 src.get("note"),
                 src.get("canonical_book_id", slug),
                 src.get("edition_relation", "canonical"),
@@ -412,7 +429,7 @@ def build():
 
         for seq, page in enumerate(pages, start=1):
             text = "\n\n".join(page["paragraphs"])
-            norm = normalize_arabic(text, aggressive=True)
+            norm = normalize_search_text(_indexable_text(text), level="safe")
             conn.execute(
                 "INSERT INTO pages (book_id, seq, printed_page, citation_label, qasida_number, "
                 "qasida_title, qasida_bayt_count, bayt_from, bayt_to, block_type, text, norm_text) "

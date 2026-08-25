@@ -2,11 +2,13 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
+import hashlib
+import json
 from typing import Any
 
 
-SERVER_VERSION = "2.3.7"
-TOOL_CONTRACT_VERSION = "5.8"
+SERVER_VERSION = "2.4.0"
+TOOL_CONTRACT_VERSION = "6.0"
 TOOL_CONTRACT_ID = "alburhaniya-tools-v5"
 
 REQUIRED_TOOLS = frozenset({
@@ -17,11 +19,35 @@ REQUIRED_TOOLS = frozenset({
     "list_books",
 })
 
+SCHEMA_CAPABILITIES = {
+    "search_library": {
+        "match_modes": ["auto", "exact", "terms", "hybrid", "lexeme"],
+        "response_modes": ["compact", "ultra_compact"],
+        "required_parameters": [
+            "query", "queries", "book_ids", "book_scope", "qasida_number",
+            "include_counts", "count_basis", "whole_word", "min_tier",
+            "expand_top", "expand_chars", "min_score", "match_mode", "mode",
+        ],
+    },
+    "get_passage": {
+        "selectors": ["match_id", "match_ids", "stable_id", "qasida_number"],
+        "parallel_candidates": True,
+    },
+    "get_page": {"default_max_chars": 20000, "declares_truncation": True},
+}
+SCHEMA_DIGEST = hashlib.sha256(
+    json.dumps(
+        SCHEMA_CAPABILITIES, ensure_ascii=False, sort_keys=True,
+        separators=(",", ":"),
+    ).encode("utf-8")
+).hexdigest()
+
 TOOL_META: dict[str, str | int] = {
     "server_version": SERVER_VERSION,
     "tool_contract_version": TOOL_CONTRACT_VERSION,
     "tool_contract": TOOL_CONTRACT_ID,
     "tool_count": len(REQUIRED_TOOLS),
+    "schema_digest": SCHEMA_DIGEST,
 }
 
 
@@ -63,4 +89,6 @@ def contract_metadata(tools: Iterable[str] | None = None) -> dict[str, Any]:
         "tool_contract": TOOL_CONTRACT_ID,
         "tool_count": len(actual),
         "tools": list(actual),
+        "schema_digest": SCHEMA_DIGEST,
+        "schema_capabilities": SCHEMA_CAPABILITIES,
     }

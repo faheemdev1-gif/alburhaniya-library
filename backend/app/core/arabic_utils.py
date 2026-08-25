@@ -108,6 +108,53 @@ def normalize_arabic(text: str, *, aggressive: bool = False) -> str:
     return text
 
 
+def normalize_search_text(text: str, *, level: str = "safe") -> str:
+    """Normalize Arabic under an explicit, research-safe policy.
+
+    ``surface`` removes only tashkil/tatweel and normalizes whitespace.
+    ``safe`` additionally normalizes Unicode Kaf variants, but deliberately
+    preserves hamzated Alef, Alef Maqsura/Ya, and Ta Marbuta/Ha.  Those
+    distinctions can change the word and must not inflate literal censuses.
+    ``broad`` is recall-oriented and applies the legacy aggressive mapping; it
+    is suitable only for lexeme/hybrid candidate discovery and must never be
+    reported as literal evidence.
+    """
+    if level not in {"surface", "safe", "broad"}:
+        raise ValueError("normalization level must be surface, safe, or broad")
+    value = strip_diacritics(remove_tatweel(text or ""))
+    value = value.replace("ﷺ", "صلى الله عليه وسلم")
+    if level in {"safe", "broad"}:
+        value = normalize_kaf(value)
+    if level == "broad":
+        value = normalize_ta_marbuta(normalize_ya(normalize_alef(value)))
+    value = _PUNCT_WS.sub(" ", value)
+    return re.sub(r"\s+", " ", value).strip()
+
+
+def safe_tokens(text: str, *, drop_stopwords: bool = False) -> list[str]:
+    """Return citation-safe tokens without collapsing distinct Arabic forms."""
+    words = normalize_search_text(text, level="safe").split()
+    if not drop_stopwords:
+        return words
+    # Stopwords are stored in the legacy broad form. Compare only for dropping;
+    # never replace the authoritative safe token returned to the caller.
+    return [
+        word for word in words
+        if normalize_search_text(word, level="broad") not in ARABIC_STOPWORDS
+    ]
+
+
+def safe_term_variants(token: str) -> tuple[str, ...]:
+    """Article-only variants for literal exact/terms retrieval."""
+    token = normalize_search_text(token, level="safe")
+    variants = {token}
+    if token.startswith("ال") and len(token) > 4:
+        variants.add(token[2:])
+    elif len(token) >= 3:
+        variants.add("ال" + token)
+    return tuple(sorted(value for value in variants if value))
+
+
 def normalized_tokens(text: str, *, drop_stopwords: bool = False) -> list[str]:
     """Return canonical Arabic tokens for every retrieval subsystem."""
     words = normalize_arabic(text, aggressive=True).split()

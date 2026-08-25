@@ -38,6 +38,10 @@
     "b01": {
       "grade": "ثانوي",
       "author": "مجهول المُعِدّ — من دروس سيدي الإمام فخر الدين",
+      "compiler": null,
+      "authorship_mode": "murid_compilation",
+      "attribution_confidence": "low",
+      "provenance_status": "provisional_pending_documentary_verification",
       "note": "منتخبٌ من دروس سيدي الإمام فخر الدين قدّس سرّه في القصص، جمعه أحد المريدين، إلّا أنّ اسم من أعدّ هذا الجمع غير معروف حاليًا، ولذا يُعامَل بوصفه مصدرًا ثانويًا حتى يتحقق التثبت من ضبطه ونسبته الدقيقة."
     },
     "b02": {
@@ -48,6 +52,10 @@
     "b03": {
       "grade": "ثانوي",
       "author": "إبراهيم الدسوقي محمد بدُّور",
+      "compiler": "إبراهيم الدسوقي محمد بدُّور",
+      "authorship_mode": "murid_authored_reference",
+      "attribution_confidence": "high",
+      "provenance_status": "identified_in_front_matter",
       "note": "لأحد مريدي الطريقة، رتّب فيه مصطلحات التصوف على حروف المعجم مستفيدًا من كتب سيدي الإمام فخر الدين قدّس سرّه، مع توثيق المرجع لكل تعريف."
     },
     "b04": {
@@ -68,6 +76,10 @@
     "b07": {
       "grade": "أصلي",
       "author": "سيدي الإمام فخر الدين قدّس سرّه",
+      "compiler": null,
+      "authorship_mode": "authored",
+      "attribution_confidence": "high",
+      "provenance_status": "classified_canonical_work",
       "note": "من تصانيف سيدي الإمام فخر الدين قدّس سرّه، يبيّن فيه مقامات أولياء الرحمن في مقابل أولياء الشيطان، ناقلًا كلام مشايخ السلسلة المتقدمين كسيدي إبراهيم الدسوقي رضي الله عنه مع بيانه."
     },
     "b08": {
@@ -83,31 +95,55 @@
     "b10": {
       "grade": "أصلي",
       "author": "سيدي الإمام فخر الدين قدّس سرّه",
+      "compiler": null,
+      "authorship_mode": "authored_critical_edition",
+      "attribution_confidence": "high",
+      "provenance_status": "classified_canonical_work",
       "note": "الجزء الأول من النسخة المحقَّقة لكتاب «تبرئة الذمة في نصح الأمة» — من أهمّ المصادر الأصلية، يتناول مسائل العقيدة والسلوك ونصح الأمة."
     },
     "b11": {
       "grade": "أصلي",
       "author": "سيدي الإمام فخر الدين قدّس سرّه",
+      "compiler": null,
+      "authorship_mode": "authored_critical_edition",
+      "attribution_confidence": "high",
+      "provenance_status": "classified_canonical_work",
       "note": "الجزء الثاني من النسخة المحقَّقة لكتاب «تبرئة الذمة في نصح الأمة»."
     },
     "b12": {
       "grade": "أصلي",
       "author": "سيدي الإمام فخر الدين قدّس سرّه",
+      "compiler": null,
+      "authorship_mode": "authored_critical_edition",
+      "attribution_confidence": "high",
+      "provenance_status": "classified_canonical_work",
       "note": "الجزء الثالث من النسخة المحقَّقة لكتاب «تبرئة الذمة في نصح الأمة»."
     },
     "b13": {
       "grade": "أصلي",
       "author": "سيدي الإمام فخر الدين قدّس سرّه",
+      "compiler": null,
+      "authorship_mode": "authored_critical_edition",
+      "attribution_confidence": "high",
+      "provenance_status": "classified_canonical_work",
       "note": "الجزء الرابع والأخير من النسخة المحقَّقة لكتاب «تبرئة الذمة في نصح الأمة»."
     },
     "b14": {
       "grade": "أصلي",
       "author": "سيدي الإمام فخر الدين قدّس سرّه",
+      "compiler": null,
+      "authorship_mode": "post_wafat_ilqa",
+      "attribution_confidence": "high",
+      "provenance_status": "declared_tradition_specific_transmission",
       "note": "ديوان شعرٍ لسيدي الإمام فخر الدين قدّس سرّه. لم يصدر عنه في حياته الظاهرة، بل أملاه بعد وصاله — بطريق الكرامة — على أحد مريديه، ويحوي ذات علومه لكن أكثر انكشافًا وتكاملًا: الفناء والبقاء والوصال والحقيقة الأحمدية واسم الله وسائر معارف السلوك والحقيقة."
     },
     "b15": {
       "grade": "أصلي",
       "author": "سيدي الإمام فخر الدين قدّس سرّه",
+      "compiler": null,
+      "authorship_mode": "recorded_durus",
+      "attribution_confidence": "medium",
+      "provenance_status": "compiler_not_identified",
       "note": "دروس سيدي الإمام فخر الدين قدّس سرّه في صورة أسئلة وأجوبة في العقيدة والسلوك والتصوف."
     },
     "b16": {
@@ -132,67 +168,119 @@
     },
     "b20": {
       "grade": "ثانوي",
-      "author": "مجهول الشارح",
+      "author": "عبد الحميد بابكر",
+      "compiler": "عبد الحميد بابكر",
+      "authorship_mode": "murid_commentary",
+      "attribution_confidence": "high",
+      "provenance_status": "identified_in_corpus_colophon",
       "note": "الجزء الأول من الشرح العربي لديوان شراب الوصل. تنبيه: هذا الشرح ليس من تصنيف سيدي نفسه، فلا يُنسب ما فيه من معانٍ وتفسيرات إلى سيدي مباشرة."
     },
     "b21": {
       "grade": "ثانوي",
-      "author": "مجهول الشارح",
+      "author": "عبد الحميد بابكر",
+      "compiler": "عبد الحميد بابكر",
+      "authorship_mode": "murid_commentary",
+      "attribution_confidence": "high",
+      "provenance_status": "identified_in_corpus_front_matter",
       "note": "الجزء الثاني من الشرح العربي لديوان شراب الوصل. تنبيه: ليس من تصنيف سيدي، فلا تُنسب معانيه إليه مباشرة."
     },
     "b22": {
       "grade": "ثانوي",
-      "author": "مجهول الشارح",
+      "author": "عبد الحميد بابكر",
+      "compiler": "عبد الحميد بابكر",
+      "authorship_mode": "murid_commentary",
+      "attribution_confidence": "high",
+      "provenance_status": "identified_in_corpus_front_matter",
       "note": "الجزء الثالث من الشرح العربي لديوان شراب الوصل. تنبيه: ليس من تصنيف سيدي، فلا تُنسب معانيه إليه مباشرة."
     },
     "b23": {
       "grade": "ثانوي",
       "author": "مجهول الشارح",
+      "compiler": null,
+      "authorship_mode": "murid_commentary",
+      "attribution_confidence": "low",
+      "provenance_status": "needs_review",
       "note": "الجزء الرابع من الشرح العربي لديوان شراب الوصل. تنبيه: ليس من تصنيف سيدي، فلا تُنسب معانيه إليه مباشرة."
     },
     "b24": {
       "grade": "ثانوي",
       "author": "مجهول الشارح",
+      "compiler": null,
+      "authorship_mode": "murid_commentary",
+      "attribution_confidence": "low",
+      "provenance_status": "needs_review",
       "note": "الجزء الخامس من الشرح العربي لديوان شراب الوصل. تنبيه: ليس من تصنيف سيدي، فلا تُنسب معانيه إليه مباشرة."
     },
     "b25": {
       "grade": "ثانوي",
       "author": "مجهول الشارح",
+      "compiler": null,
+      "authorship_mode": "murid_commentary",
+      "attribution_confidence": "low",
+      "provenance_status": "needs_review",
       "note": "الجزء السادس والأخير من الشرح العربي لديوان شراب الوصل. تنبيه: ليس من تصنيف سيدي، فلا تُنسب معانيه إليه مباشرة."
     },
     "b26": {
       "grade": "أصلي",
       "author": "سيدي الإمام فخر الدين قدّس سرّه",
+      "compiler": null,
+      "authorship_mode": "recorded_durus",
+      "attribution_confidence": "medium",
+      "provenance_status": "compiler_not_identified",
       "note": "الجزء الأول من سلسلة «علّموا عني» — دروس سيدي في معارف السلوك والحقيقة، مع أمره لمريديه بتبليغها."
     },
     "b27": {
       "grade": "أصلي",
       "author": "سيدي الإمام فخر الدين قدّس سرّه",
+      "compiler": null,
+      "authorship_mode": "recorded_durus",
+      "attribution_confidence": "medium",
+      "provenance_status": "compiler_not_identified",
       "note": "الجزء الثاني من سلسلة «علّموا عني»."
     },
     "b28": {
       "grade": "أصلي",
       "author": "سيدي الإمام فخر الدين قدّس سرّه",
+      "compiler": null,
+      "authorship_mode": "recorded_durus",
+      "attribution_confidence": "medium",
+      "provenance_status": "compiler_not_identified",
       "note": "الجزء الثالث من سلسلة «علّموا عني»."
     },
     "b29": {
       "grade": "أصلي",
       "author": "سيدي الإمام فخر الدين قدّس سرّه",
+      "compiler": null,
+      "authorship_mode": "recorded_durus",
+      "attribution_confidence": "medium",
+      "provenance_status": "compiler_not_identified",
       "note": "الجزء الرابع من سلسلة «علّموا عني»."
     },
     "b30": {
       "grade": "أصلي",
       "author": "سيدي الإمام فخر الدين قدّس سرّه",
+      "compiler": null,
+      "authorship_mode": "recorded_durus",
+      "attribution_confidence": "medium",
+      "provenance_status": "compiler_not_identified",
       "note": "الجزء الخامس والأخير من سلسلة «علّموا عني»."
     },
     "b31": {
       "grade": "أصلي",
       "author": "سيدي الإمام فخر الدين قدّس سرّه",
+      "compiler": null,
+      "authorship_mode": "recorded_durus",
+      "attribution_confidence": "medium",
+      "provenance_status": "compiler_not_identified",
       "note": "دروس سيدي الإمام فخر الدين قدّس سرّه، وفيه جملة من إشاراته ومعارفه في التوحيد والسلوك والحقيقة المحمدية."
     },
     "b32": {
       "grade": "أصلي",
       "author": "سيدي الإمام فخر الدين قدّس سرّه",
+      "compiler": null,
+      "authorship_mode": "recorded_durus",
+      "attribution_confidence": "medium",
+      "provenance_status": "compiler_not_identified",
       "note": "دروس سيدي في قصص الأنبياء عليهم السلام، يستخرج فيها العبر والحكم واللطائف الإشارية من سيرهم."
     },
     "b33": {
@@ -225,21 +313,37 @@
     "b39": {
       "grade": "أصلي",
       "author": "سيدي الإمام فخر الدين قدّس سرّه",
+      "compiler": null,
+      "authorship_mode": "murid_transmitted",
+      "attribution_confidence": "medium",
+      "provenance_status": "compiler_not_identified",
       "note": "مجموعة مختارة من أقوال سيدي الإمام فخر الدين قدّس سرّه وحكمه ولطائفه، جُمعت من دروسه ومجالسه."
     },
     "b40": {
       "grade": "أصلي",
       "author": "سيدي الإمام فخر الدين قدّس سرّه",
+      "compiler": null,
+      "authorship_mode": "dictated_inspirations",
+      "attribution_confidence": "medium",
+      "provenance_status": "compiler_not_identified",
       "note": "خواطر سيدي الإمام فخر الدين قدّس سرّه، وهي إلهاماتٌ ولطائف روحية كان يُمليها في مناسباتٍ مختلفة."
     },
     "b41": {
       "grade": "أصلي",
       "author": "سيدي الإمام فخر الدين قدّس سرّه",
+      "compiler": null,
+      "authorship_mode": "murid_transmitted",
+      "attribution_confidence": "medium",
+      "provenance_status": "compiler_not_identified",
       "note": "نقلٌ لعددٍ من دروس سيدي الإمام فخر الدين قدّس سرّه الشفهية، دوّنها بعض مريديه."
     },
     "b42": {
       "grade": "أصلي",
       "author": "سيدي الإمام فخر الدين قدّس سرّه",
+      "compiler": null,
+      "authorship_mode": "recorded_durus",
+      "attribution_confidence": "medium",
+      "provenance_status": "compiler_unverified_do_not_assume_safwat",
       "note": "دروس سيدي الإمام فخر الدين قدّس سرّه التي كان يُلقيها في أسفاره وخلواته، وتتضمن جملة من علومه ومعارفه."
     },
     "b43": {
@@ -250,11 +354,19 @@
     "b44": {
       "grade": "أصلي",
       "author": "الشيخ محمد الشيخ إبراهيم الشيخ محمد عثمان عبده البرهاني",
+      "compiler": null,
+      "authorship_mode": "official_speeches",
+      "attribution_confidence": "high",
+      "provenance_status": "identified_speaker_compiler_not_identified",
       "note": "مجموعة خطابات مولانا الشيخ محمد شيخ الطريقة الحالي: خطابات الحولية السنوية من 2004 إلى 2019، وخطب الأعياد (عيد الفطر وعيد الأضحى) للأعوام 2021، 2022، 2024، 2025، 2026."
     },
     "b45": {
       "grade": "أصلي",
       "author": "الشيخ إبراهيم محمد عثمان عبده البرهاني",
+      "compiler": null,
+      "authorship_mode": "official_speeches",
+      "attribution_confidence": "high",
+      "provenance_status": "identified_speaker_compiler_not_identified",
       "note": "مجموعة خطابات مولانا الشيخ إبراهيم شيخ الطريقة السابق رضي الله عنه، من عام 1994 حتى حولية إبريل 2003 (آخر خطاباته قبل انتقاله)."
     }
   }

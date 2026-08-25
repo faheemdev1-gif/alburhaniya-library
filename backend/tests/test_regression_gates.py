@@ -17,6 +17,7 @@ sys.modules.setdefault("app.core.config", config_stub)
 
 from app.services import library_db as db
 from app.services.compact_response import attach_expanded_passages
+from app.core.arabic_utils import strip_diacritics
 from scripts.build_index import (
     _DIWAN_ORDINAL_DIGEST,
     _QASIDA_HEADING,
@@ -81,36 +82,37 @@ class FinalRegressionGates(unittest.TestCase):
     def test_hard_n1_article_normalization_preserves_surface_counts(self):
         bare = db.search_stats(["معرفة"])
         definite = db.search_stats(["المعرفة"])
-        self.assertEqual(bare["matching_pages"], 344)
-        self.assertEqual(definite["matching_pages"], 344)
-        self.assertEqual(bare["normalized_occurrences"], 510)
-        self.assertEqual(definite["normalized_occurrences"], 510)
-        self.assertEqual(bare["surface_occurrences"], 499)
-        self.assertEqual(definite["surface_occurrences"], 232)
+        self.assertEqual(bare["matching_pages"], definite["matching_pages"])
+        self.assertEqual(
+            bare["normalized_occurrences"], definite["normalized_occurrences"],
+        )
+        self.assertGreater(bare["surface_occurrences"], definite["surface_occurrences"])
+        self.assertEqual(bare["count_basis"], "phrase")
 
-    def test_hard_n2_n4_normalized_variants_have_identical_page_counts(self):
-        for left, right in (
-            ("الإمام", "الامام"),
-            ("الوصل", "الْوَصْل"),
-            ("المعرفة", "المعرفه"),
-        ):
-            self.assertEqual(
-                db.count_search([left]),
-                db.count_search([right]),
-                (left, right),
-            )
+    def test_hard_n2_n4_safe_normalization_preserves_meaningful_letters(self):
+        # Tashkil remains safely ignorable.
+        self.assertEqual(
+            db.count_search(["الوصل"]), db.count_search(["الْوَصْل"]),
+        )
+        # Hamza and Ta Marbuta are not silently collapsed in literal census.
+        self.assertNotEqual(
+            db.count_search(["الإمام"]), db.count_search(["الامام"]),
+        )
+        self.assertNotEqual(
+            db.count_search(["المعرفة"]), db.count_search(["المعرفه"]),
+        )
 
     def test_hard_n5_ya_ambiguity_preserves_surface_form(self):
         rows = db.search(
-            "على", book_ids=["b29"], ranking="book_order",
+            "على", book_ids=["b29"], ranking="book_order", search_mode="lexeme",
             diversify_books=False, limit=1000,
         )
         ambiguous = next(
             row["matched_terms"]["على"] for row in rows
             if row.get("matched_terms", {}).get("على", {}).get("surface_form") == "علي"
         )
-        self.assertEqual(ambiguous["relation"], "normalized")
-        self.assertIn("ى/ي", ambiguous["normalization_warning"])
+        self.assertEqual(ambiguous["relation"], "broad_normalized")
+        self.assertIn("surface_form is authoritative", ambiguous["normalization_warning"])
 
         unrelated = db.search(
             "المريد", ranking="relevance", diversify_books=False, limit=20,
@@ -197,8 +199,8 @@ class FinalRegressionGates(unittest.TestCase):
             evidence = row["matched_terms"]["المحافظة"]
             self.assertEqual(evidence["relation"], "root")
             self.assertEqual(evidence["root"], "حفظ")
-            self.assertIn(evidence["corpus_form"], {
-                "حَافِظ", "للحفظ", "لحفظ", "الحفظة", "ويحافظك", "الحفظ",
+            self.assertIn(strip_diacritics(evidence["corpus_form"]), {
+                "حافظ", "للحفظ", "لحفظ", "الحفظة", "ويحافظك", "الحفظ",
             })
 
     def test_quality_h1_h2_hybrid_threshold_discriminates(self):
@@ -282,7 +284,7 @@ class FinalRegressionGates(unittest.TestCase):
 
     def test_hard_f4_decorative_dots_do_not_hide_substantive_page(self):
         rows = db.search(
-            "هدى", book_ids=["b29"], ranking="relevance",
+            "هدى", book_ids=["b29"], ranking="relevance", search_mode="lexeme",
             diversify_books=False, limit=10,
         )
         page = next(row for row in rows if row["seq"] == 35)
@@ -363,24 +365,21 @@ class FinalRegressionGates(unittest.TestCase):
             passage = db.get_passage(book_id, seq, context_chars=250)
             self.assertEqual(passage["citation_label"], page["citation_label"])
 
-    def test_hard_n6_article_prefix_does_not_hide_ya_warning(self):
-        huda_rows = db.search(
-            "هدى", ranking="relevance", diversify_books=False, limit=100,
-        )
-        huda = next(
-            row["matched_terms"]["هدى"] for row in huda_rows
-            if row.get("matched_terms", {}).get("هدى", {}).get("surface_form") == "الهدي"
-        )
-        self.assertIn("ى/ي", huda["normalization_warning"])
-
-        ali_rows = db.search(
-            "علي", ranking="relevance", diversify_books=False, limit=100,
-        )
-        ali = next(
-            row["matched_terms"]["علي"] for row in ali_rows
-            if row.get("matched_terms", {}).get("علي", {}).get("surface_form") == "العلى"
-        )
-        self.assertIn("ى/ي", ali["normalization_warning"])
+    def test_hard_n6_literal_search_never_collapses_ya_or_maqsura(self):
+        # Literal retrieval is deliberately stricter than the former warning-
+        # only policy: distinct ى/ي forms are excluded from exact evidence and
+        # census arithmetic, even when an article is attached.
+        for query, forbidden in (("هدى", "الهدي"), ("علي", "العلى")):
+            rows = db.search(
+                query, ranking="relevance", search_mode="exact_phrase",
+                diversify_books=False, limit=1000,
+            )
+            surfaces = {
+                item.get("surface_form")
+                for row in rows
+                for item in row.get("matched_terms", {}).values()
+            }
+            self.assertNotIn(forbidden, surfaces)
 
     def test_hard_r1_r3_ranking_policy_is_explainable(self):
         relevance = db.search(

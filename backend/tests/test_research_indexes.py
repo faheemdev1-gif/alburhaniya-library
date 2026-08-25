@@ -33,6 +33,11 @@ class ResearchIndexHardGates(unittest.TestCase):
         self.assertTrue(snapshot["diwan"]["continuous_bayt_numbering"])
         self.assertEqual(snapshot["diwan"]["malformed_stable_ids"], 0)
         self.assertEqual(snapshot["diwan"]["numeric_heading_rewrites"], 0)
+        self.assertEqual(snapshot["matching_contract"]["status"], "ok")
+        self.assertTrue(snapshot["matching_contract"]["whole_word_default"])
+        self.assertEqual(snapshot["matching_contract"]["literal_normalization"], "safe")
+        self.assertEqual(snapshot["provenance_contract"]["status"], "ok")
+        self.assertEqual(snapshot["provenance_contract"]["b42_compiler"], "unverified")
 
     def test_hard_token_positions_preserve_authoritative_surface_text(self):
         rows = self.conn.execute(

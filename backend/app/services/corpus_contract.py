@@ -109,7 +109,35 @@ def corpus_contract_snapshot(db_path: str | None = None) -> dict[str, Any]:
             and ordinal_digest == DIWAN_ORDINAL_DIGEST
         )
         research_ok = research_tables and token_count > 0 and rooted_token_count > 0 and parallel_count > 0
-        status = "ok" if book_count == 43 and edition_ok and diwan_ok and research_ok else "broken"
+        book_columns = {
+            row[1] for row in conn.execute("PRAGMA table_info(books)").fetchall()
+        }
+        provenance_columns = {
+            "compiler", "authorship_mode", "attribution_confidence",
+            "provenance_status",
+        }
+        provenance_complete = provenance_columns.issubset(book_columns) and int(
+            conn.execute(
+                "SELECT COUNT(*) FROM books WHERE authorship_mode IS NULL "
+                "OR attribution_confidence IS NULL OR provenance_status IS NULL"
+            ).fetchone()[0]
+        ) == 0
+        b20 = conn.execute(
+            "SELECT source_author, compiler FROM books WHERE book_id='b20'"
+        ).fetchone()
+        provenance_ok = bool(
+            provenance_complete and b20
+            and b20[0] == "عبد الحميد بابكر"
+            and b20[1] == "عبد الحميد بابكر"
+        )
+        b13_norm = conn.execute(
+            "SELECT norm_text FROM pages WHERE book_id='b13' AND seq=97"
+        ).fetchone()[0]
+        matching_ok = "كتب الاسم" not in b13_norm
+        status = "ok" if (
+            book_count == 43 and edition_ok and diwan_ok and research_ok
+            and provenance_ok and matching_ok
+        ) else "broken"
         return {
             "status": status,
             "books": book_count,
@@ -139,6 +167,22 @@ def corpus_contract_snapshot(db_path: str | None = None) -> dict[str, Any]:
                 "rooted_tokens": rooted_token_count,
                 "parallel_candidates": parallel_count,
                 "parallel_semantics": "unverified_candidates_only",
+            },
+            "matching_contract": {
+                "status": "ok" if matching_ok else "broken",
+                "whole_word_default": True,
+                "literal_normalization": "safe",
+                "preserved_distinctions": ["hamza", "alef_maqsura_ya", "ta_marbuta_ha"],
+                "count_bases": ["phrase", "term_bag"],
+                "footnote_policy": "explicit_end_footnotes_excluded",
+                "zero_result_diagnostics": True,
+            },
+            "provenance_contract": {
+                "status": "ok" if provenance_ok else "broken",
+                "fields": sorted(provenance_columns),
+                "b20_compiler_verified_from_corpus": provenance_ok,
+                "b42_compiler": "unverified",
+                "b01_classification": "provisional_secondary",
             },
         }
     finally:

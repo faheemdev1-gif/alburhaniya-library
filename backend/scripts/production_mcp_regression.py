@@ -20,6 +20,7 @@ from mcp.client.streamable_http import streamable_http_client
 
 from app.mcp_contract import (
     REQUIRED_TOOLS,
+    SCHEMA_DIGEST,
     SERVER_VERSION,
     TOOL_CONTRACT_ID,
     TOOL_CONTRACT_VERSION,
@@ -31,6 +32,7 @@ SEARCH_REQUIRED_PROPERTIES = {
     "query", "queries", "operator", "book_scope", "book_ids",
     "include_counts", "qasida_number", "expand_top", "expand_chars",
     "min_score", "match_mode", "mode", "context_chars", "ranking",
+    "whole_word", "count_basis", "min_tier",
 }
 MATCH_MODES = {"auto", "exact", "terms", "hybrid", "lexeme"}
 RESPONSE_MODES = {"compact", "ultra_compact"}
@@ -52,6 +54,8 @@ async def _validate_live_health(endpoint: str) -> dict[str, Any]:
     corpus = payload.get("corpus_contract") or {}
     diwan = corpus.get("diwan") or {}
     research = corpus.get("research_indexes") or {}
+    matching = corpus.get("matching_contract") or {}
+    provenance = corpus.get("provenance_contract") or {}
     if not (
         corpus.get("status") == "ok"
         and diwan.get("qasidas") == 95
@@ -59,6 +63,10 @@ async def _validate_live_health(endpoint: str) -> dict[str, Any]:
         and diwan.get("continuous_bayt_numbering") is True
         and research.get("status") == "ok"
         and research.get("parallel_semantics") == "unverified_candidates_only"
+        and matching.get("status") == "ok"
+        and matching.get("whole_word_default") is True
+        and matching.get("literal_normalization") == "safe"
+        and provenance.get("status") == "ok"
     ):
         raise AssertionError(f"live corpus contract is broken or incomplete: {corpus}")
     editions = corpus.get("edition_deduplication") or {}
@@ -119,8 +127,14 @@ def _validate_schemas(tools: dict[str, Any]) -> None:
 
     passage = _schema(tools["get_passage"])
     passage_properties = set(passage.get("properties", {}))
-    if not {"match_id", "match_ids"}.issubset(passage_properties):
-        raise AssertionError("get_passage must expose match_id and match_ids")
+    if not {
+        "match_id", "match_ids", "stable_id", "qasida_number",
+        "include_parallels", "parallel_limit",
+    }.issubset(passage_properties):
+        raise AssertionError("get_passage schema is stale")
+    page = _schema(tools["get_page"])
+    if page.get("properties", {}).get("max_chars", {}).get("default") != 20000:
+        raise AssertionError("get_page max_chars default is stale")
 
 
 def _structured(result: Any) -> dict[str, Any]:
@@ -172,13 +186,15 @@ async def run(endpoint: str, discovery_only: bool = False) -> dict[str, Any]:
                     raise AssertionError(
                         f"list_books smoke expected 43, received {catalogue.get('total')}"
                     )
-                if catalogue.get("connector_contract") != {
-                    "server_version": SERVER_VERSION,
-                    "tool_contract_version": TOOL_CONTRACT_VERSION,
-                    "tool_contract": TOOL_CONTRACT_ID,
-                    "tool_count": 5,
-                    "tools": sorted(REQUIRED_TOOLS),
-                }:
+                connector = catalogue.get("connector_contract") or {}
+                if not (
+                    connector.get("server_version") == SERVER_VERSION
+                    and connector.get("tool_contract_version") == TOOL_CONTRACT_VERSION
+                    and connector.get("tool_contract") == TOOL_CONTRACT_ID
+                    and connector.get("tool_count") == 5
+                    and connector.get("tools") == sorted(REQUIRED_TOOLS)
+                    and connector.get("schema_digest") == SCHEMA_DIGEST
+                ):
                     raise AssertionError("list_books MCP contract evidence is stale")
                 if catalogue.get("corpus_contract") != health["corpus_contract"]:
                     raise AssertionError("list_books corpus evidence differs from /health")
@@ -198,7 +214,17 @@ async def run(endpoint: str, discovery_only: bool = False) -> dict[str, Any]:
                 book = _structured(await session.call_tool("get_book", {"book_id": "b14"}))
                 if (book.get("connector_contract") or {}).get("server_version") != SERVER_VERSION:
                     raise AssertionError("get_book does not expose the live connector version")
+                b20 = _structured(await session.call_tool("get_book", {"book_id": "b20"}))
+                b42 = _structured(await session.call_tool("get_book", {"book_id": "b42"}))
+                if not (
+                    b20.get("compiler") == "عبد الحميد بابكر"
+                    and b20.get("attribution_confidence") == "high"
+                    and b42.get("compiler") is None
+                    and "do_not_assume_safwat" in (b42.get("provenance_status") or "")
+                ):
+                    raise AssertionError("live provenance policy is stale or speculative")
                 smoke["get_book"] = "pass"
+                smoke["provenance"] = "pass"
 
                 search = _structured(await session.call_tool(
                     "search_library",
@@ -268,6 +294,139 @@ async def run(endpoint: str, discovery_only: bool = False) -> dict[str, Any]:
                         f"{scoped_census}"
                     )
                 smoke["qasida_scoped_counts"] = "pass"
+
+                boundary_sir = _structured(await session.call_tool(
+                    "search_library",
+                    {
+                        "query": "سر", "book_ids": ["b13"],
+                        "page_from": 97, "page_to": 97,
+                        "match_mode": "exact", "whole_word": True,
+                        "include_counts": True, "count_basis": "phrase",
+                        "limit": 10, "mode": "compact", "ranking": "relevance",
+                    },
+                ))
+                sir_rows = boundary_sir.get("results") or []
+                if not sir_rows or "الي<mark>سر</mark>ى" in str(sir_rows):
+                    raise AssertionError("whole-word سر regressed to substring highlighting")
+                if boundary_sir.get("count_basis") != "phrase":
+                    raise AssertionError("count basis is missing from live census")
+
+                boundary_la = _structured(await session.call_tool(
+                    "search_library",
+                    {
+                        "query": "لا", "book_ids": ["b14"],
+                        "page_from": 246, "page_to": 246,
+                        "match_mode": "exact", "whole_word": True,
+                        "limit": 10, "mode": "compact", "ranking": "relevance",
+                    },
+                ))
+                if "ا<mark>لأ</mark>" in str(boundary_la):
+                    raise AssertionError("safe normalization collapsed لا and لأ")
+                smoke["whole_word_and_safe_normalization"] = "pass"
+
+                exact_census = _structured(await session.call_tool(
+                    "search_library",
+                    {
+                        "query": "الحقيقة المحمدية", "match_mode": "exact",
+                        "include_counts": True, "count_basis": "phrase",
+                        "limit": 1, "mode": "compact", "ranking": "relevance",
+                    },
+                ))
+                terms_census = _structured(await session.call_tool(
+                    "search_library",
+                    {
+                        "query": "الحقيقة المحمدية", "match_mode": "terms",
+                        "include_counts": True, "count_basis": "phrase",
+                        "limit": 1, "mode": "compact", "ranking": "relevance",
+                    },
+                ))
+                if (
+                    exact_census.get("total_hits"),
+                    exact_census.get("total_occurrences"),
+                    exact_census.get("count_basis"),
+                ) != (
+                    terms_census.get("total_hits"),
+                    terms_census.get("total_occurrences"),
+                    terms_census.get("count_basis"),
+                ):
+                    raise AssertionError("phrase counts changed with retrieval mode")
+                smoke["mode_independent_counts"] = "pass"
+
+                zero = _structured(await session.call_tool(
+                    "search_library",
+                    {
+                        "query": "أحكام زكاة الأنعام والماشية",
+                        "book_ids": ["b14"], "match_mode": "auto",
+                        "include_counts": True, "limit": 5,
+                        "mode": "compact", "ranking": "relevance",
+                    },
+                ))
+                diagnostics = zero.get("diagnostics") or {}
+                if not (
+                    zero.get("returned_count") == 0
+                    and diagnostics.get("zero_result_is_not_absence_proof") is True
+                    and diagnostics.get("per_term")
+                    and diagnostics.get("attempted_modes") == ["exact", "terms", "hybrid"]
+                ):
+                    raise AssertionError("auto zero-result diagnostics are missing")
+                smoke["auto_fallback_diagnostics"] = "pass"
+
+                tier_limited = _structured(await session.call_tool(
+                    "search_library",
+                    {
+                        "query": "الله", "match_mode": "exact", "min_tier": 2,
+                        "limit": 20, "mode": "compact", "ranking": "relevance",
+                    },
+                ))
+                if not tier_limited.get("results") or any(
+                    int(meta.get("tier", 99)) > 2
+                    for meta in (tier_limited.get("books") or {}).values()
+                ):
+                    raise AssertionError("min_tier=2 leaked a lower-authority source")
+                smoke["min_tier"] = "pass"
+
+                full_page = _structured(await session.call_tool(
+                    "get_page", {"book_id": "b44", "seq": 12, "mode": "compact"},
+                ))
+                if full_page.get("truncated") or full_page.get("full_chars", 0) < 8000:
+                    raise AssertionError("get_page silently truncated b44 page 12")
+                if "quran_bracket_direction" not in (full_page.get("display_repairs") or []):
+                    raise AssertionError("get_page did not repair inverted Quran brackets")
+                smoke["full_page_default"] = "pass"
+
+                footnote_page = _structured(await session.call_tool(
+                    "get_page", {"book_id": "b13", "seq": 97, "mode": "compact"},
+                ))
+                if "footnote" not in (footnote_page.get("content_types") or []):
+                    raise AssertionError("page content typing lost explicit footnotes")
+                smoke["content_typing"] = "pass"
+
+                qasida = _structured(await session.call_tool(
+                    "get_passage", {"qasida_number": 91},
+                ))
+                if not (
+                    qasida.get("complete") is True
+                    and qasida.get("returned_bayts") == 22
+                    and qasida.get("prosody", {}).get("status") == "not_curated"
+                ):
+                    raise AssertionError("full qasida retrieval is incomplete or misleading")
+                smoke["full_qasida_context"] = "pass"
+
+                parallel = _structured(await session.call_tool(
+                    "get_passage",
+                    {
+                        "stable_id": "b14-q001-b007", "include_parallels": True,
+                        "parallel_limit": 5,
+                    },
+                ))
+                candidates = parallel.get("parallel_candidates") or []
+                if not candidates or any(
+                    row.get("review_status") != "unverified_candidate"
+                    or row.get("citation_safe") is not False
+                    for row in candidates
+                ):
+                    raise AssertionError("parallel candidates were presented as verified")
+                smoke["parallel_safety"] = "pass"
 
                 ultra_expansion = _structured(await session.call_tool(
                     "search_library",

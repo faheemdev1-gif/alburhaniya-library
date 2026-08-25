@@ -65,8 +65,19 @@ DEFAULT_HEMISTICH = 43
 VOCALISED = 0.35
 
 _WS = re.compile(r"\s+")
+_INVERTED_QURAN_BRACKETS = re.compile(
+    r"\]\s*((?=[^\[\]\n]{6,800}\s*\[)[^\[\]\n]*[\u0621-\u06ff][^\[\]\n]*?)\s*\["
+)
 
 VERSE, NEUTRAL, PROSE = 1, 0, -1
+
+
+def repair_quran_display_brackets(text: str) -> tuple[str, bool]:
+    """Repair bidi-inverted Qur'an brackets for display, never stored text."""
+    repaired, count = _INVERTED_QURAN_BRACKETS.subn(
+        lambda match: f"﴿ {match.group(1).strip()} ﴾", text or "",
+    )
+    return repaired, bool(count)
 
 
 def _clean(s: str) -> str:

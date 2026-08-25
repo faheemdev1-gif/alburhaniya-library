@@ -73,6 +73,7 @@ def _optional_field(row, key: str):
 def _candidate_rows(
     *, book_ids: list[str] | None, source_code: str | None,
     page_from: int | None, page_to: int | None, qasida_number: int | None,
+    min_tier: int | None = None,
 ) -> list:
     from app.services import library_db as db
 
@@ -85,6 +86,9 @@ def _candidate_rows(
     if source_code:
         where.append("b.source_code = ?")
         params.append(source_code)
+    if min_tier is not None:
+        where.append("b.source_tier <= ?")
+        params.append(int(min_tier))
     if page_from is not None:
         where.append("c.seq >= ?")
         params.append(page_from)
@@ -97,6 +101,8 @@ def _candidate_rows(
     clause = " WHERE " + " AND ".join(where) if where else ""
     return db._connection().execute(
         """SELECT c.*, b.title AS book_title, b.source_grade, b.source_code,
+                    b.source_author, b.compiler, b.authorship_mode,
+                    b.attribution_confidence, b.provenance_status,
                     b.canonical_book_id, b.edition_relation,
                     b.searchable_by_default
              FROM semantic_chunks c
@@ -117,6 +123,7 @@ def semantic_search(
     limit: int = 40,
     context_chars: int = 60,
     min_score: float | None = None,
+    min_tier: int | None = None,
 ) -> list[dict]:
     """Return filtered semantic candidates as normal library search rows."""
     if not semantic_available():
@@ -136,6 +143,7 @@ def semantic_search(
     rows = _candidate_rows(
         book_ids=book_ids, source_code=source_code,
         page_from=page_from, page_to=page_to, qasida_number=qasida_number,
+        min_tier=min_tier,
     )
     if not rows:
         return []
@@ -164,6 +172,11 @@ def semantic_search(
             "book_id": row["book_id"], "book_title": row["book_title"],
             "source_grade": row["source_grade"], "source_code": row["source_code"],
             "source_tier": row["source_tier"], "seq": row["seq"],
+            "source_author": _optional_field(row, "source_author"),
+            "compiler": _optional_field(row, "compiler"),
+            "authorship_mode": _optional_field(row, "authorship_mode") or "unresolved",
+            "attribution_confidence": _optional_field(row, "attribution_confidence") or "unverified",
+            "provenance_status": _optional_field(row, "provenance_status") or "needs_review",
             "canonical_book_id": _optional_field(row, "canonical_book_id") or row["book_id"],
             "edition_relation": _optional_field(row, "edition_relation") or "canonical",
             "searchable_by_default": (
@@ -288,6 +301,7 @@ def auto_search(**kwargs) -> list[dict]:
         book_ids=kwargs.get("book_ids"), source_code=kwargs.get("source_code"),
         page_from=kwargs.get("page_from"), page_to=kwargs.get("page_to"),
         qasida_number=kwargs.get("qasida_number"), limit=pool,
+        min_tier=kwargs.get("min_tier"),
         context_chars=kwargs.get("context_chars", 60),
         min_score=0.0,
     )
