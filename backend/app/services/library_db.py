@@ -17,12 +17,15 @@ Token budget rule of thumb:
   - author + note (longer)    -> included in get_book / read_book only
 """
 from __future__ import annotations
+import os
 import re
 import sqlite3
+import threading
 from difflib import get_close_matches
 from functools import lru_cache
 from html import escape as _esc
 from itertools import product
+from collections.abc import Iterable
 
 from app.core.config import get_settings
 from app.core.arabic_utils import (
@@ -31,6 +34,7 @@ from app.core.arabic_utils import (
     remove_tatweel, safe_term_variants, safe_tokens, strip_diacritics,
     term_variants,
 )
+from app.core.text_format import clean_structured_bayt_text
 
 _DIACRITIC_CLASS = (
     "[\u064b-\u065f\u0610-\u061a\u06d6-\u06dc\u06df-\u06e4\u06e7\u06e8\u06ea-\u06ed\u0640]*"
@@ -113,11 +117,31 @@ def _concise_qasida_title(value: str | None) -> str | None:
     return title or value.strip()
 
 
-@lru_cache(maxsize=1)
 def _connection() -> sqlite3.Connection:
+    """One read-only connection per worker thread.
+
+    The former process-wide connection used ``check_same_thread=False`` and
+    could be entered concurrently by FastAPI/FastMCP workers.  Thread-local
+    readers avoid shared cursor/transaction state while retaining connection
+    reuse and SQLite page caching.
+    """
     s = get_settings()
-    conn = sqlite3.connect(s.library_db_path, check_same_thread=False)
+    path = os.path.abspath(s.library_db_path)
+    state = getattr(_connection, "_state", None)
+    if state is None:
+        state = threading.local()
+        _connection._state = state
+    conn = getattr(state, "conn", None)
+    if conn is not None and getattr(state, "path", None) == path:
+        return conn
+    if conn is not None:
+        conn.close()
+    conn = sqlite3.connect(path, timeout=2.0)
     conn.row_factory = sqlite3.Row
+    conn.execute("PRAGMA query_only = ON")
+    conn.execute("PRAGMA busy_timeout = 1500")
+    state.conn = conn
+    state.path = path
     return conn
 
 
@@ -369,6 +393,32 @@ def get_page(book_id: str, seq: int) -> dict | None:
     d["has_prev"] = seq > 1
     d["has_next"] = seq < d["total_pages"]
     return d
+
+
+def _page_texts(keys: Iterable[tuple[str, int]]) -> dict[tuple[str, int], str]:
+    """Fetch candidate page text in bounded batches.
+
+    Hybrid ranking used to call ``get_page`` once while scoring and again
+    while rendering every candidate.  A broad 500-page pool therefore caused
+    roughly one thousand individual SQLite queries.  One batched read keeps
+    the same candidate set and ranking semantics without that request fan-out.
+    """
+    unique = list(dict.fromkeys((str(book_id), int(seq)) for book_id, seq in keys))
+    values: dict[tuple[str, int], str] = {}
+    conn = _connection()
+    for start in range(0, len(unique), 400):
+        batch = unique[start:start + 400]
+        if not batch:
+            continue
+        placeholders = ",".join("(?, ?)" for _ in batch)
+        params = [value for pair in batch for value in pair]
+        rows = conn.execute(
+            "SELECT book_id, seq, text FROM pages "
+            f"WHERE (book_id, seq) IN ({placeholders})",
+            params,
+        ).fetchall()
+        values.update({(row["book_id"], int(row["seq"])): row["text"] for row in rows})
+    return values
 
 
 # ---------------------------------------------------------------- search
@@ -1340,13 +1390,26 @@ def hybrid_search(**kwargs) -> list[dict]:
     # rows down an OR candidate list.  Keep candidate recall high, then let the
     # local covering-span scorer restore precision.  The corpus is small enough
     # that this remains comfortably bounded.
-    pool = min(max((offset + limit) * 40, 500), 2000)
+    configured_pool = int(getattr(get_settings(), "hybrid_candidate_pool", 250))
+    pool = min(max((offset + limit) * 20, configured_pool), 1000)
     rrf_scores: dict[tuple[str, int], float] = {}
     mode_scores: dict[tuple[str, int], dict[str, float]] = {}
     records: dict[tuple[str, int], dict] = {}
     # Candidate generation stays page-level (the shipped index has pages), but
     # final co-occurrence is measured in overlapping local chunks.
-    term_groups = [lexical_variants(w) for q in queries for w in q.split()]
+    query_group_sets = [
+        [lexical_variants(word) for word in query.split()]
+        for query in queries if query.strip()
+    ]
+    term_groups = [group for groups in query_group_sets for group in groups]
+    # OR alternatives are independently sufficient.  Previously all terms
+    # from every alternative were required in one local span, which silently
+    # turned an OR request into an AND during final hybrid scoring.
+    scoring_group_sets = (
+        query_group_sets
+        if str(kwargs.get("operator", "OR")).upper() == "OR"
+        else [term_groups]
+    )
     concept_queries = sorted({
         spelling
         for group in term_groups
@@ -1368,15 +1431,17 @@ def hybrid_search(**kwargs) -> list[dict]:
                 mode_scores.get(key, {}).get(mode, 0.0), float(row["score"]),
             )
             records.setdefault(key, row)
-    chunk_starts = {}
-    chunk_ends = {}
-    local_scores = {}
-    for key, row in records.items():
-        page = get_page(row["book_id"], row["seq"])
-        best, chunk_start, chunk_end = (
-            _minimum_covering_span(page["text"], term_groups)
-            if page else (0.0, 0, 0)
+    page_texts = _page_texts(records)
+    chunk_starts: dict[tuple[str, int], int] = {}
+    chunk_ends: dict[tuple[str, int], int] = {}
+    local_scores: dict[tuple[str, int], float] = {}
+    for key in records:
+        text = page_texts.get(key)
+        candidates = (
+            [_minimum_covering_span(text, groups) for groups in scoring_group_sets]
+            if text else [(0.0, 0, 0)]
         )
+        best, chunk_start, chunk_end = max(candidates, key=lambda item: item[0])
         chunk_starts[key] = chunk_start
         chunk_ends[key] = chunk_end
         local_scores[key] = best
@@ -1391,8 +1456,7 @@ def hybrid_search(**kwargs) -> list[dict]:
         )
         fusion_support = min(1.0, rrf_scores.get(key, 0.0) / max_rrf) if max_rrf else 0.0
         score = 0.62 * local_scores.get(key, 0.0) + 0.28 * lexical_support + 0.10 * fusion_support
-        page = get_page(row["book_id"], row["seq"])
-        if page and page.get("block_type") == "toc":
+        if row.get("block_type") == "toc":
             score *= 0.15
         calibrated_scores[key] = round(max(0.0, min(1.0, score)), 6)
     ordered = sorted(
@@ -1432,10 +1496,10 @@ def hybrid_search(**kwargs) -> list[dict]:
         row["score_kind"] = "hybrid_evidence"
         row["match_id"] = f"{row['book_id']}-p{row['seq']}-c{chunk_starts[key]}"
         row["match_type"] = "hybrid"
-        page = get_page(row["book_id"], row["seq"])
-        if page:
+        page_text = page_texts.get(key)
+        if page_text is not None:
             row["snippet"] = _evidence_excerpt(
-                page["text"], chunk_starts[key], chunk_ends[key],
+                page_text, chunk_starts[key], chunk_ends[key],
                 int(kwargs.get("context_chars", 160)), hybrid_patterns,
             )
             row["evidence_span"] = {
@@ -1444,23 +1508,138 @@ def hybrid_search(**kwargs) -> list[dict]:
                 "excerpt": row["snippet"],
             }
             row["matched_terms"] = _matched_hybrid_terms(
-                page["text"], raw_queries, chunk_starts[key], chunk_ends[key],
+                page_text, raw_queries, chunk_starts[key], chunk_ends[key],
             )
             row["evidence_type"] = evidence_type(
-                page["text"], chunk_starts[key], chunk_ends[key],
+                page_text, chunk_starts[key], chunk_ends[key],
             )
             row["whole_word"] = True
             row["normalization_level"] = "broad_discovery"
             row["footnotes_excluded"] = True
             if row["book_id"] == "b14":
                 row.update(_structural_identity(
-                    page["text"], chunk_starts[key], chunk_ends[key],
+                    page_text, chunk_starts[key], chunk_ends[key],
                     row.get("qasida_number"), row.get("qasida_bayt_count"),
                 ))
         fused.append(row)
     for rank, row in enumerate(fused, start=offset + 1):
         row["rank"] = rank
     return fused
+
+
+_REFORMULATION_STOPWORDS = ARABIC_STOPWORDS | {
+    "هل", "كيف", "ماذا", "متي", "متى", "اين", "أين", "لماذا",
+    "عليه", "عليها", "عليهم", "له", "لها", "لهم",
+}
+
+
+def controlled_reformulations(
+    raw_queries: list[str], *, max_queries: int = 6,
+) -> list[str]:
+    """Reduce long natural-language questions to bounded evidence phrases.
+
+    This is a deterministic fallback, not free-form query rewriting.  It keeps
+    source-surface tokens, emits adjacent two-word topic phrases first, then a
+    few individual content terms, and exposes every generated query to the
+    caller.  Short evidence queries are left alone.
+    """
+    candidates: list[str] = []
+    for raw in raw_queries:
+        tokens = [
+            token for token in safe_tokens(raw, drop_stopwords=True)
+            if normalize_search_text(token, level="broad")
+            not in _REFORMULATION_STOPWORDS
+        ]
+        if len(tokens) < 4:
+            continue
+        bigrams = [" ".join(tokens[index:index + 2]) for index in range(len(tokens) - 1)]
+        # In Arabic questions the requested topic commonly appears late, so
+        # evaluate later phrases first while preserving a strict small budget.
+        for candidate in [*reversed(bigrams), *reversed(tokens)]:
+            if len(candidate) < 3 or candidate in candidates:
+                continue
+            candidates.append(candidate)
+            if len(candidates) >= max(1, min(int(max_queries), 8)):
+                return candidates
+    return candidates
+
+
+def reformulated_search(**kwargs) -> list[dict]:
+    """Search declared evidence phrases derived from an overlong question."""
+    raw_queries = kwargs.get("queries") or ([kwargs.get("query")] if kwargs.get("query") else [])
+    reformulations = controlled_reformulations(list(raw_queries))
+    if not reformulations:
+        return []
+
+    limit = max(1, int(kwargs.get("limit", 10)))
+    offset = max(0, int(kwargs.get("offset", 0)))
+    pool = min(max((offset + limit) * 3, 20), 100)
+    records: dict[tuple[str, int], dict] = {}
+    specificity: dict[tuple[str, int], int] = {}
+    for reformulated_query in reformulations:
+        call = dict(kwargs)
+        call.update(
+            query=reformulated_query,
+            queries=[reformulated_query],
+            operator="OR",
+            search_mode="exact_phrase",
+            limit=pool,
+            offset=0,
+            diversify_books=False,
+        )
+        call.pop("min_score", None)
+        for row in search(**call):
+            key = (row["book_id"], row["seq"])
+            candidate_specificity = len(safe_tokens(reformulated_query))
+            if (
+                key in records
+                and (specificity[key], float(records[key]["score"]))
+                >= (candidate_specificity, float(row["score"]))
+            ):
+                continue
+            row["match_type"] = "reformulated"
+            row["score_kind"] = "bm25_reformulated_phrase"
+            row["reformulated_query"] = reformulated_query
+            row["original_queries"] = list(raw_queries)
+            row["reformulation_method"] = "adjacent_topic_phrases_v1"
+            records[key] = row
+            specificity[key] = candidate_specificity
+
+    ordered = list(records.values())
+    ranking = kwargs.get("ranking", "relevance")
+    if ranking in {"book_order", "chronological"}:
+        ordered.sort(key=lambda row: (row["book_id"], row["seq"]))
+    elif ranking == "primary_first":
+        ordered.sort(
+            key=lambda row: (
+                -specificity[(row["book_id"], row["seq"])],
+                *primary_first_sort_key(row),
+            )
+        )
+    else:
+        ordered.sort(key=lambda row: (
+            -specificity[(row["book_id"], row["seq"])],
+            -float(row["score"]), row["source_tier"], row["book_id"], row["seq"],
+        ))
+
+    requested_min = max(0.0, min(float(kwargs.get("min_score") or 0.0), 1.0))
+    ordered = [row for row in ordered if float(row["score"]) >= requested_min]
+    if kwargs.get("diversify_books", True) and not (
+        kwargs.get("book_ids") and len(kwargs["book_ids"]) == 1
+    ):
+        counts: dict[str, int] = {}
+        diversified = []
+        max_per_book = max(1, int(kwargs.get("max_per_book", 2)))
+        for row in ordered:
+            if counts.get(row["book_id"], 0) >= max_per_book:
+                continue
+            diversified.append(row)
+            counts[row["book_id"]] = counts.get(row["book_id"], 0) + 1
+        ordered = diversified
+    selected = ordered[offset:offset + limit]
+    for rank, row in enumerate(selected, start=offset + 1):
+        row["rank"] = rank
+    return selected
 
 
 def _paragraph_window(text: str, match_start: int, match_end: int, context_chars: int) -> tuple[int, int]:
@@ -1474,34 +1653,76 @@ def _paragraph_window(text: str, match_start: int, match_end: int, context_chars
     return start, end
 
 
+def _complete_paragraph_window(text: str, match_start: int, match_end: int) -> tuple[int, int]:
+    """Return the complete source paragraph containing an evidence span."""
+    para_start = text.rfind("\n\n", 0, match_start)
+    para_end = text.find("\n\n", match_end)
+    return (para_start + 2 if para_start >= 0 else 0, para_end if para_end >= 0 else len(text))
+
+
+def _cap_context_window(
+    text: str, start: int, end: int, match_start: int, match_end: int,
+    max_chars: int,
+) -> tuple[int, int, bool]:
+    """Cap an oversized context while keeping the evidence inside it."""
+    if end - start <= max_chars:
+        return start, end, False
+    centre = (match_start + match_end) // 2
+    capped_start = max(start, centre - max_chars // 2)
+    capped_end = min(end, capped_start + max_chars)
+    capped_start = max(start, capped_end - max_chars)
+    return capped_start, capped_end, True
+
+
 _MATCH_ID_RE = re.compile(r"^(b\d+)-p(\d+)-c(\d+)$")
 
 
 def get_passage(
     book_id: str, seq: int, query: str | None = None, context_chars: int = 800,
-    match_start: int | None = None,
+    match_start: int | None = None, context_mode: str = "bounded",
+    max_chars: int = 12000,
 ) -> dict | None:
-    """Return coherent bounded context around a normalized Arabic match."""
+    """Return bounded context or an explicitly complete source paragraph."""
+    if context_mode not in {"bounded", "paragraph"}:
+        raise ValueError("context_mode must be bounded or paragraph")
+    max_chars = max(1000, min(int(max_chars), 20000))
     page = get_page(book_id, seq)
     if page is None:
         return None
     pattern = _build_highlight_regex(query.strip()) if query else None
     text = page["text"]
     match = pattern.search(text) if pattern else None
+    complete_paragraph = False
+    context_cap_applied = False
     if match is None and match_start is not None:
         match_start = max(0, min(match_start, len(text)))
         match_end = min(len(text), match_start + 1)
-        start, end = _paragraph_window(text, match_start, match_end, context_chars)
+        if context_mode == "paragraph":
+            start, end = _complete_paragraph_window(text, match_start, match_end)
+            start, end, context_cap_applied = _cap_context_window(
+                text, start, end, match_start, match_end, max_chars,
+            )
+            complete_paragraph = not context_cap_applied
+        else:
+            start, end = _paragraph_window(text, match_start, match_end, context_chars)
         passage = ("…" if start else "") + text[start:end] + ("…" if end < len(text) else "")
         occurrences = None
     elif match:
-        start, end = _paragraph_window(text, match.start(), match.end(), context_chars)
+        if context_mode == "paragraph":
+            start, end = _complete_paragraph_window(text, match.start(), match.end())
+            start, end, context_cap_applied = _cap_context_window(
+                text, start, end, match.start(), match.end(), max_chars,
+            )
+            complete_paragraph = not context_cap_applied
+        else:
+            start, end = _paragraph_window(text, match.start(), match.end(), context_chars)
         passage = text[start:end]
         prefix, suffix = ("…" if start else ""), ("…" if end < len(text) else "")
         passage, occurrences = _highlight(passage, pattern)
         passage = prefix + passage + suffix
     else:
-        passage = text[: context_chars * 2]
+        start, end = 0, min(len(text), context_chars * 2)
+        passage = text[start:end]
         occurrences = 0
     identity = _structural_identity(
         text,
@@ -1529,7 +1750,12 @@ def get_passage(
         "bayt_range_scope": "page" if page.get("bayt_from") is not None else None,
         "occurrences": occurrences,
         "passage": passage, "page_chars": len(text),
-        "truncated": len(passage) < len(text),
+        "truncated": start > 0 or end < len(text),
+        "context_scope": (
+            "complete_paragraph" if complete_paragraph else "bounded_excerpt"
+        ),
+        "complete_paragraph": complete_paragraph,
+        "context_cap_applied": context_cap_applied,
         "content_types": page.get("content_types"),
         "evidence_type": evidence_type(
             text,
@@ -1541,15 +1767,24 @@ def get_passage(
     return result
 
 
-def get_passage_by_match_id(match_id: str, context_chars: int = 800) -> dict | None:
+def get_passage_by_match_id(
+    match_id: str, context_chars: int = 800, context_mode: str = "bounded",
+    max_chars: int = 12000,
+) -> dict | None:
     match = _MATCH_ID_RE.fullmatch(match_id or "")
     if not match:
         return None
     book_id, seq, start = match.group(1), int(match.group(2)), int(match.group(3))
-    return get_passage(book_id, seq, context_chars=context_chars, match_start=start)
+    return get_passage(
+        book_id, seq, context_chars=context_chars, match_start=start,
+        context_mode=context_mode, max_chars=max_chars,
+    )
 
 
-def get_bayt(stable_id: str, context_chars: int = 800) -> dict | None:
+def get_bayt(
+    stable_id: str, context_chars: int = 800, context_mode: str = "bounded",
+    max_chars: int = 12000,
+) -> dict | None:
     """Resolve one canonical Dīwān stable ID with page context."""
     row = _connection().execute(
         "SELECT stable_id, book_id, qasida_number, bayt_number, page_id, "
@@ -1563,14 +1798,15 @@ def get_bayt(stable_id: str, context_chars: int = 800) -> dict | None:
     ).fetchone()
     result = get_passage(
         row["book_id"], int(page["seq"]), context_chars=context_chars,
-        match_start=int(row["start_char"]),
+        match_start=int(row["start_char"]), context_mode=context_mode,
+        max_chars=max_chars,
     ) or {}
     result.update({
         "stable_id": row["stable_id"],
         "stable_id_kind": "bayt",
         "qasida_number": int(row["qasida_number"]),
         "bayt_number": int(row["bayt_number"]),
-        "bayt_text": row["text"],
+        "bayt_text": clean_structured_bayt_text(row["text"]),
     })
     return result
 
@@ -1595,7 +1831,7 @@ def get_qasida(qasida_number: int) -> dict | None:
         bayts.append({
             "stable_id": row["stable_id"],
             "bayt_number": int(row["bayt_number"]),
-            "text": row["text"],
+            "text": clean_structured_bayt_text(row["text"]),
             "seq": int(row["seq"]),
             "printed_page": row["printed_page"],
         })

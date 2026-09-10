@@ -1,0 +1,102 @@
+"""Bounded retry and API-safe failure helpers for read-only research tools."""
+from __future__ import annotations
+
+from contextvars import ContextVar
+from functools import wraps
+import logging
+import re
+import sqlite3
+import time
+import uuid
+
+
+logger = logging.getLogger(__name__)
+_request_id: ContextVar[str | None] = ContextVar("request_id", default=None)
+_TRANSIENT_SQLITE_MARKERS = ("locked", "busy", "interrupted", "temporarily unavailable")
+
+
+def new_request_id(value: str | None = None) -> str:
+    supplied = re.sub(r"[^A-Za-z0-9._:-]", "", (value or "").strip())[:128]
+    request_id = supplied or uuid.uuid4().hex
+    _request_id.set(request_id)
+    return request_id
+
+
+def current_request_id() -> str:
+    return _request_id.get() or new_request_id()
+
+
+def is_transient_sqlite_error(exc: BaseException) -> bool:
+    message = str(exc).lower()
+    return isinstance(exc, sqlite3.OperationalError) and any(
+        marker in message for marker in _TRANSIENT_SQLITE_MARKERS
+    )
+
+
+def safe_error_payload(
+    code: str, message: str, *, retryable: bool, retry_after_seconds: int | None = None,
+) -> dict:
+    error = {
+        "code": code,
+        "message": message,
+        "retryable": bool(retryable),
+        "request_id": current_request_id(),
+    }
+    if retry_after_seconds is not None:
+        error["retry_after_seconds"] = int(retry_after_seconds)
+    return {"error": error}
+
+
+def safe_tool_call(function):
+    """Retry transient SQLite reads and never expose raw infrastructure data."""
+    @wraps(function)
+    def wrapped(*args, **kwargs):
+        request_id = current_request_id()
+        for attempt, delay in enumerate((0.0, 0.05, 0.15), start=1):
+            if delay:
+                time.sleep(delay)
+            try:
+                return function(*args, **kwargs)
+            except ValueError as exc:
+                logger.info(
+                    "invalid tool request operation=%s request_id=%s error=%s",
+                    function.__name__, request_id, exc,
+                )
+                return safe_error_payload(
+                    "invalid_request", str(exc), retryable=False,
+                )
+            except sqlite3.OperationalError as exc:
+                if is_transient_sqlite_error(exc) and attempt < 3:
+                    logger.warning(
+                        "transient sqlite error operation=%s request_id=%s attempt=%d",
+                        function.__name__, request_id, attempt,
+                    )
+                    continue
+                logger.error(
+                    "database operation failed operation=%s request_id=%s exception_type=%s",
+                    function.__name__, request_id, type(exc).__name__,
+                )
+                return safe_error_payload(
+                    "temporary_unavailable",
+                    "The library is temporarily unavailable. Retry the request shortly.",
+                    retryable=True,
+                    retry_after_seconds=1,
+                )
+            except Exception as exc:
+                logger.error(
+                    "tool operation failed operation=%s request_id=%s exception_type=%s",
+                    function.__name__, request_id, type(exc).__name__,
+                )
+                return safe_error_payload(
+                    "internal_error",
+                    "The request could not be completed. Use the request_id when reporting it.",
+                    retryable=False,
+                )
+        return safe_error_payload(
+            "temporary_unavailable",
+            "The library is temporarily unavailable. Retry the request shortly.",
+            retryable=True,
+            retry_after_seconds=1,
+        )
+
+    return wrapped

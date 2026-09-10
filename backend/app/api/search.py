@@ -30,7 +30,7 @@ def _render_results_html(q: str, limit: int) -> str:
         crumbs,
         f"<h1>نتائج البحث عن: {_esc(q)}</h1>",
         search_form(q),
-        f'<p class="meta">عدد الصفحات التي وردت فيها الكلمة: {len(results)}</p>',
+        f'<p class="meta">عدد النتائج المعروضة: {len(results)}</p>',
     ]
     for r in results:
         url = _page_url(s, r["book_id"], r["seq"])
@@ -55,7 +55,12 @@ def search_json(
     """JSON search results — used by the React app."""
     ids = [b.strip() for b in book_ids.split(",")] if book_ids else None
     results = db.search(q, book_ids=ids, limit=limit, include_full_text=True)
-    return {"query": q, "total": len(results), "results": results}
+    return {
+        "query": q,
+        "returned_count": len(results),
+        "literal_matching_pages": db.count_search([q], book_ids=ids),
+        "results": results,
+    }
 
 
 @router.get("/search.html", response_class=HTMLResponse)
@@ -84,4 +89,9 @@ def search_json_path(query: str, limit: int = Query(2000, ge=1, le=100_000)):
     """Same as /search, but the word is a URL path segment, e.g.
     GET /api/search/قلب — no query string involved at all."""
     results = db.search(query, limit=limit, include_full_text=True)
-    return {"query": query, "total": len(results), "results": results}
+    return {
+        "query": query,
+        "returned_count": len(results),
+        "literal_matching_pages": db.count_search([query]),
+        "results": results,
+    }

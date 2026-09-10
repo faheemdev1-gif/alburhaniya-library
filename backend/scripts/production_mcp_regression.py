@@ -129,7 +129,7 @@ def _validate_schemas(tools: dict[str, Any]) -> None:
     passage_properties = set(passage.get("properties", {}))
     if not {
         "match_id", "match_ids", "stable_id", "qasida_number",
-        "include_parallels", "parallel_limit",
+        "include_parallels", "parallel_limit", "context_mode", "max_chars",
     }.issubset(passage_properties):
         raise AssertionError("get_passage schema is stale")
     page = _schema(tools["get_page"])
@@ -285,8 +285,8 @@ async def run(endpoint: str, discovery_only: bool = False) -> dict[str, Any]:
                 ))
                 if not (
                     scoped_census.get("returned_count") == 0
-                    and scoped_census.get("total_hits") == 0
-                    and scoped_census.get("total_occurrences") == 0
+                    and scoped_census.get("literal_matching_pages") == 0
+                    and scoped_census.get("literal_occurrences") == 0
                     and not scoped_census.get("suggestions")
                 ):
                     raise AssertionError(
@@ -341,12 +341,12 @@ async def run(endpoint: str, discovery_only: bool = False) -> dict[str, Any]:
                     },
                 ))
                 if (
-                    exact_census.get("total_hits"),
-                    exact_census.get("total_occurrences"),
+                    exact_census.get("census_matching_pages"),
+                    exact_census.get("census_occurrences"),
                     exact_census.get("count_basis"),
                 ) != (
-                    terms_census.get("total_hits"),
-                    terms_census.get("total_occurrences"),
+                    terms_census.get("census_matching_pages"),
+                    terms_census.get("census_occurrences"),
                     terms_census.get("count_basis"),
                 ):
                     raise AssertionError("phrase counts changed with retrieval mode")
@@ -366,7 +366,7 @@ async def run(endpoint: str, discovery_only: bool = False) -> dict[str, Any]:
                     zero.get("returned_count") == 0
                     and diagnostics.get("zero_result_is_not_absence_proof") is True
                     and diagnostics.get("per_term")
-                    and diagnostics.get("attempted_modes") == ["exact", "terms", "hybrid"]
+                    and diagnostics.get("attempted_modes") == ["exact", "terms", "hybrid", "reformulated"]
                 ):
                     raise AssertionError("auto zero-result diagnostics are missing")
                 smoke["auto_fallback_diagnostics"] = "pass"
@@ -408,6 +408,12 @@ async def run(endpoint: str, discovery_only: bool = False) -> dict[str, Any]:
                     qasida.get("complete") is True
                     and qasida.get("returned_bayts") == 22
                     and qasida.get("prosody", {}).get("status") == "not_curated"
+                    and not any(
+                        "-242 -" in row.get("text", "")
+                        or "-243 -" in row.get("text", "")
+                        or "***----------------" in row.get("text", "")
+                        for row in qasida.get("bayts") or []
+                    )
                 ):
                     raise AssertionError("full qasida retrieval is incomplete or misleading")
                 smoke["full_qasida_context"] = "pass"
@@ -470,9 +476,14 @@ async def run(endpoint: str, discovery_only: bool = False) -> dict[str, Any]:
                     )
                 smoke["ultra_compact_block_type"] = "pass"
 
-                _structured(await session.call_tool(
-                    "get_passage", {"match_id": match_id, "context_chars": 300},
+                complete_paragraph = _structured(await session.call_tool(
+                    "get_passage", {
+                        "match_id": match_id, "context_mode": "paragraph",
+                        "max_chars": 12000,
+                    },
                 ))
+                if complete_paragraph.get("context_scope") != "complete_paragraph":
+                    raise AssertionError("complete paragraph retrieval was not honored")
                 smoke["get_passage"] = "pass"
 
                 _structured(await session.call_tool(

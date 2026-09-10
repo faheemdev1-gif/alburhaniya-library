@@ -36,6 +36,7 @@ sys.path.insert(0, os.path.dirname(__file__))
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "app", "core"))
 from book_parser import parse_book, parse_utf8_pages, split_oversized_pages   # noqa: E402
 from arabic_utils import normalize_arabic, normalize_search_text  # noqa: E402
+from text_format import clean_structured_bayt_text  # noqa: E402
 from research_indexes import build_research_indexes   # noqa: E402
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -453,7 +454,9 @@ def build():
                     number = int(marker.group(1))
                     start = marker.start()
                     end = markers[i + 1].start() if i + 1 < len(markers) else len(text)
-                    bayt_text = text[start:end].strip()
+                    # Preserve raw page offsets, but do not copy the printed
+                    # folio or decorative page rule into canonical verse text.
+                    bayt_text = clean_structured_bayt_text(text[start:end].strip())
                     stable_id = f"{slug}-q{page['qasida_number']:03d}-b{number:03d}"
                     conn.execute(
                         "INSERT OR REPLACE INTO bayts (stable_id, page_id, book_id, qasida_number, "

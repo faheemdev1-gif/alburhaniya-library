@@ -44,6 +44,10 @@ class Settings(BaseSettings):
     semantic_min_score: float = 0.0
     semantic_candidate_pool: int = 50
     hybrid_min_relevance: float = 0.55
+    # Bound broad lexical candidate scoring.  The final local evidence check
+    # is CPU-heavy; 250 retains the audited prayer results (candidate ranks 4
+    # and 49) without rescoring 500 pages on every request.
+    hybrid_candidate_pool: int = 250
 
     # Meilisearch caps how many total hits a single query can return
     # (default 1000). Raised so a common word can return every matching

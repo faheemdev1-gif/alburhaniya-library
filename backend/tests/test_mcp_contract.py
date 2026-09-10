@@ -82,9 +82,9 @@ class MCPContractTests(unittest.TestCase):
         self.assertIn('ResponseMode = Literal["compact", "ultra_compact"]', self.source)
 
     def test_hard_versioned_instructions_explain_incomplete_discovery(self):
-        self.assertEqual(SERVER_VERSION, "2.4.0")
-        self.assertEqual(TOOL_CONTRACT_ID, "alburhaniya-tools-v5")
-        self.assertEqual(TOOL_CONTRACT_VERSION, "6.0")
+        self.assertEqual(SERVER_VERSION, "2.5.0")
+        self.assertEqual(TOOL_CONTRACT_ID, "alburhaniya-tools-v6")
+        self.assertEqual(TOOL_CONTRACT_VERSION, "7.0")
         self.assertIn("mcp._mcp_server.version = SERVER_VERSION", self.source)
         self.assertIn("connector discovery is incomplete", self.source)
         self.assertIn("get_passage for the precise passage", self.source)
@@ -94,6 +94,9 @@ class MCPContractTests(unittest.TestCase):
         self.assertIn("searchable_by_default=false", self.source)
         self.assertIn("whole-word matching", self.source)
         self.assertIn("Counts declare count_basis", self.source)
+        self.assertIn("literal_matching_pages", self.source)
+        self.assertIn("reformulated_query", self.source)
+        self.assertNotIn('response["total_hits"]', self.source)
 
     def test_hard_schema_parity_includes_research_integrity_controls(self):
         passage = next(
@@ -102,7 +105,7 @@ class MCPContractTests(unittest.TestCase):
         )
         self.assertTrue({
             "match_id", "match_ids", "stable_id", "qasida_number",
-            "include_parallels", "parallel_limit",
+            "include_parallels", "parallel_limit", "context_mode", "max_chars",
         }.issubset({arg.arg for arg in passage.args.args}))
         page = next(
             node for node in self.tree.body

@@ -3,11 +3,12 @@ import os
 import time
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse
 
 from app.core.config import get_settings
+from app.core.resilience import new_request_id, safe_error_payload
 from app.core.html_templates import page_shell, nav_bar
 from app.mcp_contract import SERVER_VERSION, contract_metadata, validate_registered_tools
 from app.api import books, search, files
@@ -69,6 +70,37 @@ app = FastAPI(
     version=SERVER_VERSION,
     lifespan=lifespan,
 )
+
+
+@app.middleware("http")
+async def api_safe_failures(request: Request, call_next):
+    """Attach a correlation id and keep unexpected errors concise and JSON-safe."""
+    request_id = new_request_id(request.headers.get("x-request-id"))
+    started = time.monotonic()
+    try:
+        response = await call_next(request)
+    except Exception:
+        logger.exception(
+            "unhandled request failure path=%s request_id=%s",
+            request.url.path, request_id,
+        )
+        response = JSONResponse(
+            safe_error_payload(
+                "temporary_unavailable",
+                "The library is temporarily unavailable. Retry the request shortly.",
+                retryable=True,
+                retry_after_seconds=1,
+            ),
+            status_code=503,
+            headers={"Retry-After": "1", "Cache-Control": "no-store"},
+        )
+    response.headers["X-Request-ID"] = request_id
+    logger.info(
+        "request complete method=%s path=%s status=%s elapsed_ms=%d request_id=%s",
+        request.method, request.url.path, response.status_code,
+        int((time.monotonic() - started) * 1000), request_id,
+    )
+    return response
 
 app.add_middleware(
     CORSMiddleware,

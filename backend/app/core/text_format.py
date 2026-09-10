@@ -59,6 +59,17 @@ LONE_MARKER = re.compile(r"^(?:(" + _QAF + r")\s*:|(\d{1,4})\s*[-‑–ـ])$")
 # `-33-` on its own: the printed folio number left over from the scan.
 FOLIO_RE = re.compile(r"^[-‑–—]\s*(\d{1,4})\s*[-‑–—]$")
 
+# Source scans sometimes glue the printed folio and a decorative rule to the
+# final bayt on a page.  Those marks belong to page metadata / layout, not to
+# the canonical verse text stored in ``bayts``.  Keep this helper deliberately
+# narrow so ordinary punctuation inside a bayt is never rewritten.
+STRUCTURED_FOLIO_TRAILER_RE = re.compile(
+    r"\s*(?:\[\s*[0-9٠-٩۰-۹]{1,4}\s*\]|[-‑–—]\s*[0-9٠-٩۰-۹]{1,4}\s*[-‑–—])\s*$"
+)
+STRUCTURED_RULE_TRAILER_RE = re.compile(
+    r"\s*(?:\*{2,}[-–—_]{3,}\*{3,}[-–—_]{3,}\*{2,}|\*{4,})\s*$"
+)
+
 # Median hemistich in this corpus is 43 characters (n=1,270, σ≈8).
 DEFAULT_HEMISTICH = 43
 # A word this voweled is almost certainly verse (or a quoted verse of Qur'an).
@@ -78,6 +89,21 @@ def repair_quran_display_brackets(text: str) -> tuple[str, bool]:
         lambda match: f"﴿ {match.group(1).strip()} ﴾", text or "",
     )
     return repaired, bool(count)
+
+
+def clean_structured_bayt_text(text: str) -> str:
+    """Remove scan-only material from a canonical bayt copy.
+
+    Raw page text remains untouched and therefore keeps its diplomatic source
+    representation.  This function is only for structured bayt records and is
+    idempotent so it can also protect responses built from an older database.
+    """
+    value = (text or "").rstrip()
+    value = STRUCTURED_FOLIO_TRAILER_RE.sub("", value).rstrip()
+    value = STRUCTURED_RULE_TRAILER_RE.sub("", value).rstrip()
+    # A rule may itself have been followed by the folio marker.
+    value = STRUCTURED_FOLIO_TRAILER_RE.sub("", value).rstrip()
+    return value
 
 
 def _clean(s: str) -> str:

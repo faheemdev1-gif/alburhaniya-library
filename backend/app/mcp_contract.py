@@ -7,9 +7,9 @@ import json
 from typing import Any
 
 
-SERVER_VERSION = "2.4.0"
-TOOL_CONTRACT_VERSION = "6.0"
-TOOL_CONTRACT_ID = "alburhaniya-tools-v5"
+SERVER_VERSION = "2.5.0"
+TOOL_CONTRACT_VERSION = "7.0"
+TOOL_CONTRACT_ID = "alburhaniya-tools-v6"
 
 REQUIRED_TOOLS = frozenset({
     "search_library",
@@ -32,6 +32,8 @@ SCHEMA_CAPABILITIES = {
     "get_passage": {
         "selectors": ["match_id", "match_ids", "stable_id", "qasida_number"],
         "parallel_candidates": True,
+        "context_modes": ["bounded", "paragraph"],
+        "default_max_chars": 12000,
     },
     "get_page": {"default_max_chars": 20000, "declares_truncation": True},
 }

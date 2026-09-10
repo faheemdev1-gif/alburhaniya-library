@@ -90,6 +90,9 @@ def compact_search_response(
                 hit["verification_required"] = bool(row.get("verification_required"))
             if row.get("matched_terms"):
                 hit["matched_terms"] = row["matched_terms"]
+            if row.get("reformulated_query"):
+                hit["reformulated_query"] = row["reformulated_query"]
+                hit["reformulation_method"] = row.get("reformulation_method")
             if row.get("evidence_span"):
                 hit["evidence_span"] = {
                     "start": row["evidence_span"]["start"],
@@ -102,10 +105,9 @@ def compact_search_response(
             hits.append(hit)
         response = {"n": len(hits), "books": books, "results": hits}
         if total_hits is not None:
-            response["total"] = total_hits
-            response["total_unit"] = "matching_pages"
+            response["census_matching_pages"] = total_hits
         if stats:
-            response["occurrences"] = stats["matching_occurrences"]
+            response["census_occurrences"] = stats["matching_occurrences"]
             response["count_basis"] = stats["count_basis"]
             response["count_semantics"] = {
                 "whole_word": stats["whole_word"],
@@ -148,7 +150,8 @@ def compact_search_response(
                       "bayt_range_scope", "bayt_number", "stable_id",
                       "stable_id_kind", "heading_id", "stable_ids", "container_id",
                       "block_type", "evidence_type", "matched_terms",
-                      "whole_word", "normalization_level", "footnotes_excluded"):
+                      "whole_word", "normalization_level", "footnotes_excluded",
+                      "reformulated_query", "reformulation_method"):
             if row.get(field) is not None:
                 hit[field] = row[field]
         if row.get("canonical_book_id") and row["canonical_book_id"] != row["book_id"]:
@@ -170,10 +173,9 @@ def compact_search_response(
 
     response = {"returned_count": len(hits), "books": books, "results": hits}
     if total_hits is not None:
-        response["total_hits"] = total_hits
-        response["total_hits_unit"] = "matching_pages"
+        response["census_matching_pages"] = total_hits
     if stats:
-        response["total_occurrences"] = stats["matching_occurrences"]
+        response["census_occurrences"] = stats["matching_occurrences"]
         response["count_basis"] = stats["count_basis"]
         response["count_semantics"] = {
             "whole_word": stats["whole_word"],

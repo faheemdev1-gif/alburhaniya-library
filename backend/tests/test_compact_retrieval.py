@@ -153,6 +153,28 @@ class CompactRetrievalTests(unittest.TestCase):
         passage = db.get_passage(hit["book_id"], hit["seq"], query="المريد", context_chars=300)
         self.assertIn("<mark>", passage["passage"])
 
+    def test_complete_paragraph_context_is_explicit(self):
+        hit = db.search("المريد", limit=1)[0]
+        passage = db.get_passage(
+            hit["book_id"], hit["seq"], query="المريد",
+            context_mode="paragraph", max_chars=12000,
+        )
+        self.assertEqual(passage["context_scope"], "complete_paragraph")
+        self.assertTrue(passage["complete_paragraph"])
+        self.assertFalse(passage["context_cap_applied"])
+
+    def test_complete_paragraph_cap_keeps_match_and_declares_truncation(self):
+        text = "مقدمة\n\n" + ("س " * 800) + "هدف" + (" ص" * 800) + "\n\nخاتمة"
+        match_start = text.index("هدف")
+        start, end = db._complete_paragraph_window(text, match_start, match_start + 3)
+        start, end, capped = db._cap_context_window(
+            text, start, end, match_start, match_start + 3, 1000,
+        )
+        self.assertTrue(capped)
+        self.assertLessEqual(end - start, 1000)
+        self.assertLessEqual(start, match_start)
+        self.assertGreaterEqual(end, match_start + 3)
+
     def test_compact_response_omits_counts_by_default(self):
         rows = db.search("الله", limit=2)
         payload = compact_search_response(rows, limit=2, offset=0, has_more=True)
@@ -477,6 +499,31 @@ class CompactRetrievalTests(unittest.TestCase):
             for row in rows
         ))
 
+    def test_hybrid_or_alternatives_remain_or_during_local_scoring(self):
+        rows = db.hybrid_search(
+            queries=["الصلاة في وقتها", "لفظغيرموجود تماما"],
+            operator="OR", limit=5,
+        )
+        self.assertTrue(rows)
+
+    def test_long_question_gets_declared_bounded_reformulations(self):
+        question = "من ضاقت عليه المعيشة كيف ينال سعة الرزق"
+        reformulations = db.controlled_reformulations([question])
+        self.assertIn("سعة الرزق", reformulations)
+        self.assertLessEqual(len(reformulations), 6)
+        rows = db.reformulated_search(
+            query=question, queries=[question], limit=5,
+            ranking="primary_first", context_chars=60,
+        )
+        self.assertTrue(rows)
+        self.assertTrue(all(row["match_type"] == "reformulated" for row in rows))
+        self.assertTrue(all(row.get("reformulated_query") for row in rows))
+
+    def test_hybrid_candidate_pages_are_batch_loaded(self):
+        values = db._page_texts([("b14", 246), ("b14", 247), ("b14", 246)])
+        self.assertEqual(set(values), {("b14", 246), ("b14", 247)})
+        self.assertTrue(all(values.values()))
+
     def test_hybrid_evidence_span_drives_match_id_and_passage(self):
         query = "المحافظة على الصلاة وعدم تأخيرها عن وقتها"
         row = db.hybrid_search(query=query, limit=1)[0]
@@ -641,6 +688,10 @@ class CompactRetrievalTests(unittest.TestCase):
         self.assertEqual(qasida["returned_bayts"], 22)
         self.assertEqual(qasida["bayts"][8]["stable_id"], "b14-q091-b009")
         self.assertEqual(qasida["prosody"]["status"], "not_curated")
+        by_number = {row["bayt_number"]: row["text"] for row in qasida["bayts"]}
+        self.assertNotIn("-242 -", by_number[12])
+        self.assertNotIn("-243 -", by_number[22])
+        self.assertNotIn("***----------------", by_number[22])
 
         b20 = db.get_book("b20")
         self.assertEqual(b20["compiler"], "عبد الحميد بابكر")

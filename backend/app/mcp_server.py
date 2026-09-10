@@ -39,6 +39,7 @@ from mcp.server.fastmcp import FastMCP
 from mcp.server.transport_security import TransportSecuritySettings
 
 from app.core.text_format import format_page, repair_quran_display_brackets
+from app.core.resilience import safe_tool_call
 from app.mcp_contract import (
     REQUIRED_TOOLS,
     SERVER_VERSION,
@@ -81,7 +82,10 @@ mcp = FastMCP(
         "and safe normalization: hamza, ى/ي, and ة/ه remain distinct. Broad "
         "normalization is discovery-only and its evidence relation must be "
         "inspected. Counts declare count_basis and never inherit their meaning "
-        "silently from retrieval mode. A zero result is not proof of absence; "
+        "silently from retrieval mode. retrieval_hit_count, "
+        "literal_matching_pages, and literal_occurrences are distinct; a zero "
+        "literal phrase count can coexist with broader retrieval results. Long "
+        "questions may expose a deterministic reformulated_query. A zero result is not proof of absence; "
         "inspect diagnostics. "
         "For Dīwān results, bayt_from and bayt_to are page-scoped; use "
         "qasida_bayt_count for the complete qaṣīda length. TOC/fihris hits "
@@ -118,6 +122,7 @@ if mcp._mcp_server.version != SERVER_VERSION:  # pragma: no cover - fail loud
 
 
 @mcp.tool(structured_output=True, meta=TOOL_META)
+@safe_tool_call
 def list_books(include_legend: bool = False) -> dict[str, Any]:
     """List books in a compact catalogue, ordered by source authority.
 
@@ -166,6 +171,7 @@ def list_books(include_legend: bool = False) -> dict[str, Any]:
 
 
 @mcp.tool(structured_output=True, meta=TOOL_META)
+@safe_tool_call
 def get_book(book_id: str) -> dict[str, Any]:
     """Get the metadata and provenance of one book.
 
@@ -188,6 +194,7 @@ def get_book(book_id: str) -> dict[str, Any]:
 
 
 @mcp.tool(structured_output=True, meta=TOOL_META)
+@safe_tool_call
 def get_page(
     book_id: str,
     seq: int,
@@ -270,6 +277,7 @@ def get_page(
 
 
 @mcp.tool(structured_output=True, meta=TOOL_META)
+@safe_tool_call
 def get_passage(
     match_id: Optional[str] = None,
     match_ids: Optional[list[str]] = None,
@@ -279,6 +287,8 @@ def get_passage(
     qasida_number: Optional[int] = None,
     include_parallels: bool = False,
     parallel_limit: int = 5,
+    context_mode: Literal["bounded", "paragraph"] = "bounded",
+    max_chars: int = 12000,
 ) -> dict[str, Any]:
     """Read one or several bounded passages returned by search_library.
 
@@ -287,13 +297,21 @@ def get_passage(
     provides full qaṣīda context without adding a sixth tool: pass
     qasida_number, or pass a canonical bayt stable_id. Parallel candidates are
     explicitly labelled unverified and never presented as citation-safe.
+
+    Set context_mode="paragraph" to request the complete source paragraph
+    containing the match. If it exceeds max_chars, the response declares the
+    safety cap and returns a bounded excerpt containing the evidence. Passing
+    qasida_number always requests the complete structured qaṣīda.
     """
     context_chars = max(200, min(context_chars, 2000))
     if qasida_number is not None:
         result = db.get_qasida(int(qasida_number))
         return result or {"error": f"no qasida {qasida_number} in b14"}
     if stable_id:
-        result = db.get_bayt(stable_id, context_chars=context_chars)
+        result = db.get_bayt(
+            stable_id, context_chars=context_chars, context_mode=context_mode,
+            max_chars=max_chars,
+        )
         if result is None:
             return {"error": f"invalid or unknown stable_id '{stable_id}'"}
         if include_parallels:
@@ -309,7 +327,8 @@ def get_passage(
         for item in match_ids[:20]:
             match = db._MATCH_ID_RE.fullmatch(item or "")
             result = (db.get_passage(match.group(1), int(match.group(2)), query=query,
-                      context_chars=context_chars, match_start=int(match.group(3)))
+                      context_chars=context_chars, match_start=int(match.group(3)),
+                      context_mode=context_mode, max_chars=max_chars)
                       if match else None)
             results.append(result or {"error": f"invalid or unknown match_id '{item}'"})
         return {"returned_count": len(results), "results": results}
@@ -319,9 +338,14 @@ def get_passage(
         match = db._MATCH_ID_RE.fullmatch(match_id or "")
         result = (db.get_passage(match.group(1), int(match.group(2)), query=query,
                                  context_chars=context_chars,
-                                 match_start=int(match.group(3))) if match else None)
+                                 match_start=int(match.group(3)),
+                                 context_mode=context_mode,
+                                 max_chars=max_chars) if match else None)
     else:
-        result = db.get_passage_by_match_id(match_id, context_chars)
+        result = db.get_passage_by_match_id(
+            match_id, context_chars, context_mode=context_mode,
+            max_chars=max_chars,
+        )
     if result is None:
         return {"error": f"invalid or unknown match_id '{match_id}'"}
     if include_parallels and result.get("stable_id"):
@@ -334,7 +358,70 @@ def get_passage(
     return result
 
 
+def _explicit_count_details(
+    *, stats: dict, raw_queries: list[str], effective_match_mode: str,
+    rows: list[dict], offset: int, has_more: bool, book_ids=None,
+    source_code=None, page_from=None, page_to=None, qasida_number=None,
+    min_tier=None, whole_word: bool = True, operator: str = "OR",
+) -> dict[str, Any]:
+    """Separate the retrieval result count from the literal source census."""
+    count_args = dict(
+        book_ids=book_ids, source_code=source_code,
+        page_from=page_from, page_to=page_to,
+        qasida_number=qasida_number, min_tier=min_tier,
+        whole_word=whole_word,
+    )
+    literal = (
+        stats if stats["count_basis"] == "phrase"
+        else db.search_stats(
+            raw_queries, operator=operator, count_basis="phrase", **count_args,
+        )
+    )
+    relation = "exact"
+    scope = "matching_pages_before_ranking_and_score_filter"
+    if effective_match_mode == "exact":
+        retrieval_count = literal["matching_pages"]
+    elif effective_match_mode == "terms":
+        retrieval_count = db.search_stats(
+            raw_queries, operator=operator, count_basis="term_bag", **count_args,
+        )["matching_pages"]
+    elif effective_match_mode == "reformulated":
+        reformulations = db.controlled_reformulations(raw_queries)
+        retrieval_count = (
+            db.search_stats(
+                reformulations, operator="OR", count_basis="phrase", **count_args,
+            )["matching_pages"]
+            if reformulations else 0
+        )
+        scope = "declared_reformulation_phrase_pages_before_ranking_and_score_filter"
+    elif effective_match_mode == "lexeme":
+        lexeme_rows = db.search(
+            queries=raw_queries, operator=operator, search_mode="lexeme",
+            ranking="book_order", diversify_books=False, limit=10000,
+            offset=0, min_score=0.0, **count_args,
+        )
+        retrieval_count = len({(row["book_id"], row["seq"]) for row in lexeme_rows})
+        scope = "lexeme_matching_pages_before_ranking_and_score_filter"
+    else:
+        # Hybrid and semantic retrieval apply a calibrated evidence threshold.
+        # The search path intentionally fetches only one page beyond the
+        # requested limit, so label that bounded count honestly.
+        retrieval_count = offset + len(rows)
+        relation = "lower_bound" if has_more else "exact"
+        scope = "eligible_ranked_pages_after_score_filter"
+    return {
+        "retrieval_hit_count": int(retrieval_count),
+        "retrieval_hit_count_relation": relation,
+        "retrieval_hit_count_scope": scope,
+        "literal_matching_pages": int(literal["matching_pages"]),
+        "literal_occurrences": int(literal["matching_occurrences"]),
+        "census_matching_pages": int(stats["matching_pages"]),
+        "census_occurrences": int(stats["matching_occurrences"]),
+    }
+
+
 @mcp.tool(structured_output=True, meta=TOOL_META)
+@safe_tool_call
 def search_library(
     query: Optional[str] = None,
     queries: Optional[list[str]] = None,
@@ -418,6 +505,8 @@ def search_library(
             short words such as سر and لا never match inside longer tokens.
         count_basis: phrase (default) or term_bag. This determines counts
             independently of match_mode, and is always returned with the census.
+            Count responses distinguish retrieval_hit_count from
+            literal_matching_pages and literal_occurrences.
         min_score: Filter by the declared evidence score before pagination.
             Exact textual presence is independent of BM25 magnitude: a common
             literal hit can legitimately have score 0.0. Leave this at 0.0 for
@@ -507,6 +596,8 @@ def search_library(
                 qasida_number=qasida_number, min_score=min_score,
                 min_tier=min_tier, whole_word=whole_word,
             )
+            if rows:
+                effective_match_mode = "semantic_auto"
         # A semantic index is never allowed to turn a lexical fallback into a
         # silent zero. If fusion returns nothing, run the same deterministic
         # lexical cascade used when vectors are absent.
@@ -527,6 +618,17 @@ def search_library(
                 rows = candidate_fn(**probe)
                 if rows:
                     break
+        if not rows:
+            effective_match_mode = "reformulated"
+            rows = db.reformulated_search(
+                query=query, queries=raw_queries, operator=operator,
+                ranking=ranking, book_ids=book_ids, source_code=source_code,
+                page_from=page_from, page_to=page_to, limit=limit + 1,
+                offset=offset, context_chars=context_chars,
+                diversify_books=diversify_books, max_per_book=max_per_book,
+                qasida_number=qasida_number, min_tier=min_tier,
+                whole_word=whole_word, min_score=min_score,
+            )
     search_fn = db.hybrid_search if effective_match_mode == "hybrid" else db.search
     search_args = dict(
         query=query,
@@ -553,6 +655,16 @@ def search_library(
 
     has_more = len(rows) > limit
     results = rows[:limit]
+    count_details = None
+    if include_counts:
+        count_details = _explicit_count_details(
+            stats=stats, raw_queries=raw_queries,
+            effective_match_mode=effective_match_mode, rows=rows,
+            offset=offset, has_more=has_more, book_ids=book_ids,
+            source_code=source_code, page_from=page_from, page_to=page_to,
+            qasida_number=qasida_number, min_tier=min_tier,
+            whole_word=whole_word, operator=operator,
+        )
     expand_top = max(0, min(expand_top, len(results)))
     expand_chars = max(200, min(expand_chars, 2000))
     attach_expanded_passages(
@@ -572,6 +684,8 @@ def search_library(
             stats=stats,
             ultra=(mode == "ultra_compact"),
         )
+        if count_details:
+            payload.update(count_details)
         if (
             include_counts and total_hits == 0 and len(raw_queries) == 1
             and qasida_number is None
@@ -580,19 +694,19 @@ def search_library(
             if suggestions:
                 payload["suggestions"] = suggestions
         if include_counts and min_score > 0.0:
-            payload["total_hits_scope"] = "lexical_matches_before_score_filter"
+            payload["census_count_scope"] = "lexical_matches_before_score_filter"
         payload["ranking_policy"] = db.ranking_policy(ranking)
         payload["effective_match_mode"] = effective_match_mode
         payload["whole_word"] = bool(whole_word)
         payload["normalization_level"] = (
-            "broad_discovery" if effective_match_mode in {"hybrid", "lexeme"}
+            "broad_discovery" if effective_match_mode in {"hybrid", "lexeme", "reformulated", "semantic_auto"}
             else "safe"
         )
         if not results:
             payload["diagnostics"] = db.zero_result_diagnostics(
                 raw_queries,
                 attempted_modes=(
-                    ["exact", "terms", "hybrid"]
+                    ["exact", "terms", "hybrid", "reformulated"]
                     if match_mode == "auto" else [effective_match_mode]
                 ),
                 book_ids=book_ids, source_code=source_code,
@@ -618,7 +732,7 @@ def search_library(
         "min_tier": min_tier,
         "whole_word": bool(whole_word),
         "normalization_level": (
-            "broad_discovery" if effective_match_mode in {"hybrid", "lexeme"}
+            "broad_discovery" if effective_match_mode in {"hybrid", "lexeme", "reformulated", "semantic_auto"}
             else "safe"
         ),
         "returned_count": len(results),
@@ -630,11 +744,9 @@ def search_library(
         "results": results,
     }
     if include_counts:
-        response["total_hits"] = total_hits
-        response["total_hits_unit"] = "matching_pages"
+        response.update(count_details or {})
         if min_score > 0.0:
-            response["total_hits_scope"] = "lexical_matches_before_score_filter"
-        response["total_occurrences"] = stats["matching_occurrences"]
+            response["census_count_scope"] = "lexical_matches_before_score_filter"
         response["count_basis"] = stats["count_basis"]
         response["count_semantics"] = stats
         response["per_query"] = stats["per_query"]
@@ -642,7 +754,7 @@ def search_library(
         response["diagnostics"] = db.zero_result_diagnostics(
             raw_queries,
             attempted_modes=(
-                ["exact", "terms", "hybrid"]
+                ["exact", "terms", "hybrid", "reformulated"]
                 if match_mode == "auto" else [effective_match_mode]
             ),
             book_ids=book_ids, source_code=source_code,
