@@ -40,6 +40,7 @@ from mcp.server.transport_security import TransportSecuritySettings
 
 from app.core.text_format import format_page, repair_quran_display_brackets
 from app.core.resilience import safe_tool_call
+from app.core.observability import candidate_snapshot
 from app.mcp_contract import (
     REQUIRED_TOOLS,
     SERVER_VERSION,
@@ -48,6 +49,7 @@ from app.mcp_contract import (
     TOOL_META,
     contract_metadata,
     validate_registered_tools,
+    bind_callable_schema,
 )
 from app.services import library_db as db
 from app.services.compact_response import attach_expanded_passages, compact_search_response
@@ -163,6 +165,13 @@ def list_books(include_legend: bool = False) -> dict[str, Any]:
         "corpus_contract": corpus_contract_snapshot(),
     }
 
+    from app.services import semantic_search as semantic
+    result["active_indexes"] = {
+        "lexical": "sqlite_fts5_safe",
+        "lexeme_policy": db.LEXEME_POLICY_VERSION,
+        "semantic_active": semantic.semantic_available(),
+        "root_coverage_meaning": "Tokens with a curated root annotation, not a retrieval recall percentage. Lexeme retrieval does not require root annotations.",
+    }
     if include_legend:
         result["grades"] = db.get_grades()
         result["tiers"] = db.get_tiers()
@@ -386,14 +395,9 @@ def _explicit_count_details(
             raw_queries, operator=operator, count_basis="term_bag", **count_args,
         )["matching_pages"]
     elif effective_match_mode == "reformulated":
-        reformulations = db.controlled_reformulations(raw_queries)
-        retrieval_count = (
-            db.search_stats(
-                reformulations, operator="OR", count_basis="phrase", **count_args,
-            )["matching_pages"]
-            if reformulations else 0
-        )
-        scope = "declared_reformulation_phrase_pages_before_ranking_and_score_filter"
+        retrieval_count = offset + len(rows) if rows else 0
+        relation = "lower_bound"
+        scope = "eligible_candidates_after_intent_and_score_filter"
     elif effective_match_mode == "lexeme":
         lexeme_rows = db.search(
             queries=raw_queries, operator=operator, search_mode="lexeme",
@@ -406,8 +410,8 @@ def _explicit_count_details(
         # Hybrid and semantic retrieval apply a calibrated evidence threshold.
         # The search path intentionally fetches only one page beyond the
         # requested limit, so label that bounded count honestly.
-        retrieval_count = offset + len(rows)
-        relation = "lower_bound" if has_more else "exact"
+        retrieval_count = offset + len(rows) if rows else 0
+        relation = "lower_bound"
         scope = "eligible_ranked_pages_after_score_filter"
     return {
         "retrieval_hit_count": int(retrieval_count),
@@ -501,6 +505,8 @@ def search_library(
             exact/lexeme, proximity plus BM25 for terms, fixed evidence fusion
             for hybrid, and cosine/fusion scores for semantic auto retrieval.
             Higher means stronger evidence under the declared score_kind.
+        search_mode: Legacy alias. With match_mode=auto it selects the explicit
+            legacy mode. Contradictory explicit selectors are rejected.
         whole_word: Defaults true. Exact/terms/count evidence is token-anchored;
             short words such as سر and لا never match inside longer tokens.
         count_basis: phrase (default) or term_bag. This determines counts
@@ -540,6 +546,12 @@ def search_library(
         book_ids = sorted(set(book_ids or scoped_ids) & set(scoped_ids)) if book_ids else scoped_ids
         if not book_ids:
             return {"error": "book_ids and book_scope do not overlap"}
+
+    aliases = {"exact_phrase": "exact", "all_words": "terms", "any_word": "terms", "lexeme": "lexeme"}
+    if search_mode is not None:
+        if match_mode != "auto" and match_mode != aliases[search_mode]:
+            raise ValueError("search_mode conflicts with match_mode; use one mode selector")
+        match_mode = aliases[search_mode]
 
     resolved_search_mode = search_mode or {
         "auto": "exact_phrase",
@@ -665,6 +677,24 @@ def search_library(
             qasida_number=qasida_number, min_tier=min_tier,
             whole_word=whole_word, operator=operator,
         )
+    completeness = None
+    if include_counts and effective_match_mode in {"exact", "terms", "lexeme"}:
+        completeness = db.retrieval_completeness(
+            raw_queries, resolved_search_mode, operator=operator,
+            whole_word=whole_word, book_ids=book_ids, source_code=source_code,
+            page_from=page_from, page_to=page_to, qasida_number=qasida_number,
+            min_tier=min_tier,
+        )
+
+    if include_counts and effective_match_mode == "hybrid" and candidate_snapshot() is not None:
+        scope = dict(book_ids=book_ids, source_code=source_code, page_from=page_from,
+                     page_to=page_to, qasida_number=qasida_number, min_tier=min_tier)
+        completeness = db.literal_inclusion_report(raw_queries, candidate_snapshot(),
+            operator=operator, whole_word=whole_word, **scope)
+        completeness["per_query"] = [{"query": q, **db.literal_inclusion_report(
+            [q], candidate_snapshot(), whole_word=whole_word, **scope)} for q in raw_queries]
+        completeness["per_query_scope"] = "inclusion_in_combined_candidate_union"
+
     expand_top = max(0, min(expand_top, len(results)))
     expand_chars = max(200, min(expand_chars, 2000))
     attach_expanded_passages(
@@ -714,6 +744,13 @@ def search_library(
                 qasida_number=qasida_number, min_tier=min_tier,
                 whole_word=whole_word,
             )
+        if completeness:
+            payload["retrieval_completeness"] = completeness
+            if completeness["status"] == "warning":
+                payload.setdefault("diagnostics", {}).update({
+                    "literal_inclusion_warning": True,
+                    "message": "Eligible literal pages are missing before pagination; inspect retrieval_completeness.",
+                })
         return payload
 
     primary_hits = sum(
@@ -769,5 +806,6 @@ def search_library(
 # A missing decorator, unexpected tool, or stale conditional registration now
 # prevents the application from starting instead of silently shipping drift.
 DISCOVERABLE_TOOLS = validate_registered_tools(mcp)
+bind_callable_schema(mcp)
 
 app = mcp.streamable_http_app()

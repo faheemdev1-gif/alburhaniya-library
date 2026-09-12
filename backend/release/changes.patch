@@ -1,0 +1,2319 @@
+--- /dev/null
++++ b/README.md
+@@ -0,0 +1,14 @@
++# Burhaniya library backend
++
++See [RELEASE_NOTES.md](RELEASE_NOTES.md) for the 2.6.0 fixes, evidence, remaining
++editorial work and deployment instructions.
++
++```bash
++python -m pip install -r requirements.txt
++python scripts/build_index.py
++python scripts/run_regression_suite.py
++python -m uvicorn app.main:app --host 0.0.0.0 --port 8000
++```
++
++The MCP endpoint is `/mcp/`. The database is generated; source text and optional
++semantic artifacts are included. Semantic search remains disabled by default.
+--- /dev/null
++++ b/RELEASE_NOTES.md
+@@ -0,0 +1,65 @@
++# Al Burhania connector 2.6.0
++
++This source release addresses the two supplied September 2026 assessments.
++Tool contract: **8.0**, identifier **alburhaniya-tools-v8**, five tools.
++The uploaded source is sufficient for local implementation and corpus testing.
++This package has **not been deployed to the user's production service**.
++
++## Changes and evidence
++
++| Finding | Implementation / verification |
++|---|---|
++| D-1: طمأنينة silently missing | Lexeme expansion maps broad forms to actual safe-index spellings and unions article-only literal forms. All 14 literal pages remain included; 20 expanded pages are found. Literal census remains 16 occurrences. No speculative root dictionary expansion. |
++| D-2: wrong or empty multi-query terms | Term attribution is constructed from the selected evidence span, with selected queries and scope declared. One match object supplies both offsets. Reordered alternatives, pagination and qasida 91/bayt 10 are regression gates. Strict terms OR alternatives are evaluated independently. |
++| Partial omissions | Identity-based inclusion audits compare eligible pages before ranking, score thresholds and pagination. Reports include missing identities (bounded to 20), counts and per-query diagnostics when include_counts=true. Hybrid audits inspect its actual combined candidate set; exact candidates are no longer truncated before hybrid ranking. Equal-count substitution is a seeded test. |
++| Additional confirmed spelling defect | Safe matching now recognises Persian Kaf variants already normalized by the index. Independent source counting recovered two previously missed شكر occurrences. |
++| Complete context | Callable get_passage exposes paragraph mode; adjacent prose pages are assembled using source blank lines. Each segment retains source offsets and citations; the original locator remains unchanged. The character/page caps and structural stops explicitly declare incomplete context. No claim of linguistic paragraph certainty beyond the declared source-boundary policy. |
++| D-3: contract clarity | Application 2.6.0 and contract 8.0 have distinct meanings. Every tool response carries release/contract metadata and request ID; successful responses also carry timings and attempts. Capability and actual callable-schema digests are distinguished. Startup validates advertised parameters and paragraph mode against the callable schema. |
++| Conflicting modes | An explicit legacy search_mode selects its equivalent when match_mode=auto. Conflicting explicit selectors return invalid_request. |
++| Latency / reliability | Factored phrase regexes avoid exponentially repeated whole phrases; bounded regex caching and unique-vocabulary normalization reduce repeated work. Phase timings separate candidate SQL, evidence checks, ranking, census and audit (nested timings are inclusive). Transient SQLite reads retain at most three attempts; non-transient database errors are not marked retryable. |
++| Broad-question precision | Reformulations preserve original queries, expose intent coverage and a discovery warning, and require at least two original content terms. Livestock poetry no longer answers the scoped livestock-zakat question. Expert top-five relevance is not claimed as measured. |
++| Payload and provenance | Ultra-compact match maps omit duplicate surface/broad fields while retaining corpus form, safe/query normalization, relation and warnings. Book provenance is preserved in the response. Heuristic evidence-type labels explicitly disclose unverified confidence. |
++| Index status | Catalogue reports active semantic status, the lexeme policy version and the meaning of root annotation counts. Curated-root coverage is not a recall score. |
++
++The actual cause did **not** require altering the conservative source index or
++inventing Arabic roots. `library.db` is still reproducibly built from the supplied
++source files. Source books and their attribution records are unchanged.
++
++## Validation
++
++- `release/regression-results.json`: full regression gate results.
++- `release/protocol-verification.json`: actual local HTTP MCP discovery and execution tests, including all five tools and the corpus contract.
++- `assessment-verification.json`: 36 frozen, independent source-token census cases (28 development, 8 holdout), plus five runs each of three fixed queries.
++- `tests/data/assessment_literal_cases.json`: expected page identities and occurrence counts, computed independently of FTS/retrieval code under the documented article-only policy.
++- The existing structural controls preserve 43 books / 6,935 pages, b38 edition handling, 95 qasidas and 2,682 abyat. Added checks sweep every stored bayt's page offsets.
++- The optional real-vector integration test is skipped because local semantic search is disabled. Mocked semantic safety tests still run. No claim of live vector-model verification.
++
++The 36 cases are **literal retrieval checks**, not 36 expert-labelled research
++questions. A 30–50-question expert relevance benchmark with reviewed passages and
++intent-preservation labels remains a separate editorial task. Timings are local
++Python-call measurements, exclude network/production load, and are not uptime
++estimates or a controlled production before/after comparison.
++
++## Deployment
++
++1. Replace the corresponding project files with this archive's source. For a selective update, `release/changes.patch` contains the Python changes and the new frozen fixture. Keep your deployment environment settings.
++2. In the project root, install the existing `requirements.txt`, then run:
++   ```bash
++   python scripts/build_index.py
++   python scripts/run_regression_suite.py
++   python scripts/verify_assessment_release.py --runs 5 --output assessment-verification.json
++   ```
++3. Use the existing Docker/Render deployment workflow. The Dockerfile already rebuilds the database and runs the regression gate. No new runtime dependency or secret is required by this patch. A full Docker image build was not executed in this workspace.
++4. After deployment, run:
++   ```bash
++   python scripts/production_mcp_regression.py https://burhaniya-library-backend.onrender.com/mcp/
++   ```
++5. Refresh the ChatGPT connector's tool schema. Confirm server 2.6.0, contract 8.0, five tools, and get_passage.context_mode including paragraph. If the client still caches the old schema, reconnect it.
++6. Clients should compare contract version and callable-schema digest between responses. A major contract change requires refreshing tools/list before the next call; minor changes are additive. `tool_count` is a count, not a version.
++
++## Work that needs additional evidence/access
++
++- **Authorship/compilers:** `release/provenance-review-queue.json` records 18 entries selected by unresolved authorship, unverified confidence or needs_review status. This broader rule is not the assessment's narrower count of 15. Title-page/colophon or authoritative catalogue evidence and a review basis are required before upgrading any entry; none was invented.
++- **Production incidents:** request IDs, timings and bounded retries are implemented. Explaining the previously observed internal error requires the corresponding production logs; they were not supplied.
++- **Production measurements/deployment:** local protocol verification passed, but production was not modified. Deployment access and post-deploy verification are still needed.
++- **Semantic quality / linguistic recall:** the safe literal inclusion property is tested. This is not proof that every morphological relative or relevant scholarly passage is recovered. Expert labels and a compatible enabled semantic index are required for those claims.
+--- /dev/null
++++ b/app/core/observability.py
+@@ -0,0 +1,41 @@
++"""Per-call timings; nested phase values are inclusive, not additive."""
++from contextvars import ContextVar
++from functools import wraps
++from time import perf_counter
++
++_phases = ContextVar('research_phases', default=None)
++
++def start_phases():
++    _candidates.set(None)
++    return _phases.set({})
++
++def phase_snapshot():
++    return {key: round(value, 2) for key, value in (_phases.get() or {}).items()}
++
++def reset_phases(token):
++    _phases.reset(token)
++
++def record_phase(name, started):
++    phases = _phases.get()
++    if phases is not None:
++        phases[name] = phases.get(name, 0.0) + (perf_counter()-started)*1000
++
++def profiled(name):
++    def decorate(function):
++        @wraps(function)
++        def wrapped(*args, **kwargs):
++            started = perf_counter()
++            try:
++                return function(*args, **kwargs)
++            finally:
++                record_phase(name, started)
++        return wrapped
++    return decorate
++
++_candidates = ContextVar('research_candidates', default=None)
++
++def record_candidates(identities):
++    _candidates.set(set(identities))
++
++def candidate_snapshot():
++    return _candidates.get()
+--- a/app/core/resilience.py
++++ b/app/core/resilience.py
+@@ -8,6 +8,7 @@
+ import sqlite3
+ import time
+ import uuid
++from app.core.observability import start_phases, phase_snapshot
+ 
+ 
+ logger = logging.getLogger(__name__)
+@@ -44,19 +45,29 @@
+     }
+     if retry_after_seconds is not None:
+         error["retry_after_seconds"] = int(retry_after_seconds)
+-    return {"error": error}
++    from app.mcp_contract import TOOL_META
++    return {"error": error, "contract": dict(TOOL_META), "request_id": current_request_id()}
+ 
+ 
+ def safe_tool_call(function):
+     """Retry transient SQLite reads and never expose raw infrastructure data."""
+     @wraps(function)
+     def wrapped(*args, **kwargs):
+-        request_id = current_request_id()
++        request_id = new_request_id()
++        started = time.perf_counter()
++        start_phases()
++        from app.mcp_contract import TOOL_META
++        def finish(payload, attempts):
++            if isinstance(payload, dict):
++                payload["contract"] = dict(TOOL_META)
++                payload["request_id"] = request_id
++                payload["timing"] = {"total_ms": round((time.perf_counter() - started) * 1000, 2), "attempts": attempts, "phases_ms": phase_snapshot(), "phase_semantics": "inclusive_nested"}
++            return payload
+         for attempt, delay in enumerate((0.0, 0.05, 0.15), start=1):
+             if delay:
+                 time.sleep(delay)
+             try:
+-                return function(*args, **kwargs)
++                return finish(function(*args, **kwargs), attempt)
+             except ValueError as exc:
+                 logger.info(
+                     "invalid tool request operation=%s request_id=%s error=%s",
+@@ -79,8 +90,8 @@
+                 return safe_error_payload(
+                     "temporary_unavailable",
+                     "The library is temporarily unavailable. Retry the request shortly.",
+-                    retryable=True,
+-                    retry_after_seconds=1,
++                    retryable=is_transient_sqlite_error(exc),
++                    retry_after_seconds=1 if is_transient_sqlite_error(exc) else None,
+                 )
+             except Exception as exc:
+                 logger.error(
+--- a/app/mcp_contract.py
++++ b/app/mcp_contract.py
+@@ -7,9 +7,9 @@
+ from typing import Any
+ 
+ 
+-SERVER_VERSION = "2.5.0"
+-TOOL_CONTRACT_VERSION = "7.0"
+-TOOL_CONTRACT_ID = "alburhaniya-tools-v6"
++SERVER_VERSION = "2.6.0"
++TOOL_CONTRACT_VERSION = "8.0"
++TOOL_CONTRACT_ID = "alburhaniya-tools-v8"
+ 
+ REQUIRED_TOOLS = frozenset({
+     "search_library",
+@@ -23,10 +23,12 @@
+     "search_library": {
+         "match_modes": ["auto", "exact", "terms", "hybrid", "lexeme"],
+         "response_modes": ["compact", "ultra_compact"],
+-        "required_parameters": [
++        "supported_parameters": [
+             "query", "queries", "book_ids", "book_scope", "qasida_number",
+             "include_counts", "count_basis", "whole_word", "min_tier",
+             "expand_top", "expand_chars", "min_score", "match_mode", "mode",
++            "operator", "limit", "offset", "source_code", "page_from", "page_to",
++            "context_chars", "search_mode", "ranking", "diversify_books", "max_per_book",
+         ],
+     },
+     "get_passage": {
+@@ -34,6 +36,8 @@
+         "parallel_candidates": True,
+         "context_modes": ["bounded", "paragraph"],
+         "default_max_chars": 12000,
++        "cross_page_context": True,
++        "max_context_pages": 12,
+     },
+     "get_page": {"default_max_chars": 20000, "declares_truncation": True},
+ }
+@@ -92,5 +96,28 @@
+         "tool_count": len(actual),
+         "tools": list(actual),
+         "schema_digest": SCHEMA_DIGEST,
++        "tool_schema_digest": TOOL_META.get("tool_schema_digest"),
++        "schema_digest_kind": "capability_manifest",
+         "schema_capabilities": SCHEMA_CAPABILITIES,
++        "compatibility_policy": "Compare tool_contract_version and schema_digest on every response. A major version change requires refreshing tools/list before the next call; minor changes are additive. tool_count is cardinality, not a version.",
+     }
++
++
++def bind_callable_schema(server: Any) -> None:
++    """Validate capabilities against tools/list and fingerprint callable schemas."""
++    tools = server._tool_manager.list_tools()
++    schemas = {tool.name: tool.parameters for tool in tools}
++    for name, capability in SCHEMA_CAPABILITIES.items():
++        properties = schemas[name].get('properties', {})
++        missing = set(capability.get('supported_parameters', [])) - properties.keys()
++        if missing:
++            raise RuntimeError(f'Advertised parameters missing from {name}: {sorted(missing)}')
++    paragraph = schemas['get_passage']['properties']['context_mode']
++    if set(paragraph.get('enum', [])) != {'bounded', 'paragraph'}:
++        raise RuntimeError('get_passage paragraph capability differs from callable schema')
++    TOOL_META['tool_schema_digest'] = hashlib.sha256(json.dumps(
++        schemas, sort_keys=True, ensure_ascii=False, separators=(',', ':'),
++    ).encode()).hexdigest()
++    for tool in tools:
++        if tool.meta is not None:
++            tool.meta.update(TOOL_META)
+--- a/app/mcp_server.py
++++ b/app/mcp_server.py
+@@ -40,6 +40,7 @@
+ 
+ from app.core.text_format import format_page, repair_quran_display_brackets
+ from app.core.resilience import safe_tool_call
++from app.core.observability import candidate_snapshot
+ from app.mcp_contract import (
+     REQUIRED_TOOLS,
+     SERVER_VERSION,
+@@ -48,6 +49,7 @@
+     TOOL_META,
+     contract_metadata,
+     validate_registered_tools,
++    bind_callable_schema,
+ )
+ from app.services import library_db as db
+ from app.services.compact_response import attach_expanded_passages, compact_search_response
+@@ -163,6 +165,13 @@
+         "corpus_contract": corpus_contract_snapshot(),
+     }
+ 
++    from app.services import semantic_search as semantic
++    result["active_indexes"] = {
++        "lexical": "sqlite_fts5_safe",
++        "lexeme_policy": db.LEXEME_POLICY_VERSION,
++        "semantic_active": semantic.semantic_available(),
++        "root_coverage_meaning": "Tokens with a curated root annotation, not a retrieval recall percentage. Lexeme retrieval does not require root annotations.",
++    }
+     if include_legend:
+         result["grades"] = db.get_grades()
+         result["tiers"] = db.get_tiers()
+@@ -386,14 +395,9 @@
+             raw_queries, operator=operator, count_basis="term_bag", **count_args,
+         )["matching_pages"]
+     elif effective_match_mode == "reformulated":
+-        reformulations = db.controlled_reformulations(raw_queries)
+-        retrieval_count = (
+-            db.search_stats(
+-                reformulations, operator="OR", count_basis="phrase", **count_args,
+-            )["matching_pages"]
+-            if reformulations else 0
+-        )
+-        scope = "declared_reformulation_phrase_pages_before_ranking_and_score_filter"
++        retrieval_count = offset + len(rows) if rows else 0
++        relation = "lower_bound"
++        scope = "eligible_candidates_after_intent_and_score_filter"
+     elif effective_match_mode == "lexeme":
+         lexeme_rows = db.search(
+             queries=raw_queries, operator=operator, search_mode="lexeme",
+@@ -406,8 +410,8 @@
+         # Hybrid and semantic retrieval apply a calibrated evidence threshold.
+         # The search path intentionally fetches only one page beyond the
+         # requested limit, so label that bounded count honestly.
+-        retrieval_count = offset + len(rows)
+-        relation = "lower_bound" if has_more else "exact"
++        retrieval_count = offset + len(rows) if rows else 0
++        relation = "lower_bound"
+         scope = "eligible_ranked_pages_after_score_filter"
+     return {
+         "retrieval_hit_count": int(retrieval_count),
+@@ -501,6 +505,8 @@
+             exact/lexeme, proximity plus BM25 for terms, fixed evidence fusion
+             for hybrid, and cosine/fusion scores for semantic auto retrieval.
+             Higher means stronger evidence under the declared score_kind.
++        search_mode: Legacy alias. With match_mode=auto it selects the explicit
++            legacy mode. Contradictory explicit selectors are rejected.
+         whole_word: Defaults true. Exact/terms/count evidence is token-anchored;
+             short words such as سر and لا never match inside longer tokens.
+         count_basis: phrase (default) or term_bag. This determines counts
+@@ -540,6 +546,12 @@
+         book_ids = sorted(set(book_ids or scoped_ids) & set(scoped_ids)) if book_ids else scoped_ids
+         if not book_ids:
+             return {"error": "book_ids and book_scope do not overlap"}
++
++    aliases = {"exact_phrase": "exact", "all_words": "terms", "any_word": "terms", "lexeme": "lexeme"}
++    if search_mode is not None:
++        if match_mode != "auto" and match_mode != aliases[search_mode]:
++            raise ValueError("search_mode conflicts with match_mode; use one mode selector")
++        match_mode = aliases[search_mode]
+ 
+     resolved_search_mode = search_mode or {
+         "auto": "exact_phrase",
+@@ -665,6 +677,24 @@
+             qasida_number=qasida_number, min_tier=min_tier,
+             whole_word=whole_word, operator=operator,
+         )
++    completeness = None
++    if include_counts and effective_match_mode in {"exact", "terms", "lexeme"}:
++        completeness = db.retrieval_completeness(
++            raw_queries, resolved_search_mode, operator=operator,
++            whole_word=whole_word, book_ids=book_ids, source_code=source_code,
++            page_from=page_from, page_to=page_to, qasida_number=qasida_number,
++            min_tier=min_tier,
++        )
++
++    if include_counts and effective_match_mode == "hybrid" and candidate_snapshot() is not None:
++        scope = dict(book_ids=book_ids, source_code=source_code, page_from=page_from,
++                     page_to=page_to, qasida_number=qasida_number, min_tier=min_tier)
++        completeness = db.literal_inclusion_report(raw_queries, candidate_snapshot(),
++            operator=operator, whole_word=whole_word, **scope)
++        completeness["per_query"] = [{"query": q, **db.literal_inclusion_report(
++            [q], candidate_snapshot(), whole_word=whole_word, **scope)} for q in raw_queries]
++        completeness["per_query_scope"] = "inclusion_in_combined_candidate_union"
++
+     expand_top = max(0, min(expand_top, len(results)))
+     expand_chars = max(200, min(expand_chars, 2000))
+     attach_expanded_passages(
+@@ -714,6 +744,13 @@
+                 qasida_number=qasida_number, min_tier=min_tier,
+                 whole_word=whole_word,
+             )
++        if completeness:
++            payload["retrieval_completeness"] = completeness
++            if completeness["status"] == "warning":
++                payload.setdefault("diagnostics", {}).update({
++                    "literal_inclusion_warning": True,
++                    "message": "Eligible literal pages are missing before pagination; inspect retrieval_completeness.",
++                })
+         return payload
+ 
+     primary_hits = sum(
+@@ -769,5 +806,6 @@
+ # A missing decorator, unexpected tool, or stale conditional registration now
+ # prevents the application from starting instead of silently shipping drift.
+ DISCOVERABLE_TOOLS = validate_registered_tools(mcp)
++bind_callable_schema(mcp)
+ 
+ app = mcp.streamable_http_app()
+--- a/app/services/compact_response.py
++++ b/app/services/compact_response.py
+@@ -38,6 +38,10 @@
+                 "title": row["book_title"], "tier": row["source_tier"],
+                 "am": row.get("authorship_mode"),
+                 "ac": row.get("attribution_confidence"),
++                "source": row.get("source_code"),
++                "source_author": row.get("source_author"),
++                "compiler": row.get("compiler"),
++                "provenance_status": row.get("provenance_status"),
+             })
+             hit = {
+                 "b": row["book_id"], "s": row["seq"],
+@@ -88,8 +92,16 @@
+                 hit["semantic_score"] = row["semantic_score"]
+                 hit["citation_verified"] = bool(row.get("citation_verified"))
+                 hit["verification_required"] = bool(row.get("verification_required"))
+-            if row.get("matched_terms"):
+-                hit["matched_terms"] = row["matched_terms"]
++            if "matched_terms" in row:
++                hit["matched_terms"] = {
++                    query: {key: value for key, value in evidence.items()
++                            if key not in {"surface_form", "normalized_form"}}
++                    for query, evidence in row["matched_terms"].items()
++                }
++            for field in ("selected_queries", "match_attribution_scope", "evidence_type_method", "evidence_type_confidence", "original_queries",
++                      "intent_term_coverage", "reformulation_warning"):
++                if field in row:
++                    hit[field] = row[field]
+             if row.get("reformulated_query"):
+                 hit["reformulated_query"] = row["reformulated_query"]
+                 hit["reformulation_method"] = row.get("reformulation_method")
+@@ -151,7 +163,9 @@
+                       "stable_id_kind", "heading_id", "stable_ids", "container_id",
+                       "block_type", "evidence_type", "matched_terms",
+                       "whole_word", "normalization_level", "footnotes_excluded",
+-                      "reformulated_query", "reformulation_method"):
++                      "reformulated_query", "reformulation_method", "selected_queries",
++                      "match_attribution_scope", "evidence_type_method", "evidence_type_confidence", "original_queries",
++                      "intent_term_coverage", "reformulation_warning"):
+             if row.get(field) is not None:
+                 hit[field] = row[field]
+         if row.get("canonical_book_id") and row["canonical_book_id"] != row["book_id"]:
+--- a/app/services/library_db.py
++++ b/app/services/library_db.py
+@@ -21,6 +21,8 @@
+ import re
+ import sqlite3
+ import threading
++from time import perf_counter
++from app.core.observability import profiled, record_phase, record_candidates
+ from difflib import get_close_matches
+ from functools import lru_cache
+ from html import escape as _esc
+@@ -146,6 +148,8 @@
+ 
+ 
+ def _tolerant_char_pattern(ch: str, *, normalization_level: str = "safe") -> str:
++    if normalization_level in {"safe", "broad"} and ch == "ك":
++        return "[كکڪ]"
+     if normalization_level == "broad" and ch in _ALEF:
+         return f"[{_ALEF}]"
+     if normalization_level == "broad" and ch in _YA:
+@@ -155,6 +159,7 @@
+     return re.escape(ch)
+ 
+ 
++@lru_cache(maxsize=2048)
+ def _build_highlight_regex(
+     raw_query: str, *, whole_word: bool = True,
+     normalization_level: str = "safe",
+@@ -179,6 +184,7 @@
+     return re.compile(pattern, re.IGNORECASE)
+ 
+ 
++@lru_cache(maxsize=2048)
+ def _build_exact_variant_regex(
+     raw_query: str, *, whole_word: bool = True,
+     normalization_level: str = "safe",
+@@ -190,13 +196,20 @@
+             raw_query, whole_word=whole_word,
+             normalization_level=normalization_level,
+         )
+-    patterns = []
+-    for parts in product(*(safe_term_variants(word) for word in words)):
+-        patterns.append(_build_highlight_regex(
+-            " ".join(parts), whole_word=whole_word,
+-            normalization_level=normalization_level,
+-        ).pattern)
+-    return re.compile("(?:" + "|".join(patterns) + ")", re.IGNORECASE)
++    # Factor alternatives per word instead of compiling the Cartesian product
++    # of complete phrases (2**N for an N-word question).
++    groups = []
++    for word in words:
++        groups.append("(?:" + "|".join(
++            _build_highlight_regex(variant, whole_word=False,
++                normalization_level=normalization_level).pattern
++            for variant in safe_term_variants(word)
++        ) + ")")
++    separator = r"(?:[\s\u060c\u061b\u061f،؛؟.,:;!()\[\]{}]+)"
++    phrase = separator.join(groups)
++    if whole_word:
++        phrase = rf"(?<!{_ARABIC_BOUNDARY}){phrase}(?!{_ARABIC_BOUNDARY})"
++    return re.compile(phrase, re.IGNORECASE)
+ 
+ 
+ def _indexable_text(text: str) -> str:
+@@ -489,6 +502,38 @@
+     return sorted(stems)
+ 
+ 
++# Versioned lookup projects broad discovery forms onto spellings actually in
++# the safe index. Unlike one-character inversion, this preserves combinations
++# (for example both hamza and taa marbuta in طمأنينة) without guessed roots.
++LEXEME_POLICY_VERSION = "safe-vocabulary-union-v1"
++
++@lru_cache(maxsize=2)
++def _indexed_spellings(path: str, mtime_ns: int, size: int) -> dict[str, tuple[str, ...]]:
++    forms: dict[str, set[str]] = {}
++    tokens = set()
++    for row in _connection().execute("SELECT norm_text FROM pages"):
++        tokens.update(row[0].split())
++    for token in tokens:
++        forms.setdefault(normalize_search_text(token, level="broad"), set()).add(token)
++    return {key: tuple(sorted(value)) for key, value in forms.items()}
++
++
++def _lexeme_index_forms(query: str) -> list[str]:
++    path = os.path.abspath(get_settings().library_db_path)
++    stat = os.stat(path)
++    vocabulary = _indexed_spellings(path, stat.st_mtime_ns, stat.st_size)
++    words = safe_tokens(query)
++    if len(words) != 1:
++        raise ValueError("lexeme search supports one Arabic word per query")
++    forms = set(safe_term_variants(words[0]))
++    for stem in _lexeme_stems(words[0]):
++        for prefix in _LEXEME_PREFIXES:
++            for suffix in _LEXEME_SUFFIXES:
++                key = normalize_search_text(prefix + stem + suffix, level="broad")
++                forms.update(vocabulary.get(key, ()))
++    return sorted(forms)
++
++
+ def _query_expression(query: str, search_mode: str = "exact_phrase") -> str:
+     # Literal modes use the safe index and preserve hamza, ى/ي and ة/ه.
+     # Lexeme/hybrid expansion may generate broader candidates later, but it is
+@@ -500,14 +545,7 @@
+     if search_mode == "lexeme":
+         if len(words) != 1:
+             raise ValueError("lexeme search supports one Arabic word per query")
+-        stems = _lexeme_stems(words[0])
+-        variants = sorted({
+-            spelling
+-            for stem in stems
+-            for prefix in _LEXEME_PREFIXES
+-            for suffix in _LEXEME_SUFFIXES
+-            for spelling in _broad_index_variants(prefix + stem + suffix)
+-        })
++        variants = _lexeme_index_forms(query)
+         return " OR ".join('"' + v.replace('"', '""') + '"' for v in variants)
+     if search_mode == "exact_phrase":
+         # FTS token boundaries make معرفة and المعرفة distinct. Search both
+@@ -517,6 +555,10 @@
+         for word in words:
+             variants = set(safe_term_variants(word))
+             choices.append(sorted(variants))
++        if len(choices) > 8:
++            # A broad FTS gate only; original-text phrase validation below is
++            # authoritative for both retrieval and census.
++            return " AND ".join("(" + " OR ".join('"' + v.replace('"', '""') + '"' for v in group) + ")" for group in choices)
+         phrases = [" ".join(parts) for parts in product(*choices)]
+         return " OR ".join('"' + phrase.replace('"', '""') + '"' for phrase in phrases)
+     if search_mode == "all_words":
+@@ -533,6 +575,7 @@
+     raise ValueError("search_mode must be exact_phrase, all_words, any_word, or lexeme")
+ 
+ 
++@lru_cache(maxsize=2048)
+ def _pattern_for_query(
+     query: str, search_mode: str, *, whole_word: bool = True,
+ ) -> re.Pattern:
+@@ -559,10 +602,10 @@
+     suffix = "(?:" + "|".join(suffix_patterns) + ")?"
+     start_boundary = rf"(?<!{_ARABIC_BOUNDARY})" if whole_word else ""
+     boundary = rf"(?!{_ARABIC_BOUNDARY})" if whole_word else ""
+-    return re.compile(
+-        start_boundary + prefix + "(?:" + "|".join(stem_patterns) + ")" + suffix + boundary,
+-        re.IGNORECASE,
+-    )
++    broad = start_boundary + prefix + "(?:" + "|".join(stem_patterns) + ")" + suffix + boundary
++    literal = _build_exact_variant_regex(query, whole_word=whole_word).pattern
++    return re.compile("(?:" + literal + "|" + broad + ")", re.IGNORECASE)
++
+ 
+ 
+ def _unique_occurrence_count(text: str, patterns: list[re.Pattern]) -> int:
+@@ -613,6 +656,55 @@
+     return sql, params
+ 
+ 
++def _matching_page_ids(queries, operator="OR", search_mode="exact_phrase", whole_word=True, **scope):
++    """Eligible source identities, before ranking, thresholds or pagination."""
++    expression = _fts_expression(queries, operator, search_mode)
++    if not expression:
++        return set()
++    filters, params = _search_filters(**scope)
++    rows = _connection().execute(
++        "SELECT p.book_id,p.seq,p.text FROM pages_fts "
++        "JOIN pages p ON p.id=pages_fts.rowid JOIN books b ON b.book_id=p.book_id "
++        "WHERE pages_fts MATCH ?" + filters, [expression, *params],
++    )
++    patterns = [_pattern_for_query(q, search_mode, whole_word=whole_word) for q in queries]
++    identities = set()
++    for row in rows:
++        if search_mode in {"exact_phrase", "lexeme"}:
++            flags = [bool(p.search(_indexable_text(row["text"]))) for p in patterns]
++            if not (all(flags) if operator == "AND" else any(flags)):
++                continue
++        identities.add((row["book_id"], row["seq"]))
++    return identities
++
++
++def literal_inclusion_report(queries, candidate_ids, *, operator="OR", whole_word=True, **scope):
++    """Compare identities: equal counts cannot conceal substituted pages."""
++    literal = _matching_page_ids(queries, operator, whole_word=whole_word, **scope)
++    missing = literal - set(candidate_ids)
++    return {
++        "literal_pages": len(literal), "candidate_pages": len(candidate_ids),
++        "missing_literal_pages": len(missing),
++        "missing_literal_page_sample": [f"{book}-p{seq}" for book, seq in sorted(missing)[:20]],
++        "status": "warning" if missing else "ok",
++        "scope": "eligible_pages_before_ranking_score_filter_and_pagination",
++    }
++
++
++@profiled("completeness_audit")
++def retrieval_completeness(queries, search_mode, *, operator="OR", whole_word=True, **scope):
++    candidates = _matching_page_ids(queries, operator, search_mode, whole_word, **scope)
++    report = literal_inclusion_report(queries, candidates, operator=operator, whole_word=whole_word, **scope)
++    report["per_query"] = []
++    for query in queries:
++        ids = _matching_page_ids([query], "OR", search_mode, whole_word, **scope)
++        item = literal_inclusion_report([query], ids, whole_word=whole_word, **scope)
++        report["per_query"].append({"query": query, **item})
++    if any(item["status"] == "warning" for item in report["per_query"]):
++        report["status"] = "warning"
++    return report
++
++
+ def count_search(
+     queries: list[str], operator: str = "OR", book_ids: list[str] | None = None,
+     source_code: str | None = None, page_from: int | None = None,
+@@ -628,6 +720,7 @@
+     )["matching_pages"])
+ 
+ 
++@profiled("literal_census")
+ def search_stats(
+     queries: list[str], operator: str = "OR", book_ids: list[str] | None = None,
+     source_code: str | None = None, page_from: int | None = None,
+@@ -663,6 +756,11 @@
+              WHERE pages_fts MATCH ?""" + filters
+     rows = _connection().execute(sql, [expression, *params]).fetchall()
+     if count_basis == "phrase":
++        def eligible(row, qs, op):
++            flags = [bool(_pattern_for_query(q, "exact_phrase", whole_word=whole_word).search(_indexable_text(row["text"]))) for q in qs]
++            return all(flags) if op == "AND" else any(flags)
++        rows = [r for r in rows if eligible(r, queries, operator)]
++    if count_basis == "phrase":
+         aggregate_patterns = [
+             _pattern_for_query(q, "exact_phrase", whole_word=whole_word)
+             for q in queries
+@@ -675,6 +773,8 @@
+     for query in queries:
+         q_expression = _fts_expression([query], "OR", count_mode)
+         q_rows = _connection().execute(sql, [q_expression, *params]).fetchall()
++        if count_basis == "phrase":
++            q_rows = [r for r in q_rows if eligible(r, [query], "OR")]
+         q_patterns = (
+             [_pattern_for_query(query, "exact_phrase", whole_word=whole_word)]
+             if count_basis == "phrase"
+@@ -949,12 +1049,6 @@
+     """Explain the corpus token that satisfied every strict terms token."""
+     evidence_text = text[start:end] if start is not None and end is not None and end > start else text
+     pools = [evidence_text]
+-    if evidence_text is not text:
+-        # Offset-localized evidence is preferred, but normalization and HTML
+-        # source boundaries can place the final character of a term just
+-        # outside the minimum span. The FTS all-words gate already proves the
+-        # term occurs on this page, so fall back to the authoritative page.
+-        pools.append(text)
+     evidence: dict[str, dict[str, str]] = {}
+     for query in raw_queries:
+       for display in safe_tokens(query, drop_stopwords=True):
+@@ -1153,10 +1247,12 @@
+ 
+     requested_limit, requested_offset = limit, offset
+     requested_min = max(0.0, min(float(min_score or 0.0), 1.0))
+-    terms_pool = search_mode == "all_words"
++    terms_pool = search_mode in {"all_words", "lexeme"} or (
++        search_mode == "exact_phrase" and any(len(safe_tokens(q)) > 8 for q in raw_queries)
++    )
+     needs_post_filter = terms_pool or requested_min > 0.0
+     if terms_pool:
+-        sql_limit = min(max((offset + limit) * 20, 100), 10_000)
++        sql_limit = int(conn.execute("SELECT COUNT(*) FROM pages").fetchone()[0])
+     elif requested_min > 0.0:
+         # A score threshold is applied to stable lexical evidence, not rank.
+         # The complete 6,934-page corpus fits safely under this ceiling.
+@@ -1202,7 +1298,10 @@
+         order = _ranking_order(ranking, diversified=False)
+         sql = base + " ORDER BY " + order + " LIMIT ? OFFSET ?"
+         params.extend((sql_limit, sql_offset))
++    phase_started = perf_counter()
+     rows = conn.execute(sql, params).fetchall()
++    record_phase("candidate_sql", phase_started)
++    phase_started = perf_counter()
+ 
+     patterns = [
+         _pattern_for_query(q.strip(), search_mode, whole_word=whole_word)
+@@ -1218,7 +1317,9 @@
+         plain_text = _indexable_text(source_text)
+         matches = [(pat.search(plain_text), pat) for pat in patterns]
+         matches = [(m, pat) for m, pat in matches if m]
+-        if not matches and search_mode in {"exact_phrase", "lexeme"}:
++        if search_mode in {"exact_phrase", "lexeme"} and (
++            not matches or (operator.upper() == "AND" and len(matches) != len(patterns))
++        ):
+             # The FTS candidate and public evidence matcher must agree. Never
+             # fabricate an occurrence/snippet from an unmatched candidate.
+             continue
+@@ -1263,35 +1364,47 @@
+                 "any_word": "terms", "lexeme": "lexeme",
+             }[search_mode],
+         }
+-        first_match = min((m.start() for m, _ in matches), default=0)
++        selected = min((m for m, _ in matches), key=lambda m: (m.start(), m.end()), default=None)
++        first_match = selected.start() if selected else 0
+         if search_mode == "all_words":
+-            groups = [safe_term_variants(w) for q in raw_queries
+-                      for w in safe_tokens(q, drop_stopwords=True)]
+-            local_score, span_start, span_end = _minimum_covering_span(
+-                plain_text, groups, normalization_level="safe",
+-            )
++            alternatives = [[q] for q in raw_queries] if operator.upper() == "OR" else [raw_queries]
++            spans = []
++            for alternative in alternatives:
++                groups = [safe_term_variants(w) for q in alternative
++                          for w in (safe_tokens(q, drop_stopwords=True) or safe_tokens(q))]
++                candidate = _minimum_covering_span(plain_text, groups, normalization_level="safe")
++                spans.append((*candidate, alternative))
++            local_score, span_start, span_end, selected_queries = max(spans, key=lambda x: (x[0], -x[1]))
+             first_match = span_start
+             evidence_end = span_end
+             result["_local_score"] = local_score
+             result["occurrences"] = _unique_occurrence_count(plain_text, term_patterns)
+             result["matched_terms"] = _matched_terms(
+-                plain_text, raw_queries, span_start, span_end,
++                plain_text, selected_queries, span_start, span_end,
+             )
+             if span_end > span_start:
+                 result["snippet"] = _evidence_excerpt(
+                     plain_text, span_start, span_end, context_chars, term_patterns,
+                 )
+         elif search_mode == "lexeme" and raw_queries:
+-            result["matched_terms"] = _matched_lexeme(plain_text, raw_queries[0])
+-            evidence_end = min((m.end() for m, _ in matches), default=first_match + 1)
++            evidence_end = selected.end() if selected else first_match + 1
++            result["matched_terms"] = {}
++            for raw_query, pat in zip(raw_queries, patterns):
++                local = pat.fullmatch(plain_text[first_match:evidence_end])
++                if local:
++                    result["matched_terms"].update(_matched_lexeme(local.group(0), raw_query))
++            result["selected_queries"] = sorted(result["matched_terms"])
++            result["match_attribution_scope"] = "selected_evidence_span"
+         else:
+-            evidence_end = min((m.end() for m, _ in matches), default=first_match + 1)
++            evidence_end = selected.end() if selected else first_match + 1
+             result["matched_terms"] = _matched_literal_terms(
+                 plain_text, raw_queries, first_match, evidence_end,
+             )
+         result["evidence_type"] = evidence_type(
+             source_text, first_match, evidence_end,
+         )
++        result["evidence_type_method"] = "heuristic"
++        result["evidence_type_confidence"] = "unverified"
+         result["whole_word"] = bool(whole_word)
+         result["normalization_level"] = (
+             "broad_discovery" if search_mode == "lexeme" else "safe"
+@@ -1315,6 +1428,8 @@
+             result["highlight"] = safe_text
+             result["text"] = source_text
+         results.append(result)
++    record_phase("evidence_validation", phase_started)
++    phase_started = perf_counter()
+     for item in results:
+         raw_bm25 = item.pop("_raw_relevance", 0.0)
+         bm25_score = _bounded_bm25(raw_bm25)
+@@ -1360,11 +1475,13 @@
+         results = results[requested_offset: requested_offset + requested_limit]
+     elif requested_min > 0.0:
+         results = results[requested_offset: requested_offset + requested_limit]
++    record_phase("ranking_and_pagination", phase_started)
+     for rank, item in enumerate(results, start=requested_offset + 1):
+         item["rank"] = rank
+     return results
+ 
+ 
++@profiled("hybrid_total")
+ def hybrid_search(**kwargs) -> list[dict]:
+     """Local hybrid lexical retrieval using reciprocal-rank fusion.
+ 
+@@ -1418,7 +1535,7 @@
+     })
+     for mode, weight in (("exact_phrase", 1.0), ("all_words", 0.8), ("any_word", 0.2)):
+         call = dict(kwargs)
+-        call.update(search_mode=mode, limit=pool, offset=0, diversify_books=False)
++        call.update(search_mode=mode, limit=1000000 if mode == "exact_phrase" else pool, offset=0, diversify_books=False)
+         call.pop("query", None)
+         call.pop("min_score", None)
+         call["queries"] = concept_queries if mode == "any_word" else queries
+@@ -1431,6 +1548,7 @@
+                 mode_scores.get(key, {}).get(mode, 0.0), float(row["score"]),
+             )
+             records.setdefault(key, row)
++    record_candidates(records.keys())
+     page_texts = _page_texts(records)
+     chunk_starts: dict[tuple[str, int], int] = {}
+     chunk_ends: dict[tuple[str, int], int] = {}
+@@ -1564,6 +1682,7 @@
+     return candidates
+ 
+ 
++@profiled("reformulation_total")
+ def reformulated_search(**kwargs) -> list[dict]:
+     """Search declared evidence phrases derived from an overlong question."""
+     raw_queries = kwargs.get("queries") or ([kwargs.get("query")] if kwargs.get("query") else [])
+@@ -1576,6 +1695,7 @@
+     pool = min(max((offset + limit) * 3, 20), 100)
+     records: dict[tuple[str, int], dict] = {}
+     specificity: dict[tuple[str, int], int] = {}
++    intent_tokens = set(safe_tokens(" ".join(raw_queries), drop_stopwords=True))
+     for reformulated_query in reformulations:
+         call = dict(kwargs)
+         call.update(
+@@ -1602,6 +1722,13 @@
+             row["reformulated_query"] = reformulated_query
+             row["original_queries"] = list(raw_queries)
+             row["reformulation_method"] = "adjacent_topic_phrases_v1"
++            source_tokens = set(safe_tokens(_indexable_text(get_page(row["book_id"], row["seq"])["text"])))
++            matched_intent = intent_tokens & source_tokens
++            if len(matched_intent) < 2:
++                # A single generic noun must not answer a multi-part question.
++                continue
++            row["intent_term_coverage"] = round(len(matched_intent) / max(1, len(intent_tokens)), 4)
++            row["reformulation_warning"] = "Topic discovery; verify the passage answers the original question."
+             records[key] = row
+             specificity[key] = candidate_specificity
+ 
+@@ -1612,12 +1739,14 @@
+     elif ranking == "primary_first":
+         ordered.sort(
+             key=lambda row: (
++                -row.get("intent_term_coverage", 0),
+                 -specificity[(row["book_id"], row["seq"])],
+                 *primary_first_sort_key(row),
+             )
+         )
+     else:
+         ordered.sort(key=lambda row: (
++            -row.get("intent_term_coverage", 0),
+             -specificity[(row["book_id"], row["seq"])],
+             -float(row["score"]), row["source_tier"], row["book_id"], row["seq"],
+         ))
+@@ -1674,6 +1803,80 @@
+     return capped_start, capped_end, True
+ 
+ 
++def _cross_page_paragraph(page, match_start, match_end, max_chars, max_pages=12):
++    """Join source paragraphs across adjacent prose pages, with honest caps.
++
++    Blank lines are the declared source boundary policy. A TOC or structured
++    Diwan boundary is never guessed to be a prose continuation.
++    """
++    original = _indexable_text(page["text"])
++    left, right = _complete_paragraph_window(original, match_start, match_end)
++    segments = [(page, left, right, original[left:right])]
++    left_done = left > 0 or page["seq"] == 1
++    right_done = right < len(original)
++    stop_reason = None
++    for direction in (-1, 1):
++        done = left_done if direction == -1 else right_done
++        while not done:
++            if len(segments) >= max_pages or sum(len(x[3]) for x in segments) >= max_chars:
++                stop_reason = "page_or_character_cap"
++                break
++            edge = segments[0][0] if direction == -1 else segments[-1][0]
++            adjacent = get_page(page["book_id"], edge["seq"] + direction)
++            if adjacent is None:
++                done = True
++                break
++            if (page.get("qasida_number") is not None or adjacent.get("qasida_number") is not None
++                    or page.get("block_type") == "toc" or adjacent.get("block_type") == "toc"):
++                stop_reason = "structural_boundary"
++                break
++            text = _indexable_text(adjacent["text"])
++            boundary = text.rfind("\n\n") if direction == -1 else text.find("\n\n")
++            a, b = ((boundary + 2 if boundary >= 0 else 0), len(text)) if direction == -1 else (0, boundary if boundary >= 0 else len(text))
++            segment = (adjacent, a, b, text[a:b])
++            if direction == -1:
++                segments.insert(0, segment)
++            else:
++                segments.append(segment)
++            done = boundary >= 0
++        if direction == -1:
++            left_done = done
++        else:
++            right_done = done
++    joined = "\n".join(segment[3] for segment in segments)
++    evidence_offset = 0
++    for source, a, b, text in segments:
++        if source["seq"] == page["seq"]:
++            evidence_offset += match_start - a
++            break
++        evidence_offset += len(text) + 1
++    a, b, capped = _cap_context_window(joined, 0, len(joined), evidence_offset,
++                                      evidence_offset + max(1, match_end-match_start), max_chars)
++    citations = []
++    cursor = 0
++    for source, start, end, text in segments:
++        lo, hi = max(a, cursor), min(b, cursor + len(text))
++        if hi > lo:
++            citations.append({"book_id": source["book_id"], "seq": source["seq"],
++                "printed_page": source.get("printed_page"), "citation_label": source["citation_label"],
++                "source_start": start + lo - cursor, "source_end": start + hi - cursor,
++                "passage_start": lo - a, "passage_end": hi - a})
++        cursor += len(text) + 1
++    complete = left_done and right_done and not capped
++    return {"passage": joined[a:b], "context_segments": citations,
++        "complete_paragraph": complete,
++        "context_scope": "complete_paragraph" if complete else "partial_paragraph",
++        "context_boundary_policy": "source_blank_lines_across_adjacent_prose_pages",
++        "context_cap_applied": capped or stop_reason == "page_or_character_cap",
++        "context_stop_reason": stop_reason if not complete else None,
++        "context_max_chars": max_chars, "context_max_pages": max_pages,
++        "cross_page": len(citations) > 1, "truncated": not complete,
++        "original_match": {"book_id": page["book_id"], "seq": page["seq"],
++            "start": match_start, "end": match_end},
++        "passage_evidence_span": {"start": evidence_offset-a,
++                                  "end": min(b-a, evidence_offset-a+max(1,match_end-match_start))}}
++
++
+ _MATCH_ID_RE = re.compile(r"^(b\d+)-p(\d+)-c(\d+)$")
+ 
+ 
+@@ -1691,7 +1894,7 @@
+         return None
+     pattern = _build_highlight_regex(query.strip()) if query else None
+     text = page["text"]
+-    match = pattern.search(text) if pattern else None
++    match = (pattern.match(text, match_start) if match_start is not None else pattern.search(text)) if pattern else None
+     complete_paragraph = False
+     context_cap_applied = False
+     if match is None and match_start is not None:
+@@ -1764,6 +1967,14 @@
+         ),
+     }.items() if value is not None}
+     result.update(identity)
++    if context_mode == "paragraph":
++        original_start = match.start() if match else int(match_start or 0)
++        original_end = match.end() if match else original_start + 1
++        result.update(_cross_page_paragraph(page, original_start, original_end, max_chars))
++        result["context_offsets_basis"] = "unhighlighted_passage"
++        result["original_match_scope"] = "query_span" if match else "start_anchor"
++        if pattern:
++            result["passage"], result["occurrences"] = _highlight(result["passage"], pattern)
+     return result
+ 
+ 
+--- /dev/null
++++ b/scripts/verify_assessment_release.py
+@@ -0,0 +1,65 @@
++#!/usr/bin/env python3
++"""Fixed-source inclusion gates and repeatable local MCP query measurements."""
++import argparse
++import json
++import math
++import os
++import sys
++import time
++from pathlib import Path
++ROOT = Path(__file__).resolve().parent.parent
++sys.path.insert(0, str(ROOT))
++os.chdir(ROOT)
++from app.services import library_db as db
++from app.mcp_server import search_library, get_passage, mcp
++from app.mcp_contract import TOOL_META, bind_callable_schema
++
++def main():
++    parser = argparse.ArgumentParser()
++    parser.add_argument('--runs', type=int, default=5)
++    parser.add_argument('--output', default='verification.json')
++    args = parser.parse_args()
++    cases = json.loads((ROOT/'tests/data/assessment_literal_cases.json').read_text())['cases']
++    results = []
++    for case in cases:
++        query, scope = case['query'], {'book_ids':case['book_ids']}
++        expected = set(case['expected_literal_pages'])
++        exact = db._matching_page_ids([query], **scope)
++        lexeme = db._matching_page_ids([query], search_mode='lexeme', **scope)
++        exact = {f'{b}-p{s}' for b,s in exact}
++        lexeme = {f'{b}-p{s}' for b,s in lexeme}
++        count = db.search_stats([query], **scope)['matching_occurrences']
++        passed = exact == expected and expected <= lexeme and count == case['expected_literal_occurrences']
++        results.append({'query':query,'split':case['split'],'passed':passed,
++                        'literal_pages':len(expected),'missing':sorted(expected-lexeme),
++                        'exact_symmetric_difference':sorted(expected ^ exact),
++                        'expected_occurrences':case['expected_literal_occurrences'],'actual_occurrences':count})
++    bind_callable_schema(mcp)
++    conflict = search_library(query='طمأنينة', match_mode='exact', search_mode='lexeme')
++    assert conflict['error']['code'] == 'invalid_request'
++    alias = search_library(query='طمأنينة', search_mode='lexeme', limit=3)
++    assert alias['effective_match_mode'] == 'lexeme'
++    assert alias['contract']['tool_contract_version'] == '8.0'
++    context = get_passage(match_id=alias['results'][0]['match_id'], context_mode='paragraph')
++    assert 'context_segments' in context and 'complete_paragraph' in context
++    benchmarks = []
++    for query, mode in [('طمأنينة','lexeme'),('المحافظة على الصلاة وعدم تأخيرها عن وقتها','auto'),('من ضاقت عليه المعيشة كيف ينال سعة الرزق','auto')]:
++        runs=[]
++        for _ in range(max(1,args.runs)):
++            started=time.perf_counter()
++            result=search_library(query=query,match_mode=mode,include_counts=True,limit=5)
++            runs.append({'elapsed_ms':round((time.perf_counter()-started)*1000,2),
++                         'error':result.get('error'),'returned':len(result.get('results',[])),
++                         'bytes':len(json.dumps(result,ensure_ascii=False).encode()),
++                         'timing':result.get('timing')})
++        times=sorted(r['elapsed_ms'] for r in runs)
++        benchmarks.append({'query':query,'match_mode':mode,'p50_ms':times[math.ceil(.5*len(times))-1],
++            'p95_ms':times[math.ceil(.95*len(times))-1],'errors':sum(bool(r['error']) for r in runs),'runs':runs})
++    report={'contract':TOOL_META,'fixture_cases':results,'all_passed':all(r['passed'] for r in results),
++            'benchmark_environment':'local Python calls; includes first measured call; excludes HTTP network and production load',
++            'benchmarks':benchmarks,'semantic_index_tested':False}
++    Path(args.output).write_text(json.dumps(report,ensure_ascii=False,indent=2)+'\n')
++    print(json.dumps({'fixture_passed':sum(r['passed'] for r in results),'fixture_total':len(results),
++                      'benchmarks':[{k:v for k,v in b.items() if k!='runs'} for b in benchmarks]},ensure_ascii=False))
++    raise SystemExit(0 if report['all_passed'] and not any(b['errors'] for b in benchmarks) else 1)
++if __name__=='__main__': main()
+--- /dev/null
++++ b/tests/data/assessment_literal_cases.json
+@@ -0,0 +1,1145 @@
++{
++  "basis": "Independent Unicode source-token census, article-only variants; this is not an expert relevance benchmark. Frozen before release testing.",
++  "cases": [
++    {
++      "query": "طمأنينة",
++      "book_ids": null,
++      "expected_literal_pages": [
++        "b01-p193",
++        "b07-p244",
++        "b11-p132",
++        "b16-p61",
++        "b20-p246",
++        "b21-p269",
++        "b21-p81",
++        "b22-p243",
++        "b23-p97",
++        "b25-p283",
++        "b25-p32",
++        "b41-p50",
++        "b44-p40",
++        "b45-p7"
++      ],
++      "expected_literal_occurrences": 16,
++      "split": "development"
++    },
++    {
++      "query": "إيمان",
++      "book_ids": [
++        "b14"
++      ],
++      "expected_literal_pages": [
++        "b14-p184",
++        "b14-p245",
++        "b14-p40",
++        "b14-p74"
++      ],
++      "expected_literal_occurrences": 5,
++      "split": "development"
++    },
++    {
++      "query": "مسألة",
++      "book_ids": [
++        "b14"
++      ],
++      "expected_literal_pages": [
++        "b14-p3"
++      ],
++      "expected_literal_occurrences": 2,
++      "split": "development"
++    },
++    {
++      "query": "مؤمن",
++      "book_ids": [
++        "b14"
++      ],
++      "expected_literal_pages": [],
++      "expected_literal_occurrences": 0,
++      "split": "development"
++    },
++    {
++      "query": "رحمة",
++      "book_ids": [
++        "b14"
++      ],
++      "expected_literal_pages": [
++        "b14-p104",
++        "b14-p146",
++        "b14-p159",
++        "b14-p162",
++        "b14-p2",
++        "b14-p214",
++        "b14-p216",
++        "b14-p218",
++        "b14-p221",
++        "b14-p77",
++        "b14-p81",
++        "b14-p90"
++      ],
++      "expected_literal_occurrences": 12,
++      "split": "development"
++    },
++    {
++      "query": "قلب",
++      "book_ids": [
++        "b14"
++      ],
++      "expected_literal_pages": [
++        "b14-p101",
++        "b14-p123",
++        "b14-p129",
++        "b14-p131",
++        "b14-p16",
++        "b14-p165",
++        "b14-p169",
++        "b14-p17",
++        "b14-p177",
++        "b14-p184",
++        "b14-p237",
++        "b14-p246",
++        "b14-p40",
++        "b14-p67",
++        "b14-p69",
++        "b14-p70",
++        "b14-p72",
++        "b14-p88",
++        "b14-p9"
++      ],
++      "expected_literal_occurrences": 20,
++      "split": "development"
++    },
++    {
++      "query": "معرفة",
++      "book_ids": [
++        "b14"
++      ],
++      "expected_literal_pages": [
++        "b14-p3"
++      ],
++      "expected_literal_occurrences": 1,
++      "split": "development"
++    },
++    {
++      "query": "ذكر",
++      "book_ids": [
++        "b14"
++      ],
++      "expected_literal_pages": [
++        "b14-p103",
++        "b14-p114",
++        "b14-p117",
++        "b14-p124",
++        "b14-p143",
++        "b14-p155",
++        "b14-p159",
++        "b14-p168",
++        "b14-p212",
++        "b14-p71",
++        "b14-p90"
++      ],
++      "expected_literal_occurrences": 13,
++      "split": "development"
++    },
++    {
++      "query": "يقين",
++      "book_ids": [
++        "b14"
++      ],
++      "expected_literal_pages": [
++        "b14-p13",
++        "b14-p29",
++        "b14-p41",
++        "b14-p46"
++      ],
++      "expected_literal_occurrences": 4,
++      "split": "development"
++    },
++    {
++      "query": "صبر",
++      "book_ids": null,
++      "expected_literal_pages": [
++        "b01-p110",
++        "b01-p114",
++        "b01-p139",
++        "b01-p143",
++        "b01-p147",
++        "b01-p183",
++        "b01-p37",
++        "b01-p89",
++        "b02-p5",
++        "b03-p26",
++        "b03-p48",
++        "b07-p132",
++        "b07-p143",
++        "b07-p237",
++        "b07-p25",
++        "b07-p62",
++        "b07-p96",
++        "b09-p27",
++        "b09-p3",
++        "b09-p75",
++        "b09-p76",
++        "b10-p204",
++        "b10-p231",
++        "b11-p134",
++        "b12-p112",
++        "b12-p262",
++        "b12-p263",
++        "b13-p191",
++        "b14-p22",
++        "b14-p6",
++        "b14-p93",
++        "b16-p40",
++        "b17-p29",
++        "b18-p1",
++        "b20-p110",
++        "b20-p111",
++        "b20-p151",
++        "b20-p218",
++        "b20-p3",
++        "b20-p38",
++        "b20-p4",
++        "b21-p28",
++        "b22-p146",
++        "b23-p12",
++        "b23-p189",
++        "b23-p221",
++        "b23-p232",
++        "b23-p300",
++        "b23-p32",
++        "b23-p84",
++        "b24-p125",
++        "b25-p228",
++        "b25-p325",
++        "b25-p5",
++        "b25-p64",
++        "b32-p37",
++        "b33-p20",
++        "b33-p7",
++        "b39-p227",
++        "b41-p69",
++        "b41-p70",
++        "b43-p30",
++        "b44-p12",
++        "b44-p15",
++        "b44-p24",
++        "b44-p39",
++        "b44-p44",
++        "b44-p46",
++        "b44-p48",
++        "b44-p5",
++        "b44-p51",
++        "b45-p6",
++        "b45-p8"
++      ],
++      "expected_literal_occurrences": 130,
++      "split": "development"
++    },
++    {
++      "query": "شكر",
++      "book_ids": null,
++      "expected_literal_pages": [
++        "b01-p149",
++        "b01-p173",
++        "b02-p5",
++        "b03-p25",
++        "b03-p48",
++        "b06-p8",
++        "b07-p215",
++        "b07-p62",
++        "b07-p85",
++        "b08-p12",
++        "b08-p8",
++        "b09-p3",
++        "b09-p53",
++        "b09-p69",
++        "b10-p253",
++        "b10-p54",
++        "b11-p114",
++        "b11-p80",
++        "b11-p85",
++        "b11-p86",
++        "b13-p174",
++        "b13-p39",
++        "b13-p41",
++        "b13-p42",
++        "b14-p71",
++        "b15-p17",
++        "b17-p155",
++        "b17-p177",
++        "b18-p1",
++        "b19-p16",
++        "b20-p111",
++        "b20-p224",
++        "b20-p273",
++        "b20-p278",
++        "b20-p4",
++        "b21-p15",
++        "b21-p187",
++        "b21-p189",
++        "b21-p206",
++        "b21-p255",
++        "b21-p278",
++        "b21-p279",
++        "b22-p145",
++        "b22-p146",
++        "b22-p161",
++        "b22-p182",
++        "b22-p186",
++        "b22-p222",
++        "b22-p25",
++        "b23-p105",
++        "b23-p144",
++        "b23-p58",
++        "b23-p84",
++        "b24-p175",
++        "b24-p18",
++        "b24-p237",
++        "b24-p252",
++        "b24-p303",
++        "b24-p346",
++        "b24-p72",
++        "b25-p227",
++        "b25-p323",
++        "b25-p64",
++        "b26-p60",
++        "b27-p124",
++        "b31-p121",
++        "b32-p15",
++        "b37-p137",
++        "b37-p150",
++        "b39-p141",
++        "b39-p24",
++        "b39-p288",
++        "b39-p5",
++        "b39-p65",
++        "b40-p10",
++        "b40-p20",
++        "b40-p6",
++        "b41-p20",
++        "b41-p22",
++        "b41-p23",
++        "b41-p27",
++        "b42-p121",
++        "b42-p17",
++        "b42-p36",
++        "b43-p1",
++        "b44-p15",
++        "b44-p17",
++        "b44-p19",
++        "b44-p24",
++        "b44-p50",
++        "b44-p52",
++        "b45-p12",
++        "b45-p6",
++        "b45-p9"
++      ],
++      "expected_literal_occurrences": 198,
++      "split": "development"
++    },
++    {
++      "query": "رضا",
++      "book_ids": [
++        "b14"
++      ],
++      "expected_literal_pages": [
++        "b14-p4",
++        "b14-p56",
++        "b14-p64",
++        "b14-p97"
++      ],
++      "expected_literal_occurrences": 4,
++      "split": "development"
++    },
++    {
++      "query": "إخلاص",
++      "book_ids": null,
++      "expected_literal_pages": [
++        "b01-p118",
++        "b01-p138",
++        "b01-p159",
++        "b02-p4",
++        "b03-p27",
++        "b03-p45",
++        "b03-p6",
++        "b07-p127",
++        "b07-p173",
++        "b07-p307",
++        "b07-p87",
++        "b10-p10",
++        "b10-p3",
++        "b10-p70",
++        "b11-p106",
++        "b13-p122",
++        "b13-p202",
++        "b13-p9",
++        "b15-p40",
++        "b16-p10",
++        "b16-p43",
++        "b17-p173",
++        "b17-p183",
++        "b17-p39",
++        "b17-p44",
++        "b17-p51",
++        "b21-p21",
++        "b21-p61",
++        "b21-p62",
++        "b21-p63",
++        "b21-p8",
++        "b21-p94",
++        "b22-p164",
++        "b22-p88",
++        "b25-p232",
++        "b25-p344",
++        "b25-p36",
++        "b26-p1",
++        "b26-p2",
++        "b26-p3",
++        "b26-p4",
++        "b26-p5",
++        "b28-p96",
++        "b29-p26",
++        "b29-p36",
++        "b30-p35",
++        "b30-p8",
++        "b37-p89",
++        "b39-p163",
++        "b39-p19",
++        "b39-p290",
++        "b41-p17",
++        "b42-p155",
++        "b42-p73",
++        "b42-p74",
++        "b44-p3",
++        "b44-p30"
++      ],
++      "expected_literal_occurrences": 79,
++      "split": "development"
++    },
++    {
++      "query": "توكل",
++      "book_ids": null,
++      "expected_literal_pages": [
++        "b01-p123",
++        "b01-p193",
++        "b01-p202",
++        "b03-p15",
++        "b03-p46",
++        "b10-p20",
++        "b11-p45",
++        "b13-p77",
++        "b20-p6",
++        "b21-p261",
++        "b24-p28",
++        "b27-p117",
++        "b27-p118",
++        "b27-p151",
++        "b31-p53",
++        "b31-p54",
++        "b32-p37",
++        "b32-p38",
++        "b37-p56",
++        "b40-p100",
++        "b41-p149",
++        "b41-p150",
++        "b42-p156",
++        "b42-p56",
++        "b44-p39",
++        "b44-p4",
++        "b44-p40",
++        "b44-p50"
++      ],
++      "expected_literal_occurrences": 54,
++      "split": "development"
++    },
++    {
++      "query": "محبة",
++      "book_ids": [
++        "b14"
++      ],
++      "expected_literal_pages": [
++        "b14-p186",
++        "b14-p78"
++      ],
++      "expected_literal_occurrences": 2,
++      "split": "development"
++    },
++    {
++      "query": "خشوع",
++      "book_ids": null,
++      "expected_literal_pages": [
++        "b01-p203",
++        "b07-p206",
++        "b07-p215",
++        "b09-p39",
++        "b16-p9",
++        "b17-p89",
++        "b20-p273",
++        "b20-p54",
++        "b23-p5",
++        "b23-p71",
++        "b23-p72",
++        "b30-p13",
++        "b37-p81"
++      ],
++      "expected_literal_occurrences": 13,
++      "split": "development"
++    },
++    {
++      "query": "توبة",
++      "book_ids": [
++        "b14"
++      ],
++      "expected_literal_pages": [],
++      "expected_literal_occurrences": 0,
++      "split": "development"
++    },
++    {
++      "query": "صدق",
++      "book_ids": [
++        "b14"
++      ],
++      "expected_literal_pages": [
++        "b14-p122",
++        "b14-p188",
++        "b14-p192",
++        "b14-p199"
++      ],
++      "expected_literal_occurrences": 4,
++      "split": "development"
++    },
++    {
++      "query": "أدب",
++      "book_ids": [
++        "b14"
++      ],
++      "expected_literal_pages": [],
++      "expected_literal_occurrences": 0,
++      "split": "development"
++    },
++    {
++      "query": "هداية",
++      "book_ids": [
++        "b14"
++      ],
++      "expected_literal_pages": [
++        "b14-p6"
++      ],
++      "expected_literal_occurrences": 1,
++      "split": "development"
++    },
++    {
++      "query": "حكمة",
++      "book_ids": [
++        "b14"
++      ],
++      "expected_literal_pages": [
++        "b14-p205",
++        "b14-p71"
++      ],
++      "expected_literal_occurrences": 2,
++      "split": "development"
++    },
++    {
++      "query": "نور",
++      "book_ids": [
++        "b14"
++      ],
++      "expected_literal_pages": [
++        "b14-p107",
++        "b14-p109",
++        "b14-p111",
++        "b14-p114",
++        "b14-p118",
++        "b14-p121",
++        "b14-p132",
++        "b14-p150",
++        "b14-p16",
++        "b14-p173",
++        "b14-p179",
++        "b14-p185",
++        "b14-p19",
++        "b14-p20",
++        "b14-p206",
++        "b14-p22",
++        "b14-p24",
++        "b14-p248",
++        "b14-p249",
++        "b14-p250",
++        "b14-p254",
++        "b14-p39",
++        "b14-p4",
++        "b14-p42",
++        "b14-p46",
++        "b14-p55",
++        "b14-p58",
++        "b14-p61",
++        "b14-p92",
++        "b14-p95",
++        "b14-p96"
++      ],
++      "expected_literal_occurrences": 39,
++      "split": "development"
++    },
++    {
++      "query": "روح",
++      "book_ids": [
++        "b14"
++      ],
++      "expected_literal_pages": [
++        "b14-p101",
++        "b14-p102",
++        "b14-p118",
++        "b14-p135",
++        "b14-p175",
++        "b14-p176",
++        "b14-p178",
++        "b14-p184",
++        "b14-p205",
++        "b14-p225",
++        "b14-p250",
++        "b14-p37",
++        "b14-p40",
++        "b14-p47",
++        "b14-p69",
++        "b14-p79",
++        "b14-p80",
++        "b14-p95"
++      ],
++      "expected_literal_occurrences": 19,
++      "split": "development"
++    },
++    {
++      "query": "نفس",
++      "book_ids": [
++        "b14"
++      ],
++      "expected_literal_pages": [
++        "b14-p114",
++        "b14-p116",
++        "b14-p179",
++        "b14-p19",
++        "b14-p207",
++        "b14-p218",
++        "b14-p39",
++        "b14-p60",
++        "b14-p61"
++      ],
++      "expected_literal_occurrences": 10,
++      "split": "development"
++    },
++    {
++      "query": "وقت",
++      "book_ids": [
++        "b14"
++      ],
++      "expected_literal_pages": [
++        "b14-p49"
++      ],
++      "expected_literal_occurrences": 1,
++      "split": "development"
++    },
++    {
++      "query": "صلاة",
++      "book_ids": [
++        "b14"
++      ],
++      "expected_literal_pages": [
++        "b14-p102",
++        "b14-p169",
++        "b14-p173",
++        "b14-p22",
++        "b14-p23",
++        "b14-p235",
++        "b14-p96"
++      ],
++      "expected_literal_occurrences": 7,
++      "split": "development"
++    },
++    {
++      "query": "رزق",
++      "book_ids": null,
++      "expected_literal_pages": [
++        "b01-p113",
++        "b01-p139",
++        "b01-p189",
++        "b01-p207",
++        "b01-p56",
++        "b02-p3",
++        "b07-p162",
++        "b07-p296",
++        "b07-p69",
++        "b08-p12",
++        "b09-p31",
++        "b10-p20",
++        "b12-p246",
++        "b15-p17",
++        "b15-p18",
++        "b15-p19",
++        "b15-p22",
++        "b16-p65",
++        "b17-p121",
++        "b17-p179",
++        "b17-p66",
++        "b18-p26",
++        "b20-p199",
++        "b20-p237",
++        "b20-p281",
++        "b20-p299",
++        "b20-p34",
++        "b21-p105",
++        "b21-p214",
++        "b21-p281",
++        "b21-p287",
++        "b21-p82",
++        "b22-p142",
++        "b22-p143",
++        "b22-p166",
++        "b22-p169",
++        "b22-p53",
++        "b23-p126",
++        "b23-p40",
++        "b23-p76",
++        "b24-p24",
++        "b24-p26",
++        "b25-p169",
++        "b25-p259",
++        "b25-p360",
++        "b26-p50",
++        "b28-p39",
++        "b28-p70",
++        "b28-p81",
++        "b29-p64",
++        "b29-p68",
++        "b31-p107",
++        "b31-p36",
++        "b37-p155",
++        "b37-p2",
++        "b37-p3",
++        "b37-p36",
++        "b39-p220",
++        "b39-p227",
++        "b39-p5",
++        "b39-p64",
++        "b40-p23",
++        "b40-p43",
++        "b41-p130",
++        "b41-p131",
++        "b41-p132",
++        "b41-p154",
++        "b41-p19",
++        "b41-p20",
++        "b41-p31",
++        "b42-p4",
++        "b42-p57",
++        "b42-p80",
++        "b43-p3",
++        "b44-p16",
++        "b44-p28",
++        "b44-p40",
++        "b44-p48",
++        "b45-p16"
++      ],
++      "expected_literal_occurrences": 140,
++      "split": "development"
++    },
++    {
++      "query": "فؤاد",
++      "book_ids": null,
++      "expected_literal_pages": [
++        "b01-p171",
++        "b02-p7",
++        "b07-p127",
++        "b09-p91",
++        "b09-p92",
++        "b11-p16",
++        "b11-p9",
++        "b14-p101",
++        "b14-p132",
++        "b14-p15",
++        "b14-p163",
++        "b14-p198",
++        "b14-p20",
++        "b14-p208",
++        "b14-p246",
++        "b14-p37",
++        "b14-p63",
++        "b17-p202",
++        "b18-p11",
++        "b18-p6",
++        "b20-p135",
++        "b20-p136",
++        "b20-p201",
++        "b20-p308",
++        "b20-p309",
++        "b20-p39",
++        "b20-p42",
++        "b21-p290",
++        "b21-p292",
++        "b21-p35",
++        "b21-p72",
++        "b21-p73",
++        "b22-p115",
++        "b22-p172",
++        "b22-p42",
++        "b23-p176",
++        "b23-p177",
++        "b23-p180",
++        "b23-p181",
++        "b23-p260",
++        "b23-p261",
++        "b24-p176",
++        "b24-p251",
++        "b24-p252",
++        "b24-p278",
++        "b25-p282",
++        "b25-p283",
++        "b32-p133",
++        "b32-p96",
++        "b37-p175",
++        "b37-p61",
++        "b37-p62",
++        "b37-p64",
++        "b41-p57",
++        "b42-p116",
++        "b42-p124",
++        "b42-p84",
++        "b44-p17",
++        "b44-p38",
++        "b44-p48"
++      ],
++      "expected_literal_occurrences": 100,
++      "split": "development"
++    },
++    {
++      "query": "أشرقت",
++      "book_ids": null,
++      "expected_literal_pages": [
++        "b01-p130",
++        "b01-p155",
++        "b01-p190",
++        "b01-p97",
++        "b10-p150",
++        "b10-p74",
++        "b14-p246",
++        "b17-p185",
++        "b20-p253",
++        "b20-p254",
++        "b22-p79",
++        "b23-p29",
++        "b24-p259",
++        "b25-p133",
++        "b25-p282",
++        "b25-p283",
++        "b29-p75",
++        "b37-p120",
++        "b37-p65",
++        "b41-p57",
++        "b42-p86",
++        "b45-p14"
++      ],
++      "expected_literal_occurrences": 25,
++      "split": "holdout"
++    },
++    {
++      "query": "ربك",
++      "book_ids": [
++        "b14"
++      ],
++      "expected_literal_pages": [
++        "b14-p233",
++        "b14-p246",
++        "b14-p255"
++      ],
++      "expected_literal_occurrences": 3,
++      "split": "holdout"
++    },
++    {
++      "query": "حمى",
++      "book_ids": [
++        "b14"
++      ],
++      "expected_literal_pages": [
++        "b14-p153",
++        "b14-p159",
++        "b14-p229",
++        "b14-p243",
++        "b14-p246",
++        "b14-p33",
++        "b14-p53",
++        "b14-p57",
++        "b14-p63",
++        "b14-p71",
++        "b14-p74",
++        "b14-p77",
++        "b14-p99"
++      ],
++      "expected_literal_occurrences": 14,
++      "split": "holdout"
++    },
++    {
++      "query": "سر",
++      "book_ids": [
++        "b14"
++      ],
++      "expected_literal_pages": [
++        "b14-p108",
++        "b14-p114",
++        "b14-p119",
++        "b14-p132",
++        "b14-p142",
++        "b14-p156",
++        "b14-p205",
++        "b14-p233",
++        "b14-p4",
++        "b14-p57",
++        "b14-p58",
++        "b14-p67",
++        "b14-p78",
++        "b14-p88",
++        "b14-p89",
++        "b14-p90"
++      ],
++      "expected_literal_occurrences": 18,
++      "split": "holdout"
++    },
++    {
++      "query": "لا",
++      "book_ids": [
++        "b14"
++      ],
++      "expected_literal_pages": [
++        "b14-p10",
++        "b14-p101",
++        "b14-p103",
++        "b14-p105",
++        "b14-p106",
++        "b14-p110",
++        "b14-p116",
++        "b14-p117",
++        "b14-p119",
++        "b14-p123",
++        "b14-p128",
++        "b14-p131",
++        "b14-p133",
++        "b14-p135",
++        "b14-p136",
++        "b14-p137",
++        "b14-p138",
++        "b14-p14",
++        "b14-p141",
++        "b14-p142",
++        "b14-p146",
++        "b14-p148",
++        "b14-p15",
++        "b14-p150",
++        "b14-p151",
++        "b14-p152",
++        "b14-p153",
++        "b14-p154",
++        "b14-p156",
++        "b14-p158",
++        "b14-p159",
++        "b14-p160",
++        "b14-p161",
++        "b14-p162",
++        "b14-p163",
++        "b14-p168",
++        "b14-p170",
++        "b14-p172",
++        "b14-p173",
++        "b14-p174",
++        "b14-p175",
++        "b14-p177",
++        "b14-p178",
++        "b14-p179",
++        "b14-p181",
++        "b14-p182",
++        "b14-p184",
++        "b14-p185",
++        "b14-p186",
++        "b14-p189",
++        "b14-p19",
++        "b14-p191",
++        "b14-p194",
++        "b14-p195",
++        "b14-p196",
++        "b14-p198",
++        "b14-p199",
++        "b14-p202",
++        "b14-p208",
++        "b14-p210",
++        "b14-p211",
++        "b14-p215",
++        "b14-p216",
++        "b14-p217",
++        "b14-p218",
++        "b14-p219",
++        "b14-p221",
++        "b14-p222",
++        "b14-p229",
++        "b14-p230",
++        "b14-p232",
++        "b14-p236",
++        "b14-p238",
++        "b14-p241",
++        "b14-p243",
++        "b14-p244",
++        "b14-p245",
++        "b14-p246",
++        "b14-p248",
++        "b14-p249",
++        "b14-p250",
++        "b14-p255",
++        "b14-p29",
++        "b14-p34",
++        "b14-p37",
++        "b14-p44",
++        "b14-p48",
++        "b14-p50",
++        "b14-p53",
++        "b14-p54",
++        "b14-p55",
++        "b14-p57",
++        "b14-p58",
++        "b14-p60",
++        "b14-p66",
++        "b14-p69",
++        "b14-p70",
++        "b14-p72",
++        "b14-p79",
++        "b14-p80",
++        "b14-p85",
++        "b14-p88",
++        "b14-p90",
++        "b14-p91",
++        "b14-p94",
++        "b14-p95",
++        "b14-p97",
++        "b14-p98"
++      ],
++      "expected_literal_occurrences": 170,
++      "split": "holdout"
++    },
++    {
++      "query": "هدى",
++      "book_ids": [
++        "b14"
++      ],
++      "expected_literal_pages": [
++        "b14-p132",
++        "b14-p133",
++        "b14-p147",
++        "b14-p187",
++        "b14-p19",
++        "b14-p199",
++        "b14-p208",
++        "b14-p217",
++        "b14-p238",
++        "b14-p239",
++        "b14-p252",
++        "b14-p50",
++        "b14-p61",
++        "b14-p69",
++        "b14-p74",
++        "b14-p79",
++        "b14-p82"
++      ],
++      "expected_literal_occurrences": 23,
++      "split": "holdout"
++    },
++    {
++      "query": "هدي",
++      "book_ids": null,
++      "expected_literal_pages": [
++        "b01-p129",
++        "b01-p137",
++        "b01-p138",
++        "b01-p139",
++        "b01-p155",
++        "b05-p40",
++        "b14-p159",
++        "b14-p190",
++        "b14-p228",
++        "b16-p12",
++        "b16-p58",
++        "b20-p142",
++        "b20-p185",
++        "b20-p191",
++        "b20-p308",
++        "b20-p41",
++        "b20-p77",
++        "b20-p78",
++        "b21-p105",
++        "b21-p132",
++        "b21-p177",
++        "b21-p24",
++        "b21-p272",
++        "b21-p276",
++        "b21-p3",
++        "b22-p110",
++        "b22-p126",
++        "b22-p129",
++        "b22-p136",
++        "b22-p137",
++        "b22-p162",
++        "b22-p190",
++        "b22-p202",
++        "b22-p3",
++        "b23-p112",
++        "b23-p181",
++        "b24-p111",
++        "b24-p112",
++        "b24-p113",
++        "b24-p115",
++        "b24-p178",
++        "b24-p213",
++        "b24-p214",
++        "b24-p226",
++        "b24-p232",
++        "b24-p342",
++        "b24-p346",
++        "b24-p347",
++        "b24-p7",
++        "b25-p124",
++        "b25-p176",
++        "b25-p198",
++        "b25-p2",
++        "b25-p201",
++        "b25-p206",
++        "b25-p207",
++        "b25-p210",
++        "b25-p244",
++        "b25-p326",
++        "b25-p34",
++        "b25-p35",
++        "b25-p8",
++        "b27-p5",
++        "b29-p34",
++        "b29-p35",
++        "b31-p34",
++        "b37-p124",
++        "b37-p135",
++        "b37-p142",
++        "b37-p146",
++        "b37-p37",
++        "b37-p61",
++        "b37-p68",
++        "b39-p1",
++        "b39-p11",
++        "b39-p122",
++        "b39-p270",
++        "b45-p10"
++      ],
++      "expected_literal_occurrences": 117,
++      "split": "holdout"
++    },
++    {
++      "query": "لفظغيرموجود",
++      "book_ids": null,
++      "expected_literal_pages": [],
++      "expected_literal_occurrences": 0,
++      "split": "holdout"
++    }
++  ]
++}
+--- /dev/null
++++ b/tests/test_assessment_fixes.py
+@@ -0,0 +1,116 @@
++"""Release gates from the two supplied September assessments."""
++import itertools
++import json
++from pathlib import Path
++import unittest
++from unittest.mock import patch
++from app.services import library_db as db
++
++
++class AssessmentFixTests(unittest.TestCase):
++    def test_frozen_independent_literal_census_36_cases(self):
++        fixture = json.loads((Path(__file__).parent/'data/assessment_literal_cases.json').read_text())
++        for case in fixture['cases']:
++            with self.subTest(query=case['query'], split=case['split']):
++                scope = {'book_ids': case['book_ids']}
++                expected = set(case['expected_literal_pages'])
++                exact = {f'{b}-p{s}' for b,s in db._matching_page_ids([case['query']], **scope)}
++                expanded = {f'{b}-p{s}' for b,s in db._matching_page_ids([case['query']], search_mode='lexeme', **scope)}
++                self.assertEqual(exact, expected)
++                self.assertTrue(expected <= expanded)
++                self.assertEqual(db.search_stats([case['query']], **scope)['matching_occurrences'], case['expected_literal_occurrences'])
++
++    def test_tumanina_literal_pages_are_all_retrieved(self):
++        literal = db._matching_page_ids(['طمأنينة'])
++        self.assertEqual(len(literal), 14)
++        rows = db.search('طمأنينة', search_mode='lexeme', diversify_books=False, limit=10000)
++        ids = {(x['book_id'], x['seq']) for x in rows}
++        self.assertTrue(literal <= ids)
++        self.assertEqual(db.search_stats(['طمأنينة'])['matching_occurrences'], 16)
++        self.assertTrue({('b25', '32'), ('b11', '132'), ('b20', '246')} <=
++                        {(r['book_id'], str(r['printed_page'])) for r in rows})
++
++    def test_multi_query_maps_selected_span_all_orders_and_pages(self):
++        for queries in (['أشرقت', 'فؤاد', 'ربك'], ['إيمان', 'مسألة']):
++            reference = None
++            scope = {'book_ids': ['b14']} if len(queries) == 3 else {}
++            for ordering in itertools.permutations(queries):
++                rows = db.search(queries=list(ordering), search_mode='lexeme',
++                                 limit=6, diversify_books=False, **scope)
++                found = {}
++                for hit in rows:
++                    span = hit['evidence_span']
++                    text = db.get_page(hit['book_id'], hit['seq'])['text'][span['start']:span['end']]
++                    self.assertTrue(hit['matched_terms'])
++                    for query, term in hit['matched_terms'].items():
++                        self.assertEqual(text, term['corpus_form'])
++                        self.assertTrue(db._pattern_for_query(query, 'lexeme').fullmatch(text))
++                    found[hit['match_id']] = hit['matched_terms']
++                if reference is None:
++                    reference = found
++                self.assertEqual(reference, found)
++                pages = []
++                for offset in (0, 3):
++                    pages += db.search(queries=list(ordering), search_mode='lexeme', limit=3,
++                                       offset=offset, diversify_books=False, **scope)
++                self.assertEqual([r['match_id'] for r in rows], [r['match_id'] for r in pages])
++        q91 = db.search(queries=['أشرقت', 'فؤاد', 'ربك'], search_mode='lexeme',
++                       book_ids=['b14'], qasida_number=91, limit=6)
++        bayt = next(r for r in q91 if r.get('stable_id') == 'b14-q091-b010')
++        self.assertEqual(list(bayt['matched_terms']), ['ربك'])
++
++    def test_partial_omission_detected_even_with_equal_counts(self):
++        literal = db._matching_page_ids(['طمأنينة'])
++        omitted = sorted(literal)[0]
++        seeded = literal - {omitted} | {('b99', 999)}
++        report = db.literal_inclusion_report(['طمأنينة'], seeded)
++        self.assertEqual(report['status'], 'warning')
++        self.assertEqual(report['missing_literal_pages'], 1)
++        self.assertIn(f'{omitted[0]}-p{omitted[1]}', report['missing_literal_page_sample'])
++
++    def test_inclusion_per_query_and_pagination_independence(self):
++        report = db.retrieval_completeness(['إيمان', 'مسألة'], 'lexeme')
++        self.assertEqual(report['status'], 'ok')
++        self.assertTrue(all(r['missing_literal_pages'] == 0 for r in report['per_query']))
++        self.assertGreater(report['candidate_pages'], 3)
++        self.assertEqual(len(db.search('طمأنينة', search_mode='lexeme', limit=3)), 3)
++
++    def test_cross_page_paragraph_retains_original_locator_and_segments(self):
++        pages = {
++            1: {'book_id': 'b01', 'seq': 1, 'printed_page': '1', 'citation_label': 'p1',
++                'text': 'first\n\nparagraph begins'},
++            2: {'book_id': 'b01', 'seq': 2, 'printed_page': '2', 'citation_label': 'p2',
++                'text': 'target continues'},
++            3: {'book_id': 'b01', 'seq': 3, 'printed_page': '3', 'citation_label': 'p3',
++                'text': 'paragraph ends\n\nnext'},
++        }
++        with patch.object(db, 'get_page', side_effect=lambda book, seq: pages.get(seq)):
++            result = db._cross_page_paragraph(pages[2], 0, 6, 12000)
++        self.assertTrue(result['complete_paragraph'])
++        self.assertEqual(result['original_match']['seq'], 2)
++        self.assertEqual(result['passage'], 'paragraph begins\ntarget continues\nparagraph ends')
++        self.assertEqual([x['seq'] for x in result['context_segments']], [1, 2, 3])
++        for segment in result['context_segments']:
++            self.assertEqual(result['passage'][segment['passage_start']:segment['passage_end']],
++                pages[segment['seq']]['text'][segment['source_start']:segment['source_end']])
++
++    def test_cross_page_cap_does_not_claim_completion(self):
++        page = {'book_id': 'b01', 'seq': 1, 'citation_label': 'p1', 'text': 'a' * 3000}
++        with patch.object(db, 'get_page', return_value=None):
++            result = db._cross_page_paragraph(page, 1500, 1501, 1000)
++        self.assertFalse(result['complete_paragraph'])
++        self.assertTrue(result['context_cap_applied'])
++        self.assertLessEqual(len(result['passage']), 1000)
++        self.assertGreaterEqual(result['passage_evidence_span']['start'], 0)
++
++    def test_all_diwan_locators_preserve_page_boundaries(self):
++        conn = db._connection()
++        self.assertEqual(conn.execute('SELECT COUNT(DISTINCT qasida_number) FROM bayts').fetchone()[0], 95)
++        rows = conn.execute('SELECT b.stable_id,b.start_char,b.end_char,b.bayt_number,p.text FROM bayts b JOIN pages p ON p.id=b.page_id')
++        count = 0
++        for row in rows:
++            count += 1
++            self.assertLess(row['start_char'], row['end_char'])
++            self.assertLessEqual(row['end_char'], len(row['text']))
++            self.assertTrue(row['text'][row['start_char']:row['end_char']].lstrip().startswith(str(row['bayt_number'])))
++        self.assertEqual(count, 2682)
+--- a/tests/test_mcp_contract.py
++++ b/tests/test_mcp_contract.py
+@@ -82,9 +82,9 @@
+         self.assertIn('ResponseMode = Literal["compact", "ultra_compact"]', self.source)
+ 
+     def test_hard_versioned_instructions_explain_incomplete_discovery(self):
+-        self.assertEqual(SERVER_VERSION, "2.5.0")
+-        self.assertEqual(TOOL_CONTRACT_ID, "alburhaniya-tools-v6")
+-        self.assertEqual(TOOL_CONTRACT_VERSION, "7.0")
++        self.assertEqual(SERVER_VERSION, "2.6.0")
++        self.assertEqual(TOOL_CONTRACT_ID, "alburhaniya-tools-v8")
++        self.assertEqual(TOOL_CONTRACT_VERSION, "8.0")
+         self.assertIn("mcp._mcp_server.version = SERVER_VERSION", self.source)
+         self.assertIn("connector discovery is incomplete", self.source)
+         self.assertIn("get_passage for the precise passage", self.source)
+--- a/tests/test_resilience.py
++++ b/tests/test_resilience.py
+@@ -15,7 +15,7 @@
+                 raise sqlite3.OperationalError("database is locked")
+             return {"status": "ok"}
+ 
+-        self.assertEqual(operation(), {"status": "ok"})
++        self.assertEqual(operation()["status"], "ok")
+         self.assertEqual(attempts["count"], 3)
+ 
+     def test_unexpected_failure_is_concise_and_does_not_leak_payload(self):

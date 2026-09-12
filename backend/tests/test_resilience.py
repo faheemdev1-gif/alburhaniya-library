@@ -15,7 +15,7 @@ class ResilienceTests(unittest.TestCase):
                 raise sqlite3.OperationalError("database is locked")
             return {"status": "ok"}
 
-        self.assertEqual(operation(), {"status": "ok"})
+        self.assertEqual(operation()["status"], "ok")
         self.assertEqual(attempts["count"], 3)
 
     def test_unexpected_failure_is_concise_and_does_not_leak_payload(self):

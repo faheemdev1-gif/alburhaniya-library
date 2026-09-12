@@ -7,9 +7,9 @@ import json
 from typing import Any
 
 
-SERVER_VERSION = "2.5.0"
-TOOL_CONTRACT_VERSION = "7.0"
-TOOL_CONTRACT_ID = "alburhaniya-tools-v6"
+SERVER_VERSION = "2.6.0"
+TOOL_CONTRACT_VERSION = "8.0"
+TOOL_CONTRACT_ID = "alburhaniya-tools-v8"
 
 REQUIRED_TOOLS = frozenset({
     "search_library",
@@ -23,10 +23,12 @@ SCHEMA_CAPABILITIES = {
     "search_library": {
         "match_modes": ["auto", "exact", "terms", "hybrid", "lexeme"],
         "response_modes": ["compact", "ultra_compact"],
-        "required_parameters": [
+        "supported_parameters": [
             "query", "queries", "book_ids", "book_scope", "qasida_number",
             "include_counts", "count_basis", "whole_word", "min_tier",
             "expand_top", "expand_chars", "min_score", "match_mode", "mode",
+            "operator", "limit", "offset", "source_code", "page_from", "page_to",
+            "context_chars", "search_mode", "ranking", "diversify_books", "max_per_book",
         ],
     },
     "get_passage": {
@@ -34,6 +36,8 @@ SCHEMA_CAPABILITIES = {
         "parallel_candidates": True,
         "context_modes": ["bounded", "paragraph"],
         "default_max_chars": 12000,
+        "cross_page_context": True,
+        "max_context_pages": 12,
     },
     "get_page": {"default_max_chars": 20000, "declares_truncation": True},
 }
@@ -92,5 +96,28 @@ def contract_metadata(tools: Iterable[str] | None = None) -> dict[str, Any]:
         "tool_count": len(actual),
         "tools": list(actual),
         "schema_digest": SCHEMA_DIGEST,
+        "tool_schema_digest": TOOL_META.get("tool_schema_digest"),
+        "schema_digest_kind": "capability_manifest",
         "schema_capabilities": SCHEMA_CAPABILITIES,
+        "compatibility_policy": "Compare tool_contract_version and schema_digest on every response. A major version change requires refreshing tools/list before the next call; minor changes are additive. tool_count is cardinality, not a version.",
     }
+
+
+def bind_callable_schema(server: Any) -> None:
+    """Validate capabilities against tools/list and fingerprint callable schemas."""
+    tools = server._tool_manager.list_tools()
+    schemas = {tool.name: tool.parameters for tool in tools}
+    for name, capability in SCHEMA_CAPABILITIES.items():
+        properties = schemas[name].get('properties', {})
+        missing = set(capability.get('supported_parameters', [])) - properties.keys()
+        if missing:
+            raise RuntimeError(f'Advertised parameters missing from {name}: {sorted(missing)}')
+    paragraph = schemas['get_passage']['properties']['context_mode']
+    if set(paragraph.get('enum', [])) != {'bounded', 'paragraph'}:
+        raise RuntimeError('get_passage paragraph capability differs from callable schema')
+    TOOL_META['tool_schema_digest'] = hashlib.sha256(json.dumps(
+        schemas, sort_keys=True, ensure_ascii=False, separators=(',', ':'),
+    ).encode()).hexdigest()
+    for tool in tools:
+        if tool.meta is not None:
+            tool.meta.update(TOOL_META)

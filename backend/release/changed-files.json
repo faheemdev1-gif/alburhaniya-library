@@ -1,0 +1,12 @@
+[
+  "app/core/observability.py",
+  "app/core/resilience.py",
+  "app/mcp_contract.py",
+  "app/mcp_server.py",
+  "app/services/compact_response.py",
+  "app/services/library_db.py",
+  "scripts/verify_assessment_release.py",
+  "tests/test_assessment_fixes.py",
+  "tests/test_mcp_contract.py",
+  "tests/test_resilience.py"
+]

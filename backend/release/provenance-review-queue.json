@@ -1,0 +1,200 @@
+[
+  {
+    "book_id": "b02",
+    "title": "أعداد المجلة",
+    "source_author": "مجلة الطريقة البرهانية — إعداد المريدين",
+    "compiler": null,
+    "authorship_mode": "unresolved",
+    "attribution_confidence": "unverified",
+    "provenance_status": "needs_review",
+    "source_note": "أعدادٌ من مجلة الطريقة البرهانية، أعدّها بعض المريدين نقلًا وتبويبًا لأخبار السلسلة ومناسباتها وبعض ما يتصل بها من موادّ.",
+    "required_review_evidence": "Documented title-page/colophon or authoritative catalogue evidence identifying author/compiler and edition; record source locator and reviewer before changing status."
+  },
+  {
+    "book_id": "b04",
+    "title": "الشيخ صفوت",
+    "source_author": "الشيخ صفوت رحمه الله",
+    "compiler": null,
+    "authorship_mode": "unresolved",
+    "attribution_confidence": "unverified",
+    "provenance_status": "needs_review",
+    "source_note": "مجموعة من دروس أحد مريدي سيدي الإمام فخر الدين قدّس سرّه، وهو الشيخ صفوت رحمه الله، من كبار مدرّسي ومحاضري السلسلة البرهانية.",
+    "required_review_evidence": "Documented title-page/colophon or authoritative catalogue evidence identifying author/compiler and edition; record source locator and reviewer before changing status."
+  },
+  {
+    "book_id": "b05",
+    "title": "الفرقة الناجية 25 شوال",
+    "source_author": "د. خالد العروسي — جامعة أم القرى (من خارج السلسلة)",
+    "compiler": null,
+    "authorship_mode": "unresolved",
+    "attribution_confidence": "unverified",
+    "provenance_status": "needs_review",
+    "source_note": "بحثٌ لعالمٍ من خارج السلسلة في مسألة الترخّص بمسائل الخلاف بين الفقهاء والأصوليين، مع بيان ضوابط العمل بمسائل الخلاف.",
+    "required_review_evidence": "Documented title-page/colophon or authoritative catalogue evidence identifying author/compiler and edition; record source locator and reviewer before changing status."
+  },
+  {
+    "book_id": "b06",
+    "title": "النظام الإداري واللائحة فى الطريقة البرهانية الدسوقية الشاذلية",
+    "source_author": "وثيقة إدارية للطريقة",
+    "compiler": null,
+    "authorship_mode": "unresolved",
+    "attribution_confidence": "unverified",
+    "provenance_status": "needs_review",
+    "source_note": "لائحةٌ إدارية وتنظيمية للطريقة البرهانية، تبيّن هيكلها الإداري ومهامّ مراكزها ولجانها وأنظمة عملها المؤسسي. ليست مصدرًا في العقيدة أو المعنى.",
+    "required_review_evidence": "Documented title-page/colophon or authoritative catalogue evidence identifying author/compiler and edition; record source locator and reviewer before changing status."
+  },
+  {
+    "book_id": "b08",
+    "title": "اوراد الطريقة البرهانية",
+    "source_author": "نصّ الأوراد والأذكار",
+    "compiler": null,
+    "authorship_mode": "unresolved",
+    "attribution_confidence": "unverified",
+    "provenance_status": "needs_review",
+    "source_note": "نصّ أوراد وأذكار الطريقة البرهانية التي يواظب عليها المريدون.",
+    "required_review_evidence": "Documented title-page/colophon or authoritative catalogue evidence identifying author/compiler and edition; record source locator and reviewer before changing status."
+  },
+  {
+    "book_id": "b09",
+    "title": "تأويل التائية",
+    "source_author": "كروما علي (أحد مريدي الطريقة من السودان)",
+    "compiler": null,
+    "authorship_mode": "unresolved",
+    "attribution_confidence": "unverified",
+    "provenance_status": "needs_review",
+    "source_note": "شرحٌ لجميع أبيات «التائية» — أول قصائد ديوان شراب الوصل لسيدي الإمام فخر الدين قدّس سرّه.",
+    "required_review_evidence": "Documented title-page/colophon or authoritative catalogue evidence identifying author/compiler and edition; record source locator and reviewer before changing status."
+  },
+  {
+    "book_id": "b16",
+    "title": "سيدى إبراهيم الدسوقى",
+    "source_author": "فوزي محمد أبوزيد (من خارج السلسلة)",
+    "compiler": null,
+    "authorship_mode": "unresolved",
+    "attribution_confidence": "unverified",
+    "provenance_status": "needs_review",
+    "source_note": "كتابٌ لعالمٍ من خارج السلسلة في سيرة سيدي إبراهيم القرشي الدسوقي رضي الله عنه (باني السلسلة) وشخصيته وتعاليمه ومنهجه.",
+    "required_review_evidence": "Documented title-page/colophon or authoritative catalogue evidence identifying author/compiler and edition; record source locator and reviewer before changing status."
+  },
+  {
+    "book_id": "b17",
+    "title": "شرح الأوراد",
+    "source_author": "إبراهيم الدسوقي محمد بدُّور",
+    "compiler": null,
+    "authorship_mode": "unresolved",
+    "attribution_confidence": "unverified",
+    "provenance_status": "needs_review",
+    "source_note": "لأحد مريدي الطريقة، يشرح أوراد وأذكار الطريقة البرهانية ويوضّح معانيها وحكمها.",
+    "required_review_evidence": "Documented title-page/colophon or authoritative catalogue evidence identifying author/compiler and edition; record source locator and reviewer before changing status."
+  },
+  {
+    "book_id": "b18",
+    "title": "شرح المفردات اللغوية لشراب الوصل",
+    "source_author": "مجهول المؤلف — أحد المريدين",
+    "compiler": null,
+    "authorship_mode": "unresolved",
+    "attribution_confidence": "unverified",
+    "provenance_status": "needs_review",
+    "source_note": "شرحٌ لغويٌّ لمفردات ديوان شراب الوصل، أعدّه أحد المريدين، واسم المؤلف غير معروف حاليًا.",
+    "required_review_evidence": "Documented title-page/colophon or authoritative catalogue evidence identifying author/compiler and edition; record source locator and reviewer before changing status."
+  },
+  {
+    "book_id": "b19",
+    "title": "شرح خطاب الحولية 2012 جزء 1",
+    "source_author": "شرح أحد المريدين",
+    "compiler": null,
+    "authorship_mode": "unresolved",
+    "attribution_confidence": "unverified",
+    "provenance_status": "needs_review",
+    "source_note": "شرحٌ لأحد المريدين لخطاب مولانا الشيخ محمد الذي ألقاه بمناسبة الحولية سنة 2012م. المشروح خطابُ شيخٍ، أما الشرح فمن مريد.",
+    "required_review_evidence": "Documented title-page/colophon or authoritative catalogue evidence identifying author/compiler and edition; record source locator and reviewer before changing status."
+  },
+  {
+    "book_id": "b23",
+    "title": "شرح شراب الوصل 4",
+    "source_author": "مجهول الشارح",
+    "compiler": null,
+    "authorship_mode": "murid_commentary",
+    "attribution_confidence": "low",
+    "provenance_status": "needs_review",
+    "source_note": "الجزء الرابع من الشرح العربي لديوان شراب الوصل. تنبيه: ليس من تصنيف سيدي، فلا تُنسب معانيه إليه مباشرة.",
+    "required_review_evidence": "Documented title-page/colophon or authoritative catalogue evidence identifying author/compiler and edition; record source locator and reviewer before changing status."
+  },
+  {
+    "book_id": "b24",
+    "title": "شرح شراب الوصل 5",
+    "source_author": "مجهول الشارح",
+    "compiler": null,
+    "authorship_mode": "murid_commentary",
+    "attribution_confidence": "low",
+    "provenance_status": "needs_review",
+    "source_note": "الجزء الخامس من الشرح العربي لديوان شراب الوصل. تنبيه: ليس من تصنيف سيدي، فلا تُنسب معانيه إليه مباشرة.",
+    "required_review_evidence": "Documented title-page/colophon or authoritative catalogue evidence identifying author/compiler and edition; record source locator and reviewer before changing status."
+  },
+  {
+    "book_id": "b25",
+    "title": "شرح شراب الوصل 6",
+    "source_author": "مجهول الشارح",
+    "compiler": null,
+    "authorship_mode": "murid_commentary",
+    "attribution_confidence": "low",
+    "provenance_status": "needs_review",
+    "source_note": "الجزء السادس والأخير من الشرح العربي لديوان شراب الوصل. تنبيه: ليس من تصنيف سيدي، فلا تُنسب معانيه إليه مباشرة.",
+    "required_review_evidence": "Documented title-page/colophon or authoritative catalogue evidence identifying author/compiler and edition; record source locator and reviewer before changing status."
+  },
+  {
+    "book_id": "b33",
+    "title": "قواعد التدارس",
+    "source_author": "أحد مريدي السلسلة",
+    "compiler": null,
+    "authorship_mode": "unresolved",
+    "attribution_confidence": "unverified",
+    "provenance_status": "needs_review",
+    "source_note": "يبيّن آداب «التدارس» في ضوء تعاليم مشايخ السلسلة — أي اجتماع طلاب العلم للتفكّر الجماعي في بيتٍ أو آيةٍ أو موضوعٍ في ضوء القرآن والسنة وعلوم المشايخ.",
+    "required_review_evidence": "Documented title-page/colophon or authoritative catalogue evidence identifying author/compiler and edition; record source locator and reviewer before changing status."
+  },
+  {
+    "book_id": "b36",
+    "title": "لقاء المصريين",
+    "source_author": "مجهول المُعِدّ",
+    "compiler": null,
+    "authorship_mode": "unresolved",
+    "attribution_confidence": "unverified",
+    "provenance_status": "needs_review",
+    "source_note": "تدوينٌ للقاء مولانا الشيخ محمد شيخ الطريقة الحالي بأهل مصر وما ألقاه إليهم من نصائح، رتّبها أحد المريدين واسمه غير معروف حاليًا.",
+    "required_review_evidence": "Documented title-page/colophon or authoritative catalogue evidence identifying author/compiler and edition; record source locator and reviewer before changing status."
+  },
+  {
+    "book_id": "b37",
+    "title": "مسامرة الأبرار 1",
+    "source_author": "مجهول المُعِدّ — من دروس سيدي الإمام فخر الدين",
+    "compiler": null,
+    "authorship_mode": "unresolved",
+    "attribution_confidence": "unverified",
+    "provenance_status": "needs_review",
+    "source_note": "منتخبٌ من دروس سيدي الإمام فخر الدين قدّس سرّه، جمعه أحد المريدين، واسم الجامع غير معروف حاليًا، ولذا يُعامَل بوصفه مصدرًا ثانويًا حتى يتحقق التثبت من ضبطه ونسبته.",
+    "required_review_evidence": "Documented title-page/colophon or authoritative catalogue evidence identifying author/compiler and edition; record source locator and reviewer before changing status."
+  },
+  {
+    "book_id": "b38",
+    "title": "مسامرة الأبرار",
+    "source_author": "مجهول المُعِدّ — من دروس سيدي الإمام فخر الدين",
+    "compiler": null,
+    "authorship_mode": "unresolved",
+    "attribution_confidence": "unverified",
+    "provenance_status": "needs_review",
+    "source_note": "نسخة مختصرة مستقلة الصفحات من مادة «مسامرة الأبرار 1» (b37). تُحفظ للاستشهاد بهذه الطبعة عند طلبها صراحة، وتُستبعد من البحث والإحصاء الافتراضيين حتى لا تتكرر النتائج أو تتضاعف أعداد الوقوعات.",
+    "required_review_evidence": "Documented title-page/colophon or authoritative catalogue evidence identifying author/compiler and edition; record source locator and reviewer before changing status."
+  },
+  {
+    "book_id": "b43",
+    "title": "نسب الطريقة",
+    "source_author": "مجهول المُعِدّ",
+    "compiler": null,
+    "authorship_mode": "unresolved",
+    "attribution_confidence": "unverified",
+    "provenance_status": "needs_review",
+    "source_note": "كتابٌ مهمّ في التعريف بالطريقة البرهانية ومشايخها، رتّبه أحد المريدين واسمه غير معروف حاليًا.",
+    "required_review_evidence": "Documented title-page/colophon or authoritative catalogue evidence identifying author/compiler and edition; record source locator and reviewer before changing status."
+  }
+]

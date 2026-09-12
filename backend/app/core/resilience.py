@@ -8,6 +8,7 @@ import re
 import sqlite3
 import time
 import uuid
+from app.core.observability import start_phases, phase_snapshot
 
 
 logger = logging.getLogger(__name__)
@@ -44,19 +45,29 @@ def safe_error_payload(
     }
     if retry_after_seconds is not None:
         error["retry_after_seconds"] = int(retry_after_seconds)
-    return {"error": error}
+    from app.mcp_contract import TOOL_META
+    return {"error": error, "contract": dict(TOOL_META), "request_id": current_request_id()}
 
 
 def safe_tool_call(function):
     """Retry transient SQLite reads and never expose raw infrastructure data."""
     @wraps(function)
     def wrapped(*args, **kwargs):
-        request_id = current_request_id()
+        request_id = new_request_id()
+        started = time.perf_counter()
+        start_phases()
+        from app.mcp_contract import TOOL_META
+        def finish(payload, attempts):
+            if isinstance(payload, dict):
+                payload["contract"] = dict(TOOL_META)
+                payload["request_id"] = request_id
+                payload["timing"] = {"total_ms": round((time.perf_counter() - started) * 1000, 2), "attempts": attempts, "phases_ms": phase_snapshot(), "phase_semantics": "inclusive_nested"}
+            return payload
         for attempt, delay in enumerate((0.0, 0.05, 0.15), start=1):
             if delay:
                 time.sleep(delay)
             try:
-                return function(*args, **kwargs)
+                return finish(function(*args, **kwargs), attempt)
             except ValueError as exc:
                 logger.info(
                     "invalid tool request operation=%s request_id=%s error=%s",
@@ -79,8 +90,8 @@ def safe_tool_call(function):
                 return safe_error_payload(
                     "temporary_unavailable",
                     "The library is temporarily unavailable. Retry the request shortly.",
-                    retryable=True,
-                    retry_after_seconds=1,
+                    retryable=is_transient_sqlite_error(exc),
+                    retry_after_seconds=1 if is_transient_sqlite_error(exc) else None,
                 )
             except Exception as exc:
                 logger.error(

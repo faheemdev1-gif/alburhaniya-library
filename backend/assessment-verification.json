@@ -1,0 +1,679 @@
+{
+  "contract": {
+    "server_version": "2.6.0",
+    "tool_contract_version": "8.0",
+    "tool_contract": "alburhaniya-tools-v8",
+    "tool_count": 5,
+    "schema_digest": "56327a2cb0f863bcaebd8ff764acc148f353cdbd75b73611a63ed3bd0384ecc1",
+    "tool_schema_digest": "9a4cda6e677de8539ab6399521c2a3c99ecd0160d57d3fa4d399148f682aa3fa"
+  },
+  "fixture_cases": [
+    {
+      "query": "طمأنينة",
+      "split": "development",
+      "passed": true,
+      "literal_pages": 14,
+      "missing": [],
+      "exact_symmetric_difference": [],
+      "expected_occurrences": 16,
+      "actual_occurrences": 16
+    },
+    {
+      "query": "إيمان",
+      "split": "development",
+      "passed": true,
+      "literal_pages": 4,
+      "missing": [],
+      "exact_symmetric_difference": [],
+      "expected_occurrences": 5,
+      "actual_occurrences": 5
+    },
+    {
+      "query": "مسألة",
+      "split": "development",
+      "passed": true,
+      "literal_pages": 1,
+      "missing": [],
+      "exact_symmetric_difference": [],
+      "expected_occurrences": 2,
+      "actual_occurrences": 2
+    },
+    {
+      "query": "مؤمن",
+      "split": "development",
+      "passed": true,
+      "literal_pages": 0,
+      "missing": [],
+      "exact_symmetric_difference": [],
+      "expected_occurrences": 0,
+      "actual_occurrences": 0
+    },
+    {
+      "query": "رحمة",
+      "split": "development",
+      "passed": true,
+      "literal_pages": 12,
+      "missing": [],
+      "exact_symmetric_difference": [],
+      "expected_occurrences": 12,
+      "actual_occurrences": 12
+    },
+    {
+      "query": "قلب",
+      "split": "development",
+      "passed": true,
+      "literal_pages": 19,
+      "missing": [],
+      "exact_symmetric_difference": [],
+      "expected_occurrences": 20,
+      "actual_occurrences": 20
+    },
+    {
+      "query": "معرفة",
+      "split": "development",
+      "passed": true,
+      "literal_pages": 1,
+      "missing": [],
+      "exact_symmetric_difference": [],
+      "expected_occurrences": 1,
+      "actual_occurrences": 1
+    },
+    {
+      "query": "ذكر",
+      "split": "development",
+      "passed": true,
+      "literal_pages": 11,
+      "missing": [],
+      "exact_symmetric_difference": [],
+      "expected_occurrences": 13,
+      "actual_occurrences": 13
+    },
+    {
+      "query": "يقين",
+      "split": "development",
+      "passed": true,
+      "literal_pages": 4,
+      "missing": [],
+      "exact_symmetric_difference": [],
+      "expected_occurrences": 4,
+      "actual_occurrences": 4
+    },
+    {
+      "query": "صبر",
+      "split": "development",
+      "passed": true,
+      "literal_pages": 73,
+      "missing": [],
+      "exact_symmetric_difference": [],
+      "expected_occurrences": 130,
+      "actual_occurrences": 130
+    },
+    {
+      "query": "شكر",
+      "split": "development",
+      "passed": true,
+      "literal_pages": 94,
+      "missing": [],
+      "exact_symmetric_difference": [],
+      "expected_occurrences": 198,
+      "actual_occurrences": 198
+    },
+    {
+      "query": "رضا",
+      "split": "development",
+      "passed": true,
+      "literal_pages": 4,
+      "missing": [],
+      "exact_symmetric_difference": [],
+      "expected_occurrences": 4,
+      "actual_occurrences": 4
+    },
+    {
+      "query": "إخلاص",
+      "split": "development",
+      "passed": true,
+      "literal_pages": 57,
+      "missing": [],
+      "exact_symmetric_difference": [],
+      "expected_occurrences": 79,
+      "actual_occurrences": 79
+    },
+    {
+      "query": "توكل",
+      "split": "development",
+      "passed": true,
+      "literal_pages": 28,
+      "missing": [],
+      "exact_symmetric_difference": [],
+      "expected_occurrences": 54,
+      "actual_occurrences": 54
+    },
+    {
+      "query": "محبة",
+      "split": "development",
+      "passed": true,
+      "literal_pages": 2,
+      "missing": [],
+      "exact_symmetric_difference": [],
+      "expected_occurrences": 2,
+      "actual_occurrences": 2
+    },
+    {
+      "query": "خشوع",
+      "split": "development",
+      "passed": true,
+      "literal_pages": 13,
+      "missing": [],
+      "exact_symmetric_difference": [],
+      "expected_occurrences": 13,
+      "actual_occurrences": 13
+    },
+    {
+      "query": "توبة",
+      "split": "development",
+      "passed": true,
+      "literal_pages": 0,
+      "missing": [],
+      "exact_symmetric_difference": [],
+      "expected_occurrences": 0,
+      "actual_occurrences": 0
+    },
+    {
+      "query": "صدق",
+      "split": "development",
+      "passed": true,
+      "literal_pages": 4,
+      "missing": [],
+      "exact_symmetric_difference": [],
+      "expected_occurrences": 4,
+      "actual_occurrences": 4
+    },
+    {
+      "query": "أدب",
+      "split": "development",
+      "passed": true,
+      "literal_pages": 0,
+      "missing": [],
+      "exact_symmetric_difference": [],
+      "expected_occurrences": 0,
+      "actual_occurrences": 0
+    },
+    {
+      "query": "هداية",
+      "split": "development",
+      "passed": true,
+      "literal_pages": 1,
+      "missing": [],
+      "exact_symmetric_difference": [],
+      "expected_occurrences": 1,
+      "actual_occurrences": 1
+    },
+    {
+      "query": "حكمة",
+      "split": "development",
+      "passed": true,
+      "literal_pages": 2,
+      "missing": [],
+      "exact_symmetric_difference": [],
+      "expected_occurrences": 2,
+      "actual_occurrences": 2
+    },
+    {
+      "query": "نور",
+      "split": "development",
+      "passed": true,
+      "literal_pages": 31,
+      "missing": [],
+      "exact_symmetric_difference": [],
+      "expected_occurrences": 39,
+      "actual_occurrences": 39
+    },
+    {
+      "query": "روح",
+      "split": "development",
+      "passed": true,
+      "literal_pages": 18,
+      "missing": [],
+      "exact_symmetric_difference": [],
+      "expected_occurrences": 19,
+      "actual_occurrences": 19
+    },
+    {
+      "query": "نفس",
+      "split": "development",
+      "passed": true,
+      "literal_pages": 9,
+      "missing": [],
+      "exact_symmetric_difference": [],
+      "expected_occurrences": 10,
+      "actual_occurrences": 10
+    },
+    {
+      "query": "وقت",
+      "split": "development",
+      "passed": true,
+      "literal_pages": 1,
+      "missing": [],
+      "exact_symmetric_difference": [],
+      "expected_occurrences": 1,
+      "actual_occurrences": 1
+    },
+    {
+      "query": "صلاة",
+      "split": "development",
+      "passed": true,
+      "literal_pages": 7,
+      "missing": [],
+      "exact_symmetric_difference": [],
+      "expected_occurrences": 7,
+      "actual_occurrences": 7
+    },
+    {
+      "query": "رزق",
+      "split": "development",
+      "passed": true,
+      "literal_pages": 79,
+      "missing": [],
+      "exact_symmetric_difference": [],
+      "expected_occurrences": 140,
+      "actual_occurrences": 140
+    },
+    {
+      "query": "فؤاد",
+      "split": "development",
+      "passed": true,
+      "literal_pages": 60,
+      "missing": [],
+      "exact_symmetric_difference": [],
+      "expected_occurrences": 100,
+      "actual_occurrences": 100
+    },
+    {
+      "query": "أشرقت",
+      "split": "holdout",
+      "passed": true,
+      "literal_pages": 22,
+      "missing": [],
+      "exact_symmetric_difference": [],
+      "expected_occurrences": 25,
+      "actual_occurrences": 25
+    },
+    {
+      "query": "ربك",
+      "split": "holdout",
+      "passed": true,
+      "literal_pages": 3,
+      "missing": [],
+      "exact_symmetric_difference": [],
+      "expected_occurrences": 3,
+      "actual_occurrences": 3
+    },
+    {
+      "query": "حمى",
+      "split": "holdout",
+      "passed": true,
+      "literal_pages": 13,
+      "missing": [],
+      "exact_symmetric_difference": [],
+      "expected_occurrences": 14,
+      "actual_occurrences": 14
+    },
+    {
+      "query": "سر",
+      "split": "holdout",
+      "passed": true,
+      "literal_pages": 16,
+      "missing": [],
+      "exact_symmetric_difference": [],
+      "expected_occurrences": 18,
+      "actual_occurrences": 18
+    },
+    {
+      "query": "لا",
+      "split": "holdout",
+      "passed": true,
+      "literal_pages": 108,
+      "missing": [],
+      "exact_symmetric_difference": [],
+      "expected_occurrences": 170,
+      "actual_occurrences": 170
+    },
+    {
+      "query": "هدى",
+      "split": "holdout",
+      "passed": true,
+      "literal_pages": 17,
+      "missing": [],
+      "exact_symmetric_difference": [],
+      "expected_occurrences": 23,
+      "actual_occurrences": 23
+    },
+    {
+      "query": "هدي",
+      "split": "holdout",
+      "passed": true,
+      "literal_pages": 78,
+      "missing": [],
+      "exact_symmetric_difference": [],
+      "expected_occurrences": 117,
+      "actual_occurrences": 117
+    },
+    {
+      "query": "لفظغيرموجود",
+      "split": "holdout",
+      "passed": true,
+      "literal_pages": 0,
+      "missing": [],
+      "exact_symmetric_difference": [],
+      "expected_occurrences": 0,
+      "actual_occurrences": 0
+    }
+  ],
+  "all_passed": true,
+  "benchmark_environment": "local Python calls; includes first measured call; excludes HTTP network and production load",
+  "benchmarks": [
+    {
+      "query": "طمأنينة",
+      "match_mode": "lexeme",
+      "p50_ms": 52.72,
+      "p95_ms": 56.42,
+      "errors": 0,
+      "runs": [
+        {
+          "elapsed_ms": 51.28,
+          "error": null,
+          "returned": 5,
+          "bytes": 9238,
+          "timing": {
+            "total_ms": 51.26,
+            "attempts": 1,
+            "phases_ms": {
+              "literal_census": 11.76,
+              "candidate_sql": 1.13,
+              "evidence_validation": 25.22,
+              "ranking_and_pagination": 0.08,
+              "completeness_audit": 12.13
+            },
+            "phase_semantics": "inclusive_nested"
+          }
+        },
+        {
+          "elapsed_ms": 52.72,
+          "error": null,
+          "returned": 5,
+          "bytes": 9238,
+          "timing": {
+            "total_ms": 52.67,
+            "attempts": 1,
+            "phases_ms": {
+              "literal_census": 11.84,
+              "candidate_sql": 1.09,
+              "evidence_validation": 25.69,
+              "ranking_and_pagination": 0.09,
+              "completeness_audit": 13.05
+            },
+            "phase_semantics": "inclusive_nested"
+          }
+        },
+        {
+          "elapsed_ms": 54.17,
+          "error": null,
+          "returned": 5,
+          "bytes": 9235,
+          "timing": {
+            "total_ms": 54.1,
+            "attempts": 1,
+            "phases_ms": {
+              "literal_census": 12.07,
+              "candidate_sql": 1.4,
+              "evidence_validation": 26.54,
+              "ranking_and_pagination": 0.1,
+              "completeness_audit": 12.96
+            },
+            "phase_semantics": "inclusive_nested"
+          }
+        },
+        {
+          "elapsed_ms": 52.37,
+          "error": null,
+          "returned": 5,
+          "bytes": 9237,
+          "timing": {
+            "total_ms": 52.32,
+            "attempts": 1,
+            "phases_ms": {
+              "literal_census": 11.7,
+              "candidate_sql": 1.12,
+              "evidence_validation": 26.33,
+              "ranking_and_pagination": 0.09,
+              "completeness_audit": 12.16
+            },
+            "phase_semantics": "inclusive_nested"
+          }
+        },
+        {
+          "elapsed_ms": 56.42,
+          "error": null,
+          "returned": 5,
+          "bytes": 9237,
+          "timing": {
+            "total_ms": 56.37,
+            "attempts": 1,
+            "phases_ms": {
+              "literal_census": 12.53,
+              "candidate_sql": 1.66,
+              "evidence_validation": 28.14,
+              "ranking_and_pagination": 0.1,
+              "completeness_audit": 12.93
+            },
+            "phase_semantics": "inclusive_nested"
+          }
+        }
+      ]
+    },
+    {
+      "query": "المحافظة على الصلاة وعدم تأخيرها عن وقتها",
+      "match_mode": "auto",
+      "p50_ms": 2197.14,
+      "p95_ms": 2371.25,
+      "errors": 0,
+      "runs": [
+        {
+          "elapsed_ms": 2371.25,
+          "error": null,
+          "returned": 1,
+          "bytes": 4128,
+          "timing": {
+            "total_ms": 2371.19,
+            "attempts": 1,
+            "phases_ms": {
+              "literal_census": 19.33,
+              "candidate_sql": 22.97,
+              "evidence_validation": 1811.81,
+              "ranking_and_pagination": 0.58,
+              "hybrid_total": 2295.96
+            },
+            "phase_semantics": "inclusive_nested"
+          }
+        },
+        {
+          "elapsed_ms": 2197.14,
+          "error": null,
+          "returned": 1,
+          "bytes": 4125,
+          "timing": {
+            "total_ms": 2197.1,
+            "attempts": 1,
+            "phases_ms": {
+              "literal_census": 3.23,
+              "candidate_sql": 20.47,
+              "evidence_validation": 1730.79,
+              "ranking_and_pagination": 0.66,
+              "hybrid_total": 2187.2
+            },
+            "phase_semantics": "inclusive_nested"
+          }
+        },
+        {
+          "elapsed_ms": 2185.69,
+          "error": null,
+          "returned": 1,
+          "bytes": 4127,
+          "timing": {
+            "total_ms": 2185.65,
+            "attempts": 1,
+            "phases_ms": {
+              "literal_census": 3.14,
+              "candidate_sql": 20.21,
+              "evidence_validation": 1699.83,
+              "ranking_and_pagination": 0.68,
+              "hybrid_total": 2176.13
+            },
+            "phase_semantics": "inclusive_nested"
+          }
+        },
+        {
+          "elapsed_ms": 2157.05,
+          "error": null,
+          "returned": 1,
+          "bytes": 4126,
+          "timing": {
+            "total_ms": 2157.0,
+            "attempts": 1,
+            "phases_ms": {
+              "literal_census": 3.22,
+              "candidate_sql": 20.43,
+              "evidence_validation": 1701.58,
+              "ranking_and_pagination": 0.67,
+              "hybrid_total": 2147.52
+            },
+            "phase_semantics": "inclusive_nested"
+          }
+        },
+        {
+          "elapsed_ms": 2197.39,
+          "error": null,
+          "returned": 1,
+          "bytes": 4127,
+          "timing": {
+            "total_ms": 2197.35,
+            "attempts": 1,
+            "phases_ms": {
+              "literal_census": 3.22,
+              "candidate_sql": 20.09,
+              "evidence_validation": 1744.14,
+              "ranking_and_pagination": 0.67,
+              "hybrid_total": 2187.63
+            },
+            "phase_semantics": "inclusive_nested"
+          }
+        }
+      ]
+    },
+    {
+      "query": "من ضاقت عليه المعيشة كيف ينال سعة الرزق",
+      "match_mode": "auto",
+      "p50_ms": 1140.77,
+      "p95_ms": 1168.75,
+      "errors": 0,
+      "runs": [
+        {
+          "elapsed_ms": 1168.75,
+          "error": null,
+          "returned": 5,
+          "bytes": 9495,
+          "timing": {
+            "total_ms": 1168.71,
+            "attempts": 1,
+            "phases_ms": {
+              "literal_census": 24.29,
+              "candidate_sql": 34.29,
+              "evidence_validation": 834.02,
+              "ranking_and_pagination": 0.73,
+              "hybrid_total": 1096.35,
+              "reformulation_total": 28.55
+            },
+            "phase_semantics": "inclusive_nested"
+          }
+        },
+        {
+          "elapsed_ms": 1140.77,
+          "error": null,
+          "returned": 5,
+          "bytes": 9493,
+          "timing": {
+            "total_ms": 1140.72,
+            "attempts": 1,
+            "phases_ms": {
+              "literal_census": 9.07,
+              "candidate_sql": 34.34,
+              "evidence_validation": 830.88,
+              "ranking_and_pagination": 0.88,
+              "hybrid_total": 1104.11,
+              "reformulation_total": 22.0
+            },
+            "phase_semantics": "inclusive_nested"
+          }
+        },
+        {
+          "elapsed_ms": 1156.66,
+          "error": null,
+          "returned": 5,
+          "bytes": 9493,
+          "timing": {
+            "total_ms": 1156.61,
+            "attempts": 1,
+            "phases_ms": {
+              "literal_census": 9.4,
+              "candidate_sql": 34.63,
+              "evidence_validation": 843.39,
+              "ranking_and_pagination": 1.04,
+              "hybrid_total": 1121.22,
+              "reformulation_total": 20.65
+            },
+            "phase_semantics": "inclusive_nested"
+          }
+        },
+        {
+          "elapsed_ms": 1128.57,
+          "error": null,
+          "returned": 5,
+          "bytes": 9493,
+          "timing": {
+            "total_ms": 1128.52,
+            "attempts": 1,
+            "phases_ms": {
+              "literal_census": 8.78,
+              "candidate_sql": 33.8,
+              "evidence_validation": 817.61,
+              "ranking_and_pagination": 0.73,
+              "hybrid_total": 1093.38,
+              "reformulation_total": 21.48
+            },
+            "phase_semantics": "inclusive_nested"
+          }
+        },
+        {
+          "elapsed_ms": 1123.72,
+          "error": null,
+          "returned": 5,
+          "bytes": 9493,
+          "timing": {
+            "total_ms": 1123.67,
+            "attempts": 1,
+            "phases_ms": {
+              "literal_census": 8.85,
+              "candidate_sql": 35.33,
+              "evidence_validation": 809.22,
+              "ranking_and_pagination": 0.76,
+              "hybrid_total": 1086.8,
+              "reformulation_total": 22.61
+            },
+            "phase_semantics": "inclusive_nested"
+          }
+        }
+      ]
+    }
+  ],
+  "semantic_index_tested": false
+}

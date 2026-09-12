@@ -38,6 +38,10 @@ def compact_search_response(
                 "title": row["book_title"], "tier": row["source_tier"],
                 "am": row.get("authorship_mode"),
                 "ac": row.get("attribution_confidence"),
+                "source": row.get("source_code"),
+                "source_author": row.get("source_author"),
+                "compiler": row.get("compiler"),
+                "provenance_status": row.get("provenance_status"),
             })
             hit = {
                 "b": row["book_id"], "s": row["seq"],
@@ -88,8 +92,16 @@ def compact_search_response(
                 hit["semantic_score"] = row["semantic_score"]
                 hit["citation_verified"] = bool(row.get("citation_verified"))
                 hit["verification_required"] = bool(row.get("verification_required"))
-            if row.get("matched_terms"):
-                hit["matched_terms"] = row["matched_terms"]
+            if "matched_terms" in row:
+                hit["matched_terms"] = {
+                    query: {key: value for key, value in evidence.items()
+                            if key not in {"surface_form", "normalized_form"}}
+                    for query, evidence in row["matched_terms"].items()
+                }
+            for field in ("selected_queries", "match_attribution_scope", "evidence_type_method", "evidence_type_confidence", "original_queries",
+                      "intent_term_coverage", "reformulation_warning"):
+                if field in row:
+                    hit[field] = row[field]
             if row.get("reformulated_query"):
                 hit["reformulated_query"] = row["reformulated_query"]
                 hit["reformulation_method"] = row.get("reformulation_method")
@@ -151,7 +163,9 @@ def compact_search_response(
                       "stable_id_kind", "heading_id", "stable_ids", "container_id",
                       "block_type", "evidence_type", "matched_terms",
                       "whole_word", "normalization_level", "footnotes_excluded",
-                      "reformulated_query", "reformulation_method"):
+                      "reformulated_query", "reformulation_method", "selected_queries",
+                      "match_attribution_scope", "evidence_type_method", "evidence_type_confidence", "original_queries",
+                      "intent_term_coverage", "reformulation_warning"):
             if row.get(field) is not None:
                 hit[field] = row[field]
         if row.get("canonical_book_id") and row["canonical_book_id"] != row["book_id"]:

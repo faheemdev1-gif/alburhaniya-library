@@ -1,0 +1,21 @@
+{
+  "hard_gates": {
+    "passed": 136,
+    "failed": [],
+    "skipped": [
+      "test_semantic_retrieval.SemanticRetrievalTests.test_vector_metadata_filters_book_and_qasida_before_scoring: local semantic index is disabled"
+    ]
+  },
+  "retrieval_quality_gates": {
+    "passed": 3,
+    "failed": [],
+    "skipped": []
+  },
+  "efficiency_warnings": {
+    "passed": 2,
+    "failed": [],
+    "skipped": []
+  },
+  "deployment_blocked": false,
+  "efficiency_warning_count": 0
+}
