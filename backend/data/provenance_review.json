@@ -1,0 +1,1006 @@
+{
+  "review_basis": "Supplied parsed corpus and existing catalogue only; no independent documentary authentication.",
+  "author_metadata_changed": false,
+  "records": [
+    {
+      "book_id": "b01",
+      "title": "أحسن القصص",
+      "source_author": "مجهول المُعِدّ — من دروس سيدي الإمام فخر الدين",
+      "compiler": null,
+      "existing_provenance_status": "provisional_pending_documentary_verification",
+      "attribution_confidence": "low",
+      "review_date": "2026-09-15",
+      "review_status": "documentary_review_required",
+      "review_method": "automated_front_and_back_matter_triage",
+      "corpus_text_sha256": "4130b7b0098543ca2642d9bdd34ffa1438fb8482a8f55b0a530e8aeca5a7ef1c",
+      "candidate_evidence": [],
+      "required_next_evidence": "Signed title page, colophon, official catalogue, or documented transmission/compilation attribution."
+    },
+    {
+      "book_id": "b02",
+      "title": "أعداد المجلة",
+      "source_author": "مجلة الطريقة البرهانية — إعداد المريدين",
+      "compiler": null,
+      "existing_provenance_status": "needs_review",
+      "attribution_confidence": "unverified",
+      "review_date": "2026-09-15",
+      "review_status": "documentary_review_required",
+      "review_method": "automated_front_and_back_matter_triage",
+      "corpus_text_sha256": "f296ddd374f9e113628966b3f59fbc51403a9c6df83561f5d5b083b69af05962",
+      "candidate_evidence": [
+        {
+          "seq": 2,
+          "citation_label": "أعداد المجلة، المقطع 2",
+          "start": 7106,
+          "end": 7352,
+          "excerpt": "ن الكتب الستة، والإمام السيوطى قد شرح وعلق على كل ابواب وأحاديث السنن.\n\nوقد قام المحقق بتخريج أحاديث السنن وأحاديث الحافظ السيوطى.\n\nرابط كتاب المنهاج فى موقع التراث:- <  http://alturath.info/hadeeth/alnesa'ee/alnesa'ee.htm>\n\n............ أسرة الت",
+          "status": "unreviewed_attribution_clue_not_proof"
+        }
+      ],
+      "required_next_evidence": "Signed title page, colophon, official catalogue, or documented transmission/compilation attribution."
+    },
+    {
+      "book_id": "b03",
+      "title": "التعريفات المحكمات",
+      "source_author": "إبراهيم الدسوقي محمد بدُّور",
+      "compiler": "إبراهيم الدسوقي محمد بدُّور",
+      "existing_provenance_status": "identified_in_front_matter",
+      "attribution_confidence": "high",
+      "review_date": "2026-09-15",
+      "review_status": "existing_attribution_preserved_not_recertified",
+      "review_method": "automated_front_and_back_matter_triage",
+      "corpus_text_sha256": "d374fb344642e622543dcb1f10aa9e6af7d5879b01bad0d0f6a361989cb063c1",
+      "candidate_evidence": [
+        {
+          "seq": 2,
+          "citation_label": "التعريفات المحكمات، الصفحة 2",
+          "start": 865,
+          "end": 1110,
+          "excerpt": "اً في أغوار الوجدان أبيّاً على النسيان. وقد كان هذا البحث أحدَ ثمرات اجتهاده في تحقيق وتدقيق علوم مولانا الإمام فخر الدين - رضي الله عنه -، وهو بحث ضِمْن أبحاث عديدة أسأل اللَّه تعالى أنْ يَمُنّ عَلَيّ بإخراجها في أقشب بردة وأزهى حُلّةً لِيَنتفع",
+          "status": "unreviewed_attribution_clue_not_proof"
+        }
+      ],
+      "required_next_evidence": null
+    },
+    {
+      "book_id": "b04",
+      "title": "الشيخ صفوت",
+      "source_author": "الشيخ صفوت رحمه الله",
+      "compiler": null,
+      "existing_provenance_status": "needs_review",
+      "attribution_confidence": "unverified",
+      "review_date": "2026-09-15",
+      "review_status": "documentary_review_required",
+      "review_method": "automated_front_and_back_matter_triage",
+      "corpus_text_sha256": "836c58b1348df43213e2c39fe89deeb2d2fb414ed8607e923a2b05b995f9f560",
+      "candidate_evidence": [],
+      "required_next_evidence": "Signed title page, colophon, official catalogue, or documented transmission/compilation attribution."
+    },
+    {
+      "book_id": "b05",
+      "title": "الفرقة الناجية 25 شوال",
+      "source_author": "د. خالد العروسي — جامعة أم القرى (من خارج السلسلة)",
+      "compiler": null,
+      "existing_provenance_status": "needs_review",
+      "attribution_confidence": "unverified",
+      "review_date": "2026-09-15",
+      "review_status": "documentary_review_required",
+      "review_method": "automated_front_and_back_matter_triage",
+      "corpus_text_sha256": "526cdd7a3c49ae351b76971a9b7d9725ad334b6bdf7d5fba00568f0b13f83b5d",
+      "candidate_evidence": [
+        {
+          "seq": 42,
+          "citation_label": "الفرقة الناجية 25 شوال، الصفحة 42",
+          "start": 1627,
+          "end": 1872,
+          "excerpt": "لمية . - أسد الغابة في معرفة الصحابة ، لعز الدين ابن الأثير الجزري ( ت 630 هـ ) تحقيق : علي معوّض - عادل عبد الموجود ، دار الكتب العلمية ، بيروت - لبنان . - أصول ابن مفلح ، لشمس الدين محمد بن مفلح المقدسي ( ت 763 هـ ) ، تحقيق : الدكتور فهد السدح",
+          "status": "unreviewed_attribution_clue_not_proof"
+        },
+        {
+          "seq": 42,
+          "citation_label": "الفرقة الناجية 25 شوال، الصفحة 42",
+          "start": 1767,
+          "end": 2012,
+          "excerpt": "يروت - لبنان . - أصول ابن مفلح ، لشمس الدين محمد بن مفلح المقدسي ( ت 763 هـ ) ، تحقيق : الدكتور فهد السدحان ، مكتبة العبيكان ، الرياض 1420 هـ . - الأعلام ، لخير الدين الزركلي ، الطبعة الثامنة ، دار العلم للملايين ، بيروت - لبنان . - إعلام الموقع",
+          "status": "unreviewed_attribution_clue_not_proof"
+        },
+        {
+          "seq": 42,
+          "citation_label": "الفرقة الناجية 25 شوال، الصفحة 42",
+          "start": 2124,
+          "end": 2369,
+          "excerpt": " . - إغاثة اللهفان من مصائد الشيطان ، لشمس الدين ابن قيم الجوزية ( ت 751 هـ ) ، تحقيق : خالد السبع العلمي ، الناشر: دار الكتاب العربي. - الأم ، لمحمد بن إدريس الشافعي ( ت 204 هـ ) ، الناشر : دار المعرفة . - الإنصاف في معرفة الراجح من الخلاف ، لع",
+          "status": "unreviewed_attribution_clue_not_proof"
+        },
+        {
+          "seq": 42,
+          "citation_label": "الفرقة الناجية 25 شوال، الصفحة 42",
+          "start": 2337,
+          "end": 2582,
+          "excerpt": "ف في معرفة الراجح من الخلاف ، لعلاء الدين علي بن سليمان المرداوي ( ت 885 هـ ) ، تحقيق : محمد حامد فقي ، الناشر : دار إحياء التراث العربي . - البحر المحيط في أصول الفقه ، لبدر الدين محمد بن بهادر الزركشي ( ت 794 هـ ) ، راجعه : الدكتور عمر الأشقر ",
+          "status": "unreviewed_attribution_clue_not_proof"
+        },
+        {
+          "seq": 42,
+          "citation_label": "الفرقة الناجية 25 شوال، الصفحة 42",
+          "start": 2623,
+          "end": 2868,
+          "excerpt": "ت 1409 هـ . - التحبير شرح التحرير ، لأبي الحسن علي بن سليمان المرداوي ( ت 885 ) تحقيق : د/ عبد الرحمن الجبرين ، د/ عوض القرني ، د/ أحمد السراج ، الناشر : مكتبة الرشد - الرياض . - تفسير الطبري ، لأبي جعفر محمد بن جرير الطبري ( ت 310 هـ ) ، دار ال",
+          "status": "unreviewed_attribution_clue_not_proof"
+        },
+        {
+          "seq": 42,
+          "citation_label": "الفرقة الناجية 25 شوال، الصفحة 42",
+          "start": 2878,
+          "end": 3123,
+          "excerpt": "ة - بيروت. - تفسير ابن كثير ، لأبي الفداء إسماعيل بن كثير القرشي ( ت 774 هـ ) ، تحقيق : ساهي السلامة، دار طيبة للنشر - السعودية . - تقرير القواعد وتحرير الفوائد ، لزين الدين عبد الرحمن بن رجب الحنبلي ( ت 795 هـ ) ، تحقيق : أبو عبيدة مشهور بن حسن",
+          "status": "unreviewed_attribution_clue_not_proof"
+        }
+      ],
+      "required_next_evidence": "Signed title page, colophon, official catalogue, or documented transmission/compilation attribution."
+    },
+    {
+      "book_id": "b06",
+      "title": "النظام الإداري واللائحة فى الطريقة البرهانية الدسوقية الشاذلية",
+      "source_author": "وثيقة إدارية للطريقة",
+      "compiler": null,
+      "existing_provenance_status": "needs_review",
+      "attribution_confidence": "unverified",
+      "review_date": "2026-09-15",
+      "review_status": "documentary_review_required",
+      "review_method": "automated_front_and_back_matter_triage",
+      "corpus_text_sha256": "a2c369fb915726fc85d5dec8c7eea440dacb4ca6e7b7514488b2aa9777932ba5",
+      "candidate_evidence": [],
+      "required_next_evidence": "Signed title page, colophon, official catalogue, or documented transmission/compilation attribution."
+    },
+    {
+      "book_id": "b07",
+      "title": "انتصار أولياء الرحمن على أولياء الشيطان",
+      "source_author": "سيدي الإمام فخر الدين قدّس سرّه",
+      "compiler": null,
+      "existing_provenance_status": "classified_canonical_work",
+      "attribution_confidence": "high",
+      "review_date": "2026-09-15",
+      "review_status": "existing_attribution_preserved_not_recertified",
+      "review_method": "automated_front_and_back_matter_triage",
+      "corpus_text_sha256": "9a8a6f4aa92c728a1f192f95044f477627e8145298a8469197759824153b2b41",
+      "candidate_evidence": [
+        {
+          "seq": 2,
+          "citation_label": "انتصار أولياء الرحمن على أولياء الشيطان، الصفحة 2",
+          "start": 1238,
+          "end": 1483,
+          "excerpt": " أشد حرصا على اتباع أمور دينها، والتمسك بتراث عبادتها، وأن المعين الوحيد لها في تحقيق ذلك هو التصوف الإسلامي، وأنها قادرة على التمييز بين الخبيث والطيب، والعقيدة وصلاحها، وأباطيل وتزييف الذين يهاجمونها أويدعون السير في منهجها والله نسأل التوفيق ",
+          "status": "unreviewed_attribution_clue_not_proof"
+        },
+        {
+          "seq": 324,
+          "citation_label": "انتصار أولياء الرحمن على أولياء الشيطان، الصفحة 323",
+          "start": 0,
+          "end": 96,
+          "excerpt": "تم نقل هذ الجزء من الكتاب من موقع رايات العز ولم يكتمل نشر الكتاب\n\nجمعه وفهرسة للشاملة محمد فارس",
+          "status": "unreviewed_attribution_clue_not_proof"
+        }
+      ],
+      "required_next_evidence": null
+    },
+    {
+      "book_id": "b08",
+      "title": "اوراد الطريقة البرهانية",
+      "source_author": "نصّ الأوراد والأذكار",
+      "compiler": null,
+      "existing_provenance_status": "needs_review",
+      "attribution_confidence": "unverified",
+      "review_date": "2026-09-15",
+      "review_status": "documentary_review_required",
+      "review_method": "automated_front_and_back_matter_triage",
+      "corpus_text_sha256": "56cd1b607acac717210c746f721f365f713894f758470e5d234231702889eed8",
+      "candidate_evidence": [],
+      "required_next_evidence": "Signed title page, colophon, official catalogue, or documented transmission/compilation attribution."
+    },
+    {
+      "book_id": "b09",
+      "title": "تأويل التائية",
+      "source_author": "كروما علي (أحد مريدي الطريقة من السودان)",
+      "compiler": null,
+      "existing_provenance_status": "needs_review",
+      "attribution_confidence": "unverified",
+      "review_date": "2026-09-15",
+      "review_status": "documentary_review_required",
+      "review_method": "automated_front_and_back_matter_triage",
+      "corpus_text_sha256": "e55d38785c11a37f8ad5b9a45f411824cda190edcd7fcdd50390d712cf107683",
+      "candidate_evidence": [],
+      "required_next_evidence": "Signed title page, colophon, official catalogue, or documented transmission/compilation attribution."
+    },
+    {
+      "book_id": "b10",
+      "title": "تبرئة الذمة المحقق 1 الجزء الأول كامل",
+      "source_author": "سيدي الإمام فخر الدين قدّس سرّه",
+      "compiler": null,
+      "existing_provenance_status": "classified_canonical_work",
+      "attribution_confidence": "high",
+      "review_date": "2026-09-15",
+      "review_status": "existing_attribution_preserved_not_recertified",
+      "review_method": "automated_front_and_back_matter_triage",
+      "corpus_text_sha256": "ba6f5005193964a184062565a9ec7b903506d81ea540df6686e8fd6ec668ca38",
+      "candidate_evidence": [
+        {
+          "seq": 1,
+          "citation_label": "تبرئة الذمة المحقق 1 الجزء الأول كامل، الصفحة 1",
+          "start": 335,
+          "end": 581,
+          "excerpt": "جَنَبوُا إِنْكَارَ حَرْفٍ وَاحِدٍ عَزْلُ الْكِرَامِ مَزلَّةُ الأَقدَامِ\n\n{مقدمة المحقق}\n\nالحمد لله الذى عجزت العقول عن إدراك كنه ذاته، وتحيرت الفهوم فى معرفة صفاته، أبدع العالم وأجلى عجائب صنعه فى مجالى مصنوعاته وخلق النوع الإنساني و أودع فيه جمي",
+          "status": "unreviewed_attribution_clue_not_proof"
+        },
+        {
+          "seq": 3,
+          "citation_label": "تبرئة الذمة المحقق 1 الجزء الأول كامل، الصفحة 3",
+          "start": 518,
+          "end": 763,
+          "excerpt": "ل كلام يبرز وعليه كسوف القلب الذى منه برز\" فآثرت أن أشارك القوم بجهد متواضع وهو تحقيق هذا الكتاب النفيس الذى يعد - بحق - مَعْلَماً من معالم الطريق إلى الله، فسألت الله، وكان التوفيق لتحقيق إجابتى، واستعنت به سبحانه فكان خروجه إلى النور مرادى وبغ",
+          "status": "unreviewed_attribution_clue_not_proof"
+        },
+        {
+          "seq": 3,
+          "citation_label": "تبرئة الذمة المحقق 1 الجزء الأول كامل، الصفحة 3",
+          "start": 621,
+          "end": 866,
+          "excerpt": " الذى يعد - بحق - مَعْلَماً من معالم الطريق إلى الله، فسألت الله، وكان التوفيق لتحقيق إجابتى، واستعنت به سبحانه فكان خروجه إلى النور مرادى وبغيتى، وكان حبيبى وجدى الأعظم رسول الله (صلى الله عليه وسلم) مظلتى، وجدى الذى أنتمى إليه السيد عبد العزيز",
+          "status": "unreviewed_attribution_clue_not_proof"
+        },
+        {
+          "seq": 3,
+          "citation_label": "تبرئة الذمة المحقق 1 الجزء الأول كامل، الصفحة 3",
+          "start": 1082,
+          "end": 1327,
+          "excerpt": "ن عين السخط تبدى المساويا، لكن طلاب الحق يصلون إليه من أقرب طريق، وكان منهجى فى تحقيق الكتاب ما يلى: أولاً: دراسة شاملة لصاحب الكتاب (حياته - رحلاته - شيوخه وتلاميذه - عرض لمنهجه فى الكتاب - اختياراته وتجديداته) ثانياً: خدمة النص وطريقتى فى إخرا",
+          "status": "unreviewed_attribution_clue_not_proof"
+        }
+      ],
+      "required_next_evidence": null
+    },
+    {
+      "book_id": "b11",
+      "title": "تبرئة الذمة المحقق 2 الجزء الثانى كامل",
+      "source_author": "سيدي الإمام فخر الدين قدّس سرّه",
+      "compiler": null,
+      "existing_provenance_status": "classified_canonical_work",
+      "attribution_confidence": "high",
+      "review_date": "2026-09-15",
+      "review_status": "existing_attribution_preserved_not_recertified",
+      "review_method": "automated_front_and_back_matter_triage",
+      "corpus_text_sha256": "2c4132c3ac9a997cc44f7f0bd9836d21c71ffefd10fc3e029dfc1a4ce0d33e04",
+      "candidate_evidence": [
+        {
+          "seq": 2,
+          "citation_label": "تبرئة الذمة المحقق 2 الجزء الثانى كامل، الصفحة 2",
+          "start": 987,
+          "end": 1232,
+          "excerpt": "مجئ جاء \" وكلامهم بهذه الصيغة أدل د ليل على ما ذكرناه من معرفتهم بجلالة مكانته وتحقيق رسالته لأن هذا أجل ما يكون من حسن الخطاب. أنظر فىهذا: - ) سبل الهدى والرشاد) للصالحى 3/ 168، 169 (ط. المجلس الأعلى للشئون الإسلامية (. ) الشفا) للقاضى عياض 1/ ",
+          "status": "unreviewed_attribution_clue_not_proof"
+        }
+      ],
+      "required_next_evidence": null
+    },
+    {
+      "book_id": "b12",
+      "title": "تبرئة الذمة المحقق 3 الجزء الثالث كامل",
+      "source_author": "سيدي الإمام فخر الدين قدّس سرّه",
+      "compiler": null,
+      "existing_provenance_status": "classified_canonical_work",
+      "attribution_confidence": "high",
+      "review_date": "2026-09-15",
+      "review_status": "existing_attribution_preserved_not_recertified",
+      "review_method": "automated_front_and_back_matter_triage",
+      "corpus_text_sha256": "cf110b27415b7f6bcaf7cf0ebc5254aabbc31b6d5955cac8ca949ac8d2cf15c1",
+      "candidate_evidence": [
+        {
+          "seq": 2,
+          "citation_label": "تبرئة الذمة المحقق 3 الجزء الثالث كامل، الصفحة 2",
+          "start": 981,
+          "end": 1226,
+          "excerpt": "4. - (مرشد المحتار إلى خصائص المختار) لمحمد بن طولون الصالحى (رساله دكتوراه) فى تحقيق الكتاب بكلية أصول الدين - جامعة الأزهر 2/ 409. (6) من الآية 81 من سورة آل عمران. (7) انظر فيه: - - (شعب الإيمان) للبيهقى 2/ 146، 147 ح 1410. - البخارى (4/ 342 ",
+          "status": "unreviewed_attribution_clue_not_proof"
+        }
+      ],
+      "required_next_evidence": null
+    },
+    {
+      "book_id": "b13",
+      "title": "تبرئة الذمة المحقق 4 الجزء الرابع كامل",
+      "source_author": "سيدي الإمام فخر الدين قدّس سرّه",
+      "compiler": null,
+      "existing_provenance_status": "classified_canonical_work",
+      "attribution_confidence": "high",
+      "review_date": "2026-09-15",
+      "review_status": "existing_attribution_preserved_not_recertified",
+      "review_method": "automated_front_and_back_matter_triage",
+      "corpus_text_sha256": "892a10bbe9cc6684b40fb58d45966b1d6d67b4eb9defec9e841e5b85d9a04fe6",
+      "candidate_evidence": [],
+      "required_next_evidence": null
+    },
+    {
+      "book_id": "b14",
+      "title": "دِيوَان شَرَاب الْوَصْل",
+      "source_author": "سيدي الإمام فخر الدين قدّس سرّه",
+      "compiler": null,
+      "existing_provenance_status": "declared_tradition_specific_transmission",
+      "attribution_confidence": "high",
+      "review_date": "2026-09-15",
+      "review_status": "existing_attribution_preserved_not_recertified",
+      "review_method": "automated_front_and_back_matter_triage",
+      "corpus_text_sha256": "8b1a0d993c92d6f7f0eebb8db5f3913403b4e1ed8605adfa02575c70afdb96b3",
+      "candidate_evidence": [],
+      "required_next_evidence": null
+    },
+    {
+      "book_id": "b15",
+      "title": "س و ج لسيدي فخر الدين",
+      "source_author": "سيدي الإمام فخر الدين قدّس سرّه",
+      "compiler": null,
+      "existing_provenance_status": "compiler_not_identified",
+      "attribution_confidence": "medium",
+      "review_date": "2026-09-15",
+      "review_status": "documentary_review_required",
+      "review_method": "automated_front_and_back_matter_triage",
+      "corpus_text_sha256": "b4fee89f778b5e2dc3a1631f58cdd1b8599c47a0734aa5fe6943fbc455e064a4",
+      "candidate_evidence": [],
+      "required_next_evidence": "Signed title page, colophon, official catalogue, or documented transmission/compilation attribution."
+    },
+    {
+      "book_id": "b16",
+      "title": "سيدى إبراهيم الدسوقى",
+      "source_author": "فوزي محمد أبوزيد (من خارج السلسلة)",
+      "compiler": null,
+      "existing_provenance_status": "needs_review",
+      "attribution_confidence": "unverified",
+      "review_date": "2026-09-15",
+      "review_status": "documentary_review_required",
+      "review_method": "automated_front_and_back_matter_triage",
+      "corpus_text_sha256": "3807708af668594d207d8582a1301adc4f38a9bb7737755cad60f916c29d3f78",
+      "candidate_evidence": [
+        {
+          "seq": 74,
+          "citation_label": "سيدى إبراهيم الدسوقى، الصفحة 74",
+          "start": 554,
+          "end": 799,
+          "excerpt": "أبرار (حجم صغير) 33 - المجاهدة للصفاء و المشاهدة ... 34 - علامات التوفيق لأهل التحقيق 35 - رسالة الصالحين ... 36 - مراقى الصالحين 37 - طريق المحبوبين و أذواقهم 38 - أوراد الأخيار (ح صغير، تخريج وشرح) خامسا: دراسات صوفية معاصرة: 39 - الصوفية و ال",
+          "status": "unreviewed_attribution_clue_not_proof"
+        }
+      ],
+      "required_next_evidence": "Signed title page, colophon, official catalogue, or documented transmission/compilation attribution."
+    },
+    {
+      "book_id": "b17",
+      "title": "شرح الأوراد",
+      "source_author": "إبراهيم الدسوقي محمد بدُّور",
+      "compiler": null,
+      "existing_provenance_status": "needs_review",
+      "attribution_confidence": "unverified",
+      "review_date": "2026-09-15",
+      "review_status": "documentary_review_required",
+      "review_method": "automated_front_and_back_matter_triage",
+      "corpus_text_sha256": "39a2be87283626a81bf207182d4985a20328bcd8873153b15ccc970eb8057378",
+      "candidate_evidence": [
+        {
+          "seq": 1,
+          "citation_label": "شرح الأوراد، الصفحة 1",
+          "start": 174,
+          "end": 418,
+          "excerpt": "َخْرِ الدِّين أو ( التَّحْقَيقُ وَالتَّدْقَيق فِي شَرْحِ أَوْرَادِ الطَّرِيق )\n\nجمعه وحقَّقه وعلَّق عَلَيْه الراجي القبول والسعادة وبلوغ المأمول في الدارين الخويدم إبراهيم الدّسوقيّ مُحَمَّد بدور\n\nمقدمة الحمدُ للهِ الذي بنعمتِهِ تتمُّ الصالحاتُ",
+          "status": "unreviewed_attribution_clue_not_proof"
+        },
+        {
+          "seq": 3,
+          "citation_label": "شرح الأوراد، الصفحة 3",
+          "start": 407,
+          "end": 652,
+          "excerpt": "بِنَصِّهِ لِنُضِيفَ أماناً جديداً لِلأخِ القارئِ العزيزِ ، فإذَا رَأيْنَا وجوبَ تحقيقٍ أوْ تدقيقٍ عَمدْنَا إلى الإشارةِ إلى ذلكَ بلفظِ ( تحقيقٍ ) أوْ ( تدقيقٍ ) تَيَمُّناً واستناداً إلى قولِ شَيْخِنَا - رضي الله عنه - ( لَيْتَهُمْ لَوْ حَقَّقُوا",
+          "status": "unreviewed_attribution_clue_not_proof"
+        },
+        {
+          "seq": 3,
+          "citation_label": "شرح الأوراد، الصفحة 3",
+          "start": 464,
+          "end": 709,
+          "excerpt": "، فإذَا رَأيْنَا وجوبَ تحقيقٍ أوْ تدقيقٍ عَمدْنَا إلى الإشارةِ إلى ذلكَ بلفظِ ( تحقيقٍ ) أوْ ( تدقيقٍ ) تَيَمُّناً واستناداً إلى قولِ شَيْخِنَا - رضي الله عنه - ( لَيْتَهُمْ لَوْ حَقَّقُوا أَوْدَقَّقُوا ) .. حَيْثُ عَرَّفَ سَيِّدِي أبو المواهبِ ",
+          "status": "unreviewed_attribution_clue_not_proof"
+        },
+        {
+          "seq": 203,
+          "citation_label": "شرح الأوراد، الصفحة 203",
+          "start": 1060,
+          "end": 1249,
+          "excerpt": "رِ مَا يستطيعُ ، ولكنْ أنَا ذاتي باعملْ كُلّ المطلوب مِنِّي قَبْلَ صلاة العصر . تحقيق : ولاَ يَتَعارَضُ هذَا معَ مَا نُقِلَ عَنْ مَوْلاَنَا الشَّيْخِ إبراهيمَ - رضي الله عنه - بأنْ يَجْعَلَ",
+          "status": "unreviewed_attribution_clue_not_proof"
+        }
+      ],
+      "required_next_evidence": "Signed title page, colophon, official catalogue, or documented transmission/compilation attribution."
+    },
+    {
+      "book_id": "b18",
+      "title": "شرح المفردات اللغوية لشراب الوصل",
+      "source_author": "مجهول المؤلف — أحد المريدين",
+      "compiler": null,
+      "existing_provenance_status": "needs_review",
+      "attribution_confidence": "unverified",
+      "review_date": "2026-09-15",
+      "review_status": "documentary_review_required",
+      "review_method": "automated_front_and_back_matter_triage",
+      "corpus_text_sha256": "9ba58c5a76150ceabca57f840d95d2c945c4261237b21bc2b9d8cd0f61e331ce",
+      "candidate_evidence": [
+        {
+          "seq": 2,
+          "citation_label": "شرح المفردات اللغوية لشراب الوصل، الصفحة 2",
+          "start": 1285,
+          "end": 1529,
+          "excerpt": "نظرت إليها ، وقيل : هو الذى تراه ممتدا كالرماح بعد الطلوع ، وقيل انتشار نورها ،وجمعه أشعة . الهداية :من أسماء الله تعالى الهادى ، وهو الذى بصر عباده وعرفهم طريق معرفته حتى أقروا بربوبيته. والهدى ضد الضلال وهو الرشاد . والهداية : الإرشادإلى الصر",
+          "status": "unreviewed_attribution_clue_not_proof"
+        }
+      ],
+      "required_next_evidence": "Signed title page, colophon, official catalogue, or documented transmission/compilation attribution."
+    },
+    {
+      "book_id": "b19",
+      "title": "شرح خطاب الحولية 2012 جزء 1",
+      "source_author": "شرح أحد المريدين",
+      "compiler": null,
+      "existing_provenance_status": "needs_review",
+      "attribution_confidence": "unverified",
+      "review_date": "2026-09-15",
+      "review_status": "documentary_review_required",
+      "review_method": "automated_front_and_back_matter_triage",
+      "corpus_text_sha256": "a5abbc3d85eed3dd2cd70d64de56756849b8248f06f4d99225c93ca02d3a7ea1",
+      "candidate_evidence": [],
+      "required_next_evidence": "Signed title page, colophon, official catalogue, or documented transmission/compilation attribution."
+    },
+    {
+      "book_id": "b20",
+      "title": "شرح شراب الوصل 1",
+      "source_author": "عبد الحميد بابكر",
+      "compiler": "عبد الحميد بابكر",
+      "existing_provenance_status": "identified_in_corpus_colophon",
+      "attribution_confidence": "high",
+      "review_date": "2026-09-15",
+      "review_status": "existing_attribution_preserved_not_recertified",
+      "review_method": "automated_front_and_back_matter_triage",
+      "corpus_text_sha256": "e60c7faed9471b6605cbfd6247f9cc2c8fbc9e49ecb97ecdac558fa0ba54b3a6",
+      "candidate_evidence": [
+        {
+          "seq": 314,
+          "citation_label": "شرح شراب الوصل 1، الصفحة 314",
+          "start": 1034,
+          "end": 1279,
+          "excerpt": " فَهُمْ مُسْلِمُونَ) النمل 81 فَذَاكَ: إشارة إلي الخليفة علي الأرض يَقِيناً: بالتحقيق بكل درجات المعرفة لأهل المعرفة في مراتب الدين الثلاث, و القائم مقامها: ترحّلت من علم اليقين لعينه ... إلي حقّه حيثُ الحقيقةِ وجهتي وَارِثُ الرَّاحِمِيَّةِ: بال",
+          "status": "unreviewed_attribution_clue_not_proof"
+        }
+      ],
+      "required_next_evidence": null
+    },
+    {
+      "book_id": "b21",
+      "title": "شرح شراب الوصل 2",
+      "source_author": "عبد الحميد بابكر",
+      "compiler": "عبد الحميد بابكر",
+      "existing_provenance_status": "identified_in_corpus_front_matter",
+      "attribution_confidence": "high",
+      "review_date": "2026-09-15",
+      "review_status": "existing_attribution_preserved_not_recertified",
+      "review_method": "automated_front_and_back_matter_triage",
+      "corpus_text_sha256": "b0b534fe9818ef0a5b09c42835b2d8a0615c40b1959b8067d461c7c2053929de",
+      "candidate_evidence": [
+        {
+          "seq": 1,
+          "citation_label": "شرح شراب الوصل 2، الصفحة 1",
+          "start": 905,
+          "end": 1149,
+          "excerpt": "ّل الذي لم يكن في ضوء الشمس الأكوان ... جمع كون, و الكون الحيز الذي يجمع عوالم تجمعها طبيعة التكوين و السيرورة. الأكوان خمسة و تسمي عوالم: الملك, الملكوت, الجبروت, اللاهوت, الهاهوت إلتفات ... لغةً أن تستخرج من شخصك شخصاً آخر تحاطبه (مصل قول أبي",
+          "status": "unreviewed_attribution_clue_not_proof"
+        }
+      ],
+      "required_next_evidence": null
+    },
+    {
+      "book_id": "b22",
+      "title": "شرح شراب الوصل 3",
+      "source_author": "عبد الحميد بابكر",
+      "compiler": "عبد الحميد بابكر",
+      "existing_provenance_status": "identified_in_corpus_front_matter",
+      "attribution_confidence": "high",
+      "review_date": "2026-09-15",
+      "review_status": "existing_attribution_preserved_not_recertified",
+      "review_method": "automated_front_and_back_matter_triage",
+      "corpus_text_sha256": "10d180453b94608e74cec2a26a0600a9e09baf9da2c7b14d58e03b2b4f198005",
+      "candidate_evidence": [
+        {
+          "seq": 1,
+          "citation_label": "شرح شراب الوصل 3، الصفحة 1",
+          "start": 905,
+          "end": 1149,
+          "excerpt": "ّل الذي لم يكن في ضوء الشمس الأكوان ... جمع كون, و الكون الحيز الذي يجمع عوالم تجمعها طبيعة التكوين و السيرورة. الأكوان خمسة و تسمي عوالم: الملك, الملكوت, الجبروت, اللاهوت, الهاهوت إلتفات ... لغةً أن تستخرج من شخصك شخصاً آخر تحاطبه (مصل قول أبي",
+          "status": "unreviewed_attribution_clue_not_proof"
+        },
+        {
+          "seq": 250,
+          "citation_label": "شرح شراب الوصل 3، الصفحة 250",
+          "start": 94,
+          "end": 338,
+          "excerpt": "دنيا الهوي) إِنَّ سِرَّ الْقَوْمِ كَتْمُ: لم تعرف شيئاً من سرّ القوم, القوم: من جمعهم شأن واحد, أهل الطريقة\n\nالْقَصِيدَة الثّامِنَة عشرة: العَهْدِيَّة (هَذِهِ أَنْوَارُ عَهْدِي) بيت 23: ذَا بَيَانِي يَا لِسَانِي *** دُونَهُ خَمْرٌ وَكَرْمُ\n\nالم",
+          "status": "unreviewed_attribution_clue_not_proof"
+        }
+      ],
+      "required_next_evidence": null
+    },
+    {
+      "book_id": "b23",
+      "title": "شرح شراب الوصل 4",
+      "source_author": "مجهول الشارح",
+      "compiler": null,
+      "existing_provenance_status": "needs_review",
+      "attribution_confidence": "low",
+      "review_date": "2026-09-15",
+      "review_status": "documentary_review_required",
+      "review_method": "automated_front_and_back_matter_triage",
+      "corpus_text_sha256": "397503b612cedea7e10f1e33a6cfe5b20cd51b61cdbe941ee76a2d1e9e76c309",
+      "candidate_evidence": [],
+      "required_next_evidence": "Signed title page, colophon, official catalogue, or documented transmission/compilation attribution."
+    },
+    {
+      "book_id": "b24",
+      "title": "شرح شراب الوصل 5",
+      "source_author": "مجهول الشارح",
+      "compiler": null,
+      "existing_provenance_status": "needs_review",
+      "attribution_confidence": "low",
+      "review_date": "2026-09-15",
+      "review_status": "documentary_review_required",
+      "review_method": "automated_front_and_back_matter_triage",
+      "corpus_text_sha256": "de8073e674aba1d94f8d4ec8b71a11d7f3910bf71584a9d4230c25d84414061f",
+      "candidate_evidence": [],
+      "required_next_evidence": "Signed title page, colophon, official catalogue, or documented transmission/compilation attribution."
+    },
+    {
+      "book_id": "b25",
+      "title": "شرح شراب الوصل 6",
+      "source_author": "مجهول الشارح",
+      "compiler": null,
+      "existing_provenance_status": "needs_review",
+      "attribution_confidence": "low",
+      "review_date": "2026-09-15",
+      "review_status": "documentary_review_required",
+      "review_method": "automated_front_and_back_matter_triage",
+      "corpus_text_sha256": "881a5f43f7b0643fad7b2c9b1ba66787ebfb82edf4f2e2491eb6768d20cb5ba0",
+      "candidate_evidence": [],
+      "required_next_evidence": "Signed title page, colophon, official catalogue, or documented transmission/compilation attribution."
+    },
+    {
+      "book_id": "b26",
+      "title": "علموا عنى 1 الجزء الاول",
+      "source_author": "سيدي الإمام فخر الدين قدّس سرّه",
+      "compiler": null,
+      "existing_provenance_status": "compiler_not_identified",
+      "attribution_confidence": "medium",
+      "review_date": "2026-09-15",
+      "review_status": "documentary_review_required",
+      "review_method": "automated_front_and_back_matter_triage",
+      "corpus_text_sha256": "dc65fa50961345b6c9b2e53f30fa2d08970bde510c916a0f8c6a0e8e4d6af437",
+      "candidate_evidence": [],
+      "required_next_evidence": "Signed title page, colophon, official catalogue, or documented transmission/compilation attribution."
+    },
+    {
+      "book_id": "b27",
+      "title": "علموا عنى 2 الجزء الثاني",
+      "source_author": "سيدي الإمام فخر الدين قدّس سرّه",
+      "compiler": null,
+      "existing_provenance_status": "compiler_not_identified",
+      "attribution_confidence": "medium",
+      "review_date": "2026-09-15",
+      "review_status": "documentary_review_required",
+      "review_method": "automated_front_and_back_matter_triage",
+      "corpus_text_sha256": "c83605437f824cc397c48cf10b4d2d272f40e41cd0704a16b94bc5bd43e89ea5",
+      "candidate_evidence": [],
+      "required_next_evidence": "Signed title page, colophon, official catalogue, or documented transmission/compilation attribution."
+    },
+    {
+      "book_id": "b28",
+      "title": "علموا عنى 3 الجزء الثالث",
+      "source_author": "سيدي الإمام فخر الدين قدّس سرّه",
+      "compiler": null,
+      "existing_provenance_status": "compiler_not_identified",
+      "attribution_confidence": "medium",
+      "review_date": "2026-09-15",
+      "review_status": "documentary_review_required",
+      "review_method": "automated_front_and_back_matter_triage",
+      "corpus_text_sha256": "7a4c9027699c82a0c59b922343e4748b1bb5ed9aacd3b78fb0def163bab3022c",
+      "candidate_evidence": [
+        {
+          "seq": 3,
+          "citation_label": "علموا عنى 3 الجزء الثالث، الصفحة 3",
+          "start": 0,
+          "end": 232,
+          "excerpt": "مولانا الشيخ: ما كلهم مأخوذين من النبي، المصدر واحد. السائل: ما في تأليف ياعم الشيخ؟ مولاناالشيخ: تأليف، تأليف، ألفه من رأسه؟ أهلا وسهلا، ومدده وين؟ كان الأفندية أولى. السائل: ......... ؟ مولانا الشيخ ............. السائل: .........",
+          "status": "unreviewed_attribution_clue_not_proof"
+        },
+        {
+          "seq": 3,
+          "citation_label": "علموا عنى 3 الجزء الثالث، الصفحة 3",
+          "start": 18,
+          "end": 263,
+          "excerpt": "لهم مأخوذين من النبي، المصدر واحد. السائل: ما في تأليف ياعم الشيخ؟ مولاناالشيخ: تأليف، تأليف، ألفه من رأسه؟ أهلا وسهلا، ومدده وين؟ كان الأفندية أولى. السائل: ......... ؟ مولانا الشيخ ............. السائل: .......... أمتى ياعم الشيخ ....... أمتى ",
+          "status": "unreviewed_attribution_clue_not_proof"
+        },
+        {
+          "seq": 3,
+          "citation_label": "علموا عنى 3 الجزء الثالث، الصفحة 3",
+          "start": 25,
+          "end": 270,
+          "excerpt": "وذين من النبي، المصدر واحد. السائل: ما في تأليف ياعم الشيخ؟ مولاناالشيخ: تأليف، تأليف، ألفه من رأسه؟ أهلا وسهلا، ومدده وين؟ كان الأفندية أولى. السائل: ......... ؟ مولانا الشيخ ............. السائل: .......... أمتى ياعم الشيخ ....... أمتى ياعم ال",
+          "status": "unreviewed_attribution_clue_not_proof"
+        },
+        {
+          "seq": 3,
+          "citation_label": "علموا عنى 3 الجزء الثالث، الصفحة 3",
+          "start": 1260,
+          "end": 1412,
+          "excerpt": "بداً مدده وين، مدده وين؟ السائل: كلاما يعنى ياعم الشيخ إنه معناه، انا بقول ليك، تأليف إذا كان تأليف ماعنده مدد، يكون الرواية اللى بحفظه منه ما عنده مدد؟",
+          "status": "unreviewed_attribution_clue_not_proof"
+        },
+        {
+          "seq": 3,
+          "citation_label": "علموا عنى 3 الجزء الثالث، الصفحة 3",
+          "start": 1274,
+          "end": 1412,
+          "excerpt": " مدده وين؟ السائل: كلاما يعنى ياعم الشيخ إنه معناه، انا بقول ليك، تأليف إذا كان تأليف ماعنده مدد، يكون الرواية اللى بحفظه منه ما عنده مدد؟",
+          "status": "unreviewed_attribution_clue_not_proof"
+        }
+      ],
+      "required_next_evidence": "Signed title page, colophon, official catalogue, or documented transmission/compilation attribution."
+    },
+    {
+      "book_id": "b29",
+      "title": "علموا عنى 4 الجزء الرابع",
+      "source_author": "سيدي الإمام فخر الدين قدّس سرّه",
+      "compiler": null,
+      "existing_provenance_status": "compiler_not_identified",
+      "attribution_confidence": "medium",
+      "review_date": "2026-09-15",
+      "review_status": "documentary_review_required",
+      "review_method": "automated_front_and_back_matter_triage",
+      "corpus_text_sha256": "43c4eb8c8edeec933331e22169260588381261d37611be7d9d82b2119b8f324a",
+      "candidate_evidence": [],
+      "required_next_evidence": "Signed title page, colophon, official catalogue, or documented transmission/compilation attribution."
+    },
+    {
+      "book_id": "b30",
+      "title": "علموا عنى 5 الجزء الخامس",
+      "source_author": "سيدي الإمام فخر الدين قدّس سرّه",
+      "compiler": null,
+      "existing_provenance_status": "compiler_not_identified",
+      "attribution_confidence": "medium",
+      "review_date": "2026-09-15",
+      "review_status": "documentary_review_required",
+      "review_method": "automated_front_and_back_matter_triage",
+      "corpus_text_sha256": "58c053c5152105c31d11a478ced20ca338e661c9026128e7e05f08f87bcb9567",
+      "candidate_evidence": [],
+      "required_next_evidence": "Signed title page, colophon, official catalogue, or documented transmission/compilation attribution."
+    },
+    {
+      "book_id": "b31",
+      "title": "قبس من النور المبين",
+      "source_author": "سيدي الإمام فخر الدين قدّس سرّه",
+      "compiler": null,
+      "existing_provenance_status": "compiler_not_identified",
+      "attribution_confidence": "medium",
+      "review_date": "2026-09-15",
+      "review_status": "documentary_review_required",
+      "review_method": "automated_front_and_back_matter_triage",
+      "corpus_text_sha256": "438b2bdb918fa9cb73803a9b2b55d3db32a4d95b737227030175cba78c1c6e39",
+      "candidate_evidence": [],
+      "required_next_evidence": "Signed title page, colophon, official catalogue, or documented transmission/compilation attribution."
+    },
+    {
+      "book_id": "b32",
+      "title": "قصص الانبياء لسيدى فخر الدين",
+      "source_author": "سيدي الإمام فخر الدين قدّس سرّه",
+      "compiler": null,
+      "existing_provenance_status": "compiler_not_identified",
+      "attribution_confidence": "medium",
+      "review_date": "2026-09-15",
+      "review_status": "documentary_review_required",
+      "review_method": "automated_front_and_back_matter_triage",
+      "corpus_text_sha256": "6cc35a052c3d8f3cdd8e10d3c54b1b30cd21e391942abb2e02700d1da9a104fe",
+      "candidate_evidence": [],
+      "required_next_evidence": "Signed title page, colophon, official catalogue, or documented transmission/compilation attribution."
+    },
+    {
+      "book_id": "b33",
+      "title": "قواعد التدارس",
+      "source_author": "أحد مريدي السلسلة",
+      "compiler": null,
+      "existing_provenance_status": "needs_review",
+      "attribution_confidence": "unverified",
+      "review_date": "2026-09-15",
+      "review_status": "documentary_review_required",
+      "review_method": "automated_front_and_back_matter_triage",
+      "corpus_text_sha256": "dd958e9cfad671ebe2836ea5ad4f5f5db9c43c1094edd89ebd71729e77431535",
+      "candidate_evidence": [],
+      "required_next_evidence": "Signed title page, colophon, official catalogue, or documented transmission/compilation attribution."
+    },
+    {
+      "book_id": "b36",
+      "title": "لقاء المصريين",
+      "source_author": "مجهول المُعِدّ",
+      "compiler": null,
+      "existing_provenance_status": "needs_review",
+      "attribution_confidence": "unverified",
+      "review_date": "2026-09-15",
+      "review_status": "documentary_review_required",
+      "review_method": "automated_front_and_back_matter_triage",
+      "corpus_text_sha256": "9f3a980ec66e289623dc869e773cac870f217f7749407ec47e7483e063464792",
+      "candidate_evidence": [
+        {
+          "seq": 21,
+          "citation_label": "لقاء المصريين، الصفحة 21",
+          "start": 472,
+          "end": 716,
+          "excerpt": "تؤول لِلطريقة أو مِن الممتلَكات أو النفحات .. ما عندك حقّ التصرف فيها .. فإنت بتجمعها بإيصال .. إذا جَمَعْتَها مِن منطقة مُعَيَّنة بتِجْمَعها بإيصال .. بتوَرَّدْها بإيصال .. بتاخد الإيصال بتاعك .. عشان الموضوع ده شريعة .. عشان الموضوع دا يَكون ",
+          "status": "unreviewed_attribution_clue_not_proof"
+        }
+      ],
+      "required_next_evidence": "Signed title page, colophon, official catalogue, or documented transmission/compilation attribution."
+    },
+    {
+      "book_id": "b37",
+      "title": "مسامرة الأبرار 1",
+      "source_author": "مجهول المُعِدّ — من دروس سيدي الإمام فخر الدين",
+      "compiler": null,
+      "existing_provenance_status": "needs_review",
+      "attribution_confidence": "unverified",
+      "review_date": "2026-09-15",
+      "review_status": "documentary_review_required",
+      "review_method": "automated_front_and_back_matter_triage",
+      "corpus_text_sha256": "4bc8be42a42111a9c62c367624a871786acd4aaf47e8ba39db4dd009b6aa0ac8",
+      "candidate_evidence": [
+        {
+          "seq": 184,
+          "citation_label": "مسامرة الأبرار 1، الصفحة 184",
+          "start": 862,
+          "end": 1107,
+          "excerpt": "لي النبي, فيزداد شجنه و يغلبه الحال.\n\nكتاب تاني كنا تلاميذ في المرحلة الوسطي (الإعدادية) و كنا مجنهدين في الأوراد و في الدراسة كله مية المية الحمد لله. و أيضا كان زملاءنا يأخذون الطريقة منا يوميا بأعداد حتي أن سيدي فخر الدين أشاد بذلك في أثناء أ",
+          "status": "unreviewed_attribution_clue_not_proof"
+        }
+      ],
+      "required_next_evidence": "Signed title page, colophon, official catalogue, or documented transmission/compilation attribution."
+    },
+    {
+      "book_id": "b38",
+      "title": "مسامرة الأبرار",
+      "source_author": "مجهول المُعِدّ — من دروس سيدي الإمام فخر الدين",
+      "compiler": null,
+      "existing_provenance_status": "needs_review",
+      "attribution_confidence": "unverified",
+      "review_date": "2026-09-15",
+      "review_status": "documentary_review_required",
+      "review_method": "automated_front_and_back_matter_triage",
+      "corpus_text_sha256": "aa2c21c69dff6be4907741154b12c29ba31647e0f4dccf31edcbf6acaddadcc4",
+      "candidate_evidence": [
+        {
+          "seq": 48,
+          "citation_label": "مسامرة الأبرار، الصفحة 48",
+          "start": 862,
+          "end": 1107,
+          "excerpt": "لي النبي, فيزداد شجنه و يغلبه الحال.\n\nكتاب تاني كنا تلاميذ في المرحلة الوسطي (الإعدادية) و كنا مجنهدين في الأوراد و في الدراسة كله مية المية الحمد لله. و أيضا كان زملاءنا يأخذون الطريقة منا يوميا بأعداد حتي أن سيدي فخر الدين أشاد بذلك في أثناء أ",
+          "status": "unreviewed_attribution_clue_not_proof"
+        }
+      ],
+      "required_next_evidence": "Signed title page, colophon, official catalogue, or documented transmission/compilation attribution."
+    },
+    {
+      "book_id": "b39",
+      "title": "من جواهر الامام فخر الدين",
+      "source_author": "سيدي الإمام فخر الدين قدّس سرّه",
+      "compiler": null,
+      "existing_provenance_status": "compiler_not_identified",
+      "attribution_confidence": "medium",
+      "review_date": "2026-09-15",
+      "review_status": "documentary_review_required",
+      "review_method": "automated_front_and_back_matter_triage",
+      "corpus_text_sha256": "669ac9f9940d93e7bfe0c27114f891f5298f407a716cd7a326695a0b19e14e1b",
+      "candidate_evidence": [],
+      "required_next_evidence": "Signed title page, colophon, official catalogue, or documented transmission/compilation attribution."
+    },
+    {
+      "book_id": "b40",
+      "title": "من خواطر الامام فخر الدين",
+      "source_author": "سيدي الإمام فخر الدين قدّس سرّه",
+      "compiler": null,
+      "existing_provenance_status": "compiler_not_identified",
+      "attribution_confidence": "medium",
+      "review_date": "2026-09-15",
+      "review_status": "documentary_review_required",
+      "review_method": "automated_front_and_back_matter_triage",
+      "corpus_text_sha256": "0d68f11fe6859cf69d006dcad122e1c4f37c784f9065ce844ca8bc2a02c91acc",
+      "candidate_evidence": [],
+      "required_next_evidence": "Signed title page, colophon, official catalogue, or documented transmission/compilation attribution."
+    },
+    {
+      "book_id": "b41",
+      "title": "من دروس الإمام",
+      "source_author": "سيدي الإمام فخر الدين قدّس سرّه",
+      "compiler": null,
+      "existing_provenance_status": "compiler_not_identified",
+      "attribution_confidence": "medium",
+      "review_date": "2026-09-15",
+      "review_status": "documentary_review_required",
+      "review_method": "automated_front_and_back_matter_triage",
+      "corpus_text_sha256": "a588b34126bebe138b719b448d378b7144f55a6317a98e758b6e3d8f37b08c74",
+      "candidate_evidence": [],
+      "required_next_evidence": "Signed title page, colophon, official catalogue, or documented transmission/compilation attribution."
+    },
+    {
+      "book_id": "b42",
+      "title": "من علومى فى الفيافى",
+      "source_author": "سيدي الإمام فخر الدين قدّس سرّه",
+      "compiler": null,
+      "existing_provenance_status": "compiler_unverified_do_not_assume_safwat",
+      "attribution_confidence": "medium",
+      "review_date": "2026-09-15",
+      "review_status": "documentary_review_required",
+      "review_method": "automated_front_and_back_matter_triage",
+      "corpus_text_sha256": "7041eba2424062851d7ec64fffb6afec8318f8c98ba875bf39ddf6eba27af4f7",
+      "candidate_evidence": [
+        {
+          "seq": 160,
+          "citation_label": "من علومى فى الفيافى، الصفحة 118",
+          "start": 37,
+          "end": 282,
+          "excerpt": "ن خط سيرة غير السالك السالك مشى الطريق بنفسه ونزل فى محطاته وعاشر أهلها . يمشى بتحقيق .. معرفة صحيحة .. المجذوب كأنه خطى من إلى هناك .. فى طرفة عين نقلوه .. لايعرف خطوات أو عقبات السير الرئاسات فوق المجذوب الذى لايزيد ولاينقص.. وبدون مراحل الذكر",
+          "status": "unreviewed_attribution_clue_not_proof"
+        }
+      ],
+      "required_next_evidence": "Signed title page, colophon, official catalogue, or documented transmission/compilation attribution."
+    },
+    {
+      "book_id": "b43",
+      "title": "نسب الطريقة",
+      "source_author": "مجهول المُعِدّ",
+      "compiler": null,
+      "existing_provenance_status": "needs_review",
+      "attribution_confidence": "unverified",
+      "review_date": "2026-09-15",
+      "review_status": "documentary_review_required",
+      "review_method": "automated_front_and_back_matter_triage",
+      "corpus_text_sha256": "f8f2577309000d527bfceec0678476e9ea8ae6a67ce9419194c4434031cd4e81",
+      "candidate_evidence": [
+        {
+          "seq": 1,
+          "citation_label": "نسب الطريقة، الصفحة 1",
+          "start": 418,
+          "end": 663,
+          "excerpt": "الهلاك وأهله. وإنه لمن المعتاد أن تجد كثيراً من السالكين في ابتداءاتهم منشغلين بتحقيق بعض المسائل التي يجدونها في طريق الصوفية بين يدي مشايخهم ، فهم بين سائل ومنتقدٍ ومستدل وشارد ومُعْرض ومُعْترض ومنكر حتى يستقر الأمر على حالة واحدة تؤدي بصاحبها",
+          "status": "unreviewed_attribution_clue_not_proof"
+        },
+        {
+          "seq": 2,
+          "citation_label": "نسب الطريقة، الصفحة 2",
+          "start": 0,
+          "end": 217,
+          "excerpt": "ومن أجل ما وجده الكثير من إخواننا في الله جديراً بالتحقيق والتدقيق مسألة نسب الطريقة وإسنادها وسلسلتها والكلام في هذا الأمر العظيم لا ينبغي أن يؤتى إلا عند أهله فالطريقة أصلاً للمصطفى صلى الله عليه وسلم .. \" والو استق",
+          "status": "unreviewed_attribution_clue_not_proof"
+        },
+        {
+          "seq": 3,
+          "citation_label": "نسب الطريقة، الصفحة 3",
+          "start": 1174,
+          "end": 1403,
+          "excerpt": "ن كتاب الله خفي عليك معناها دهراً طويلاً فإذا به ينقدح ليفقأ عين فهم قلبك فتدرك تحقيق هذه المعلومة يقيناً صادقاً لا يعتريه الشك من أحد الوجوه ، وسنذكر أمثلة مما وقع من مثل ذلك نسوق تحقيقها كما وردت في بعض أمهات الكتب إن شاء الله.",
+          "status": "unreviewed_attribution_clue_not_proof"
+        },
+        {
+          "seq": 3,
+          "citation_label": "نسب الطريقة، الصفحة 3",
+          "start": 1275,
+          "end": 1403,
+          "excerpt": "يناً صادقاً لا يعتريه الشك من أحد الوجوه ، وسنذكر أمثلة مما وقع من مثل ذلك نسوق تحقيقها كما وردت في بعض أمهات الكتب إن شاء الله.",
+          "status": "unreviewed_attribution_clue_not_proof"
+        }
+      ],
+      "required_next_evidence": "Signed title page, colophon, official catalogue, or documented transmission/compilation attribution."
+    },
+    {
+      "book_id": "b44",
+      "title": "خطابات مولانا الإمام الشيخ محمد الشيخ إبراهيم الشيخ محمد عثمان عبده البرهاني رضي الله عنه",
+      "source_author": "الشيخ محمد الشيخ إبراهيم الشيخ محمد عثمان عبده البرهاني",
+      "compiler": null,
+      "existing_provenance_status": "identified_speaker_compiler_not_identified",
+      "attribution_confidence": "high",
+      "review_date": "2026-09-15",
+      "review_status": "documentary_review_required",
+      "review_method": "automated_front_and_back_matter_triage",
+      "corpus_text_sha256": "2130b1ce2ab116cf50e1f08ac84e27214f0be16902b735ba78fc0c44a78551aa",
+      "candidate_evidence": [
+        {
+          "seq": 2,
+          "citation_label": "حولية 2004 — مقطع 2",
+          "start": 175,
+          "end": 420,
+          "excerpt": "هِ ويُواظبُ عليها كطالبِ عِلمٍ بالرغم من كَونِه من أعلمِ عُلماءِ عَصرِه تشريعا وتحقيقا. ثم نأتى إلى الودِّ والتآلفِ والتَّزاورِ والتكاتفِ والتَّصافى وقد قال الله تعالى فى مُحكمِ التنزيل ?يَا أَيُّهَا الَّذِينَ آمَنُوا لَا يَسْخَرْ قَومٌ مِّن قَو",
+          "status": "unreviewed_attribution_clue_not_proof"
+        },
+        {
+          "seq": 2,
+          "citation_label": "حولية 2004 — مقطع 2",
+          "start": 6050,
+          "end": 6295,
+          "excerpt": " وادى النيل مع الاستراتيجيات الأجنبية فى المنطقة يحتم أن تستند الجهود المبذولة لتحقيق وحدة وادى النيل على قاعدة التيار الصوفى الجارف فى شطرى الوادي، الشئ الذى يعنى دعم تلك الخطوات وتعزيزها وتوفير القوة الروحية والسند الشعبى لها ويشكل بالتالى أهم",
+          "status": "unreviewed_attribution_clue_not_proof"
+        }
+      ],
+      "required_next_evidence": "Signed title page, colophon, official catalogue, or documented transmission/compilation attribution."
+    },
+    {
+      "book_id": "b45",
+      "title": "خطابات مولانا الإمام الشيخ إبراهيم محمد عثمان عبده البرهاني رضي الله عنه",
+      "source_author": "الشيخ إبراهيم محمد عثمان عبده البرهاني",
+      "compiler": null,
+      "existing_provenance_status": "identified_speaker_compiler_not_identified",
+      "attribution_confidence": "high",
+      "review_date": "2026-09-15",
+      "review_status": "documentary_review_required",
+      "review_method": "automated_front_and_back_matter_triage",
+      "corpus_text_sha256": "89a8799f8badff5b5901a1ab4fb7d5116b9c82f03b49286ba3691bd3b4c57875",
+      "candidate_evidence": [
+        {
+          "seq": 3,
+          "citation_label": "خطاب 1998",
+          "start": 722,
+          "end": 967,
+          "excerpt": " .... ولابد لي أن أشير إلى أن دخولنا إلى هذه المرحلة لا يمكن أن يتم إذا لم نحسن إعداد أنفسنا وترتيب كياناتنا جيداً باعتبار أن ضخامة المسئولية القادمة والتي تحدثت عنها علاوة على بيئة عملنا أصقاع العالم هي بيئة غاية في التعقيد نعني صعوبة العالم في",
+          "status": "unreviewed_attribution_clue_not_proof"
+        },
+        {
+          "seq": 3,
+          "citation_label": "خطاب 1998",
+          "start": 1816,
+          "end": 2061,
+          "excerpt": "ً - العمل على نشر أهمية الصفا وعدم الاختلاف وعدم التنازع كعامل غاية في الأهمية لتحقيق النجاح لأعمالنا وأذكركم بقوله تعالى في هذا الخصوص (ولا تنازعوا فتفشلوا) صدق الله العظيم. وقول مولانا الشيخ محمد عثمان عبده رضي الله عنه: باب التنازع إن طرقتم ت",
+          "status": "unreviewed_attribution_clue_not_proof"
+        },
+        {
+          "seq": 17,
+          "citation_label": "خطاب 2003 — مقطع 3",
+          "start": 4046,
+          "end": 4290,
+          "excerpt": "صَّى بها الوالد / فيه ناس شغّالين ورا الكواليس / سيبك من الكلام التقيل / خطبة الجمعه كانت كيف؟ شخص يردّ: جميله. مولانا: ما عجبتهم / العجيبه الشخص اللي بيدرس في مصر يقول لك: آه انت عالِم ونحنا [نحن] عُلَمَا روح عالسودان / انت فاهم كلامي؟ / المصر",
+          "status": "unreviewed_attribution_clue_not_proof"
+        },
+        {
+          "seq": 17,
+          "citation_label": "خطاب 2003 — مقطع 3",
+          "start": 4303,
+          "end": 4547,
+          "excerpt": "انت عالِم واحنا عُلَمَا / ما في حدّ معترِف بالدرس / لكنْ لَما جينا / هسّه يوم الجمعه / الخلْق كلها روحها المعنويه مبسوطه / شايفه دا محلّ الدين / دا محلّ التصوف / دا محلّ المشايخ / دا محلّ الرسول صلى الله عليه وسلَّم / انتوا ما بتشوفوا بعيونكم ه",
+          "status": "unreviewed_attribution_clue_not_proof"
+        },
+        {
+          "seq": 18,
+          "citation_label": "خطاب 2003 (2) — مقطع 1",
+          "start": 3003,
+          "end": 3248,
+          "excerpt": "قد كثُرت بلا حياء وإن الله منجينى\n\nولذا نعود لنكرر أن سيدى فخر الدين لم يهتم بالتأليف والكتابة إلا فى العقائد فأتى كتابيه تبرئة الذمة وانتصار أولياء الرحمن خير ناصح للأمة للخروج من دياجير الجهل والظلام إلى نور البدر التمام صلوات الله وسلامه عليه",
+          "status": "unreviewed_attribution_clue_not_proof"
+        },
+        {
+          "seq": 18,
+          "citation_label": "خطاب 2003 (2) — مقطع 1",
+          "start": 6029,
+          "end": 6274,
+          "excerpt": "هذه المظاهر، وهذا هو الإمام فخر الدين الشيخ محمد عثمان عبده البرهانى ينفى بحقٍ وتحقيق هذه .. عن أتباعه ومحبيه فيقول فى أحد قصائده من ديوان شراب الوصل وهى أيضاً لكل من يقف على طريق الحق:\n\nيا أيها الناس حج البيت للسارى وميتُ القلبِ لا تشجيه أوتارى",
+          "status": "unreviewed_attribution_clue_not_proof"
+        }
+      ],
+      "required_next_evidence": "Signed title page, colophon, official catalogue, or documented transmission/compilation attribution."
+    }
+  ],
+  "documentary_review_required": 33
+}

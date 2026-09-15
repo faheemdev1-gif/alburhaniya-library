@@ -99,7 +99,8 @@ def compact_search_response(
                     for query, evidence in row["matched_terms"].items()
                 }
             for field in ("selected_queries", "match_attribution_scope", "evidence_type_method", "evidence_type_confidence", "original_queries",
-                      "intent_term_coverage", "reformulation_warning"):
+                      "intent_term_coverage", "reformulation_warning", "question_relevance",
+                      "intent_method", "answer_verified", "intent_evidence", "lexical_score"):
                 if field in row:
                     hit[field] = row[field]
             if row.get("reformulated_query"):
@@ -165,7 +166,8 @@ def compact_search_response(
                       "whole_word", "normalization_level", "footnotes_excluded",
                       "reformulated_query", "reformulation_method", "selected_queries",
                       "match_attribution_scope", "evidence_type_method", "evidence_type_confidence", "original_queries",
-                      "intent_term_coverage", "reformulation_warning"):
+                      "intent_term_coverage", "reformulation_warning", "question_relevance",
+                      "intent_method", "answer_verified", "intent_evidence", "lexical_score"):
             if row.get(field) is not None:
                 hit[field] = row[field]
         if row.get("canonical_book_id") and row["canonical_book_id"] != row["book_id"]:

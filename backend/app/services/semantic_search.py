@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import hashlib
 import os
 from functools import lru_cache
 from html import escape as _esc
@@ -34,7 +35,7 @@ def _load_index() -> tuple[np.ndarray, dict]:
 
 
 def semantic_available() -> bool:
-    if not _setting("enable_local_semantic_search", True):
+    if not _setting("enable_local_semantic_search", False):
         return False
     vectors_path = _setting("semantic_embeddings_path", "semantic_embeddings.npy")
     manifest_path = _setting("semantic_manifest_path", "semantic_manifest.json")
@@ -45,9 +46,30 @@ def semantic_available() -> bool:
         row = db._connection().execute(
             "SELECT 1 FROM sqlite_master WHERE type='table' AND name='semantic_chunks'"
         ).fetchone()
-        return bool(row)
+        if not row:
+            return False
+        vectors, manifest = _load_index()
+        path = os.path.abspath(_setting("library_db_path", "library.db"))
+        stat = os.stat(path)
+        corpus_hash, chunk_count = _semantic_corpus_identity(path, stat.st_mtime_ns, stat.st_size)
+        return (manifest.get("corpus_sha256") == corpus_hash
+                and chunk_count == vectors.shape[0])
     except Exception:
         return False
+
+
+@lru_cache(maxsize=2)
+def _semantic_corpus_identity(path, mtime_ns, size):
+    """Reject vectors from a different corpus before loading a query model."""
+    from app.services import library_db as db
+    digest = hashlib.sha256()
+    for book, seq, text in db._connection().execute(
+            "SELECT book_id,seq,text FROM pages ORDER BY book_id,seq"):
+        digest.update(book.encode("utf-8"))
+        digest.update(str(seq).encode("ascii"))
+        digest.update(text.encode("utf-8"))
+    count = db._connection().execute("SELECT COUNT(*) FROM semantic_chunks").fetchone()[0]
+    return digest.hexdigest(), count
 
 
 def _top_indices(scores: np.ndarray, limit: int) -> np.ndarray:

@@ -8,13 +8,6 @@ import unittest
 BACKEND_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 sys.path.insert(0, BACKEND_DIR)
 
-config_stub = types.ModuleType("app.core.config")
-config_stub.get_settings = lambda: types.SimpleNamespace(
-    library_db_path=os.path.join(BACKEND_DIR, "library.db"),
-    hybrid_min_relevance=0.55,
-)
-sys.modules.setdefault("app.core.config", config_stub)
-
 from app.services import library_db as db
 from app.services.compact_response import attach_expanded_passages
 from app.core.arabic_utils import strip_diacritics

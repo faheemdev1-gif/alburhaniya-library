@@ -1,0 +1,795 @@
+{
+  "server_version": "2.7.0",
+  "environment": {
+    "python": "3.12.14",
+    "platform": "Linux-6.18.44-x86_64-with-glibc2.39",
+    "production_tested": false,
+    "os_caches_controlled": false
+  },
+  "corpus_audit": {
+    "books": 43,
+    "pages": 6935,
+    "default_search_books": 42,
+    "default_search_pages": 6885,
+    "suppressed_editions": [
+      "b38"
+    ],
+    "canonical_aliases": {
+      "b38": "b37"
+    },
+    "b38_b37_exact_page_matches": 33,
+    "qasidas": 95,
+    "bayts": 2682,
+    "continuous_bayt_numbering": true,
+    "malformed_stable_ids": [],
+    "duplicate_stable_ids": [],
+    "written_ordinals": 95,
+    "ordinal_digest": "c354110999fb08d95a8d8d090fa63cc9eb47ddb62e4ea77e25b7261b66676a8d",
+    "suspicious_mid_book_toc": [],
+    "matching_integrity": {
+      "b13_p97_whole_word_sir_tokens": 1,
+      "b14_p246_whole_word_la_tokens": 1,
+      "explicit_footnote_excluded": true,
+      "literal_normalization": "safe"
+    },
+    "provenance_integrity": {
+      "status": "pass",
+      "missing_columns": [],
+      "incomplete_rows": 0,
+      "b20_compiler": "عبد الحميد بابكر",
+      "b42_compiler": null
+    },
+    "status": "pass",
+    "failures": []
+  },
+  "direct_benchmarks": [
+    {
+      "name": "lexeme",
+      "ms": [
+        673.97,
+        4.62,
+        4.36,
+        5.16,
+        4.91,
+        4.86,
+        4.52
+      ],
+      "p50_ms": 4.86,
+      "p95_ms": 673.97,
+      "samples": 7,
+      "first_request_ms": 673.97,
+      "warm": {
+        "p50_ms": 4.74,
+        "p95_ms": 5.16,
+        "samples": 6
+      },
+      "baseline_median_ms": 14.97,
+      "median_change_percent": -67.55,
+      "result_ids": [
+        "b09-p92-c384",
+        "b25-p32-c851",
+        "b11-p132-c304",
+        "b07-p96-c294",
+        "b40-p95-c258"
+      ],
+      "unchanged_result_ids": true
+    },
+    {
+      "name": "multi_lexeme",
+      "ms": [
+        369.71,
+        119.23,
+        118.26,
+        123.75,
+        120.54,
+        119.04,
+        115.77
+      ],
+      "p50_ms": 119.23,
+      "p95_ms": 369.71,
+      "samples": 7,
+      "first_request_ms": 369.71,
+      "warm": {
+        "p50_ms": 119.13,
+        "p95_ms": 123.75,
+        "samples": 6
+      },
+      "baseline_median_ms": 509.7,
+      "median_change_percent": -76.61,
+      "result_ids": [
+        "b39-p157-c176",
+        "b29-p42-c206",
+        "b11-p118-c152",
+        "b07-p20-c329",
+        "b11-p100-c343"
+      ],
+      "unchanged_result_ids": true
+    },
+    {
+      "name": "prayer_hybrid",
+      "ms": [
+        1146.48,
+        1010.2,
+        995.8,
+        999.0,
+        983.97,
+        973.51,
+        972.7
+      ],
+      "p50_ms": 995.8,
+      "p95_ms": 1146.48,
+      "samples": 7,
+      "first_request_ms": 1146.48,
+      "warm": {
+        "p50_ms": 989.88,
+        "p95_ms": 1010.2,
+        "samples": 6
+      },
+      "baseline_median_ms": 2216.2,
+      "median_change_percent": -55.07,
+      "result_ids": [
+        "b44-p46-c1675"
+      ],
+      "unchanged_result_ids": true
+    },
+    {
+      "name": "livelihood_hybrid",
+      "ms": [
+        614.58,
+        88.97,
+        80.02,
+        80.65,
+        82.52,
+        83.18,
+        82.51
+      ],
+      "p50_ms": 82.52,
+      "p95_ms": 614.58,
+      "samples": 7,
+      "first_request_ms": 614.58,
+      "warm": {
+        "p50_ms": 82.51,
+        "p95_ms": 88.97,
+        "samples": 6
+      },
+      "baseline_median_ms": 1076.62,
+      "median_change_percent": -92.33,
+      "result_ids": [],
+      "unchanged_result_ids": true
+    }
+  ],
+  "mcp": {
+    "transport": "local MCP stdio with fresh subprocess per scenario; excludes HTTP/network/deployment latency",
+    "tokenizer": "cl100k_base; descriptive token counts, not actual client context usage or billing",
+    "cases": [
+      {
+        "scenario": "lexeme",
+        "tool": "search_library",
+        "args": {
+          "query": "طمأنينة",
+          "match_mode": "lexeme",
+          "include_counts": true,
+          "limit": 5
+        },
+        "fresh_tools_list": true,
+        "first_request": {
+          "client_ms": 710.12,
+          "server_ms": 704.42,
+          "attempts": 1,
+          "phases_ms": {
+            "literal_census": 8.48,
+            "candidate_sql": 1.59,
+            "evidence_validation": 18.09,
+            "ranking_and_pagination": 0.1,
+            "completeness_audit": 0.63
+          },
+          "structured_tokens": 2696,
+          "complete_mcp_result_tokens": 6612,
+          "request_id": "aed69e3bb402452f8a61213165f60224"
+        },
+        "warm_client": {
+          "p50_ms": 16.41,
+          "p95_ms": 17.7,
+          "samples": 6
+        },
+        "warm_server": {
+          "p50_ms": 11.75,
+          "p95_ms": 12.55,
+          "samples": 6
+        },
+        "samples": [
+          {
+            "client_ms": 710.12,
+            "server_ms": 704.42,
+            "attempts": 1,
+            "phases_ms": {
+              "literal_census": 8.48,
+              "candidate_sql": 1.59,
+              "evidence_validation": 18.09,
+              "ranking_and_pagination": 0.1,
+              "completeness_audit": 0.63
+            },
+            "structured_tokens": 2696,
+            "complete_mcp_result_tokens": 6612,
+            "request_id": "aed69e3bb402452f8a61213165f60224"
+          },
+          {
+            "client_ms": 17.7,
+            "server_ms": 12.55,
+            "attempts": 1,
+            "phases_ms": {
+              "literal_census": 1.48,
+              "candidate_sql": 1.31,
+              "evidence_validation": 8.18,
+              "ranking_and_pagination": 0.08,
+              "completeness_audit": 0.48
+            },
+            "structured_tokens": 2698,
+            "complete_mcp_result_tokens": 6616,
+            "request_id": "85c60029d7f740eca0644fc1f58a5230"
+          },
+          {
+            "client_ms": 16.67,
+            "server_ms": 11.89,
+            "attempts": 1,
+            "phases_ms": {
+              "literal_census": 1.86,
+              "candidate_sql": 1.13,
+              "evidence_validation": 7.45,
+              "ranking_and_pagination": 0.08,
+              "completeness_audit": 0.54
+            },
+            "structured_tokens": 2698,
+            "complete_mcp_result_tokens": 6616,
+            "request_id": "bf64252da2b540199d0cdce0ef77af5f"
+          },
+          {
+            "client_ms": 16.15,
+            "server_ms": 12.0,
+            "attempts": 1,
+            "phases_ms": {
+              "literal_census": 1.41,
+              "candidate_sql": 1.08,
+              "evidence_validation": 8.06,
+              "ranking_and_pagination": 0.08,
+              "completeness_audit": 0.51
+            },
+            "structured_tokens": 2702,
+            "complete_mcp_result_tokens": 6624,
+            "request_id": "4e89ebaaf4bd4e3f8c54dbe3f50e0b71"
+          },
+          {
+            "client_ms": 15.24,
+            "server_ms": 11.3,
+            "attempts": 1,
+            "phases_ms": {
+              "literal_census": 1.41,
+              "candidate_sql": 1.08,
+              "evidence_validation": 7.35,
+              "ranking_and_pagination": 0.08,
+              "completeness_audit": 0.5
+            },
+            "structured_tokens": 2699,
+            "complete_mcp_result_tokens": 6618,
+            "request_id": "c19f33c094ca41b0916df9d4b0325435"
+          },
+          {
+            "client_ms": 15.51,
+            "server_ms": 11.61,
+            "attempts": 1,
+            "phases_ms": {
+              "literal_census": 1.5,
+              "candidate_sql": 1.17,
+              "evidence_validation": 7.47,
+              "ranking_and_pagination": 0.08,
+              "completeness_audit": 0.58
+            },
+            "structured_tokens": 2696,
+            "complete_mcp_result_tokens": 6612,
+            "request_id": "ad13e876e992490bac28cfabd2edf73d"
+          },
+          {
+            "client_ms": 16.73,
+            "server_ms": 11.54,
+            "attempts": 1,
+            "phases_ms": {
+              "literal_census": 1.31,
+              "candidate_sql": 1.34,
+              "evidence_validation": 7.41,
+              "ranking_and_pagination": 0.08,
+              "completeness_audit": 0.49
+            },
+            "structured_tokens": 2700,
+            "complete_mcp_result_tokens": 6620,
+            "request_id": "9cddcd9b00bf4282b6efb32b370e7398"
+          }
+        ]
+      },
+      {
+        "scenario": "multi_lexeme",
+        "tool": "search_library",
+        "args": {
+          "queries": [
+            "إيمان",
+            "مسألة"
+          ],
+          "match_mode": "lexeme",
+          "check_completeness": true,
+          "limit": 5
+        },
+        "fresh_tools_list": true,
+        "first_request": {
+          "client_ms": 1231.63,
+          "server_ms": 1226.49,
+          "attempts": 1,
+          "phases_ms": {
+            "candidate_sql": 15.9,
+            "evidence_validation": 351.8,
+            "ranking_and_pagination": 1.96,
+            "completeness_audit": 49.15
+          },
+          "structured_tokens": 2459,
+          "complete_mcp_result_tokens": 6040,
+          "request_id": "dd82ed32a6b54a008718724936060167"
+        },
+        "warm_client": {
+          "p50_ms": 129.76,
+          "p95_ms": 135.79,
+          "samples": 6
+        },
+        "warm_server": {
+          "p50_ms": 124.7,
+          "p95_ms": 130.75,
+          "samples": 6
+        },
+        "samples": [
+          {
+            "client_ms": 1231.63,
+            "server_ms": 1226.49,
+            "attempts": 1,
+            "phases_ms": {
+              "candidate_sql": 15.9,
+              "evidence_validation": 351.8,
+              "ranking_and_pagination": 1.96,
+              "completeness_audit": 49.15
+            },
+            "structured_tokens": 2459,
+            "complete_mcp_result_tokens": 6040,
+            "request_id": "dd82ed32a6b54a008718724936060167"
+          },
+          {
+            "client_ms": 135.79,
+            "server_ms": 130.75,
+            "attempts": 1,
+            "phases_ms": {
+              "candidate_sql": 16.66,
+              "evidence_validation": 98.55,
+              "ranking_and_pagination": 1.96,
+              "completeness_audit": 12.18
+            },
+            "structured_tokens": 2463,
+            "complete_mcp_result_tokens": 6048,
+            "request_id": "4db0ee597b91430ea2b83b460a4d64a4"
+          },
+          {
+            "client_ms": 126.9,
+            "server_ms": 122.25,
+            "attempts": 1,
+            "phases_ms": {
+              "candidate_sql": 13.91,
+              "evidence_validation": 93.06,
+              "ranking_and_pagination": 1.83,
+              "completeness_audit": 12.17
+            },
+            "structured_tokens": 2460,
+            "complete_mcp_result_tokens": 6042,
+            "request_id": "b171f03f551e4ca4afd63481fb68abe4"
+          },
+          {
+            "client_ms": 129.88,
+            "server_ms": 124.93,
+            "attempts": 1,
+            "phases_ms": {
+              "candidate_sql": 13.63,
+              "evidence_validation": 96.25,
+              "ranking_and_pagination": 1.78,
+              "completeness_audit": 11.91
+            },
+            "structured_tokens": 2462,
+            "complete_mcp_result_tokens": 6046,
+            "request_id": "d95ef24c16a545ec8288d83af5591d8b"
+          },
+          {
+            "client_ms": 130.51,
+            "server_ms": 125.67,
+            "attempts": 1,
+            "phases_ms": {
+              "candidate_sql": 14.22,
+              "evidence_validation": 96.14,
+              "ranking_and_pagination": 1.72,
+              "completeness_audit": 12.2
+            },
+            "structured_tokens": 2459,
+            "complete_mcp_result_tokens": 6040,
+            "request_id": "210157f1f82f483385d5bcd46fe730ab"
+          },
+          {
+            "client_ms": 129.65,
+            "server_ms": 124.47,
+            "attempts": 1,
+            "phases_ms": {
+              "candidate_sql": 14.35,
+              "evidence_validation": 94.42,
+              "ranking_and_pagination": 1.97,
+              "completeness_audit": 12.41
+            },
+            "structured_tokens": 2461,
+            "complete_mcp_result_tokens": 6044,
+            "request_id": "f0147fd62eec4566bc91e003d64db8b0"
+          },
+          {
+            "client_ms": 128.56,
+            "server_ms": 123.85,
+            "attempts": 1,
+            "phases_ms": {
+              "candidate_sql": 13.7,
+              "evidence_validation": 94.81,
+              "ranking_and_pagination": 1.79,
+              "completeness_audit": 12.22
+            },
+            "structured_tokens": 2463,
+            "complete_mcp_result_tokens": 6048,
+            "request_id": "ac8ee5ac49c249e7a1b6ac432446f3ea"
+          }
+        ]
+      },
+      {
+        "scenario": "livelihood",
+        "tool": "search_library",
+        "args": {
+          "query": "من ضاقت عليه المعيشة كيف ينال سعة الرزق",
+          "limit": 5
+        },
+        "fresh_tools_list": true,
+        "first_request": {
+          "client_ms": 852.5,
+          "server_ms": 847.88,
+          "attempts": 1,
+          "phases_ms": {
+            "candidate_sql": 44.62,
+            "evidence_validation": 515.39,
+            "ranking_and_pagination": 1.13,
+            "hybrid_total": 556.72,
+            "reformulation_total": 207.78
+          },
+          "structured_tokens": 2954,
+          "complete_mcp_result_tokens": 7360,
+          "request_id": "ebeb3ba2d7864a9b9bed17a19dc7bb44"
+        },
+        "warm_client": {
+          "p50_ms": 233.02,
+          "p95_ms": 272.79,
+          "samples": 6
+        },
+        "warm_server": {
+          "p50_ms": 227.58,
+          "p95_ms": 259.56,
+          "samples": 6
+        },
+        "samples": [
+          {
+            "client_ms": 852.5,
+            "server_ms": 847.88,
+            "attempts": 1,
+            "phases_ms": {
+              "candidate_sql": 44.62,
+              "evidence_validation": 515.39,
+              "ranking_and_pagination": 1.13,
+              "hybrid_total": 556.72,
+              "reformulation_total": 207.78
+            },
+            "structured_tokens": 2954,
+            "complete_mcp_result_tokens": 7360,
+            "request_id": "ebeb3ba2d7864a9b9bed17a19dc7bb44"
+          },
+          {
+            "client_ms": 225.53,
+            "server_ms": 220.47,
+            "attempts": 1,
+            "phases_ms": {
+              "candidate_sql": 39.87,
+              "evidence_validation": 59.89,
+              "ranking_and_pagination": 1.11,
+              "hybrid_total": 76.7,
+              "reformulation_total": 136.85
+            },
+            "structured_tokens": 2956,
+            "complete_mcp_result_tokens": 7364,
+            "request_id": "7ae4258e7e02449cb2b1fe8a6a989f9d"
+          },
+          {
+            "client_ms": 219.7,
+            "server_ms": 214.65,
+            "attempts": 1,
+            "phases_ms": {
+              "candidate_sql": 39.2,
+              "evidence_validation": 57.82,
+              "ranking_and_pagination": 0.89,
+              "hybrid_total": 74.76,
+              "reformulation_total": 132.82
+            },
+            "structured_tokens": 2952,
+            "complete_mcp_result_tokens": 7356,
+            "request_id": "eb077bb1fc524cafbb0f45d9cb7240f5"
+          },
+          {
+            "client_ms": 230.56,
+            "server_ms": 225.42,
+            "attempts": 1,
+            "phases_ms": {
+              "candidate_sql": 39.18,
+              "evidence_validation": 60.96,
+              "ranking_and_pagination": 1.03,
+              "hybrid_total": 77.3,
+              "reformulation_total": 141.35
+            },
+            "structured_tokens": 2952,
+            "complete_mcp_result_tokens": 7356,
+            "request_id": "3163bb7350aa45faacf5d1590f231c4d"
+          },
+          {
+            "client_ms": 272.79,
+            "server_ms": 259.56,
+            "attempts": 1,
+            "phases_ms": {
+              "candidate_sql": 48.24,
+              "evidence_validation": 64.33,
+              "ranking_and_pagination": 0.99,
+              "hybrid_total": 103.89,
+              "reformulation_total": 148.49
+            },
+            "structured_tokens": 2954,
+            "complete_mcp_result_tokens": 7360,
+            "request_id": "60cd8f9f3ae4445ca93d0162339e58b1"
+          },
+          {
+            "client_ms": 251.95,
+            "server_ms": 245.05,
+            "attempts": 1,
+            "phases_ms": {
+              "candidate_sql": 42.54,
+              "evidence_validation": 61.9,
+              "ranking_and_pagination": 1.11,
+              "hybrid_total": 81.48,
+              "reformulation_total": 156.6
+            },
+            "structured_tokens": 2952,
+            "complete_mcp_result_tokens": 7356,
+            "request_id": "01f184059c264e1bb9c580fac812c1b3"
+          },
+          {
+            "client_ms": 235.48,
+            "server_ms": 229.75,
+            "attempts": 1,
+            "phases_ms": {
+              "candidate_sql": 44.2,
+              "evidence_validation": 62.3,
+              "ranking_and_pagination": 0.92,
+              "hybrid_total": 82.91,
+              "reformulation_total": 138.44
+            },
+            "structured_tokens": 2953,
+            "complete_mcp_result_tokens": 7358,
+            "request_id": "61db9332d62e4ae68a995585d68a52e3"
+          }
+        ]
+      },
+      {
+        "scenario": "paragraph",
+        "tool": "get_passage",
+        "args": {
+          "match_id": "b11-p132-c304",
+          "context_mode": "paragraph",
+          "max_chars": 3000
+        },
+        "fresh_tools_list": true,
+        "first_request": {
+          "client_ms": 5.05,
+          "server_ms": 1.66,
+          "attempts": 1,
+          "phases_ms": {},
+          "structured_tokens": 3045,
+          "complete_mcp_result_tokens": 6555,
+          "request_id": "b64b00f6513545059c325cdc86c735fb"
+        },
+        "warm_client": {
+          "p50_ms": 3.67,
+          "p95_ms": 4.18,
+          "samples": 6
+        },
+        "warm_server": {
+          "p50_ms": 0.56,
+          "p95_ms": 0.59,
+          "samples": 6
+        },
+        "samples": [
+          {
+            "client_ms": 5.05,
+            "server_ms": 1.66,
+            "attempts": 1,
+            "phases_ms": {},
+            "structured_tokens": 3045,
+            "complete_mcp_result_tokens": 6555,
+            "request_id": "b64b00f6513545059c325cdc86c735fb"
+          },
+          {
+            "client_ms": 3.61,
+            "server_ms": 0.57,
+            "attempts": 1,
+            "phases_ms": {},
+            "structured_tokens": 3047,
+            "complete_mcp_result_tokens": 6559,
+            "request_id": "e869e572c3a548b29a943b571184cc8e"
+          },
+          {
+            "client_ms": 3.44,
+            "server_ms": 0.55,
+            "attempts": 1,
+            "phases_ms": {},
+            "structured_tokens": 3051,
+            "complete_mcp_result_tokens": 6567,
+            "request_id": "8935d4b7b8de46d2aae24e58b97505c0"
+          },
+          {
+            "client_ms": 3.73,
+            "server_ms": 0.55,
+            "attempts": 1,
+            "phases_ms": {},
+            "structured_tokens": 3044,
+            "complete_mcp_result_tokens": 6553,
+            "request_id": "17f069545345499aa0244fc853f91fb6"
+          },
+          {
+            "client_ms": 4.18,
+            "server_ms": 0.58,
+            "attempts": 1,
+            "phases_ms": {},
+            "structured_tokens": 3044,
+            "complete_mcp_result_tokens": 6553,
+            "request_id": "781464ddb66a4d15a35311d561796efd"
+          },
+          {
+            "client_ms": 3.85,
+            "server_ms": 0.59,
+            "attempts": 1,
+            "phases_ms": {},
+            "structured_tokens": 3046,
+            "complete_mcp_result_tokens": 6557,
+            "request_id": "0e4183712b4549f5bf9537369908e492"
+          },
+          {
+            "client_ms": 3.53,
+            "server_ms": 0.56,
+            "attempts": 1,
+            "phases_ms": {},
+            "structured_tokens": 3047,
+            "complete_mcp_result_tokens": 6559,
+            "request_id": "0a91fdbb60754718a60bb81d8b76ce28"
+          }
+        ]
+      },
+      {
+        "scenario": "catalogue_ids",
+        "tool": "list_books",
+        "args": {
+          "projection": "ids"
+        },
+        "fresh_tools_list": true,
+        "first_request": {
+          "client_ms": 64.63,
+          "server_ms": 53.79,
+          "attempts": 1,
+          "phases_ms": {},
+          "structured_tokens": 1178,
+          "complete_mcp_result_tokens": 3191,
+          "request_id": "c35ff6a4c1f14599927b69e3c748075d"
+        },
+        "warm_client": {
+          "p50_ms": 18.42,
+          "p95_ms": 30.81,
+          "samples": 6
+        },
+        "warm_server": {
+          "p50_ms": 12.93,
+          "p95_ms": 23.75,
+          "samples": 6
+        },
+        "samples": [
+          {
+            "client_ms": 64.63,
+            "server_ms": 53.79,
+            "attempts": 1,
+            "phases_ms": {},
+            "structured_tokens": 1178,
+            "complete_mcp_result_tokens": 3191,
+            "request_id": "c35ff6a4c1f14599927b69e3c748075d"
+          },
+          {
+            "client_ms": 21.57,
+            "server_ms": 13.27,
+            "attempts": 1,
+            "phases_ms": {},
+            "structured_tokens": 1172,
+            "complete_mcp_result_tokens": 3179,
+            "request_id": "ade332600389451bacfaf6030f9fa64e"
+          },
+          {
+            "client_ms": 16.46,
+            "server_ms": 12.6,
+            "attempts": 1,
+            "phases_ms": {},
+            "structured_tokens": 1175,
+            "complete_mcp_result_tokens": 3185,
+            "request_id": "15851d7f1fa942779aad6f3854e228dd"
+          },
+          {
+            "client_ms": 30.81,
+            "server_ms": 23.75,
+            "attempts": 1,
+            "phases_ms": {},
+            "structured_tokens": 1176,
+            "complete_mcp_result_tokens": 3187,
+            "request_id": "23973044b65d4c60a8e590342baee02d"
+          },
+          {
+            "client_ms": 20.31,
+            "server_ms": 15.91,
+            "attempts": 1,
+            "phases_ms": {},
+            "structured_tokens": 1177,
+            "complete_mcp_result_tokens": 3189,
+            "request_id": "3df1de35d7ce4a26b369ab7d687afd96"
+          },
+          {
+            "client_ms": 16.54,
+            "server_ms": 12.45,
+            "attempts": 1,
+            "phases_ms": {},
+            "structured_tokens": 1179,
+            "complete_mcp_result_tokens": 3193,
+            "request_id": "88e80681dc7d4eaca2e73b8a79f74c54"
+          },
+          {
+            "client_ms": 15.21,
+            "server_ms": 11.67,
+            "attempts": 1,
+            "phases_ms": {},
+            "structured_tokens": 1179,
+            "complete_mcp_result_tokens": 3193,
+            "request_id": "a7c6c69a303e4363b1da2085f2b29419"
+          }
+        ]
+      }
+    ],
+    "catalogue_structured_tokens": {
+      "compact": 3348,
+      "ids": 1174,
+      "full": 9883
+    },
+    "evidence_workflow": {
+      "compact": {
+        "tool_calls": 2,
+        "structured_tokens": 5411,
+        "evidence_check": "literal hit expanded with a valid citation; not a reviewed answer-quality score"
+      },
+      "ultra_compact": {
+        "tool_calls": 2,
+        "structured_tokens": 5044,
+        "evidence_check": "literal hit expanded with a valid citation; not a reviewed answer-quality score"
+      }
+    }
+  },
+  "external_score": null,
+  "human_relevance_review": "pending",
+  "documentary_provenance_review": "pending"
+}

@@ -1,0 +1,11 @@
+# Default lexical MCP service: no embedding model download is required.
+fastapi==0.111.0
+uvicorn[standard]==0.32.1
+python-multipart==0.0.9
+pydantic==2.11.10
+pydantic-settings==2.7.1
+aiofiles==23.2.1
+mcp==1.28.1
+beautifulsoup4==4.12.3
+lxml==5.2.2
+numpy==1.26.4

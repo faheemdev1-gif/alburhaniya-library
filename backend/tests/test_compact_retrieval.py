@@ -8,12 +8,7 @@ import re
 BACKEND_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 sys.path.insert(0, BACKEND_DIR)
 
-# Keep these database-level tests independent of the web-server dependencies.
-config_stub = types.ModuleType("app.core.config")
-config_stub.get_settings = lambda: types.SimpleNamespace(
-    library_db_path=os.path.join(BACKEND_DIR, "library.db")
-)
-sys.modules["app.core.config"] = config_stub
+# Use the real settings: process-global module stubs hid API integration faults.
 
 from app.services import library_db as db
 from app.services.compact_response import compact_search_response

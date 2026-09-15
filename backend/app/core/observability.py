@@ -7,6 +7,7 @@ _phases = ContextVar('research_phases', default=None)
 
 def start_phases():
     _candidates.set(None)
+    _query_candidates.set(None)
     return _phases.set({})
 
 def phase_snapshot():
@@ -33,9 +34,14 @@ def profiled(name):
     return decorate
 
 _candidates = ContextVar('research_candidates', default=None)
+_query_candidates = ContextVar('research_query_candidates', default=None)
 
-def record_candidates(identities):
+def record_candidates(identities, per_query=None):
     _candidates.set(set(identities))
+    _query_candidates.set(per_query)
 
 def candidate_snapshot():
     return _candidates.get()
+
+def query_candidate_snapshot():
+    return _query_candidates.get()

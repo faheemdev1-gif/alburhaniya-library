@@ -1,0 +1,4 @@
+-r requirements-core.txt
+pytest==8.4.2
+httpx==0.28.1
+tiktoken==0.12.0

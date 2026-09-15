@@ -12,17 +12,6 @@ import numpy as np
 BACKEND_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 sys.path.insert(0, BACKEND_DIR)
 
-if "app.core.config" not in sys.modules:
-    config_stub = types.ModuleType("app.core.config")
-    config_stub.get_settings = lambda: types.SimpleNamespace(
-        library_db_path=os.path.join(BACKEND_DIR, "library.db"),
-        enable_local_semantic_search=True,
-        semantic_embeddings_path="semantic_embeddings.npy",
-        semantic_manifest_path="semantic_manifest.json",
-        semantic_min_score=0.0,
-    )
-    sys.modules["app.core.config"] = config_stub
-
 from app.services.semantic_chunks import split_semantic_chunks
 from app.services import semantic_search
 from app.services.semantic_search import _top_indices, combine_candidates
@@ -131,15 +120,21 @@ class SemanticRetrievalTests(unittest.TestCase):
 
     def test_vector_metadata_filters_book_and_qasida_before_scoring(self):
         from app.services import library_db
-        table = library_db._connection().execute(
-            "SELECT 1 FROM sqlite_master WHERE type='table' AND name='semantic_chunks'"
-        ).fetchone()
-        if table is None:
-            self.skipTest("local semantic index is disabled")
-        rows = semantic_search._candidate_rows(
-            book_ids=["b14"], source_code="primary",
-            page_from=None, page_to=None, qasida_number=3,
-        )
+        from scripts.build_semantic_index import build_chunk_metadata
+        # Exercise real corpus metadata in an isolated copy, without enabling
+        # the stale bundled vectors or modifying the production database.
+        conn=sqlite3.connect(':memory:')
+        try:
+            library_db._connection().backup(conn)
+            build_chunk_metadata(conn)
+            conn.row_factory=sqlite3.Row
+            with patch.object(library_db,'_connection',return_value=conn):
+                rows = semantic_search._candidate_rows(
+                    book_ids=["b14"], source_code="primary",
+                    page_from=None, page_to=None, qasida_number=3,
+                )
+        finally:
+            conn.close()
         self.assertTrue(rows)
         self.assertTrue(all(row["book_id"] == "b14" for row in rows))
         self.assertTrue(all(row["qasida_number"] == 3 for row in rows))

@@ -7,9 +7,9 @@ import json
 from typing import Any
 
 
-SERVER_VERSION = "2.6.0"
-TOOL_CONTRACT_VERSION = "8.0"
-TOOL_CONTRACT_ID = "alburhaniya-tools-v8"
+SERVER_VERSION = "2.7.0"
+TOOL_CONTRACT_VERSION = "9.0"
+TOOL_CONTRACT_ID = "alburhaniya-tools-v9"
 
 REQUIRED_TOOLS = frozenset({
     "search_library",
@@ -25,13 +25,15 @@ SCHEMA_CAPABILITIES = {
         "response_modes": ["compact", "ultra_compact"],
         "supported_parameters": [
             "query", "queries", "book_ids", "book_scope", "qasida_number",
-            "include_counts", "count_basis", "whole_word", "min_tier",
+            "include_counts", "check_completeness", "count_basis", "whole_word", "min_tier",
             "expand_top", "expand_chars", "min_score", "match_mode", "mode",
             "operator", "limit", "offset", "source_code", "page_from", "page_to",
             "context_chars", "search_mode", "ranking", "diversify_books", "max_per_book",
         ],
     },
     "get_passage": {
+        "supported_parameters": ["match_id", "match_ids", "stable_id", "qasida_number", "context_mode", "max_chars", "context_chars", "query", "include_parallels", "parallel_limit"],
+        "selector_policy": "exactly_one; qasida_number_returns_full_structure",
         "selectors": ["match_id", "match_ids", "stable_id", "qasida_number"],
         "parallel_candidates": True,
         "context_modes": ["bounded", "paragraph"],
@@ -40,6 +42,8 @@ SCHEMA_CAPABILITIES = {
         "max_context_pages": 12,
     },
     "get_page": {"default_max_chars": 20000, "declares_truncation": True},
+    "list_books": {"supported_parameters": ["include_legend", "projection", "book_ids"],
+                   "projections": ["compact", "ids", "full"]},
 }
 SCHEMA_DIGEST = hashlib.sha256(
     json.dumps(
@@ -99,7 +103,7 @@ def contract_metadata(tools: Iterable[str] | None = None) -> dict[str, Any]:
         "tool_schema_digest": TOOL_META.get("tool_schema_digest"),
         "schema_digest_kind": "capability_manifest",
         "schema_capabilities": SCHEMA_CAPABILITIES,
-        "compatibility_policy": "Compare tool_contract_version and schema_digest on every response. A major version change requires refreshing tools/list before the next call; minor changes are additive. tool_count is cardinality, not a version.",
+        "compatibility_policy": "Compare tool_contract_version, schema_digest and tool_schema_digest on every response. Any digest change requires refreshing tools/list before the next call. A major version change may alter semantics; minor changes are additive. tool_count is cardinality, not a version.",
     }
 
 

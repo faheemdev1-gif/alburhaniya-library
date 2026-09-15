@@ -1,0 +1,224 @@
+{
+  "hard_gates": {
+    "passed": 150,
+    "failed": [],
+    "skipped": []
+  },
+  "retrieval_quality_gates": {
+    "passed": 3,
+    "failed": [],
+    "skipped": []
+  },
+  "efficiency_warnings": {
+    "passed": 2,
+    "failed": [],
+    "skipped": []
+  },
+  "deployment_blocked": false,
+  "efficiency_warning_count": 0
+}
+
+test_all_diwan_locators_preserve_page_boundaries (test_assessment_fixes.AssessmentFixTests.test_all_diwan_locators_preserve_page_boundaries) ... ok
+test_cross_page_cap_does_not_claim_completion (test_assessment_fixes.AssessmentFixTests.test_cross_page_cap_does_not_claim_completion) ... ok
+test_cross_page_paragraph_retains_original_locator_and_segments (test_assessment_fixes.AssessmentFixTests.test_cross_page_paragraph_retains_original_locator_and_segments) ... ok
+test_frozen_independent_literal_census_36_cases (test_assessment_fixes.AssessmentFixTests.test_frozen_independent_literal_census_36_cases) ... ok
+test_inclusion_per_query_and_pagination_independence (test_assessment_fixes.AssessmentFixTests.test_inclusion_per_query_and_pagination_independence) ... ok
+test_multi_query_maps_selected_span_all_orders_and_pages (test_assessment_fixes.AssessmentFixTests.test_multi_query_maps_selected_span_all_orders_and_pages) ... ok
+test_partial_omission_detected_even_with_equal_counts (test_assessment_fixes.AssessmentFixTests.test_partial_omission_detected_even_with_equal_counts) ... ok
+test_tumanina_literal_pages_are_all_retrieved (test_assessment_fixes.AssessmentFixTests.test_tumanina_literal_pages_are_all_retrieved) ... ok
+test_body_heading_outranks_contents_copy (test_compact_retrieval.CompactRetrievalTests.test_body_heading_outranks_contents_copy) ... ok
+test_book_and_source_filters (test_compact_retrieval.CompactRetrievalTests.test_book_and_source_filters) ... ok
+test_book_order_is_unambiguous_stable_and_non_overlapping (test_compact_retrieval.CompactRetrievalTests.test_book_order_is_unambiguous_stable_and_non_overlapping) ... ok
+test_compact_response_omits_counts_by_default (test_compact_retrieval.CompactRetrievalTests.test_compact_response_omits_counts_by_default) ... ok
+test_complete_exact_article_page_sets_are_identical (test_compact_retrieval.CompactRetrievalTests.test_complete_exact_article_page_sets_are_identical) ... ok
+test_complete_paragraph_cap_keeps_match_and_declares_truncation (test_compact_retrieval.CompactRetrievalTests.test_complete_paragraph_cap_keeps_match_and_declares_truncation) ... ok
+test_complete_paragraph_context_is_explicit (test_compact_retrieval.CompactRetrievalTests.test_complete_paragraph_context_is_explicit) ... ok
+test_counts_are_mode_independent_and_basis_is_explicit (test_compact_retrieval.CompactRetrievalTests.test_counts_are_mode_independent_and_basis_is_explicit) ... ok
+test_counts_respect_qasida_scope (test_compact_retrieval.CompactRetrievalTests.test_counts_respect_qasida_scope) ... ok
+test_diversifies_across_books (test_compact_retrieval.CompactRetrievalTests.test_diversifies_across_books) ... ok
+test_diwan_structure_and_qasida_scope (test_compact_retrieval.CompactRetrievalTests.test_diwan_structure_and_qasida_scope) ... ok
+test_every_retrieval_mode_localizes_and_highlights_evidence (test_compact_retrieval.CompactRetrievalTests.test_every_retrieval_mode_localizes_and_highlights_evidence) ... ok
+test_every_search_hit_has_stable_match_id_and_score (test_compact_retrieval.CompactRetrievalTests.test_every_search_hit_has_stable_match_id_and_score) ... ok
+test_exact_article_variant_has_real_offset_and_visible_evidence (test_compact_retrieval.CompactRetrievalTests.test_exact_article_variant_has_real_offset_and_visible_evidence) ... ok
+test_exact_bayt_number_and_stable_id (test_compact_retrieval.CompactRetrievalTests.test_exact_bayt_number_and_stable_id) ... ok
+test_exact_expands_definite_article (test_compact_retrieval.CompactRetrievalTests.test_exact_expands_definite_article) ... ok
+test_exact_min_score_filters_lexical_strength_before_pagination (test_compact_retrieval.CompactRetrievalTests.test_exact_min_score_filters_lexical_strength_before_pagination) ... ok
+test_exact_min_score_preserves_filtered_pagination (test_compact_retrieval.CompactRetrievalTests.test_exact_min_score_preserves_filtered_pagination) ... ok
+test_exact_scores_are_stable_bm25_not_reciprocal_rank (test_compact_retrieval.CompactRetrievalTests.test_exact_scores_are_stable_bm25_not_reciprocal_rank) ... ok
+test_explicit_footnotes_are_not_indexed_as_authorial_body (test_compact_retrieval.CompactRetrievalTests.test_explicit_footnotes_are_not_indexed_as_authorial_body) ... ok
+test_get_passage_is_bounded (test_compact_retrieval.CompactRetrievalTests.test_get_passage_is_bounded) ... ok
+test_hybrid_candidate_pages_are_batch_loaded (test_compact_retrieval.CompactRetrievalTests.test_hybrid_candidate_pages_are_batch_loaded) ... ok
+test_hybrid_evidence_span_drives_match_id_and_passage (test_compact_retrieval.CompactRetrievalTests.test_hybrid_evidence_span_drives_match_id_and_passage) ... ok
+test_hybrid_min_score_filters (test_compact_retrieval.CompactRetrievalTests.test_hybrid_min_score_filters) ... ok
+test_hybrid_or_alternatives_remain_or_during_local_scoring (test_compact_retrieval.CompactRetrievalTests.test_hybrid_or_alternatives_remain_or_during_local_scoring) ... ok
+test_hybrid_recovers_separated_terms (test_compact_retrieval.CompactRetrievalTests.test_hybrid_recovers_separated_terms) ... ok
+test_hybrid_scores_are_fixed_evidence_scores_not_saturated (test_compact_retrieval.CompactRetrievalTests.test_hybrid_scores_are_fixed_evidence_scores_not_saturated) ... ok
+test_hybrid_uses_real_local_match_offsets (test_compact_retrieval.CompactRetrievalTests.test_hybrid_uses_real_local_match_offsets) ... ok
+test_khitabat_have_citation_labels (test_compact_retrieval.CompactRetrievalTests.test_khitabat_have_citation_labels) ... ok
+test_legacy_full_text_is_opt_in (test_compact_retrieval.CompactRetrievalTests.test_legacy_full_text_is_opt_in) ... ok
+test_lexeme_mode_recovers_affixed_hima_forms (test_compact_retrieval.CompactRetrievalTests.test_lexeme_mode_recovers_affixed_hima_forms) ... ok
+test_lexeme_root_relation_is_explicit (test_compact_retrieval.CompactRetrievalTests.test_lexeme_root_relation_is_explicit) ... ok
+test_long_question_gets_declared_bounded_reformulations (test_compact_retrieval.CompactRetrievalTests.test_long_question_gets_declared_bounded_reformulations) ... ok
+test_longest_live_page_fits_new_default_contract (test_compact_retrieval.CompactRetrievalTests.test_longest_live_page_fits_new_default_contract) ... ok
+test_min_tier_means_tiers_one_through_requested_value (test_compact_retrieval.CompactRetrievalTests.test_min_tier_means_tiers_one_through_requested_value) ... ok
+test_multiple_query_or_search (test_compact_retrieval.CompactRetrievalTests.test_multiple_query_or_search) ... ok
+test_noncanonical_edition_is_explicit_and_ultra_compact_safe (test_compact_retrieval.CompactRetrievalTests.test_noncanonical_edition_is_explicit_and_ultra_compact_safe) ... ok
+test_normalized_and_surface_occurrences_are_explicit (test_compact_retrieval.CompactRetrievalTests.test_normalized_and_surface_occurrences_are_explicit) ... ok
+test_numeric_tiers_preserve_internal_primary_order (test_compact_retrieval.CompactRetrievalTests.test_numeric_tiers_preserve_internal_primary_order) ... ok
+test_offset_paginates_without_overlap (test_compact_retrieval.CompactRetrievalTests.test_offset_paginates_without_overlap) ... ok
+test_page_range_filter (test_compact_retrieval.CompactRetrievalTests.test_page_range_filter) ... ok
+test_parallel_candidates_are_never_claimed_as_verified (test_compact_retrieval.CompactRetrievalTests.test_parallel_candidates_are_never_claimed_as_verified) ... ok
+test_passage_query_restores_highlighting (test_compact_retrieval.CompactRetrievalTests.test_passage_query_restores_highlighting) ... ok
+test_persian_character_normalization (test_compact_retrieval.CompactRetrievalTests.test_persian_character_normalization) ... ok
+test_primary_first_uses_bounded_authority_adjustment (test_compact_retrieval.CompactRetrievalTests.test_primary_first_uses_bounded_authority_adjustment) ... ok
+test_qasida_context_and_provenance_are_explicit (test_compact_retrieval.CompactRetrievalTests.test_qasida_context_and_provenance_are_explicit) ... ok
+test_qasida_heading_has_stable_container_identity (test_compact_retrieval.CompactRetrievalTests.test_qasida_heading_has_stable_container_identity) ... ok
+test_quran_bidi_brackets_are_display_only_and_repaired (test_compact_retrieval.CompactRetrievalTests.test_quran_bidi_brackets_are_display_only_and_repaired) ... ok
+test_safe_normalization_preserves_hamza_ya_and_ta_marbuta (test_compact_retrieval.CompactRetrievalTests.test_safe_normalization_preserves_hamza_ya_and_ta_marbuta) ... ok
+test_scores_are_higher_is_better_in_every_relevance_mode (test_compact_retrieval.CompactRetrievalTests.test_scores_are_higher_is_better_in_every_relevance_mode) ... ok
+test_search_modes (test_compact_retrieval.CompactRetrievalTests.test_search_modes) ... ok
+test_search_returns_snippets_not_full_pages (test_compact_retrieval.CompactRetrievalTests.test_search_returns_snippets_not_full_pages) ... ok
+test_search_stats_distinguish_pages_occurrences_and_terms (test_compact_retrieval.CompactRetrievalTests.test_search_stats_distinguish_pages_occurrences_and_terms) ... ok
+test_short_concept_query_recovers_relevant_prayer_evidence (test_compact_retrieval.CompactRetrievalTests.test_short_concept_query_recovers_relevant_prayer_evidence) ... ok
+test_single_book_search_is_not_diversified (test_compact_retrieval.CompactRetrievalTests.test_single_book_search_is_not_diversified) ... ok
+test_single_term_scores_discriminate_using_bm25 (test_compact_retrieval.CompactRetrievalTests.test_single_term_scores_discriminate_using_bm25) ... ok
+test_terms_anchor_to_minimum_covering_span (test_compact_retrieval.CompactRetrievalTests.test_terms_anchor_to_minimum_covering_span) ... ok
+test_terms_do_not_promote_root_or_concept_relatives (test_compact_retrieval.CompactRetrievalTests.test_terms_do_not_promote_root_or_concept_relatives) ... ok
+test_terms_expose_exact_or_normalized_match_evidence (test_compact_retrieval.CompactRetrievalTests.test_terms_expose_exact_or_normalized_match_evidence) ... ok
+test_terms_highlight_every_evidence_excerpt (test_compact_retrieval.CompactRetrievalTests.test_terms_highlight_every_evidence_excerpt) ... ok
+test_terms_ignore_arabic_stopwords (test_compact_retrieval.CompactRetrievalTests.test_terms_ignore_arabic_stopwords) ... ok
+test_title_scope_resolves_series_without_catalogue (test_compact_retrieval.CompactRetrievalTests.test_title_scope_resolves_series_without_catalogue) ... ok
+test_total_hits_is_true_count (test_compact_retrieval.CompactRetrievalTests.test_total_hits_is_true_count) ... ok
+test_ultra_compact_block_type_does_not_collide_with_bayt_to (test_compact_retrieval.CompactRetrievalTests.test_ultra_compact_block_type_does_not_collide_with_bayt_to) ... ok
+test_ultra_compact_preserves_explicit_expansions (test_compact_retrieval.CompactRetrievalTests.test_ultra_compact_preserves_explicit_expansions) ... ok
+test_ultra_compact_shape (test_compact_retrieval.CompactRetrievalTests.test_ultra_compact_shape) ... ok
+test_v2_compact_shape_deduplicates_book_metadata (test_compact_retrieval.CompactRetrievalTests.test_v2_compact_shape_deduplicates_book_metadata) ... ok
+test_v2_payload_is_smaller_than_standard_rows (test_compact_retrieval.CompactRetrievalTests.test_v2_payload_is_smaller_than_standard_rows) ... ok
+test_vowelled_query_centres_excerpt (test_compact_retrieval.CompactRetrievalTests.test_vowelled_query_centres_excerpt) ... ok
+test_weak_lexical_hybrid_can_return_no_answer (test_compact_retrieval.CompactRetrievalTests.test_weak_lexical_hybrid_can_return_no_answer) ... ok
+test_whole_word_short_terms_never_highlight_substrings (test_compact_retrieval.CompactRetrievalTests.test_whole_word_short_terms_never_highlight_substrings) ... ok
+test_zero_result_diagnostics_never_claim_absence (test_compact_retrieval.CompactRetrievalTests.test_zero_result_diagnostics_never_claim_absence) ... ok
+test_hard_contract_rejects_missing_unexpected_and_duplicate_names (test_mcp_contract.MCPContractTests.test_hard_contract_rejects_missing_unexpected_and_duplicate_names) ... ok
+test_hard_mcp_000_exact_five_tool_source_registry (test_mcp_contract.MCPContractTests.test_hard_mcp_000_exact_five_tool_source_registry) ... ok
+test_hard_mcp_001_get_passage_visibility (test_mcp_contract.MCPContractTests.test_hard_mcp_001_get_passage_visibility) ... ok
+test_hard_mcp_only_clients_receive_live_contract_evidence (test_mcp_contract.MCPContractTests.test_hard_mcp_only_clients_receive_live_contract_evidence) ... ok
+test_hard_schema_parity_includes_research_integrity_controls (test_mcp_contract.MCPContractTests.test_hard_schema_parity_includes_research_integrity_controls) ... ok
+test_hard_search_schema_source_contract (test_mcp_contract.MCPContractTests.test_hard_search_schema_source_contract) ... ok
+test_hard_versioned_instructions_explain_incomplete_discovery (test_mcp_contract.MCPContractTests.test_hard_versioned_instructions_explain_incomplete_discovery) ... ok
+test_arabic_indic_numeric_heading_is_supported (test_qasida_numbering.QasidaNumberingTests.test_arabic_indic_numeric_heading_is_supported) ... ok
+test_decorative_poetry_dots_are_not_a_toc (test_qasida_numbering.QasidaNumberingTests.test_decorative_poetry_dots_are_not_a_toc) ... ok
+test_diwan_footer_and_qasida_total_are_authoritative (test_qasida_numbering.QasidaNumberingTests.test_diwan_footer_and_qasida_total_are_authoritative) ... ok
+test_explanatory_qasida_note_does_not_advance_number (test_qasida_numbering.QasidaNumberingTests.test_explanatory_qasida_note_does_not_advance_number) ... ok
+test_heading_without_date_is_not_counted (test_qasida_numbering.QasidaNumberingTests.test_heading_without_date_is_not_counted) ... ok
+test_implicit_toc_requires_trailing_page_numbers (test_qasida_numbering.QasidaNumberingTests.test_implicit_toc_requires_trailing_page_numbers) ... ok
+test_numbered_fihris_page_is_explicitly_toc (test_qasida_numbering.QasidaNumberingTests.test_numbered_fihris_page_is_explicitly_toc) ... ok
+test_numeric_headings_are_authoritative (test_qasida_numbering.QasidaNumberingTests.test_numeric_headings_are_authoritative) ... ok
+test_parenthesized_bayt_openings_are_indexed (test_qasida_numbering.QasidaNumberingTests.test_parenthesized_bayt_openings_are_indexed) ... ok
+test_single_digit_numeric_headings_are_not_skipped (test_qasida_numbering.QasidaNumberingTests.test_single_digit_numeric_headings_are_not_skipped) ... ok
+test_efficiency_m1_batch_passages_are_bounded (test_regression_gates.FinalRegressionGates.test_efficiency_m1_batch_passages_are_bounded) ... ok
+test_efficiency_m3_expand_top_attaches_exactly_two (test_regression_gates.FinalRegressionGates.test_efficiency_m3_expand_top_attaches_exactly_two) ... ok
+test_hard_c1_citation_label_is_universal (test_regression_gates.FinalRegressionGates.test_hard_c1_citation_label_is_universal) ... ok
+test_hard_d10_heading_identity_and_page_scoped_bayt_range (test_regression_gates.FinalRegressionGates.test_hard_d10_heading_identity_and_page_scoped_bayt_range) ... ok
+test_hard_d11_diwan_printed_page_comes_from_source_footer (test_regression_gates.FinalRegressionGates.test_hard_d11_diwan_printed_page_comes_from_source_footer) ... ok
+test_hard_d1_d7_qasida_boundaries_and_titles (test_regression_gates.FinalRegressionGates.test_hard_d1_d7_qasida_boundaries_and_titles) ... ok
+test_hard_d8_d10_stable_bayt_identity (test_regression_gates.FinalRegressionGates.test_hard_d8_d10_stable_bayt_identity) ... ok
+test_hard_d9_full_diwan_sweep_and_written_ordinals (test_regression_gates.FinalRegressionGates.test_hard_d9_full_diwan_sweep_and_written_ordinals) ... ok
+test_hard_e1_duplicate_edition_is_suppressed_by_default_but_addressable (test_regression_gates.FinalRegressionGates.test_hard_e1_duplicate_edition_is_suppressed_by_default_but_addressable) ... ok
+test_hard_f1_f2_toc_is_typed_and_downranked (test_regression_gates.FinalRegressionGates.test_hard_f1_f2_toc_is_typed_and_downranked) ... ok
+test_hard_f3_fihris_heading_phrase_is_typed_and_downranked (test_regression_gates.FinalRegressionGates.test_hard_f3_fihris_heading_phrase_is_typed_and_downranked) ... ok
+test_hard_f4_decorative_dots_do_not_hide_substantive_page (test_regression_gates.FinalRegressionGates.test_hard_f4_decorative_dots_do_not_hide_substantive_page) ... ok
+test_hard_f5_every_implicit_toc_is_structural_and_at_boundary (test_regression_gates.FinalRegressionGates.test_hard_f5_every_implicit_toc_is_structural_and_at_boundary) ... ok
+test_hard_h12_evidence_offsets_are_page_bounded (test_regression_gates.FinalRegressionGates.test_hard_h12_evidence_offsets_are_page_bounded) ... ok
+test_hard_h13_every_hybrid_hit_explains_matched_terms (test_regression_gates.FinalRegressionGates.test_hard_h13_every_hybrid_hit_explains_matched_terms) ... ok
+test_hard_l1_l4_terms_never_claim_root_evidence (test_regression_gates.FinalRegressionGates.test_hard_l1_l4_terms_never_claim_root_evidence) ... ok
+test_hard_l2_lexeme_root_relation_is_explicit (test_regression_gates.FinalRegressionGates.test_hard_l2_lexeme_root_relation_is_explicit) ... ok
+test_hard_n1_article_normalization_preserves_surface_counts (test_regression_gates.FinalRegressionGates.test_hard_n1_article_normalization_preserves_surface_counts) ... ok
+test_hard_n2_n4_safe_normalization_preserves_meaningful_letters (test_regression_gates.FinalRegressionGates.test_hard_n2_n4_safe_normalization_preserves_meaningful_letters) ... ok
+test_hard_n5_ya_ambiguity_preserves_surface_form (test_regression_gates.FinalRegressionGates.test_hard_n5_ya_ambiguity_preserves_surface_form) ... ok
+test_hard_n6_literal_search_never_collapses_ya_or_maqsura (test_regression_gates.FinalRegressionGates.test_hard_n6_literal_search_never_collapses_ya_or_maqsura) ... ok
+test_hard_r1_r3_ranking_policy_is_explainable (test_regression_gates.FinalRegressionGates.test_hard_r1_r3_ranking_policy_is_explainable) ... ok
+test_hard_s1_score_vectors_are_query_dependent (test_regression_gates.FinalRegressionGates.test_hard_s1_score_vectors_are_query_dependent) ... ok
+test_hard_s2_relevance_is_strictly_descending (test_regression_gates.FinalRegressionGates.test_hard_s2_relevance_is_strictly_descending) ... ok
+test_hard_s3_score_kind_matches_mode (test_regression_gates.FinalRegressionGates.test_hard_s3_score_kind_matches_mode) ... ok
+test_hard_s4_zero_bm25_exact_hit_survives (test_regression_gates.FinalRegressionGates.test_hard_s4_zero_bm25_exact_hit_survives) ... ok
+test_hard_s5_qasida_filtered_census_matches_filtered_results (test_regression_gates.FinalRegressionGates.test_hard_s5_qasida_filtered_census_matches_filtered_results) ... ok
+test_quality_h11_paraphrases_share_top_evidence (test_regression_gates.FinalRegressionGates.test_quality_h11_paraphrases_share_top_evidence) ... ok
+test_quality_h1_h2_hybrid_threshold_discriminates (test_regression_gates.FinalRegressionGates.test_quality_h1_h2_hybrid_threshold_discriminates) ... ok
+test_quality_h3_h10_all_hybrid_traps_are_rejected (test_regression_gates.FinalRegressionGates.test_quality_h3_h10_all_hybrid_traps_are_rejected) ... ok
+test_actual_search_omission_is_detected (test_release_270.Release270Tests.test_actual_search_omission_is_detected) ... ok
+test_booleans_and_batch_provenance (test_release_270.Release270Tests.test_booleans_and_batch_provenance) ... [09/15/26 20:25:05] INFO     invalid tool request               resilience.py:72
+                             operation=list_books                               
+                             request_id=9394594d06ae47b79ef1b40                 
+                             399ca69dd error=Unknown book_ids                   
+                             or more than 43 IDs requested                      
+ok
+test_completeness_is_opt_in_without_counts (test_release_270.Release270Tests.test_completeness_is_opt_in_without_counts) ... ok
+test_equal_count_substitutions_are_detected_in_all_scopes (test_release_270.Release270Tests.test_equal_count_substitutions_are_detected_in_all_scopes) ... ok
+test_fresh_callable_schema_and_paragraph_selectors (test_release_270.Release270Tests.test_fresh_callable_schema_and_paragraph_selectors) ...                     INFO     invalid tool request               resilience.py:72
+                             operation=get_passage                              
+                             request_id=7c1b62dcb9714164906b353                 
+                             3fdb37714 error=Provide exactly                    
+                             one passage selector: match_id,                    
+                             match_ids, stable_id, or                           
+                             qasida_number                                      
+                    INFO     invalid tool request               resilience.py:72
+                             operation=get_passage                              
+                             request_id=b20cbd3eb0a84fc4aeca7ce                 
+                             318db1c28 error=match_ids must                     
+                             contain between 1 and 20 IDs                       
+ok
+test_function_words_do_not_count_as_question_intent (test_release_270.Release270Tests.test_function_words_do_not_count_as_question_intent) ... ok
+test_http_health_and_all_five_tools (test_release_270.Release270Tests.test_http_health_and_all_five_tools) ...                     INFO     library.db found at library.db ✓         main.py:49
+                    INFO     StreamableHTTP       streamable_http_manager.py:131
+                             session manager                                    
+                             started                                            
+                    INFO     request complete method=GET path=/health main.py:98
+                             status=200 elapsed_ms=15                           
+                             request_id=25ea013035964bf1bbebe6afd0d82           
+                             02a                                                
+                    INFO     HTTP Request: GET                   _client.py:1025
+                             http://testserver/health "HTTP/1.1                 
+                             200 OK"                                            
+                    INFO     StreamableHTTP       streamable_http_manager.py:135
+                             session manager                                    
+                             shutting down                                      
+ok
+test_livelihood_fixture_retains_relevant_sources_not_mercy_decoys (test_release_270.Release270Tests.test_livelihood_fixture_retains_relevant_sources_not_mercy_decoys) ... ok
+test_reformulation_pagination_is_stable (test_release_270.Release270Tests.test_reformulation_pagination_is_stable) ... ok
+test_score_filter_pagination_and_AND_are_not_omissions (test_release_270.Release270Tests.test_score_filter_pagination_and_AND_are_not_omissions) ... ok
+test_semantic_corpus_mismatch_is_not_activated (test_release_270.Release270Tests.test_semantic_corpus_mismatch_is_not_activated) ... ok
+test_text_cache_never_reuses_offsets_for_different_source (test_release_270.Release270Tests.test_text_cache_never_reuses_offsets_for_different_source) ... ok
+test_unreviewed_questions_cannot_receive_a_score (test_release_270.Release270Tests.test_unreviewed_questions_cannot_receive_a_score) ... ok
+test_hard_live_corpus_contract_is_computed_from_database (test_research_indexes.ResearchIndexHardGates.test_hard_live_corpus_contract_is_computed_from_database) ... ok
+test_hard_parallel_index_is_candidate_only (test_research_indexes.ResearchIndexHardGates.test_hard_parallel_index_is_candidate_only) ... ok
+test_hard_parallel_references_resolve_to_stable_bayts (test_research_indexes.ResearchIndexHardGates.test_hard_parallel_references_resolve_to_stable_bayts) ... ok
+test_hard_roots_are_nullable_curated_and_versioned (test_research_indexes.ResearchIndexHardGates.test_hard_roots_are_nullable_curated_and_versioned) ... ok
+test_hard_token_positions_preserve_authoritative_surface_text (test_research_indexes.ResearchIndexHardGates.test_hard_token_positions_preserve_authoritative_surface_text) ... ok
+test_transient_sqlite_reads_retry_with_a_small_bound (test_resilience.ResilienceTests.test_transient_sqlite_reads_retry_with_a_small_bound) ... [09/15/26 20:25:07] WARNING  transient sqlite error             resilience.py:81
+                             operation=operation                                
+                             request_id=5bfd2572145f4e59b6fb87f                 
+                             336dc4f85 attempt=1                                
+                    WARNING  transient sqlite error             resilience.py:81
+                             operation=operation                                
+                             request_id=5bfd2572145f4e59b6fb87f                 
+                             336dc4f85 attempt=2                                
+ok
+test_unexpected_failure_is_concise_and_does_not_leak_payload (test_resilience.ResilienceTests.test_unexpected_failure_is_concise_and_does_not_leak_payload) ... [09/15/26 20:25:08] ERROR    tool operation failed              resilience.py:97
+                             operation=operation                                
+                             request_id=64370e1d2e8c4d34a975e72                 
+                             e75850be5                                          
+                             exception_type=RuntimeError                        
+ok
+test_chunks_are_page_bounded_stable_and_overlapping (test_semantic_retrieval.SemanticRetrievalTests.test_chunks_are_page_bounded_stable_and_overlapping) ... ok
+test_exact_candidate_outranks_semantic_neighbor (test_semantic_retrieval.SemanticRetrievalTests.test_exact_candidate_outranks_semantic_neighbor) ... ok
+test_lexical_support_marks_citation_verified (test_semantic_retrieval.SemanticRetrievalTests.test_lexical_support_marks_citation_verified) ... ok
+test_semantic_only_candidate_is_explicitly_unverified (test_semantic_retrieval.SemanticRetrievalTests.test_semantic_only_candidate_is_explicitly_unverified) ... ok
+test_semantic_search_returns_required_safety_fields (test_semantic_retrieval.SemanticRetrievalTests.test_semantic_search_returns_required_safety_fields) ... ok
+test_short_page_remains_one_chunk (test_semantic_retrieval.SemanticRetrievalTests.test_short_page_remains_one_chunk) ... ok
+test_top_indices_are_descending_and_filter_safe (test_semantic_retrieval.SemanticRetrievalTests.test_top_indices_are_descending_and_filter_safe) ... ok
+test_vector_metadata_filters_book_and_qasida_before_scoring (test_semantic_retrieval.SemanticRetrievalTests.test_vector_metadata_filters_book_and_qasida_before_scoring) ... ok
+
+----------------------------------------------------------------------
+Ran 155 tests in 18.052s
+
+OK

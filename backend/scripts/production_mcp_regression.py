@@ -41,7 +41,8 @@ RESPONSE_MODES = {"compact", "ultra_compact"}
 async def _validate_live_health(endpoint: str) -> dict[str, Any]:
     parts = urlsplit(endpoint)
     health_url = urlunsplit((parts.scheme, parts.netloc, "/health", "", ""))
-    async with httpx.AsyncClient(timeout=30.0, follow_redirects=True) as client:
+    local = parts.hostname in {"localhost", "127.0.0.1", "::1"}
+    async with httpx.AsyncClient(timeout=30.0, follow_redirects=True, trust_env=not local) as client:
         response = await client.get(health_url)
         response.raise_for_status()
     payload = response.json()
@@ -162,7 +163,9 @@ async def _discover_all(session: ClientSession) -> list[Any]:
 
 async def run(endpoint: str, discovery_only: bool = False) -> dict[str, Any]:
     health = await _validate_live_health(endpoint)
-    async with streamable_http_client(endpoint) as (read_stream, write_stream, _):
+    local = urlsplit(endpoint).hostname in {"localhost", "127.0.0.1", "::1"}
+    async with httpx.AsyncClient(timeout=300.0, follow_redirects=True, trust_env=not local) as client, \
+            streamable_http_client(endpoint, http_client=client) as (read_stream, write_stream, _):
         async with ClientSession(read_stream, write_stream) as session:
             init = await session.initialize()
             if getattr(init.serverInfo, "version", None) != SERVER_VERSION:

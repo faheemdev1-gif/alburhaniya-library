@@ -40,7 +40,7 @@ from mcp.server.transport_security import TransportSecuritySettings
 
 from app.core.text_format import format_page, repair_quran_display_brackets
 from app.core.resilience import safe_tool_call
-from app.core.observability import candidate_snapshot
+from app.core.observability import candidate_snapshot, query_candidate_snapshot
 from app.mcp_contract import (
     REQUIRED_TOOLS,
     SERVER_VERSION,
@@ -92,7 +92,7 @@ mcp = FastMCP(
         "For Dīwān results, bayt_from and bayt_to are page-scoped; use "
         "qasida_bayt_count for the complete qaṣīda length. TOC/fihris hits "
         "are explicitly typed and downranked. "
-        "Book b35 contains multiple speakers: verify the speaker before attribution. "
+        "Verify the identified speaker and compiler before attribution. "
         f"Tool contract: {TOOL_CONTRACT_ID}; contract version: "
         f"{TOOL_CONTRACT_VERSION}; required tool count: {len(REQUIRED_TOOLS)}."
     ),
@@ -125,7 +125,8 @@ if mcp._mcp_server.version != SERVER_VERSION:  # pragma: no cover - fail loud
 
 @mcp.tool(structured_output=True, meta=TOOL_META)
 @safe_tool_call
-def list_books(include_legend: bool = False) -> dict[str, Any]:
+def list_books(include_legend: bool = False, projection: Literal["compact", "ids", "full"] = "compact",
+               book_ids: Optional[list[str]] = None) -> dict[str, Any]:
     """List books in a compact catalogue, ordered by source authority.
 
     This is one of the five required Al Burhania research tools. The response
@@ -138,7 +139,15 @@ def list_books(include_legend: bool = False) -> dict[str, Any]:
     Args:
         include_legend: Include full source-grade definitions. Leave false
             unless the detailed definitions are specifically required.
+        projection: compact catalogue, ids only, or full provenance metadata.
+        book_ids: Optional IDs to filter or batch-load full metadata (maximum 43).
     """
+    catalogue = db.list_books()
+    if book_ids is not None:
+        unknown = set(book_ids) - {b["book_id"] for b in catalogue}
+        if unknown or len(book_ids) > 43:
+            raise ValueError("Unknown book_ids or more than 43 IDs requested")
+        catalogue = [b for b in catalogue if b["book_id"] in book_ids]
     books = [
         ({
             "id": book["book_id"],
@@ -153,8 +162,14 @@ def list_books(include_legend: bool = False) -> dict[str, Any]:
             "edition_relation": book["edition_relation"],
             "searchable_by_default": bool(book["searchable_by_default"]),
         } if book["canonical_book_id"] != book["book_id"] else {}))
-        for book in db.list_books()
+        for book in catalogue
     ]
+    if projection == "ids":
+        books = [b["book_id"] for b in catalogue]
+    elif projection == "full":
+        books = [db.get_book(b["book_id"]) for b in catalogue]
+    elif projection != "compact":
+        raise ValueError("projection must be compact, ids, or full")
 
     result = {
         "total": len(books),
@@ -170,6 +185,7 @@ def list_books(include_legend: bool = False) -> dict[str, Any]:
         "lexical": "sqlite_fts5_safe",
         "lexeme_policy": db.LEXEME_POLICY_VERSION,
         "semantic_active": semantic.semantic_available(),
+        "semantic_policy": "Disabled by default; enable only with rebuilt chunks, matching corpus hash/vector dimensions and the query model installed.",
         "root_coverage_meaning": "Tokens with a curated root annotation, not a retrieval recall percentage. Lexeme retrieval does not require root annotations.",
     }
     if include_legend:
@@ -313,6 +329,10 @@ def get_passage(
     qasida_number always requests the complete structured qaṣīda.
     """
     context_chars = max(200, min(context_chars, 2000))
+    if sum([match_id is not None, match_ids is not None, stable_id is not None, qasida_number is not None]) != 1:
+        raise ValueError("Provide exactly one passage selector: match_id, match_ids, stable_id, or qasida_number")
+    if match_ids is not None and not 1 <= len(match_ids) <= 20:
+        raise ValueError("match_ids must contain between 1 and 20 IDs")
     if qasida_number is not None:
         result = db.get_qasida(int(qasida_number))
         return result or {"error": f"no qasida {qasida_number} in b14"}
@@ -445,6 +465,7 @@ def search_library(
     diversify_books: bool = True,
     max_per_book: int = 2,
     include_counts: bool = False,
+    check_completeness: bool = False,
     count_basis: CountBasis = "phrase",
     whole_word: bool = True,
     min_score: float = 0.0,
@@ -513,6 +534,10 @@ def search_library(
             independently of match_mode, and is always returned with the census.
             Count responses distinguish retrieval_hit_count from
             literal_matching_pages and literal_occurrences.
+        check_completeness: Audit actual eligible lexical candidates before
+            ranking/score filtering/pagination, independently of counts.
+            include_counts also enables this audit. Other retrieval modes
+            explicitly report not_checked or not_supported, never implied success.
         min_score: Filter by the declared evidence score before pagination.
             Exact textual presence is independent of BM25 magnitude: a common
             literal hit can legitimately have score 0.0. Leave this at 0.0 for
@@ -584,6 +609,7 @@ def search_library(
         }
 
     total_hits = stats = None
+    audit_requested = bool(include_counts or check_completeness)
     if include_counts:
         stats = db.search_stats(
             raw_queries, operator=operator, book_ids=book_ids,
@@ -627,6 +653,7 @@ def search_library(
                              qasida_number=qasida_number, min_tier=min_tier,
                              whole_word=whole_word)
                 probe["min_score"] = min_score
+                probe["_audit_candidates"] = audit_requested
                 rows = candidate_fn(**probe)
                 if rows:
                     break
@@ -662,6 +689,7 @@ def search_library(
         whole_word=whole_word,
     )
     search_args["min_score"] = min_score
+    search_args["_audit_candidates"] = audit_requested
     if match_mode != "auto":
         rows = search_fn(**search_args)
 
@@ -677,16 +705,18 @@ def search_library(
             qasida_number=qasida_number, min_tier=min_tier,
             whole_word=whole_word, operator=operator,
         )
-    completeness = None
-    if include_counts and effective_match_mode in {"exact", "terms", "lexeme"}:
+    completeness = {"status": "not_checked", "reason": "Request check_completeness=true or include_counts=true"}
+    if audit_requested and effective_match_mode in {"exact", "terms", "lexeme"}:
         completeness = db.retrieval_completeness(
             raw_queries, resolved_search_mode, operator=operator,
+            candidate_ids=candidate_snapshot() if candidate_snapshot() is not None else set(),
+            per_query_candidates=query_candidate_snapshot(),
             whole_word=whole_word, book_ids=book_ids, source_code=source_code,
             page_from=page_from, page_to=page_to, qasida_number=qasida_number,
             min_tier=min_tier,
         )
 
-    if include_counts and effective_match_mode == "hybrid" and candidate_snapshot() is not None:
+    elif audit_requested and effective_match_mode == "hybrid" and candidate_snapshot() is not None:
         scope = dict(book_ids=book_ids, source_code=source_code, page_from=page_from,
                      page_to=page_to, qasida_number=qasida_number, min_tier=min_tier)
         completeness = db.literal_inclusion_report(raw_queries, candidate_snapshot(),
@@ -694,6 +724,15 @@ def search_library(
         completeness["per_query"] = [{"query": q, **db.literal_inclusion_report(
             [q], candidate_snapshot(), whole_word=whole_word, **scope)} for q in raw_queries]
         completeness["per_query_scope"] = "inclusion_in_combined_candidate_union"
+        completeness["method"] = "actual_retrieved_candidates"
+        if operator == "AND":
+            completeness["per_query"] = [{"query": q, **db.literal_inclusion_report(
+                raw_queries, candidate_snapshot(), operator="AND", whole_word=whole_word, **scope)} for q in raw_queries]
+            completeness["per_query_scope"] = "combined_AND_eligibility"
+        if any(item["status"] == "warning" for item in completeness["per_query"]):
+            completeness["status"] = "warning"
+    elif audit_requested:
+        completeness = {"status": "not_supported", "reason": "Literal inclusion is not a completeness metric for reformulated or semantic discovery", "effective_match_mode": effective_match_mode}
 
     expand_top = max(0, min(expand_top, len(results)))
     expand_chars = max(200, min(expand_chars, 2000))

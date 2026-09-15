@@ -39,7 +39,7 @@ def main():
     assert conflict['error']['code'] == 'invalid_request'
     alias = search_library(query='طمأنينة', search_mode='lexeme', limit=3)
     assert alias['effective_match_mode'] == 'lexeme'
-    assert alias['contract']['tool_contract_version'] == '8.0'
+    assert alias['contract']['tool_contract_version'] == TOOL_META['tool_contract_version']
     context = get_passage(match_id=alias['results'][0]['match_id'], context_mode='paragraph')
     assert 'context_segments' in context and 'complete_paragraph' in context
     benchmarks = []

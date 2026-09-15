@@ -212,6 +212,7 @@ def _build_exact_variant_regex(
     return re.compile(phrase, re.IGNORECASE)
 
 
+@lru_cache(maxsize=8192)
 def _indexable_text(text: str) -> str:
     """Return authorial/page text eligible for search and census.
 
@@ -223,8 +224,9 @@ def _indexable_text(text: str) -> str:
     return text[:marker.start()].rstrip() if marker else (text or "")
 
 
-def _content_ranges(pattern: re.Pattern, text: str) -> list[tuple[int, int]]:
-    return [(match.start(), match.end()) for match in pattern.finditer(text or "")]
+@lru_cache(maxsize=8192)
+def _content_ranges(pattern: re.Pattern, text: str) -> tuple[tuple[int, int], ...]:
+    return tuple((match.start(), match.end()) for match in pattern.finditer(text or ""))
 
 
 def content_types(text: str) -> list[str]:
@@ -266,13 +268,28 @@ def _highlight(text: str, pattern: re.Pattern) -> tuple[str, int]:
     return pattern.sub(_sub, text), count
 
 
+@lru_cache(maxsize=32768)
+def _match_spans(text: str, pattern: re.Pattern) -> tuple:
+    """Cache only immutable text/pattern computations, never corpus identities.
+
+    Changed source bytes or normalization patterns necessarily use a new key.
+    No stale book/page results can survive a corpus replacement through this cache.
+    """
+    return tuple(m.span() for m in pattern.finditer(text))
+
+
+def _first_match(text: str, pattern: re.Pattern):
+    spans = _match_spans(text, pattern)
+    return pattern.match(text, spans[0][0]) if spans else None
+
+
 def _make_snippet(plain_text: str, pattern: re.Pattern, radius: int = 120) -> str:
     """
     Trim a long page down to a window around the first match, THEN
     highlight — never slice already-tagged HTML, which could cut a
     <mark>/</mark> tag in half.
     """
-    m = pattern.search(plain_text)
+    m = _first_match(plain_text, pattern)
     if not m:
         window = plain_text[: radius * 2]
         prefix, suffix = "", "…" if len(plain_text) > radius * 2 else ""
@@ -322,7 +339,7 @@ def list_books() -> list[dict]:
         "canonical_book_id, edition_relation, searchable_by_default "
         "FROM books ORDER BY source_tier, title"
     ).fetchall()
-    return [dict(r) for r in rows]
+    return [dict(r) | {"searchable_by_default": bool(r["searchable_by_default"])} for r in rows]
 
 
 def get_book(book_id: str) -> dict | None:
@@ -336,7 +353,7 @@ def get_book(book_id: str) -> dict | None:
         "FROM books WHERE book_id = ?",
         (book_id,),
     ).fetchone()
-    return dict(row) if row else None
+    return (dict(row) | {"searchable_by_default": bool(row["searchable_by_default"])}) if row else None
 
 
 def resolve_book_scope(scope: str) -> list[str]:
@@ -401,6 +418,7 @@ def get_page(book_id: str, seq: int) -> dict | None:
     if not row:
         return None
     d = dict(row)
+    d["searchable_by_default"] = bool(d["searchable_by_default"])
     d["qasida_title"] = _concise_qasida_title(d.get("qasida_title"))
     d["content_types"] = content_types(d["text"])
     d["has_prev"] = seq > 1
@@ -609,7 +627,7 @@ def _pattern_for_query(
 
 
 def _unique_occurrence_count(text: str, patterns: list[re.Pattern]) -> int:
-    return len({m.span() for pattern in patterns for m in pattern.finditer(text)})
+    return len({span for pattern in patterns for span in _match_spans(text, pattern)})
 
 
 def _fts_expression(
@@ -671,7 +689,8 @@ def _matching_page_ids(queries, operator="OR", search_mode="exact_phrase", whole
     identities = set()
     for row in rows:
         if search_mode in {"exact_phrase", "lexeme"}:
-            flags = [bool(p.search(_indexable_text(row["text"]))) for p in patterns]
+            text = _indexable_text(row["text"])
+            flags = [bool(_match_spans(text, p)) for p in patterns]
             if not (all(flags) if operator == "AND" else any(flags)):
                 continue
         identities.add((row["book_id"], row["seq"]))
@@ -692,14 +711,25 @@ def literal_inclusion_report(queries, candidate_ids, *, operator="OR", whole_wor
 
 
 @profiled("completeness_audit")
-def retrieval_completeness(queries, search_mode, *, operator="OR", whole_word=True, **scope):
-    candidates = _matching_page_ids(queries, operator, search_mode, whole_word, **scope)
+def retrieval_completeness(queries, search_mode, *, operator="OR", whole_word=True,
+                           candidate_ids=None, per_query_candidates=None, **scope):
+    actual = candidate_ids is not None
+    candidates = (set(candidate_ids) if actual else
+                  _matching_page_ids(queries, operator, search_mode, whole_word, **scope))
     report = literal_inclusion_report(queries, candidates, operator=operator, whole_word=whole_word, **scope)
+    report["method"] = "actual_retrieved_candidates" if actual else "independent_index_candidate_check"
     report["per_query"] = []
     for query in queries:
-        ids = _matching_page_ids([query], "OR", search_mode, whole_word, **scope)
-        item = literal_inclusion_report([query], ids, whole_word=whole_word, **scope)
+        ids = (set((per_query_candidates or {}).get(query, candidates)) if actual else
+               _matching_page_ids([query], "OR", search_mode, whole_word, **scope))
+        # An AND result need only contain pages eligible for the full conjunction.
+        # Pages satisfying only one alternative are not omissions.
+        if actual and operator.upper() == "AND":
+            item = literal_inclusion_report(queries, ids, operator="AND", whole_word=whole_word, **scope)
+        else:
+            item = literal_inclusion_report([query], ids, whole_word=whole_word, **scope)
         report["per_query"].append({"query": query, **item})
+    report["per_query_scope"] = "combined_AND_eligibility" if operator.upper() == "AND" else "individual_query_eligibility"
     if any(item["status"] == "warning" for item in report["per_query"]):
         report["status"] = "warning"
     return report
@@ -883,16 +913,17 @@ def _minimum_covering_span(
     """Return calibrated relevance and the smallest original-text term span."""
     if not term_groups:
         return (0.0, 0, 0)
+    text = _indexable_text(text)
     occurrences: list[tuple[int, int, int]] = []
     for group_index, variants in enumerate(term_groups):
         seen: set[tuple[int, int]] = set()
         for variant in variants:
-            for match in _build_highlight_regex(
+            for span in _match_spans(text, _build_highlight_regex(
                 variant, whole_word=True, normalization_level=normalization_level,
-            ).finditer(_indexable_text(text)):
-                if match.span() not in seen:
-                    occurrences.append((match.start(), match.end(), group_index))
-                    seen.add(match.span())
+            )):
+                if span not in seen:
+                    occurrences.append((*span, group_index))
+                    seen.add(span)
     occurrences.sort()
     present = len({item[2] for item in occurrences})
     coverage = present / len(term_groups)
@@ -1081,19 +1112,27 @@ def _matched_literal_terms(
     corpus_tokens = [m.group(0) for m in _ARABIC_TOKEN_RE.finditer(evidence_text)]
     normalized_corpus = [normalize_search_text(t, level="safe") for t in corpus_tokens]
     evidence: dict[str, dict[str, str]] = {}
-    for query in raw_queries:
-      for display in safe_tokens(query):
-        normalized = normalize_search_text(display, level="safe")
-        allowed = set(safe_term_variants(normalized))
-        for corpus_form, corpus_normalized in zip(corpus_tokens, normalized_corpus):
-            if corpus_normalized not in allowed:
+    lookup = _literal_term_lookup(tuple(raw_queries))
+    for corpus_form, corpus_normalized in zip(corpus_tokens, normalized_corpus):
+        for display, normalized in lookup.get(corpus_normalized, ()):
+            if display in evidence:
                 continue
             relation = "exact" if _surface_key(corpus_form) == _surface_key(display) else "normalized"
             evidence[display] = _term_evidence(
                 display, normalized, corpus_form, relation,
             )
-            break
     return evidence
+
+
+@lru_cache(maxsize=512)
+def _literal_term_lookup(queries: tuple[str, ...]) -> dict:
+    lookup = {}
+    for query in queries:
+        for display in safe_tokens(query):
+            normalized = normalize_search_text(display, level="safe")
+            for variant in safe_term_variants(normalized):
+                lookup.setdefault(variant, []).append((display, normalized))
+    return lookup
 
 
 def _matched_lexeme(text: str, raw_query: str) -> dict[str, dict[str, str]]:
@@ -1232,6 +1271,7 @@ def search(
     min_score: float = 0.0,
     min_tier: int | None = None,
     whole_word: bool = True,
+    _audit_candidates: bool = False,
 ) -> list[dict]:
     """Arabic FTS search with explicit modes, ranking, and safe diversity."""
     raw_queries = queries or ([query] if query else [])
@@ -1247,7 +1287,7 @@ def search(
 
     requested_limit, requested_offset = limit, offset
     requested_min = max(0.0, min(float(min_score or 0.0), 1.0))
-    terms_pool = search_mode in {"all_words", "lexeme"} or (
+    terms_pool = _audit_candidates or search_mode in {"all_words", "lexeme"} or (
         search_mode == "exact_phrase" and any(len(safe_tokens(q)) > 8 for q in raw_queries)
     )
     needs_post_filter = terms_pool or requested_min > 0.0
@@ -1312,10 +1352,11 @@ def search(
         if search_mode == "all_words" else []
     )
     results = []
+    query_candidates = {q: set() for q in raw_queries}
     for row in rows:
         source_text = row["text"]
         plain_text = _indexable_text(source_text)
-        matches = [(pat.search(plain_text), pat) for pat in patterns]
+        matches = [(_first_match(plain_text, pat), pat) for pat in patterns]
         matches = [(m, pat) for m, pat in matches if m]
         if search_mode in {"exact_phrase", "lexeme"} and (
             not matches or (operator.upper() == "AND" and len(matches) != len(patterns))
@@ -1428,6 +1469,15 @@ def search(
             result["highlight"] = safe_text
             result["text"] = source_text
         results.append(result)
+        if _audit_candidates:
+            for q, pat in zip(raw_queries, patterns):
+                terms = safe_tokens(q, drop_stopwords=True) if search_mode == "all_words" else []
+                term_match = bool(terms) and all(_match_spans(plain_text,
+                    _build_exact_variant_regex(t,whole_word=whole_word)) for t in terms)
+                if _match_spans(plain_text, pat) or term_match:
+                    query_candidates[q].add((row["book_id"], row["seq"]))
+    if _audit_candidates:
+        record_candidates(((r["book_id"], r["seq"]) for r in results), query_candidates)
     record_phase("evidence_validation", phase_started)
     phase_started = perf_counter()
     for item in results:
@@ -1536,6 +1586,9 @@ def hybrid_search(**kwargs) -> list[dict]:
     for mode, weight in (("exact_phrase", 1.0), ("all_words", 0.8), ("any_word", 0.2)):
         call = dict(kwargs)
         call.update(search_mode=mode, limit=1000000 if mode == "exact_phrase" else pool, offset=0, diversify_books=False)
+        # Hybrid records its actual combined pool below; do not turn its broad
+        # any-term discovery pool into an unbounded evidence-rendering pass.
+        call["_audit_candidates"] = False
         call.pop("query", None)
         call.pop("min_score", None)
         call["queries"] = concept_queries if mode == "any_word" else queries
@@ -1661,25 +1714,8 @@ def controlled_reformulations(
     few individual content terms, and exposes every generated query to the
     caller.  Short evidence queries are left alone.
     """
-    candidates: list[str] = []
-    for raw in raw_queries:
-        tokens = [
-            token for token in safe_tokens(raw, drop_stopwords=True)
-            if normalize_search_text(token, level="broad")
-            not in _REFORMULATION_STOPWORDS
-        ]
-        if len(tokens) < 4:
-            continue
-        bigrams = [" ".join(tokens[index:index + 2]) for index in range(len(tokens) - 1)]
-        # In Arabic questions the requested topic commonly appears late, so
-        # evaluate later phrases first while preserving a strict small budget.
-        for candidate in [*reversed(bigrams), *reversed(tokens)]:
-            if len(candidate) < 3 or candidate in candidates:
-                continue
-            candidates.append(candidate)
-            if len(candidates) >= max(1, min(int(max_queries), 8)):
-                return candidates
-    return candidates
+    from app.services.question_intent import discovery_phrases
+    return discovery_phrases(raw_queries, max_queries)
 
 
 @profiled("reformulation_total")
@@ -1692,10 +1728,12 @@ def reformulated_search(**kwargs) -> list[dict]:
 
     limit = max(1, int(kwargs.get("limit", 10)))
     offset = max(0, int(kwargs.get("offset", 0)))
-    pool = min(max((offset + limit) * 3, 20), 100)
+    # A fixed discovery pool keeps pages stable when limit/offset changes.
+    pool = 100
     records: dict[tuple[str, int], dict] = {}
     specificity: dict[tuple[str, int], int] = {}
-    intent_tokens = set(safe_tokens(" ".join(raw_queries), drop_stopwords=True))
+    from app.services.question_intent import assess_window, POLICY
+    page_texts = {}
     for reformulated_query in reformulations:
         call = dict(kwargs)
         call.update(
@@ -1708,26 +1746,45 @@ def reformulated_search(**kwargs) -> list[dict]:
             diversify_books=False,
         )
         call.pop("min_score", None)
+        call.pop("_audit_candidates", None)
         for row in search(**call):
             key = (row["book_id"], row["seq"])
             candidate_specificity = len(safe_tokens(reformulated_query))
-            if (
-                key in records
-                and (specificity[key], float(records[key]["score"]))
-                >= (candidate_specificity, float(row["score"]))
-            ):
+            if key not in page_texts:
+                page_texts[key] = _indexable_text(get_page(*key)["text"])
+            source = page_texts[key]
+            pattern = _pattern_for_query(reformulated_query, "exact_phrase")
+            evidence = []
+            for start, end in _match_spans(source, pattern):
+                assessments = [assess_window(q, source, start, end,
+                    lambda t: _build_exact_variant_regex(t)) for q in raw_queries]
+                if str(kwargs.get("operator", "OR")).upper() == "AND" and any(a is None for a in assessments):
+                    continue
+                valid = [a for a in assessments if a is not None]
+                if valid:
+                    evidence.append((max(valid, key=lambda a: a["intent_score"]), start, end))
+            if not evidence:
                 continue
+            intent, start, end = max(evidence, key=lambda x: (x[0]["intent_score"], -x[1]))
+            row["lexical_score"] = row["score"]
+            row["score"] = round(0.8*intent["intent_score"] + 0.2*row["score"], 6)
+            if key in records and records[key]["score"] >= row["score"]:
+                continue
+            row.update(intent)
+            row["snippet"] = _evidence_excerpt(source, start, end, kwargs.get("context_chars", 160), [pattern])
+            row["match_id"] = f"{key[0]}-p{key[1]}-c{start}"
+            row["evidence_span"] = {"start": start, "end": end, "excerpt": row["snippet"]}
+            row["matched_terms"] = _matched_literal_terms(source, [reformulated_query], start, end)
+            row["evidence_type"] = evidence_type(source, start, end)
+            if key[0] == "b14":
+                for field in ("stable_id", "stable_ids", "stable_id_kind", "heading_id", "bayt_number", "container_id"):
+                    row.pop(field, None)
+                row.update(_structural_identity(source, start, end, row.get("qasida_number"), row.get("qasida_bayt_count")))
             row["match_type"] = "reformulated"
-            row["score_kind"] = "bm25_reformulated_phrase"
+            row["score_kind"] = "local_intent_bm25_discovery"
             row["reformulated_query"] = reformulated_query
             row["original_queries"] = list(raw_queries)
-            row["reformulation_method"] = "adjacent_topic_phrases_v1"
-            source_tokens = set(safe_tokens(_indexable_text(get_page(row["book_id"], row["seq"])["text"])))
-            matched_intent = intent_tokens & source_tokens
-            if len(matched_intent) < 2:
-                # A single generic noun must not answer a multi-part question.
-                continue
-            row["intent_term_coverage"] = round(len(matched_intent) / max(1, len(intent_tokens)), 4)
+            row["reformulation_method"] = POLICY
             row["reformulation_warning"] = "Topic discovery; verify the passage answers the original question."
             records[key] = row
             specificity[key] = candidate_specificity
@@ -1739,15 +1796,11 @@ def reformulated_search(**kwargs) -> list[dict]:
     elif ranking == "primary_first":
         ordered.sort(
             key=lambda row: (
-                -row.get("intent_term_coverage", 0),
-                -specificity[(row["book_id"], row["seq"])],
                 *primary_first_sort_key(row),
             )
         )
     else:
         ordered.sort(key=lambda row: (
-            -row.get("intent_term_coverage", 0),
-            -specificity[(row["book_id"], row["seq"])],
             -float(row["score"]), row["source_tier"], row["book_id"], row["seq"],
         ))
 
@@ -1863,7 +1916,25 @@ def _cross_page_paragraph(page, match_start, match_end, max_chars, max_pages=12)
                 "passage_start": lo - a, "passage_end": hi - a})
         cursor += len(text) + 1
     complete = left_done and right_done and not capped
+    continuation = []
+    if not complete and (capped or stop_reason == "page_or_character_cap") and citations:
+        for direction, segment in (("before", citations[0]), ("after", citations[-1])):
+            source = get_page(page["book_id"], segment["seq"])
+            if source is None:
+                continue
+            seq = segment["seq"]
+            position = segment["source_start"]-1 if direction == "before" else segment["source_end"]
+            if position < 0 or position >= len(_indexable_text(source["text"])):
+                seq += -1 if direction == "before" else 1
+                source = get_page(page["book_id"], seq)
+                if source is None:
+                    continue
+                position = max(0,len(_indexable_text(source["text"]))-1) if direction == "before" else 0
+            continuation.append({"direction":direction,
+                "match_id":f"{page['book_id']}-p{seq}-c{position}",
+                "context_mode":"paragraph", "note":"Context continuation locator, not a new query match."})
     return {"passage": joined[a:b], "context_segments": citations,
+        "continuation": continuation,
         "complete_paragraph": complete,
         "context_scope": "complete_paragraph" if complete else "partial_paragraph",
         "context_boundary_policy": "source_blank_lines_across_adjacent_prose_pages",
