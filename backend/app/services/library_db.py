@@ -212,7 +212,6 @@ def _build_exact_variant_regex(
     return re.compile(phrase, re.IGNORECASE)
 
 
-@lru_cache(maxsize=8192)
 def _indexable_text(text: str) -> str:
     """Return authorial/page text eligible for search and census.
 
@@ -221,7 +220,9 @@ def _indexable_text(text: str) -> str:
     deleting source prose.
     """
     marker = _FOOTNOTE_SEPARATOR_RE.search(text or "")
-    return text[:marker.start()].rstrip() if marker else (text or "")
+    value = text[:marker.start()].rstrip() if marker else (text or "")
+    from app.core.evidence_blocks import INCLUDE_TOC, body_text
+    return value if INCLUDE_TOC.get() else body_text(value)
 
 
 @lru_cache(maxsize=8192)
@@ -421,10 +422,22 @@ def get_page(book_id: str, seq: int) -> dict | None:
     d["searchable_by_default"] = bool(d["searchable_by_default"])
     d["qasida_title"] = _concise_qasida_title(d.get("qasida_title"))
     d["content_types"] = content_types(d["text"])
+    from app.core.evidence_blocks import blocks
+    d["evidence_blocks"] = blocks(d["text"], d["block_type"])
+    d.update(citation_metadata(book_id, seq, d["printed_page"]))
     d["has_prev"] = seq > 1
     d["has_next"] = seq < d["total_pages"]
     return d
 
+
+
+def citation_metadata(book_id, seq, printed_page):
+    repeated = bool(printed_page is not None and _connection().execute(
+        "SELECT COUNT(*) FROM pages WHERE book_id=? AND printed_page=?",
+        (book_id, printed_page)).fetchone()[0] > 1)
+    return {"page_id": f"{book_id}-p{seq}",
+            "pagination_status": "repeated_printed_label_unresolved" if repeated else "unique_in_index",
+            "pagination_warning": "Printed label repeats; cite the included sequence locator. Original scan review is pending." if repeated else None}
 
 def _page_texts(keys: Iterable[tuple[str, int]]) -> dict[tuple[str, int], str]:
     """Fetch candidate page text in bounded batches.
@@ -671,6 +684,9 @@ def _search_filters(
     if qasida_number is not None:
         sql += " AND p.qasida_number = ?"
         params.append(qasida_number)
+    from app.core.evidence_blocks import INCLUDE_TOC
+    if not INCLUDE_TOC.get():
+        sql += " AND p.block_type != 'toc'"
     return sql, params
 
 
@@ -1287,7 +1303,8 @@ def search(
 
     requested_limit, requested_offset = limit, offset
     requested_min = max(0.0, min(float(min_score or 0.0), 1.0))
-    terms_pool = _audit_candidates or search_mode in {"all_words", "lexeme"} or (
+    from app.core.evidence_blocks import INCLUDE_TOC, block_at
+    terms_pool = (not INCLUDE_TOC.get() and search_mode == "exact_phrase") or _audit_candidates or search_mode in {"all_words", "lexeme"} or (
         search_mode == "exact_phrase" and any(len(safe_tokens(q)) > 8 for q in raw_queries)
     )
     needs_post_filter = terms_pool or requested_min > 0.0
@@ -1356,6 +1373,8 @@ def search(
     for row in rows:
         source_text = row["text"]
         plain_text = _indexable_text(source_text)
+        if row["block_type"] == "toc" and not INCLUDE_TOC.get():
+            continue
         matches = [(_first_match(plain_text, pat), pat) for pat in patterns]
         matches = [(m, pat) for m, pat in matches if m]
         if search_mode in {"exact_phrase", "lexeme"} and (
@@ -1444,6 +1463,10 @@ def search(
         result["evidence_type"] = evidence_type(
             source_text, first_match, evidence_end,
         )
+        result["block_type"] = block_at(source_text, first_match, row["block_type"])
+        result.update(citation_metadata(row["book_id"], row["seq"], row["printed_page"]))
+        result["evidence_type_scope"] = "start_anchor"
+        result["evidence_type"] = evidence_type(source_text, first_match, first_match + 1)
         result["evidence_type_method"] = "heuristic"
         result["evidence_type_confidence"] = "unverified"
         result["whole_word"] = bool(whole_word)
@@ -1501,7 +1524,7 @@ def search(
         item["score"] = round(max(0.0, min(1.0, score)), 6)
         if ranking == "primary_first":
             _set_rank_score(item)
-    if search_mode == "all_words":
+    if terms_pool or search_mode == "all_words":
         if ranking in {"book_order", "chronological"}:
             results.sort(key=lambda item: (item["book_id"], item["seq"]))
         elif ranking == "primary_first":
@@ -1720,108 +1743,90 @@ def controlled_reformulations(
 
 @profiled("reformulation_total")
 def reformulated_search(**kwargs) -> list[dict]:
-    """Search declared evidence phrases derived from an overlong question."""
-    raw_queries = kwargs.get("queries") or ([kwargs.get("query")] if kwargs.get("query") else [])
-    reformulations = controlled_reformulations(list(raw_queries))
-    if not reformulations:
-        return []
+    """Retrieve compositional anchors in one FTS query, verify locally, then rank.
 
-    limit = max(1, int(kwargs.get("limit", 10)))
-    offset = max(0, int(kwargs.get("offset", 0)))
-    # A fixed discovery pool keeps pages stable when limit/offset changes.
-    pool = 100
-    records: dict[tuple[str, int], dict] = {}
-    specificity: dict[tuple[str, int], int] = {}
-    from app.services.question_intent import assess_window, POLICY
-    page_texts = {}
-    for reformulated_query in reformulations:
-        call = dict(kwargs)
-        call.update(
-            query=reformulated_query,
-            queries=[reformulated_query],
-            operator="OR",
-            search_mode="exact_phrase",
-            limit=pool,
-            offset=0,
-            diversify_books=False,
-        )
-        call.pop("min_score", None)
-        call.pop("_audit_candidates", None)
-        for row in search(**call):
-            key = (row["book_id"], row["seq"])
-            candidate_specificity = len(safe_tokens(reformulated_query))
-            if key not in page_texts:
-                page_texts[key] = _indexable_text(get_page(*key)["text"])
-            source = page_texts[key]
-            pattern = _pattern_for_query(reformulated_query, "exact_phrase")
-            evidence = []
-            for start, end in _match_spans(source, pattern):
-                assessments = [assess_window(q, source, start, end,
-                    lambda t: _build_exact_variant_regex(t)) for q in raw_queries]
-                if str(kwargs.get("operator", "OR")).upper() == "AND" and any(a is None for a in assessments):
-                    continue
-                valid = [a for a in assessments if a is not None]
-                if valid:
-                    evidence.append((max(valid, key=lambda a: a["intent_score"]), start, end))
-            if not evidence:
-                continue
-            intent, start, end = max(evidence, key=lambda x: (x[0]["intent_score"], -x[1]))
-            row["lexical_score"] = row["score"]
-            row["score"] = round(0.8*intent["intent_score"] + 0.2*row["score"], 6)
-            if key in records and records[key]["score"] >= row["score"]:
-                continue
-            row.update(intent)
-            row["snippet"] = _evidence_excerpt(source, start, end, kwargs.get("context_chars", 160), [pattern])
-            row["match_id"] = f"{key[0]}-p{key[1]}-c{start}"
-            row["evidence_span"] = {"start": start, "end": end, "excerpt": row["snippet"]}
-            row["matched_terms"] = _matched_literal_terms(source, [reformulated_query], start, end)
-            row["evidence_type"] = evidence_type(source, start, end)
-            if key[0] == "b14":
-                for field in ("stable_id", "stable_ids", "stable_id_kind", "heading_id", "bayt_number", "container_id"):
-                    row.pop(field, None)
-                row.update(_structural_identity(source, start, end, row.get("qasida_number"), row.get("qasida_bayt_count")))
-            row["match_type"] = "reformulated"
-            row["score_kind"] = "local_intent_bm25_discovery"
-            row["reformulated_query"] = reformulated_query
-            row["original_queries"] = list(raw_queries)
-            row["reformulation_method"] = POLICY
-            row["reformulation_warning"] = "Topic discovery; verify the passage answers the original question."
-            records[key] = row
-            specificity[key] = candidate_specificity
-
-    ordered = list(records.values())
-    ranking = kwargs.get("ranking", "relevance")
-    if ranking in {"book_order", "chronological"}:
-        ordered.sort(key=lambda row: (row["book_id"], row["seq"]))
-    elif ranking == "primary_first":
-        ordered.sort(
-            key=lambda row: (
-                *primary_first_sort_key(row),
-            )
-        )
-    else:
-        ordered.sort(key=lambda row: (
-            -float(row["score"]), row["source_tier"], row["book_id"], row["seq"],
-        ))
-
-    requested_min = max(0.0, min(float(kwargs.get("min_score") or 0.0), 1.0))
-    ordered = [row for row in ordered if float(row["score"]) >= requested_min]
-    if kwargs.get("diversify_books", True) and not (
-        kwargs.get("book_ids") and len(kwargs["book_ids"]) == 1
-    ):
-        counts: dict[str, int] = {}
-        diversified = []
-        max_per_book = max(1, int(kwargs.get("max_per_book", 2)))
-        for row in ordered:
-            if counts.get(row["book_id"], 0) >= max_per_book:
-                continue
-            diversified.append(row)
-            counts[row["book_id"]] = counts.get(row["book_id"], 0) + 1
-        ordered = diversified
-    selected = ordered[offset:offset + limit]
-    for rank, row in enumerate(selected, start=offset + 1):
-        row["rank"] = rank
-    return selected
+    Fixed candidate pools and source-local locators make pagination stable.
+    Literal searches/counts retain their separate, exhaustive contracts.
+    """
+    from app.services.question_intent import plan, concept_patterns, concept_regex, assess_window, POLICY
+    from app.core.evidence_blocks import block_at, INCLUDE_TOC
+    raw_queries=kwargs.get('queries') or [kwargs.get('query')]
+    raw_queries=[q for q in raw_queries if q]
+    plans=[plan(q) for q in raw_queries]
+    if not plans:return []
+    forms=list(dict.fromkeys(form for p in plans for g in p['groups'] for form,_ in concept_patterns(g)))
+    if not forms:forms=list(dict.fromkeys(t for p in plans for t in p['terms']))
+    if not forms:return []
+    # FTS does not encode source semantics; it supplies candidates only.
+    expressions=[]
+    for p in plans:
+        if p['required']:
+            expressions.append(' AND '.join('('+_fts_expression([form for form,_ in concept_patterns(g)],'OR','exact_phrase')+')' for g in p['required']))
+    expression=(' OR '.join('('+e+')' for e in expressions)) if expressions else _fts_expression(forms,'OR','exact_phrase')
+    scope={k:kwargs.get(k) for k in ('book_ids','source_code','page_from','page_to','qasida_number','min_tier')}
+    filters,params=_search_filters(**scope)
+    candidates=_connection().execute('SELECT p.book_id,p.seq,p.text,p.block_type,bm25(pages_fts) AS relevance FROM pages_fts JOIN pages p ON p.id=pages_fts.rowid JOIN books b ON b.book_id=p.book_id WHERE pages_fts MATCH ?'+filters+' ORDER BY relevance,p.book_id,p.seq LIMIT 300',[expression,*params]).fetchall()
+    patterns=[(form,_pattern_for_query(form,'exact_phrase')) for form in forms]
+    records=[]
+    for candidate in candidates:
+        if candidate['block_type']=='toc' and not INCLUDE_TOC.get():continue
+        source=_indexable_text(candidate['text'])
+        evidence=[]
+        # Anchor at every required primary concept, rather than at ubiquitous
+        # supplementary words such as "work" or "time".
+        primary=list(dict.fromkeys(g for p in plans for g in p['required'][:1]))
+        anchors=[(g,concept_regex(g)) for g in primary] if primary else patterns
+        seen=set(); window_cells=set()
+        for form,pattern in anchors:
+            for m in pattern.finditer(source):
+                if m.start() in seen:continue
+                seen.add(m.start())
+                para_start,para_end=_complete_paragraph_window(source,m.start(),m.end())
+                cell=(para_start,para_end) if para_end-para_start<=840 else (para_start,(m.start()-para_start)//120)
+                if cell in window_cells:continue
+                window_cells.add(cell)
+                assessments=[assess_window(q,source,m.start(),m.end(),_build_exact_variant_regex) for q in raw_queries]
+                valid=[a for a in assessments if a]
+                if not valid or (kwargs.get('operator')=='AND' and len(valid)!=len(raw_queries)):continue
+                intent=max(valid,key=lambda a:a['intent_score'])
+                if not kwargs.get('include_topic_only',False) and intent['question_relevance']=='topic_only':continue
+                evidence.append((intent,m.start(),m.end(),m.group()))
+        if not evidence:continue
+        intent,start,end,form=max(evidence,key=lambda x:(x[0]['intent_score'],-x[1]))
+        page=get_page(candidate['book_id'],candidate['seq'])
+        row={k:v for k,v in page.items() if k not in ('text','has_next','has_prev','content_types','evidence_blocks')}
+        pattern=_pattern_for_query(form,'exact_phrase')
+        row.update(intent)
+        row.update(score=round(.93*intent['intent_score']+.07*_bounded_bm25(-candidate['relevance']),6),
+            lexical_score=_bounded_bm25(-candidate['relevance']),match_type='reformulated',
+            score_kind='local_intent_bm25_discovery',reformulated_query=form,
+            original_queries=raw_queries,reformulation_method=POLICY,
+            reformulation_warning='Discovery only; local concept co-occurrence does not verify an answer.',
+            snippet=_evidence_excerpt(source,start,end,kwargs.get('context_chars',160),[pattern]),
+            match_id=f"{page['book_id']}-p{page['seq']}-c{start}",
+            matched_terms=_matched_literal_terms(source,[form],start,end),
+            evidence_type=evidence_type(candidate['text'],start,start+1),
+            evidence_type_method='heuristic',evidence_type_confidence='unverified',evidence_type_scope='start_anchor',
+            block_type=block_at(candidate['text'],start,page['block_type']))
+        row['evidence_span']={'start':start,'end':end,'excerpt':row['snippet']}
+        if page['book_id']=='b14':row.update(_structural_identity(source,start,end,page.get('qasida_number'),page.get('qasida_bayt_count')))
+        records.append(row)
+    ranking=kwargs.get('ranking','relevance')
+    if ranking in {'book_order','chronological'}:records.sort(key=lambda r:(r['book_id'],r['seq']))
+    elif ranking=='primary_first':records.sort(key=primary_first_sort_key)
+    else:records.sort(key=lambda r:(-r['score'],r['source_tier'],r['book_id'],r['seq']))
+    records=[r for r in records if r['score']>=float(kwargs.get('min_score') or 0)]
+    if kwargs.get('diversify_books',True) and len(kwargs.get('book_ids') or [])!=1:
+        counts={};selected=[]
+        for row in records:
+            key=row['book_id']
+            if counts.get(key,0)>=kwargs.get('max_per_book',2):continue
+            counts[key]=counts.get(key,0)+1;selected.append(row)
+        records=selected
+    offset=max(0,int(kwargs.get('offset',0)));limit=max(1,int(kwargs.get('limit',10)))
+    records=records[offset:offset+limit]
+    for rank,row in enumerate(records,offset+1):row['rank']=rank
+    return records
 
 
 def _paragraph_window(text: str, match_start: int, match_end: int, context_chars: int) -> tuple[int, int]:
@@ -1959,12 +1964,15 @@ def get_passage(
     """Return bounded context or an explicitly complete source paragraph."""
     if context_mode not in {"bounded", "paragraph"}:
         raise ValueError("context_mode must be bounded or paragraph")
-    max_chars = max(1000, min(int(max_chars), 20000))
+    requested_max_chars = int(max_chars)
+    max_chars = max(1, min(int(max_chars), 20000))
     page = get_page(book_id, seq)
     if page is None:
         return None
     pattern = _build_highlight_regex(query.strip()) if query else None
     text = page["text"]
+    if match_start is not None and not 0 <= match_start < len(text):
+        return None
     match = (pattern.match(text, match_start) if match_start is not None else pattern.search(text)) if pattern else None
     complete_paragraph = False
     context_cap_applied = False
@@ -2038,6 +2046,14 @@ def get_passage(
         ),
     }.items() if value is not None}
     result.update(identity)
+    from app.core.evidence_blocks import block_at
+    anchor = match.start() if match else int(match_start or 0)
+    result.update(citation_metadata(book_id, seq, page["printed_page"]))
+    result.update(block_type=block_at(text, anchor, page["block_type"]),
+                  evidence_type=evidence_type(text, anchor, anchor+1),
+                  evidence_type_method="heuristic", evidence_type_confidence="unverified",
+                  evidence_type_scope="start_anchor", requested_max_chars=requested_max_chars,
+                  effective_max_chars=max_chars)
     if context_mode == "paragraph":
         original_start = match.start() if match else int(match_start or 0)
         original_end = match.end() if match else original_start + 1
@@ -2074,7 +2090,17 @@ def get_bayt(
         (stable_id,),
     ).fetchone()
     if not row:
-        return None
+        heading = re.fullmatch(r"b14-q(\d{3})-h", stable_id or "")
+        if not heading:
+            return None
+        page_row = _connection().execute("SELECT seq,text FROM pages WHERE book_id='b14' AND qasida_number=? ORDER BY seq LIMIT 1", (int(heading.group(1)),)).fetchone()
+        if not page_row:
+            return None
+        result = get_passage('b14', page_row['seq'], match_start=0,
+                             context_chars=context_chars, context_mode=context_mode,max_chars=max_chars)
+        result.update(stable_id=stable_id, stable_id_kind='qasida_heading',heading_id=stable_id)
+        result.pop('bayt_number',None)
+        return result
     page = _connection().execute(
         "SELECT seq FROM pages WHERE id=?", (row["page_id"],),
     ).fetchone()
@@ -2179,45 +2205,49 @@ def suggest_spelling(query: str, limit: int = 5) -> list[str]:
 
 
 def zero_result_diagnostics(
-    queries: list[str], *, attempted_modes: list[str], book_ids=None,
-    source_code=None, page_from=None, page_to=None, qasida_number=None,
-    min_tier=None, whole_word: bool = True,
-) -> dict:
-    """Explain a zero result instead of implying corpus absence."""
-    terms = []
-    dropped = []
-    for query in queries:
-        for token in safe_tokens(query):
-            broad = normalize_search_text(token, level="broad")
-            target = dropped if broad in ARABIC_STOPWORDS else terms
-            if token not in target:
-                target.append(token)
-    per_term = []
+    queries, *, attempted_modes, book_ids=None, source_code=None, page_from=None,
+    page_to=None, qasida_number=None, min_tier=None, whole_word=True,
+    min_score=0.0, offset=0, include_topic_only=False, operator="OR",
+):
+    """Only offer a retry after verifying it with the same source scope."""
+    from app.services.question_intent import content_terms
+    terms=list(dict.fromkeys(t for q in queries for t in content_terms(q)))
+    scope=dict(book_ids=book_ids,source_code=source_code,page_from=page_from,
+               page_to=page_to,qasida_number=qasida_number,min_tier=min_tier)
+    per_term=[]
     for term in terms:
-        stats = search_stats(
-            [term], book_ids=book_ids, source_code=source_code,
-            page_from=page_from, page_to=page_to,
-            qasida_number=qasida_number, min_tier=min_tier,
-            count_basis="phrase", whole_word=whole_word,
-        )
-        per_term.append({
-            "term": term,
-            "matching_pages": stats["matching_pages"],
-            "occurrences": stats["matching_occurrences"],
-        })
-    any_term = any(item["matching_pages"] for item in per_term)
-    suggestions = suggest_spelling(queries[0]) if len(queries) == 1 else []
-    return {
-        "zero_result_is_not_absence_proof": True,
-        "attempted_modes": attempted_modes,
-        "whole_word": bool(whole_word),
-        "normalization_level": "safe",
-        "per_term": per_term,
-        "dropped_stopwords": dropped,
-        "spelling_suggestions": suggestions,
-        "suggested_mode": "hybrid" if any_term else ("lexeme" if len(terms) == 1 else None),
-        "message": (
-            "No evidence satisfied the selected matching rules. Inspect per_term "
-            "counts and try the suggested mode; do not infer corpus absence."
-        ),
-    }
+        stats=search_stats([term],whole_word=whole_word,**scope)
+        per_term.append(dict(term=term,matching_pages=stats['matching_pages'],occurrences=stats['matching_occurrences']))
+    retry=None;stage='matching_or_scope'
+    base=dict(queries=queries,operator=operator,whole_word=whole_word,limit=1,
+              diversify_books=False,**scope)
+    fn=reformulated_search if 'reformulated' in attempted_modes else (hybrid_search if 'hybrid' in attempted_modes else search)
+    mode=attempted_modes[-1]
+    if fn==search:base['search_mode']={'exact':'exact_phrase','terms':'all_words','lexeme':'lexeme'}.get(mode,'exact_phrase')
+    if offset:
+        if fn(**base,min_score=min_score):
+            stage='pagination';retry={'offset':0,'match_mode':'auto' if mode=='reformulated' else mode}
+    if retry is None and min_score>0 and fn(**base,min_score=0):
+        stage='score_filter';retry={'offset':0,'min_score':0,'match_mode':'auto' if mode=='reformulated' else mode}
+    if retry is None and mode=='reformulated' and not include_topic_only and reformulated_search(**base,include_topic_only=True):
+        stage='relation_filter';retry={'match_mode':'auto','include_topic_only':True,'offset':0,'min_score':0}
+    # A safe exact single-term recovery is useful exploration, explicitly not
+    # an answer. Its count already proves a match under this navigation scope.
+    if retry is None:
+        available=[x for x in per_term if x['matching_pages']]
+        if available:
+            term=min(available,key=lambda x:x['matching_pages'])['term']
+            if search(query=term,search_mode='exact_phrase',limit=1,**scope):
+                retry={'query':term,'match_mode':'exact','offset':0,'min_score':0}
+    if retry:
+        from app.core.evidence_blocks import INCLUDE_TOC
+        if 'query' not in retry:retry['queries']=queries
+        retry['operator']=operator
+        retry['include_toc']=INCLUDE_TOC.get()
+    return {'zero_result_is_not_absence_proof':True,'empty_stage':stage,
+            'attempted_modes':attempted_modes,'per_term':per_term,
+            'dropped_stopwords':[t for q in queries for t in safe_tokens(q) if t not in terms],
+            'suggested_mode':retry.get('match_mode') if retry else None,
+            'verified_retry':dict(retry,**{k:v for k,v in scope.items() if v is not None},whole_word=whole_word) if retry else None,
+            'retry_scope':'exploration_not_verified_answer',
+            'message':'No displayed evidence met the request; do not infer corpus absence. A verified_retry, when present, was checked in the same source scope.'}

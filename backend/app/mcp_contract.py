@@ -7,9 +7,9 @@ import json
 from typing import Any
 
 
-SERVER_VERSION = "2.7.0"
-TOOL_CONTRACT_VERSION = "9.0"
-TOOL_CONTRACT_ID = "alburhaniya-tools-v9"
+SERVER_VERSION = "2.8.0"
+TOOL_CONTRACT_VERSION = "10.0"
+TOOL_CONTRACT_ID = "alburhaniya-tools-v10"
 
 REQUIRED_TOOLS = frozenset({
     "search_library",
@@ -25,7 +25,7 @@ SCHEMA_CAPABILITIES = {
         "response_modes": ["compact", "ultra_compact"],
         "supported_parameters": [
             "query", "queries", "book_ids", "book_scope", "qasida_number",
-            "include_counts", "check_completeness", "count_basis", "whole_word", "min_tier",
+            "include_counts", "check_completeness", "include_toc", "include_topic_only", "count_basis", "whole_word", "min_tier",
             "expand_top", "expand_chars", "min_score", "match_mode", "mode",
             "operator", "limit", "offset", "source_code", "page_from", "page_to",
             "context_chars", "search_mode", "ranking", "diversify_books", "max_per_book",
@@ -41,7 +41,7 @@ SCHEMA_CAPABILITIES = {
         "cross_page_context": True,
         "max_context_pages": 12,
     },
-    "get_page": {"default_max_chars": 20000, "declares_truncation": True},
+    "get_page": {"default_max_chars": 20000, "declares_truncation": True, "effective_cap_disclosed": True, "ultra_compact": "omits_book_metadata"},
     "list_books": {"supported_parameters": ["include_legend", "projection", "book_ids"],
                    "projections": ["compact", "ids", "full"]},
 }

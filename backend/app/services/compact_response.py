@@ -100,6 +100,7 @@ def compact_search_response(
                 }
             for field in ("selected_queries", "match_attribution_scope", "evidence_type_method", "evidence_type_confidence", "original_queries",
                       "intent_term_coverage", "reformulation_warning", "question_relevance",
+                      "reformulation_status", "page_id", "pagination_status", "pagination_warning", "evidence_type_scope",
                       "intent_method", "answer_verified", "intent_evidence", "lexical_score"):
                 if field in row:
                     hit[field] = row[field]
@@ -167,6 +168,7 @@ def compact_search_response(
                       "reformulated_query", "reformulation_method", "selected_queries",
                       "match_attribution_scope", "evidence_type_method", "evidence_type_confidence", "original_queries",
                       "intent_term_coverage", "reformulation_warning", "question_relevance",
+                      "reformulation_status", "page_id", "pagination_status", "pagination_warning", "evidence_type_scope",
                       "intent_method", "answer_verified", "intent_evidence", "lexical_score"):
             if row.get(field) is not None:
                 hit[field] = row[field]

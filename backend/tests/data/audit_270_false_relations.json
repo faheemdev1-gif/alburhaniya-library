@@ -1,0 +1,218 @@
+[
+  {
+    "query_id": "L3",
+    "query": "كيف يتعامل المريد مع الفقر وقلة المال",
+    "book_id": "b16",
+    "seq": 39,
+    "match_id": "b16-p39-c2",
+    "span": {
+      "end": 11,
+      "start": 2
+    },
+    "reason": "Disciple-teacher etiquette; poverty relation lost."
+  },
+  {
+    "query_id": "L3",
+    "query": "كيف يتعامل المريد مع الفقر وقلة المال",
+    "book_id": "b20",
+    "seq": 132,
+    "match_id": "b20-p132-c1108",
+    "span": {
+      "end": 1111,
+      "start": 1108
+    },
+    "reason": "The verb 'inclined' is matched as the noun 'money'."
+  },
+  {
+    "query_id": "W5",
+    "query": "لو قعدت أقرأ الأوراد بس من غير شغل هل يجي الرزق",
+    "book_id": "b41",
+    "seq": 27,
+    "match_id": "b41-p27-c1172",
+    "span": {
+      "end": 1178,
+      "start": 1172
+    },
+    "reason": "Generic 'only/not' words in a discussion of insults."
+  },
+  {
+    "query_id": "A3",
+    "query": "ماذا أفعل حتى لا أؤذي الناس بكلامي وقت الغضب",
+    "book_id": "b41",
+    "seq": 70,
+    "match_id": "b41-p70-c1259",
+    "span": {
+      "end": 1265,
+      "start": 1259
+    },
+    "reason": "Devotional time boundaries; matches 'so that not'."
+  },
+  {
+    "query_id": "A3",
+    "query": "ماذا أفعل حتى لا أؤذي الناس بكلامي وقت الغضب",
+    "book_id": "b07",
+    "seq": 24,
+    "match_id": "b07-p24-c452",
+    "span": {
+      "end": 458,
+      "start": 452
+    },
+    "reason": "A story about receiving money; generic connective match."
+  },
+  {
+    "query_id": "A3",
+    "query": "ماذا أفعل حتى لا أؤذي الناس بكلامي وقت الغضب",
+    "book_id": "b07",
+    "seq": 168,
+    "match_id": "b07-p168-c1173",
+    "span": {
+      "end": 1179,
+      "start": 1173
+    },
+    "reason": "Remembrance and the end of the world; generic connective match."
+  },
+  {
+    "query_id": "A3",
+    "query": "ماذا أفعل حتى لا أؤذي الناس بكلامي وقت الغضب",
+    "book_id": "b42",
+    "seq": 135,
+    "match_id": "b42-p135-c455",
+    "span": {
+      "end": 461,
+      "start": 455
+    },
+    "reason": "A story of a visitor's fear; generic connective match."
+  },
+  {
+    "query_id": "Q1",
+    "query": "كيف أداوم على تلاوة القرآن كل يوم",
+    "book_id": "b29",
+    "seq": 78,
+    "match_id": "b29-p78-c1006",
+    "span": {
+      "end": 1009,
+      "start": 1006
+    },
+    "reason": "Judgment Day and senses; 'day' loses the daily-recitation relation."
+  },
+  {
+    "query_id": "Q2",
+    "query": "ما توجيه الشيخ للمحافظة على ورد يومي من القرآن",
+    "book_id": "b26",
+    "seq": 105,
+    "match_id": "b26-p105-c43",
+    "span": {
+      "end": 49,
+      "start": 43
+    },
+    "reason": "Interpretation of letters/talismans; not daily recitation."
+  },
+  {
+    "query_id": "Q3",
+    "query": "كيف أنتظم في قراءة القرآن ولا أنقطع عنها",
+    "book_id": "b07",
+    "seq": 12,
+    "match_id": "b07-p12-c893",
+    "span": {
+      "end": 897,
+      "start": 893
+    },
+    "reason": "Quraysh traditions selected via a generic pronoun."
+  },
+  {
+    "query_id": "Q5",
+    "query": "عايز أقرأ قرآن كل يوم وما أسيبش الورد أعمل إيه",
+    "book_id": "b39",
+    "seq": 140,
+    "match_id": "b39-p140-c1202",
+    "span": {
+      "end": 1210,
+      "start": 1202
+    },
+    "reason": "Generic 'what should I do' in another discussion."
+  },
+  {
+    "query_id": "Q5",
+    "query": "عايز أقرأ قرآن كل يوم وما أسيبش الورد أعمل إيه",
+    "book_id": "b39",
+    "seq": 180,
+    "match_id": "b39-p180-c501",
+    "span": {
+      "end": 509,
+      "start": 501
+    },
+    "reason": "Generic 'what should I do' in a divine-name discussion."
+  },
+  {
+    "query_id": "Q5",
+    "query": "عايز أقرأ قرآن كل يوم وما أسيبش الورد أعمل إيه",
+    "book_id": "b40",
+    "seq": 47,
+    "match_id": "b40-p47-c1032",
+    "span": {
+      "end": 1038,
+      "start": 1032
+    },
+    "reason": "Daily instructions in a discussion of following an expert, without Quran continuity."
+  },
+  {
+    "query_id": "S5",
+    "query": "أنا مهموم وحاسس بضيق أعمل إيه عشان قلبي يطمئن",
+    "book_id": "b26",
+    "seq": 110,
+    "match_id": "b26-p110-c236",
+    "span": {
+      "end": 245,
+      "start": 236
+    },
+    "reason": "A prayer/food anecdote selected by generic conversational words."
+  },
+  {
+    "query_id": "S5",
+    "query": "أنا مهموم وحاسس بضيق أعمل إيه عشان قلبي يطمئن",
+    "book_id": "b39",
+    "seq": 55,
+    "match_id": "b39-p55-c233",
+    "span": {
+      "end": 242,
+      "start": 233
+    },
+    "reason": "Spiritual ranks selected by a generic 'why/because' phrase."
+  },
+  {
+    "query_id": "S5",
+    "query": "أنا مهموم وحاسس بضيق أعمل إيه عشان قلبي يطمئن",
+    "book_id": "b39",
+    "seq": 180,
+    "match_id": "b39-p180-c501",
+    "span": {
+      "end": 509,
+      "start": 501
+    },
+    "reason": "Divine-name discussion selected by 'what should I do'."
+  },
+  {
+    "query_id": "S5",
+    "query": "أنا مهموم وحاسس بضيق أعمل إيه عشان قلبي يطمئن",
+    "book_id": "b28",
+    "seq": 52,
+    "match_id": "b28-p52-c945",
+    "span": {
+      "end": 954,
+      "start": 945
+    },
+    "reason": "Human trusteeship selected by a generic 'why/because' phrase."
+  },
+  {
+    "query_id": "S5",
+    "query": "أنا مهموم وحاسس بضيق أعمل إيه عشان قلبي يطمئن",
+    "book_id": "b26",
+    "seq": 76,
+    "match_id": "b26-p76-c447",
+    "span": {
+      "end": 456,
+      "start": 447
+    },
+    "reason": "Divine attributes selected by a generic 'why/because' phrase."
+  }
+]

@@ -33,6 +33,7 @@ import sys
 import re
 
 sys.path.insert(0, os.path.dirname(__file__))
+sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "app", "core"))
 from book_parser import parse_book, parse_utf8_pages, split_oversized_pages   # noqa: E402
 from arabic_utils import normalize_arabic, normalize_search_text  # noqa: E402
@@ -486,6 +487,14 @@ def build():
             + ", ".join(f"{row[0]}->{row[1]}" for row in broken_editions)
         )
 
+    duplicates = conn.execute("SELECT book_id,printed_page FROM pages WHERE printed_page IS NOT NULL GROUP BY book_id,printed_page HAVING COUNT(*)>1").fetchall()
+    for book_id, printed in duplicates:
+        conn.execute("UPDATE pages SET citation_label=citation_label || ' [الموضع ' || book_id || '-p' || seq || '؛ ترقيم مطبوع مكرر]' WHERE book_id=? AND printed_page=?",(book_id,printed))
+    from app.core.evidence_blocks import blocks
+    conn.execute("CREATE TABLE evidence_blocks (page_id INTEGER, start_char INTEGER, end_char INTEGER, block_type TEXT, PRIMARY KEY(page_id,start_char))")
+    for row in conn.execute("SELECT id,text,block_type FROM pages").fetchall():
+        for block in blocks(row[1],row[2]):
+            conn.execute("INSERT INTO evidence_blocks VALUES (?,?,?,?)",(row[0],block['start'],block['end'],block['type']))
     validate_diwan_structure(conn)
     research_stats = build_research_indexes(conn)
 

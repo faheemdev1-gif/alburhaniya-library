@@ -10,10 +10,10 @@ ROOT=Path(__file__).resolve().parent.parent
 os.chdir(ROOT)
 out=ROOT/'verification';out.mkdir(exist_ok=True)
 commands=[('pytest',[sys.executable,'-m','pytest','-q']),
-          ('classified_suite',[sys.executable,'scripts/run_regression_suite.py']),
           ('corpus_audit',[sys.executable,'scripts/independent_corpus_audit.py','library.db']),
           ('negative_control',[sys.executable,'scripts/prove_audit_failure.py']),
-          ('assessment_release',[sys.executable,'scripts/verify_assessment_release.py','--runs','7','--output','verification/assessment_release.json'])]
+          ('audit_replay',[sys.executable,'scripts/verify_release_280.py']),
+          ('local_http',[sys.executable,'scripts/verify_http_local.py'])]
 records=[]
 for name,command in commands:
     result=subprocess.run(command,capture_output=True,text=True)

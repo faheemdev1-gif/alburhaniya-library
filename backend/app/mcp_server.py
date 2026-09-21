@@ -123,6 +123,8 @@ if mcp._mcp_server.version != SERVER_VERSION:  # pragma: no cover - fail loud
     raise RuntimeError("MCP application version was not applied to serverInfo")
 
 
+from app.core.evidence_blocks import navigation_scope
+
 @mcp.tool(structured_output=True, meta=TOOL_META)
 @safe_tool_call
 def list_books(include_legend: bool = False, projection: Literal["compact", "ids", "full"] = "compact",
@@ -248,11 +250,12 @@ def get_page(
 
     page["text"] = format_page(page["text"])
     page["text"], repaired_brackets = repair_quran_display_brackets(page["text"])
-    max_chars = max(1000, min(max_chars, 20000))
+    requested_max_chars = max_chars
+    max_chars = max(1, min(max_chars, 20000))
     full_chars = len(page["text"])
     oversized = full_chars > max_chars
     if oversized:
-        page["text"] = page["text"][:max_chars] + "…"
+        page["text"] = page["text"][:max_chars-1] + "…"
 
     if mode in ("compact", "ultra_compact"):
         result = {
@@ -263,6 +266,8 @@ def get_page(
             "seq": page["seq"],
             "text": page["text"],
             "full_chars": full_chars,
+            "requested_max_chars": requested_max_chars,
+            "effective_max_chars": max_chars,
             "truncated": bool(oversized),
             "source_author": page.get("source_author"),
             "compiler": page.get("compiler"),
@@ -280,7 +285,8 @@ def get_page(
         for field in (
             "qasida_number", "qasida_title", "qasida_bayt_count",
             "bayt_from", "bayt_to", "block_type", "canonical_book_id",
-            "edition_relation", "searchable_by_default",
+            "edition_relation", "searchable_by_default", "page_id",
+            "pagination_status", "pagination_warning", "evidence_blocks",
         ):
             if page.get(field) is not None:
                 result[field] = page[field]
@@ -296,6 +302,12 @@ def get_page(
         if repaired_brackets:
             result["display_repairs"] = ["quran_bracket_direction"]
 
+        if mode == "ultra_compact":
+            # Keep canonical locators and full text; omit book-level repetition.
+            for key in ("book_title","source_author","compiler","canonical_book_id",
+                        "edition_relation","content_types","evidence_blocks","hint"):
+                result.pop(key,None)
+            result["metadata_tool"] = "get_book"
         return result
 
     return page
@@ -446,6 +458,7 @@ def _explicit_count_details(
 
 @mcp.tool(structured_output=True, meta=TOOL_META)
 @safe_tool_call
+@navigation_scope
 def search_library(
     query: Optional[str] = None,
     queries: Optional[list[str]] = None,
@@ -466,6 +479,8 @@ def search_library(
     max_per_book: int = 2,
     include_counts: bool = False,
     check_completeness: bool = False,
+    include_toc: bool = False,
+    include_topic_only: bool = False,
     count_basis: CountBasis = "phrase",
     whole_word: bool = True,
     min_score: float = 0.0,
@@ -475,6 +490,10 @@ def search_library(
     expand_chars: int = 600,
 ) -> dict[str, Any]:
     """Search the Al Burhania Library.
+
+    include_toc opts into navigation text; default results and counts exclude it.
+    include_topic_only includes weak question candidates for exploration.
+    Question relations are local anchor checks, never verified answers.
 
     Typical workflow:
     1. search_library
@@ -620,7 +639,17 @@ def search_library(
         total_hits = stats["matching_pages"]
 
     effective_match_mode = match_mode
-    if match_mode == "auto":
+    from app.services.question_intent import is_question, plan
+    question_mode = match_mode == "auto" and any(is_question(q) for q in raw_queries)
+    if question_mode:
+        effective_match_mode = "reformulated"
+        rows = db.reformulated_search(query=query, queries=raw_queries, operator=operator,
+            ranking=ranking, book_ids=book_ids, source_code=source_code,
+            page_from=page_from, page_to=page_to, limit=limit+1, offset=offset,
+            context_chars=context_chars, diversify_books=diversify_books,
+            max_per_book=max_per_book, qasida_number=qasida_number, min_tier=min_tier,
+            whole_word=whole_word, min_score=min_score, include_topic_only=include_topic_only)
+    if match_mode == "auto" and not question_mode:
         from app.services import semantic_search as semantic
         rows = []
         if semantic.semantic_available():
@@ -764,6 +793,13 @@ def search_library(
                 payload["suggestions"] = suggestions
         if include_counts and min_score > 0.0:
             payload["census_count_scope"] = "lexical_matches_before_score_filter"
+        payload["navigation_scope"] = "body_and_toc" if include_toc else "body_only"
+        payload["reformulation_status"] = (
+            ("ok" if any(r.get("question_relevance")=="relation_candidate" for r in results) else "degraded")
+            if question_mode and results else ("failed" if question_mode else "not_needed"))
+        if question_mode:
+            payload["query_plan"] = [{"original_query":q, **plan(q)} for q in raw_queries]
+            payload["answer_verified"] = False
         payload["ranking_policy"] = db.ranking_policy(ranking)
         payload["effective_match_mode"] = effective_match_mode
         payload["whole_word"] = bool(whole_word)
@@ -775,13 +811,14 @@ def search_library(
             payload["diagnostics"] = db.zero_result_diagnostics(
                 raw_queries,
                 attempted_modes=(
-                    ["exact", "terms", "hybrid", "reformulated"]
+                    (["reformulated"] if question_mode else ["exact", "terms", "hybrid", "reformulated"])
                     if match_mode == "auto" else [effective_match_mode]
                 ),
                 book_ids=book_ids, source_code=source_code,
                 page_from=page_from, page_to=page_to,
                 qasida_number=qasida_number, min_tier=min_tier,
-                whole_word=whole_word,
+                whole_word=whole_word, min_score=min_score, offset=offset,
+                include_topic_only=include_topic_only, operator=operator,
             )
         if completeness:
             payload["retrieval_completeness"] = completeness

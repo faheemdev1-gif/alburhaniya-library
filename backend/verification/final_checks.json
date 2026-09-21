@@ -5,7 +5,7 @@
     {
       "check": "pytest",
       "command": [
-        "/workspace/scratch/d819daf00120/tmp/release-venv/bin/python",
+        "/workspace/scratch/ec2b97711283/project/Al_Burhaniya_Connector_2.7.0/.venv/bin/python",
         "-m",
         "pytest",
         "-q"
@@ -13,17 +13,9 @@
       "exit_code": 0
     },
     {
-      "check": "classified_suite",
-      "command": [
-        "/workspace/scratch/d819daf00120/tmp/release-venv/bin/python",
-        "scripts/run_regression_suite.py"
-      ],
-      "exit_code": 0
-    },
-    {
       "check": "corpus_audit",
       "command": [
-        "/workspace/scratch/d819daf00120/tmp/release-venv/bin/python",
+        "/workspace/scratch/ec2b97711283/project/Al_Burhaniya_Connector_2.7.0/.venv/bin/python",
         "scripts/independent_corpus_audit.py",
         "library.db"
       ],
@@ -32,25 +24,32 @@
     {
       "check": "negative_control",
       "command": [
-        "/workspace/scratch/d819daf00120/tmp/release-venv/bin/python",
+        "/workspace/scratch/ec2b97711283/project/Al_Burhaniya_Connector_2.7.0/.venv/bin/python",
         "scripts/prove_audit_failure.py"
       ],
       "exit_code": 0
     },
     {
-      "check": "assessment_release",
+      "check": "audit_replay",
       "command": [
-        "/workspace/scratch/d819daf00120/tmp/release-venv/bin/python",
-        "scripts/verify_assessment_release.py",
-        "--runs",
-        "7",
-        "--output",
-        "verification/assessment_release.json"
+        "/workspace/scratch/ec2b97711283/project/Al_Burhaniya_Connector_2.7.0/.venv/bin/python",
+        "scripts/verify_release_280.py"
       ],
       "exit_code": 0
+    },
+    {
+      "check": "local_http",
+      "command": [
+        "/workspace/scratch/ec2b97711283/project/Al_Burhaniya_Connector_2.7.0/.venv/bin/python",
+        "scripts/verify_http_local.py"
+      ],
+      "exit_code": 0,
+      "rerun_note": "Passed after updating the historical TOC control to opt into navigation under contract 10.0; verified with a fresh local HTTP client."
     }
   ],
   "passed": true,
   "production_deployed": false,
-  "docker_engine_tested": false
+  "docker_engine_tested": false,
+  "pytest_passed": 185,
+  "acceptance_scope": "Local automated gates only. Independent retrieval/source review and production deployment/client-wrapper checks remain open."
 }

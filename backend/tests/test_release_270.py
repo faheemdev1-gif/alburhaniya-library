@@ -128,7 +128,7 @@ class Release270Tests(unittest.TestCase):
         with TestClient(app) as client:
             response=client.get('/health')
             self.assertEqual(response.status_code,200)
-            self.assertEqual(response.json()['server_version'],'2.7.0')
+            self.assertEqual(response.json()['server_version'],'2.8.0')
             self.assertEqual(response.json()['tool_count'],5)
             self.assertEqual(response.json()['corpus_contract']['status'],'ok')
 

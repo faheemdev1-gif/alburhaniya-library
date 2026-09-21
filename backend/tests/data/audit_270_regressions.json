@@ -1,0 +1,993 @@
+{
+  "source": "Supplied live audit of 2.7.0; development regressions, not held-out evaluation",
+  "suite": [
+    {
+      "args": {
+        "context_chars": 180,
+        "include_counts": false,
+        "limit": 5,
+        "match_mode": "auto",
+        "query": "من ضاقت عليه المعيشة كيف ينال سعة الرزق"
+      },
+      "criterion": "Practical or spiritual guidance responding to tight provision, wealth/poverty or hardship; broad word matches on abundance do not count.",
+      "en": "How can someone whose livelihood has become difficult obtain greater provision?",
+      "family": "Livelihood under hardship",
+      "id": "L1",
+      "origin": "prior",
+      "query": "من ضاقت عليه المعيشة كيف ينال سعة الرزق",
+      "reference_pages": [
+        "b41:130",
+        "b41:131",
+        "b44:40"
+      ]
+    },
+    {
+      "args": {
+        "context_chars": 180,
+        "include_counts": false,
+        "limit": 5,
+        "match_mode": "auto",
+        "query": "ماذا يفعل من ضاق رزقه واشتدت حاجته"
+      },
+      "criterion": "Practical or spiritual guidance responding to tight provision, wealth/poverty or hardship; broad word matches on abundance do not count.",
+      "en": "What should someone do when provision is tight and need has grown?",
+      "family": "Livelihood under hardship",
+      "id": "L2",
+      "origin": "new",
+      "query": "ماذا يفعل من ضاق رزقه واشتدت حاجته",
+      "reference_pages": [
+        "b41:130",
+        "b41:131",
+        "b44:40"
+      ]
+    },
+    {
+      "args": {
+        "context_chars": 180,
+        "include_counts": false,
+        "limit": 5,
+        "match_mode": "auto",
+        "query": "كيف يتعامل المريد مع الفقر وقلة المال"
+      },
+      "criterion": "Practical or spiritual guidance responding to tight provision, wealth/poverty or hardship; broad word matches on abundance do not count.",
+      "en": "How should a disciple deal with poverty and a lack of money?",
+      "family": "Livelihood under hardship",
+      "id": "L3",
+      "origin": "new",
+      "query": "كيف يتعامل المريد مع الفقر وقلة المال",
+      "reference_pages": [
+        "b41:130",
+        "b41:131",
+        "b44:40"
+      ]
+    },
+    {
+      "args": {
+        "context_chars": 180,
+        "include_counts": false,
+        "limit": 5,
+        "match_mode": "auto",
+        "query": "ما توجيه الشيخ لمن يشكو ضيق المعيشة"
+      },
+      "criterion": "Practical or spiritual guidance responding to tight provision, wealth/poverty or hardship; broad word matches on abundance do not count.",
+      "en": "What is the sheikh's guidance for someone complaining of a difficult livelihood?",
+      "family": "Livelihood under hardship",
+      "id": "L4",
+      "origin": "new",
+      "query": "ما توجيه الشيخ لمن يشكو ضيق المعيشة",
+      "reference_pages": [
+        "b41:130",
+        "b41:131",
+        "b44:40"
+      ]
+    },
+    {
+      "args": {
+        "context_chars": 180,
+        "include_counts": false,
+        "limit": 5,
+        "match_mode": "auto",
+        "query": "عندما يقل دخلي وتكثر حاجتي بماذا تنصحني التعاليم"
+      },
+      "criterion": "Practical or spiritual guidance responding to tight provision, wealth/poverty or hardship; broad word matches on abundance do not count.",
+      "en": "When my income falls and my needs grow, what do the teachings advise?",
+      "family": "Livelihood under hardship",
+      "id": "L5",
+      "origin": "new",
+      "query": "عندما يقل دخلي وتكثر حاجتي بماذا تنصحني التعاليم",
+      "reference_pages": [
+        "b41:130",
+        "b41:131",
+        "b44:40"
+      ]
+    },
+    {
+      "args": {
+        "context_chars": 180,
+        "include_counts": false,
+        "limit": 5,
+        "match_mode": "auto",
+        "query": "هل يكفي أن أقرأ الأوراد وأترك السعي للكسب"
+      },
+      "criterion": "Addresses the relationship between reciting litanies/spiritual practice and work or material means; generic praise of litanies or work alone is partial.",
+      "en": "Is it enough to read the litanies and stop working for a living?",
+      "family": "Litanies and earning a living",
+      "id": "W1",
+      "origin": "prior",
+      "query": "هل يكفي أن أقرأ الأوراد وأترك السعي للكسب",
+      "reference_pages": [
+        "b41:131"
+      ]
+    },
+    {
+      "args": {
+        "context_chars": 180,
+        "include_counts": false,
+        "limit": 5,
+        "match_mode": "auto",
+        "query": "هل قراءة الأوراد تغني عن العمل لطلب الرزق"
+      },
+      "criterion": "Addresses the relationship between reciting litanies/spiritual practice and work or material means; generic praise of litanies or work alone is partial.",
+      "en": "Does reciting the litanies replace working to earn a living?",
+      "family": "Litanies and earning a living",
+      "id": "W2",
+      "origin": "new",
+      "query": "هل قراءة الأوراد تغني عن العمل لطلب الرزق",
+      "reference_pages": [
+        "b41:131"
+      ]
+    },
+    {
+      "args": {
+        "context_chars": 180,
+        "include_counts": false,
+        "limit": 5,
+        "match_mode": "auto",
+        "query": "هل يجوز للمريد أن يترك العمل ويكتفي بالذكر"
+      },
+      "criterion": "Addresses the relationship between reciting litanies/spiritual practice and work or material means; generic praise of litanies or work alone is partial.",
+      "en": "May a disciple stop working and suffice with remembrance?",
+      "family": "Litanies and earning a living",
+      "id": "W3",
+      "origin": "new",
+      "query": "هل يجوز للمريد أن يترك العمل ويكتفي بالذكر",
+      "reference_pages": [
+        "b41:131"
+      ]
+    },
+    {
+      "args": {
+        "context_chars": 180,
+        "include_counts": false,
+        "limit": 5,
+        "match_mode": "auto",
+        "query": "كيف نجمع بين الأوراد والسعي لكسب العيش"
+      },
+      "criterion": "Addresses the relationship between reciting litanies/spiritual practice and work or material means; generic praise of litanies or work alone is partial.",
+      "en": "How do we combine litanies with working to earn a living?",
+      "family": "Litanies and earning a living",
+      "id": "W4",
+      "origin": "new",
+      "query": "كيف نجمع بين الأوراد والسعي لكسب العيش",
+      "reference_pages": [
+        "b41:131"
+      ]
+    },
+    {
+      "args": {
+        "context_chars": 180,
+        "include_counts": false,
+        "limit": 5,
+        "match_mode": "auto",
+        "query": "لو قعدت أقرأ الأوراد بس من غير شغل هل يجي الرزق"
+      },
+      "criterion": "Addresses the relationship between reciting litanies/spiritual practice and work or material means; generic praise of litanies or work alone is partial.",
+      "en": "If I only sit reciting the litanies without working, will provision come?",
+      "family": "Litanies and earning a living",
+      "id": "W5",
+      "origin": "new",
+      "query": "لو قعدت أقرأ الأوراد بس من غير شغل هل يجي الرزق",
+      "reference_pages": [
+        "b41:131"
+      ]
+    },
+    {
+      "args": {
+        "context_chars": 180,
+        "include_counts": false,
+        "limit": 5,
+        "match_mode": "auto",
+        "query": "كيف أحافظ على الصلاة في وقتها"
+      },
+      "criterion": "Explicit guidance on keeping prescribed prayer at its times; general praise of prayer is partial.",
+      "en": "How can I maintain prayer at its appointed time?",
+      "family": "Prayer at its appointed times",
+      "id": "P1",
+      "origin": "new",
+      "query": "كيف أحافظ على الصلاة في وقتها",
+      "reference_pages": [
+        "b44:55",
+        "b44:46"
+      ]
+    },
+    {
+      "args": {
+        "context_chars": 180,
+        "include_counts": false,
+        "limit": 5,
+        "match_mode": "auto",
+        "query": "ما أهمية أداء الصلوات في أوقاتها"
+      },
+      "criterion": "Explicit guidance on keeping prescribed prayer at its times; general praise of prayer is partial.",
+      "en": "Why is performing the prayers at their appointed times important?",
+      "family": "Prayer at its appointed times",
+      "id": "P2",
+      "origin": "new",
+      "query": "ما أهمية أداء الصلوات في أوقاتها",
+      "reference_pages": [
+        "b44:55",
+        "b44:46"
+      ]
+    },
+    {
+      "args": {
+        "context_chars": 180,
+        "include_counts": false,
+        "limit": 5,
+        "match_mode": "auto",
+        "query": "بماذا تنصحون من يؤخر الصلاة عن وقتها"
+      },
+      "criterion": "Explicit guidance on keeping prescribed prayer at its times; general praise of prayer is partial.",
+      "en": "What advice do you give someone who delays prayer beyond its time?",
+      "family": "Prayer at its appointed times",
+      "id": "P3",
+      "origin": "new",
+      "query": "بماذا تنصحون من يؤخر الصلاة عن وقتها",
+      "reference_pages": [
+        "b44:55",
+        "b44:46"
+      ]
+    },
+    {
+      "args": {
+        "context_chars": 180,
+        "include_counts": false,
+        "limit": 5,
+        "match_mode": "auto",
+        "query": "ما توجيه الشيخ للمداومة على الفرائض في مواعيدها"
+      },
+      "criterion": "Explicit guidance on keeping prescribed prayer at its times; general praise of prayer is partial.",
+      "en": "What is the sheikh's guidance on keeping obligatory prayers at their times?",
+      "family": "Prayer at its appointed times",
+      "id": "P4",
+      "origin": "new",
+      "query": "ما توجيه الشيخ للمداومة على الفرائض في مواعيدها",
+      "reference_pages": [
+        "b44:55",
+        "b44:46"
+      ]
+    },
+    {
+      "args": {
+        "context_chars": 180,
+        "include_counts": false,
+        "limit": 5,
+        "match_mode": "auto",
+        "query": "إزاي أواظب على صلاتي وما أأخرهاش"
+      },
+      "criterion": "Explicit guidance on keeping prescribed prayer at its times; general praise of prayer is partial.",
+      "en": "How can I keep up my prayers and avoid delaying them?",
+      "family": "Prayer at its appointed times",
+      "id": "P5",
+      "origin": "new",
+      "query": "إزاي أواظب على صلاتي وما أأخرهاش",
+      "reference_pages": [
+        "b44:55",
+        "b44:46"
+      ]
+    },
+    {
+      "args": {
+        "context_chars": 180,
+        "include_counts": false,
+        "limit": 5,
+        "match_mode": "auto",
+        "query": "ضبط اللسان عند الغضب"
+      },
+      "criterion": "Guidance on restraining speech when angry, forbearance or avoiding abusive response under provocation; generic tongue/anger word matches are partial or off-topic.",
+      "en": "Controlling one's tongue when angry.",
+      "family": "Speech and anger",
+      "id": "A1",
+      "origin": "prior",
+      "query": "ضبط اللسان عند الغضب",
+      "reference_pages": [
+        "b44:3"
+      ]
+    },
+    {
+      "args": {
+        "context_chars": 180,
+        "include_counts": false,
+        "limit": 5,
+        "match_mode": "auto",
+        "query": "كيف أحفظ لساني إذا غضبت"
+      },
+      "criterion": "Guidance on restraining speech when angry, forbearance or avoiding abusive response under provocation; generic tongue/anger word matches are partial or off-topic.",
+      "en": "How can I guard my tongue when I become angry?",
+      "family": "Speech and anger",
+      "id": "A2",
+      "origin": "new",
+      "query": "كيف أحفظ لساني إذا غضبت",
+      "reference_pages": [
+        "b44:3"
+      ]
+    },
+    {
+      "args": {
+        "context_chars": 180,
+        "include_counts": false,
+        "limit": 5,
+        "match_mode": "auto",
+        "query": "ماذا أفعل حتى لا أؤذي الناس بكلامي وقت الغضب"
+      },
+      "criterion": "Guidance on restraining speech when angry, forbearance or avoiding abusive response under provocation; generic tongue/anger word matches are partial or off-topic.",
+      "en": "What should I do to avoid hurting people with my words when angry?",
+      "family": "Speech and anger",
+      "id": "A3",
+      "origin": "new",
+      "query": "ماذا أفعل حتى لا أؤذي الناس بكلامي وقت الغضب",
+      "reference_pages": [
+        "b44:3"
+      ]
+    },
+    {
+      "args": {
+        "context_chars": 180,
+        "include_counts": false,
+        "limit": 5,
+        "match_mode": "auto",
+        "query": "ما نصيحة الشيخ في كظم الغيظ وترك الكلام الجارح"
+      },
+      "criterion": "Guidance on restraining speech when angry, forbearance or avoiding abusive response under provocation; generic tongue/anger word matches are partial or off-topic.",
+      "en": "What is the sheikh's advice on restraining rage and avoiding hurtful speech?",
+      "family": "Speech and anger",
+      "id": "A4",
+      "origin": "new",
+      "query": "ما نصيحة الشيخ في كظم الغيظ وترك الكلام الجارح",
+      "reference_pages": [
+        "b44:3"
+      ]
+    },
+    {
+      "args": {
+        "context_chars": 180,
+        "include_counts": false,
+        "limit": 5,
+        "match_mode": "auto",
+        "query": "لما أتعصب إزاي أمسك لساني وما أجرحش حد"
+      },
+      "criterion": "Guidance on restraining speech when angry, forbearance or avoiding abusive response under provocation; generic tongue/anger word matches are partial or off-topic.",
+      "en": "When I get angry, how can I hold my tongue and avoid hurting anyone?",
+      "family": "Speech and anger",
+      "id": "A5",
+      "origin": "new",
+      "query": "لما أتعصب إزاي أمسك لساني وما أجرحش حد",
+      "reference_pages": [
+        "b44:3"
+      ]
+    },
+    {
+      "args": {
+        "context_chars": 180,
+        "include_counts": false,
+        "limit": 5,
+        "match_mode": "auto",
+        "query": "كيف أداوم على تلاوة القرآن كل يوم"
+      },
+      "criterion": "Guidance on regular recitation, sustaining devotional acts, or choosing time for recitation. General Quran praise or a reference to Judgment Day is insufficient. Timing/continuity guidance is useful support, not necessarily a complete habit plan.",
+      "en": "How can I maintain daily Quran recitation?",
+      "family": "Regular Quran recitation",
+      "id": "Q1",
+      "origin": "prior",
+      "query": "كيف أداوم على تلاوة القرآن كل يوم",
+      "reference_pages": [
+        "b28:73",
+        "b29:104",
+        "b44:55"
+      ]
+    },
+    {
+      "args": {
+        "context_chars": 180,
+        "include_counts": false,
+        "limit": 5,
+        "match_mode": "auto",
+        "query": "ما توجيه الشيخ للمحافظة على ورد يومي من القرآن"
+      },
+      "criterion": "Guidance on regular recitation, sustaining devotional acts, or choosing time for recitation. General Quran praise or a reference to Judgment Day is insufficient. Timing/continuity guidance is useful support, not necessarily a complete habit plan.",
+      "en": "What is the sheikh's guidance on maintaining a daily Quran portion?",
+      "family": "Regular Quran recitation",
+      "id": "Q2",
+      "origin": "new",
+      "query": "ما توجيه الشيخ للمحافظة على ورد يومي من القرآن",
+      "reference_pages": [
+        "b28:73",
+        "b29:104",
+        "b44:55"
+      ]
+    },
+    {
+      "args": {
+        "context_chars": 180,
+        "include_counts": false,
+        "limit": 5,
+        "match_mode": "auto",
+        "query": "كيف أنتظم في قراءة القرآن ولا أنقطع عنها"
+      },
+      "criterion": "Guidance on regular recitation, sustaining devotional acts, or choosing time for recitation. General Quran praise or a reference to Judgment Day is insufficient. Timing/continuity guidance is useful support, not necessarily a complete habit plan.",
+      "en": "How can I read the Quran regularly without giving it up?",
+      "family": "Regular Quran recitation",
+      "id": "Q3",
+      "origin": "new",
+      "query": "كيف أنتظم في قراءة القرآن ولا أنقطع عنها",
+      "reference_pages": [
+        "b28:73",
+        "b29:104",
+        "b44:55"
+      ]
+    },
+    {
+      "args": {
+        "context_chars": 180,
+        "include_counts": false,
+        "limit": 5,
+        "match_mode": "auto",
+        "query": "ماذا يعين المريد على الاستمرار في تلاوة القرآن"
+      },
+      "criterion": "Guidance on regular recitation, sustaining devotional acts, or choosing time for recitation. General Quran praise or a reference to Judgment Day is insufficient. Timing/continuity guidance is useful support, not necessarily a complete habit plan.",
+      "en": "What helps a disciple keep reciting the Quran?",
+      "family": "Regular Quran recitation",
+      "id": "Q4",
+      "origin": "new",
+      "query": "ماذا يعين المريد على الاستمرار في تلاوة القرآن",
+      "reference_pages": [
+        "b28:73",
+        "b29:104",
+        "b44:55"
+      ]
+    },
+    {
+      "args": {
+        "context_chars": 180,
+        "include_counts": false,
+        "limit": 5,
+        "match_mode": "auto",
+        "query": "عايز أقرأ قرآن كل يوم وما أسيبش الورد أعمل إيه"
+      },
+      "criterion": "Guidance on regular recitation, sustaining devotional acts, or choosing time for recitation. General Quran praise or a reference to Judgment Day is insufficient. Timing/continuity guidance is useful support, not necessarily a complete habit plan.",
+      "en": "I want to read Quran every day and keep my daily portion; what should I do?",
+      "family": "Regular Quran recitation",
+      "id": "Q5",
+      "origin": "new",
+      "query": "عايز أقرأ قرآن كل يوم وما أسيبش الورد أعمل إيه",
+      "reference_pages": [
+        "b28:73",
+        "b29:104",
+        "b44:55"
+      ]
+    },
+    {
+      "args": {
+        "context_chars": 180,
+        "include_counts": false,
+        "limit": 5,
+        "match_mode": "auto",
+        "query": "كيف يتعامل المريد مع الحزن وضيق الصدر"
+      },
+      "criterion": "Spiritual guidance for sadness, worry or distress (patience, hope, trust); anatomy and the verb 'issued' are off-topic. No medical claims are being tested.",
+      "en": "How should a disciple deal with sadness and distress?",
+      "family": "Sadness and distress",
+      "id": "S1",
+      "origin": "prior",
+      "query": "كيف يتعامل المريد مع الحزن وضيق الصدر",
+      "reference_pages": [
+        "b44:40"
+      ]
+    },
+    {
+      "args": {
+        "context_chars": 180,
+        "include_counts": false,
+        "limit": 5,
+        "match_mode": "auto",
+        "query": "ما النصيحة لمن يشعر بالهم والحزن"
+      },
+      "criterion": "Spiritual guidance for sadness, worry or distress (patience, hope, trust); anatomy and the verb 'issued' are off-topic. No medical claims are being tested.",
+      "en": "What advice is there for someone feeling worry and sadness?",
+      "family": "Sadness and distress",
+      "id": "S2",
+      "origin": "new",
+      "query": "ما النصيحة لمن يشعر بالهم والحزن",
+      "reference_pages": [
+        "b44:40"
+      ]
+    },
+    {
+      "args": {
+        "context_chars": 180,
+        "include_counts": false,
+        "limit": 5,
+        "match_mode": "auto",
+        "query": "كيف يجد الإنسان الطمأنينة عندما تضيق به الدنيا"
+      },
+      "criterion": "Spiritual guidance for sadness, worry or distress (patience, hope, trust); anatomy and the verb 'issued' are off-topic. No medical claims are being tested.",
+      "en": "How can a person find reassurance when life feels constricted?",
+      "family": "Sadness and distress",
+      "id": "S3",
+      "origin": "new",
+      "query": "كيف يجد الإنسان الطمأنينة عندما تضيق به الدنيا",
+      "reference_pages": [
+        "b44:40"
+      ]
+    },
+    {
+      "args": {
+        "context_chars": 180,
+        "include_counts": false,
+        "limit": 5,
+        "match_mode": "auto",
+        "query": "بماذا يوصي الشيخ من فقد الأمل واشتد كربه"
+      },
+      "criterion": "Spiritual guidance for sadness, worry or distress (patience, hope, trust); anatomy and the verb 'issued' are off-topic. No medical claims are being tested.",
+      "en": "What does the sheikh advise someone who has lost hope and faces severe distress?",
+      "family": "Sadness and distress",
+      "id": "S4",
+      "origin": "new",
+      "query": "بماذا يوصي الشيخ من فقد الأمل واشتد كربه",
+      "reference_pages": [
+        "b44:40"
+      ]
+    },
+    {
+      "args": {
+        "context_chars": 180,
+        "include_counts": false,
+        "limit": 5,
+        "match_mode": "auto",
+        "query": "أنا مهموم وحاسس بضيق أعمل إيه عشان قلبي يطمئن"
+      },
+      "criterion": "Spiritual guidance for sadness, worry or distress (patience, hope, trust); anatomy and the verb 'issued' are off-topic. No medical claims are being tested.",
+      "en": "I feel worried and distressed; what should I do so my heart feels reassured?",
+      "family": "Sadness and distress",
+      "id": "S5",
+      "origin": "new",
+      "query": "أنا مهموم وحاسس بضيق أعمل إيه عشان قلبي يطمئن",
+      "reference_pages": [
+        "b44:40"
+      ]
+    }
+  ],
+  "families": [
+    {
+      "code": "L",
+      "criterion": "Practical or spiritual guidance responding to tight provision, wealth/poverty or hardship; broad word matches on abundance do not count.",
+      "name": "Livelihood under hardship",
+      "phrases": [
+        [
+          "من ضاقت عليه المعيشة كيف ينال سعة الرزق",
+          "How can someone whose livelihood has become difficult obtain greater provision?",
+          "prior"
+        ],
+        [
+          "ماذا يفعل من ضاق رزقه واشتدت حاجته",
+          "What should someone do when provision is tight and need has grown?",
+          "new"
+        ],
+        [
+          "كيف يتعامل المريد مع الفقر وقلة المال",
+          "How should a disciple deal with poverty and a lack of money?",
+          "new"
+        ],
+        [
+          "ما توجيه الشيخ لمن يشكو ضيق المعيشة",
+          "What is the sheikh's guidance for someone complaining of a difficult livelihood?",
+          "new"
+        ],
+        [
+          "عندما يقل دخلي وتكثر حاجتي بماذا تنصحني التعاليم",
+          "When my income falls and my needs grow, what do the teachings advise?",
+          "new"
+        ]
+      ],
+      "references": [
+        "b41:130",
+        "b41:131",
+        "b44:40"
+      ]
+    },
+    {
+      "code": "W",
+      "criterion": "Addresses the relationship between reciting litanies/spiritual practice and work or material means; generic praise of litanies or work alone is partial.",
+      "name": "Litanies and earning a living",
+      "phrases": [
+        [
+          "هل يكفي أن أقرأ الأوراد وأترك السعي للكسب",
+          "Is it enough to read the litanies and stop working for a living?",
+          "prior"
+        ],
+        [
+          "هل قراءة الأوراد تغني عن العمل لطلب الرزق",
+          "Does reciting the litanies replace working to earn a living?",
+          "new"
+        ],
+        [
+          "هل يجوز للمريد أن يترك العمل ويكتفي بالذكر",
+          "May a disciple stop working and suffice with remembrance?",
+          "new"
+        ],
+        [
+          "كيف نجمع بين الأوراد والسعي لكسب العيش",
+          "How do we combine litanies with working to earn a living?",
+          "new"
+        ],
+        [
+          "لو قعدت أقرأ الأوراد بس من غير شغل هل يجي الرزق",
+          "If I only sit reciting the litanies without working, will provision come?",
+          "new"
+        ]
+      ],
+      "references": [
+        "b41:131"
+      ]
+    },
+    {
+      "code": "P",
+      "criterion": "Explicit guidance on keeping prescribed prayer at its times; general praise of prayer is partial.",
+      "name": "Prayer at its appointed times",
+      "phrases": [
+        [
+          "كيف أحافظ على الصلاة في وقتها",
+          "How can I maintain prayer at its appointed time?",
+          "new"
+        ],
+        [
+          "ما أهمية أداء الصلوات في أوقاتها",
+          "Why is performing the prayers at their appointed times important?",
+          "new"
+        ],
+        [
+          "بماذا تنصحون من يؤخر الصلاة عن وقتها",
+          "What advice do you give someone who delays prayer beyond its time?",
+          "new"
+        ],
+        [
+          "ما توجيه الشيخ للمداومة على الفرائض في مواعيدها",
+          "What is the sheikh's guidance on keeping obligatory prayers at their times?",
+          "new"
+        ],
+        [
+          "إزاي أواظب على صلاتي وما أأخرهاش",
+          "How can I keep up my prayers and avoid delaying them?",
+          "new"
+        ]
+      ],
+      "references": [
+        "b44:55",
+        "b44:46"
+      ]
+    },
+    {
+      "code": "A",
+      "criterion": "Guidance on restraining speech when angry, forbearance or avoiding abusive response under provocation; generic tongue/anger word matches are partial or off-topic.",
+      "name": "Speech and anger",
+      "phrases": [
+        [
+          "ضبط اللسان عند الغضب",
+          "Controlling one's tongue when angry.",
+          "prior"
+        ],
+        [
+          "كيف أحفظ لساني إذا غضبت",
+          "How can I guard my tongue when I become angry?",
+          "new"
+        ],
+        [
+          "ماذا أفعل حتى لا أؤذي الناس بكلامي وقت الغضب",
+          "What should I do to avoid hurting people with my words when angry?",
+          "new"
+        ],
+        [
+          "ما نصيحة الشيخ في كظم الغيظ وترك الكلام الجارح",
+          "What is the sheikh's advice on restraining rage and avoiding hurtful speech?",
+          "new"
+        ],
+        [
+          "لما أتعصب إزاي أمسك لساني وما أجرحش حد",
+          "When I get angry, how can I hold my tongue and avoid hurting anyone?",
+          "new"
+        ]
+      ],
+      "references": [
+        "b44:3"
+      ]
+    },
+    {
+      "code": "Q",
+      "criterion": "Guidance on regular recitation, sustaining devotional acts, or choosing time for recitation. General Quran praise or a reference to Judgment Day is insufficient. Timing/continuity guidance is useful support, not necessarily a complete habit plan.",
+      "name": "Regular Quran recitation",
+      "phrases": [
+        [
+          "كيف أداوم على تلاوة القرآن كل يوم",
+          "How can I maintain daily Quran recitation?",
+          "prior"
+        ],
+        [
+          "ما توجيه الشيخ للمحافظة على ورد يومي من القرآن",
+          "What is the sheikh's guidance on maintaining a daily Quran portion?",
+          "new"
+        ],
+        [
+          "كيف أنتظم في قراءة القرآن ولا أنقطع عنها",
+          "How can I read the Quran regularly without giving it up?",
+          "new"
+        ],
+        [
+          "ماذا يعين المريد على الاستمرار في تلاوة القرآن",
+          "What helps a disciple keep reciting the Quran?",
+          "new"
+        ],
+        [
+          "عايز أقرأ قرآن كل يوم وما أسيبش الورد أعمل إيه",
+          "I want to read Quran every day and keep my daily portion; what should I do?",
+          "new"
+        ]
+      ],
+      "references": [
+        "b28:73",
+        "b29:104",
+        "b44:55"
+      ]
+    },
+    {
+      "code": "S",
+      "criterion": "Spiritual guidance for sadness, worry or distress (patience, hope, trust); anatomy and the verb 'issued' are off-topic. No medical claims are being tested.",
+      "name": "Sadness and distress",
+      "phrases": [
+        [
+          "كيف يتعامل المريد مع الحزن وضيق الصدر",
+          "How should a disciple deal with sadness and distress?",
+          "prior"
+        ],
+        [
+          "ما النصيحة لمن يشعر بالهم والحزن",
+          "What advice is there for someone feeling worry and sadness?",
+          "new"
+        ],
+        [
+          "كيف يجد الإنسان الطمأنينة عندما تضيق به الدنيا",
+          "How can a person find reassurance when life feels constricted?",
+          "new"
+        ],
+        [
+          "بماذا يوصي الشيخ من فقد الأمل واشتد كربه",
+          "What does the sheikh advise someone who has lost hope and faces severe distress?",
+          "new"
+        ],
+        [
+          "أنا مهموم وحاسس بضيق أعمل إيه عشان قلبي يطمئن",
+          "I feel worried and distressed; what should I do so my heart feels reassured?",
+          "new"
+        ]
+      ],
+      "references": [
+        "b44:40"
+      ]
+    }
+  ],
+  "prior_checks": [
+    {
+      "name": "Exact pages included in lexeme set",
+      "passed": true,
+      "detail": {
+        "exact": 12,
+        "lexeme": 17,
+        "missing": []
+      }
+    },
+    {
+      "name": "Pagination and reordered alternatives",
+      "passed": true,
+      "detail": {
+        "pages": 17
+      }
+    },
+    {
+      "name": "Multi-query attribution and passage round-trip",
+      "passed": true,
+      "detail": {
+        "checked": 17,
+        "failed": []
+      }
+    },
+    {
+      "name": "Independent whole-word and hamza counts",
+      "passed": true,
+      "detail": {
+        "terms": [
+          "لا",
+          "إلا",
+          "ربك",
+          "أشرقت",
+          "اشرقت"
+        ],
+        "expected_from_source": [
+          1,
+          2,
+          1,
+          1,
+          0
+        ]
+      }
+    },
+    {
+      "name": "Substring opt-in",
+      "passed": true,
+      "detail": {
+        "whole_word": 1,
+        "substring": 7
+      }
+    },
+    {
+      "name": "Qasida 91 structure",
+      "passed": true,
+      "detail": {
+        "bayts": 22,
+        "pages": [
+          {
+            "citation_label": "القصيدة 91، الصفحة 242، الأبيات 1–12 من 22",
+            "printed_page": "242",
+            "seq": 246
+          },
+          {
+            "citation_label": "القصيدة 91، الصفحة 243، الأبيات 13–22 من 22",
+            "printed_page": "243",
+            "seq": 247
+          }
+        ],
+        "prosody": "not_curated"
+      }
+    },
+    {
+      "name": "Qasida 95 structure",
+      "passed": true,
+      "detail": {
+        "bayts": 21,
+        "pages": [
+          {
+            "citation_label": "القصيدة 95، الصفحة 250، الأبيات 1–12 من 21",
+            "printed_page": "250",
+            "seq": 254
+          },
+          {
+            "citation_label": "القصيدة 95، الصفحة 251، الأبيات 13–21 من 21",
+            "printed_page": "251",
+            "seq": 255
+          }
+        ],
+        "prosody": "not_curated"
+      }
+    },
+    {
+      "name": "AND page intersection",
+      "passed": true,
+      "detail": {
+        "audit_scope": "combined_AND_eligibility"
+      }
+    },
+    {
+      "name": "Score-filter completeness scope",
+      "passed": true,
+      "detail": {
+        "id": "E08"
+      }
+    },
+    {
+      "name": "Tier and source filters",
+      "passed": true,
+      "detail": {
+        "ids": [
+          "E09",
+          "E10"
+        ]
+      }
+    },
+    {
+      "name": "Book scope and qasida filters",
+      "passed": true,
+      "detail": {
+        "ids": [
+          "E11",
+          "E12"
+        ]
+      }
+    },
+    {
+      "name": "Edition default and explicit opt-in",
+      "passed": true,
+      "detail": {
+        "default_count": 1,
+        "explicit_count": 2,
+        "printed_pages": {
+          "b38": "9",
+          "b37": "146"
+        }
+      }
+    },
+    {
+      "name": "Heading identity and match-id follow-up",
+      "passed": true,
+      "detail": {
+        "stable_id": "b14-q007-h",
+        "stable_id_selector_error": "invalid or unknown stable_id 'b14-q007-h'"
+      }
+    },
+    {
+      "name": "Ultra compact citation and expansion equivalence",
+      "passed": true,
+      "detail": {
+        "checked": 6
+      }
+    },
+    {
+      "name": "Page ultra compact differs",
+      "passed": false,
+      "detail": {
+        "identical_payloads": true
+      }
+    },
+    {
+      "name": "Page requested character cap",
+      "passed": false,
+      "detail": {
+        "requested": 100,
+        "returned_chars": 1001,
+        "truncated": true
+      }
+    },
+    {
+      "name": "Contents-section evidence typed as toc",
+      "passed": false,
+      "detail": {
+        "id": "b41-p154-c667",
+        "actual": "body",
+        "page_is_mixed_body_and_contents": true
+      }
+    },
+    {
+      "name": "Distinct anthology pages have distinct citation labels",
+      "passed": false,
+      "detail": {
+        "seqs": [
+          193,
+          153
+        ],
+        "printed_pages": [
+          "70",
+          "70"
+        ],
+        "labels": [
+          "أحسن القصص، الصفحة 70",
+          "أحسن القصص، الصفحة 70"
+        ]
+      }
+    },
+    {
+      "name": "Contract stable throughout session",
+      "passed": true,
+      "detail": {
+        "calls": 94,
+        "unique_contracts": 1
+      }
+    }
+  ]
+}

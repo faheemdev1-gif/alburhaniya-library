@@ -15,6 +15,17 @@ from app.services.compact_response import compact_search_response
 from app.core.text_format import repair_quran_display_brackets
 
 
+
+def with_navigation(fn):
+    from functools import wraps
+    from app.core.evidence_blocks import INCLUDE_TOC
+    @wraps(fn)
+    def wrapped(*args,**kwargs):
+        token=INCLUDE_TOC.set(True)
+        try:return fn(*args,**kwargs)
+        finally:INCLUDE_TOC.reset(token)
+    return wrapped
+
 class CompactRetrievalTests(unittest.TestCase):
     def test_search_returns_snippets_not_full_pages(self):
         results = db.search("الله", limit=3)
@@ -307,6 +318,7 @@ class CompactRetrievalTests(unittest.TestCase):
         self.assertIn("x", payload["results"][0])
         self.assertIn(payload["results"][0]["blk"], {"body", "toc"})
 
+    @with_navigation
     def test_ultra_compact_block_type_does_not_collide_with_bayt_to(self):
         rows = db.search(
             "مرتبة الإنسان الكامل", book_ids=["b12"],
@@ -562,6 +574,7 @@ class CompactRetrievalTests(unittest.TestCase):
         )
         self.assertEqual(rows, [])
 
+    @with_navigation
     def test_body_heading_outranks_contents_copy(self):
         rows = db.search(
             "مشروعية الذكر للنساء", book_ids=["b29"],

@@ -59,6 +59,9 @@ def safe_tool_call(function):
         from app.mcp_contract import TOOL_META
         def finish(payload, attempts):
             if isinstance(payload, dict):
+                if isinstance(payload.get("error"), str):
+                    payload["error"] = {"code":"invalid_selector", "message":payload["error"],
+                                        "retryable":False,"request_id":request_id}
                 payload["contract"] = dict(TOOL_META)
                 payload["request_id"] = request_id
                 payload["timing"] = {"total_ms": round((time.perf_counter() - started) * 1000, 2), "attempts": attempts, "phases_ms": phase_snapshot(), "phase_semantics": "inclusive_nested"}

@@ -32,7 +32,7 @@ SEARCH_REQUIRED_PROPERTIES = {
     "query", "queries", "operator", "book_scope", "book_ids",
     "include_counts", "qasida_number", "expand_top", "expand_chars",
     "min_score", "match_mode", "mode", "context_chars", "ranking",
-    "whole_word", "count_basis", "min_tier",
+    "whole_word", "count_basis", "min_tier", "check_completeness", "include_toc", "include_topic_only",
 }
 MATCH_MODES = {"auto", "exact", "terms", "hybrid", "lexeme"}
 RESPONSE_MODES = {"compact", "ultra_compact"}
@@ -133,6 +133,8 @@ def _validate_schemas(tools: dict[str, Any]) -> None:
         "include_parallels", "parallel_limit", "context_mode", "max_chars",
     }.issubset(passage_properties):
         raise AssertionError("get_passage schema is stale")
+    if not {"projection", "book_ids", "include_legend"}.issubset(_schema(tools["list_books"]).get("properties",{})):
+        raise AssertionError("list_books schema is stale")
     page = _schema(tools["get_page"])
     if page.get("properties", {}).get("max_chars", {}).get("default") != 20000:
         raise AssertionError("get_page max_chars default is stale")
@@ -462,6 +464,7 @@ async def run(endpoint: str, discovery_only: bool = False) -> dict[str, Any]:
                     "search_library",
                     {
                         "query": "مرتبة الإنسان الكامل", "book_ids": ["b12"],
+                        "include_toc": True,
                         "match_mode": "exact", "ranking": "relevance",
                         "limit": 10, "mode": "ultra_compact",
                         "context_chars": 60,

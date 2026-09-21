@@ -9,6 +9,11 @@ from app.services import library_db as db
 
 class AssessmentFixTests(unittest.TestCase):
     def test_frozen_independent_literal_census_36_cases(self):
+        # The frozen 2.7.0 census explicitly included navigation. Preserve that
+        # scope when checking unchanged literal semantics in contract v10.
+        from app.core.evidence_blocks import INCLUDE_TOC
+        token = INCLUDE_TOC.set(True)
+        self.addCleanup(INCLUDE_TOC.reset, token)
         fixture = json.loads((Path(__file__).parent/'data/assessment_literal_cases.json').read_text())
         for case in fixture['cases']:
             with self.subTest(query=case['query'], split=case['split']):

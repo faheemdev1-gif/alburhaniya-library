@@ -1,76 +1,159 @@
-"""Versioned, conservative question discovery; never a verified-answer classifier.
+"""Conservative, compositional Arabic discovery. No answer verification.
 
-Only discovery uses these aliases. Exact/lexeme searches and occurrence counts
-continue to use their original literal contracts. Negation is not removed.
+Aliases are language-level vocabulary, not query-to-page mappings. New topics
+retain content anchors instead of selecting arbitrary sentence-final words.
 """
+from functools import lru_cache
 from app.core.arabic_utils import ARABIC_STOPWORDS, safe_tokens, normalize_search_text
 
-POLICY = "local-question-facets-v1"
-FUNCTION_WORDS = ARABIC_STOPWORDS | {
-    "هل", "كيف", "ماذا", "متي", "متى", "اين", "أين", "لماذا", "التي",
-    "عليه", "عليها", "عليهم", "له", "لها", "لهم", "على", "إلى", "أن", "إن",
-    "وما", "وهو", "وهي", "هذا", "هذه", "ذلك", "تلك", "هو", "هي",
+POLICY = 'local-question-facets-v2'
+FUNCTION_WORDS = ARABIC_STOPWORDS | set('هل كيف ماذا متى متي أين اين لماذا التي عليه عليها عليهم له لها لهم على إلى أن إن وما وهو وهي هذا هذه ذلك تلك هو هي مع حتى لكي كي لا إلا كل بين عند من غير بس لو لما إزاي ايه إيه عشان أنا انا حاسس عايز أعمل أفعل يفعل بماذا ما يوصي تنصحني تنصحون نصيحة النصيحة توجيه النصيحه الشيخ المريد الإنسان يتعامل يشعر يجد أهمية للمريد التعاليم'.split())
+_FUNCTION_KEYS={normalize_search_text(x,level='broad') for x in FUNCTION_WORDS}
+
+# Each concept has explicit forms; ambiguous bare صدر / مال / عيش / يوم
+# are deliberately absent. Clitic forms are generated conservatively below.
+CONCEPTS = {
+ 'provision': 'الرزق رزق رزقه الأرزاق للرزق المعيشة معيشة دخلي الدخل الفقر فقر الغنى قلة المال كسب العيش لقمة العيش',
+ 'work': 'السعي سعي العمل عمل للعمل الكسب للكسب كسب لكسب شغل الشغل بتعمل اشتغل طلب الرزق يترك العمل ترك العمل',
+ 'litanies': 'الأوراد أوراد الورد بالذكر الذكر يقرأ الأوراد قراءة الأوراد',
+ 'prayer': 'الصلاة صلاة الصلوات صلاتي صلاته الفرائض الفريضة فريضة',
+ 'timing': 'وقتها أوقاتها اوقاتها مواعيدها أوقاتها ميقات مواقيت الأوقات يؤخر تأخير تأخيرها أأخرهاش لوقتها لمواقيتها',
+ 'anger': 'الغضب غضب غضبت غضبه غاضب الغيظ غيظ كظم الغيظ أتعصب تعصب',
+ 'speech': 'اللسان لسان لساني لسانه كلام الكلام بكلامي الجارح الجارحة أجرحش أؤذي السب الشتم الغيبة حفظ اللسان ضبط اللسان',
+ 'quran': 'القرآن قرآن القران قران المصحف',
+ 'continuity': 'أداوم المداومة للمداومة يداوم داوم دائما دائم الاستمرار أستمر يستمر أنتظم أواظب المحافظة للمحافظة أحافظ يحافظ منتظم يومي يوميا يومية كل يوم ورد يومي أنقطع انقطع أسيبش',
+ 'distress': 'الحزن حزن حزنا حزين الهم مهموم الهموم الكرب كرب كربه ضيق الصدر ضيق صدرك ضاق صدرك تضيق ضيق بضيق ضاقت فقد الأمل اليأس',
+ 'relief': 'الطمأنينة طمأنينة يطمئن اطمأن الاطمئنان الفرج فرج تفريج الصبر صبر اصبر صبرا الاستغفار استغفر التوكل توكل الرجاء الأمل مخرجا',
 }
-_FUNCTION_KEYS = {normalize_search_text(x, level="broad") for x in FUNCTION_WORDS}
+# Parse multiword expressions separately; avoid accidental homographs.
+PHRASES={
+ 'provision':['قلة المال','كسب العيش','لقمة العيش','تيسير الرزق','جلب الرزق','طلب الرزق','سعة الرزق'],
+ 'work':['طلب الرزق','يترك العمل','ترك العمل'],
+ 'litanies':['يقرأ الأوراد','قراءة الأوراد'],
+ 'anger':['كظم الغيظ'], 'speech':['حفظ اللسان','ضبط اللسان'],
+ 'continuity':['كل يوم','ورد يومي'],
+ 'distress':['ضيق الصدر','ضيق صدرك','ضاق صدرك','فقد الأمل']}
+for key,phrases in PHRASES.items():
+ for phrase in phrases:CONCEPTS[key]=CONCEPTS[key].replace(phrase,'')
+CONCEPTS={k:tuple(dict.fromkeys(v.split()+PHRASES.get(k,[]))) for k,v in CONCEPTS.items()}
+
+
+@lru_cache(maxsize=64)
+def concept_regex(name):
+ import re
+ return re.compile('|'.join('(?:'+pat.pattern+')' for _,pat in concept_patterns(name)))
 
 
 def content_terms(query):
-    return list(dict.fromkeys(t for t in safe_tokens(query)
-        if normalize_search_text(t, level="broad") not in _FUNCTION_KEYS))
+ return list(dict.fromkeys(t for t in safe_tokens(query) if normalize_search_text(t,level='broad') not in _FUNCTION_KEYS))
+
+@lru_cache(maxsize=2048)
+def concept_patterns(name):
+ from app.services.library_db import _build_highlight_regex
+ forms=[]
+ for form in CONCEPTS[name]:
+  forms.append(form)
+  forms.extend(prefix+form for prefix in ('و','ف','ب'))
+  forms.append('ل'+form[1:] if form.startswith('ال') else 'ل'+form)
+ return tuple((form,_build_highlight_regex(form)) for form in dict.fromkeys(forms))
+
+@lru_cache(maxsize=2048)
+def plan(query):
+ found={k: [m.group() for m in concept_regex(k).finditer(query)] for k in CONCEPTS}
+ found={k:v for k,v in found.items() if v}
+ # Different questions use the same compositional facets. Supporting facets
+ # may be proposed for discovery, but are disclosed rather than inferred facts.
+ if 'litanies' in found and ('work' in found or 'provision' in found):groups=['litanies','work','provision'];required=['litanies','work','provision']
+ elif 'prayer' in found:groups=['prayer','timing','continuity'];required=['prayer','timing'] if 'timing' in found else ['prayer','continuity']
+ elif 'anger' in found:groups=['anger','speech'];required=['anger','speech']
+ elif 'quran' in found:groups=['quran','continuity'];required=groups[:]
+ elif 'provision' in found:groups=['provision','distress','relief'];required=['provision']
+ elif 'distress' in found or 'relief' in found:groups=['distress','relief'];required=groups[:]
+ else:groups=[];required=[]
+ return {'groups':groups,'required':required,'recognized':found,'terms':content_terms(query),
+         'relation_verification':'anchor_cooccurrence_only'}
 
 
 def livelihood_intent(query):
-    tokens = {normalize_search_text(t, level="broad") for t in content_terms(query)}
-    return bool(tokens & {"الرزق", "رزق", "المعيشه", "معيشه"}) and bool(
-        tokens & {"سعه", "توسعه", "زياده", "ضيق", "ضاقت", "تيسير", "ينال", "يجلب"})
+ return 'provision' in plan(query)['recognized']
 
 
-def discovery_phrases(queries, limit=6):
-    phrases = []
-    for query in queries:
-        tokens = content_terms(query)
-        if len(tokens) < 4:
-            continue
-        candidates = (["سعة الرزق", "تيسير الرزق", "طلب الرزق", "الفقر", "الرزق", "ضيق"]
-                      if livelihood_intent(query) else
-                      [*reversed([" ".join(tokens[i:i+2]) for i in range(len(tokens)-1)]),
-                       *reversed(tokens)])
-        for phrase in candidates:
-            if len(phrase) >= 3 and phrase not in phrases:
-                phrases.append(phrase)
-    return phrases[:max(1, min(int(limit), 8))]
+def is_question(query):
+ return len(safe_tokens(query))>=4 and (bool(plan(query)['groups']) or any(t in query.split() for t in ('كيف','هل','ماذا','ما','إزاي','بماذا')))
 
 
-def assess_window(query, text, start, end, pattern_builder):
-    """Score only a source-local window around this evidence locator.
+def discovery_phrases(queries,limit=6):
+ phrases=[]
+ for q in queries:
+  terms=content_terms(q)
+  phrases.extend(' '.join(terms[i:i+2]) for i in range(len(terms)-1) if ' '.join(terms[i:i+2]) in q)
+  p=plan(q)
+  for group in p['groups']:
+   for form in CONCEPTS[group]:
+    if form not in phrases:phrases.append(form)
+  if not p['groups']:
+   phrases.extend(p['terms'])
+ return phrases[:max(1,int(limit))]
 
-    Topic and relation candidates remain unverified: e.g. an author can reject
-    a proposed practice. The caller must read/cite the passage, not infer advice.
-    """
-    left, right = max(0, start-350), min(len(text), end+350)
-    window = text[left:right]
-    terms = content_terms(query)
-    matched = [t for t in terms if pattern_builder(t).search(window)]
-    coverage = len(matched) / max(1, len(terms))
-    if livelihood_intent(query):
-        topic = [t for t in ("الرزق", "رزقه", "يرزق", "رزقه", "المعيشة", "الفقر", "الغنى")
-                 if pattern_builder(t).search(window)]
-        relation = [t for t in ("تيسير الرزق", "لتيسير الرزق", "طلب الرزق", "جلب الرزق",
-                                "لجلب الرزق", "سعة الرزق", "زيادة الرزق", "شكا الفقر",
-                                "عنه الفقر", "السعي", "ضيق", "مخرجا")
-                    if pattern_builder(t).search(window)]
-        if not topic:
-            return None
-        # Poverty/wealth alone is still only a topic match.
-        relational = bool(relation)
-        score = (0.65 if relational else 0.20) + 0.20*coverage
-    else:
-        if len(matched) < 2:
-            return None
-        topic, relation, relational = matched, [], len(matched) >= 3
-        score = 0.25 + 0.60*coverage
-    return {"intent_score": round(score, 6), "intent_term_coverage": round(coverage, 4),
-            "question_relevance": "relation_candidate" if relational else "topic_only",
-            "intent_method": POLICY, "answer_verified": False,
-            "intent_evidence": {"query_terms": matched, "topic_terms": sorted(set(topic)),
-                                "relation_terms": sorted(set(relation)), "start": left, "end": right}}
+
+
+def phrase_matches(phrase, text, builder):
+ return any(builder(form).search(text) for form in [phrase,'ل'+phrase,'ب'+phrase,'و'+phrase,'ف'+phrase])
+
+def local_concept_matches(group, text):
+ matches=[]
+ for m in concept_regex(group).finditer(text):
+  before=normalize_search_text(text[max(0,m.start()-14):m.start()],level='broad').split()
+  # "Abu al-Faraj" and "Abu Karib" are names, not relief/distress.
+  if group in ('distress','relief') and before and before[-1] in ('ابو','ابي','ابا'):continue
+  matches.append(m.group())
+ return matches
+
+def assess_window(query,text,start,end,pattern_builder):
+ p=plan(query);left=max(0,start-420);right=min(len(text),end+420)
+ # A blank-line boundary is a source paragraph boundary. Do not borrow an
+ # unrelated relation from the next Q&A merely because it is nearby.
+ before=text.rfind('\n\n',left,start)
+ after=text.find('\n\n',end,right)
+ if before>=0:left=before+2
+ if after>=0:right=after
+ window=text[left:right]
+ matched=[t for t in p['terms'] if pattern_builder(t).search(window)]
+ anchors={g:local_concept_matches(g,window) for g in p['groups']}
+ preserved=[g for g in p['required'] if anchors[g]]
+ dropped=[g for g in p['required'] if not anchors[g]]
+ if p['groups']:
+  if not anchors[p['required'][0]]:return None
+  if 'provision'==p['required'][0] and len(p['required'])==1:
+   relational=bool(anchors.get('relief') or anchors.get('distress') or any(phrase_matches(t,window,pattern_builder) for t in ['تيسير الرزق','جلب الرزق','شكا الفقر','عنه الفقر','طلب الرزق']))
+  else:relational=not dropped
+  if p['required']==['anger','speech']:
+   control=[t for t in ['كظم','الكاظمين','يكظم','لا تغضب','ضبط','احفظ','حفظ','يمسك','أمسك','حليم','الحلم','الصفح','عفوا'] if pattern_builder(t).search(window)]
+   relational=relational and bool(control)
+  if p['required']==['litanies','work','provision']:
+   earning=[t for t in ['الرزق','للرزق','رزقه','الكسب','كسب العيش','دكان','اشتغل','شغل'] if pattern_builder(t).search(window)]
+   relational=relational and bool(earning)
+  score=.2+.48*(len(preserved)/len(p['required'])) + .12*relational
+  if relational:
+   score += .08*sum(bool(anchors[g]) for g in p['groups'])/len(p['groups'])
+  topic=anchors[p['required'][0]]
+  relations=[a for g,forms in anchors.items() if g!=p['required'][0] for a in forms]
+  if p['required']==['provision']:
+   relations += [t for t in ['تيسير الرزق','جلب الرزق','طلب الرزق','سعة الرزق','شكا الفقر','عنه الفقر'] if phrase_matches(t,window,pattern_builder)]
+ else:
+  if len(matched)<2:return None
+  # Unknown relations are never promoted based on token count.
+  relational=False;score=.2+.4*len(matched)/max(1,len(p['terms']));topic=matched;relations=[]
+ if p['required']==['provision'] and relational:
+   if any(phrase_matches(t,window,pattern_builder) for t in ['تيسير الرزق','جلب الرزق','سعة الرزق']):score += .22
+   elif any(phrase_matches(t,window,pattern_builder) for t in ['شكا الفقر','عنه الفقر']):score += .16
+   elif phrase_matches('طلب الرزق',window,pattern_builder):score += .10
+ if p['required']==['quran','continuity'] and any(pattern_builder(t).search(window) for t in ['كل يوم','ورد يومي','يواظب','يداوم']):score += .07
+ coverage=len(matched)/max(1,len(p['terms']))
+ return {'intent_score':round(min(.99,(score+.08*coverage)/1.15),6),'intent_term_coverage':round(coverage,4),
+  'question_relevance':'relation_candidate' if relational else 'topic_only','intent_method':POLICY,
+  'answer_verified':False,'reformulation_status':'ok' if relational else 'degraded',
+  'intent_evidence':{'query_terms':matched,'topic_terms':sorted(set(topic)),
+   'relation_terms':sorted(set(relations)),'preserved_concepts':preserved,'dropped_concepts':dropped,
+   'proposed_concepts':[g for g in p['groups'] if g not in p['recognized']],
+   'relation_check':'local_anchor_cooccurrence_unverified','start':left,'end':right}}

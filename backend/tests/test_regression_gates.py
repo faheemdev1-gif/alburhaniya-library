@@ -18,6 +18,17 @@ from scripts.build_index import (
 )
 
 
+
+def with_navigation(fn):
+    from functools import wraps
+    from app.core.evidence_blocks import INCLUDE_TOC
+    @wraps(fn)
+    def wrapped(*args,**kwargs):
+        token=INCLUDE_TOC.set(True)
+        try:return fn(*args,**kwargs)
+        finally:INCLUDE_TOC.reset(token)
+    return wrapped
+
 class FinalRegressionGates(unittest.TestCase):
     def test_hard_s1_score_vectors_are_query_dependent(self):
         prayer = db.search(
@@ -256,6 +267,7 @@ class FinalRegressionGates(unittest.TestCase):
                 for item in row["matched_terms"].values()
             ))
 
+    @with_navigation
     def test_hard_f1_f2_toc_is_typed_and_downranked(self):
         rows = db.search(
             "مشروعية الذكر للنساء", book_ids=["b29"],
@@ -265,6 +277,7 @@ class FinalRegressionGates(unittest.TestCase):
         toc = next(row for row in rows if row["block_type"] == "toc")
         self.assertLess(toc["score"], rows[0]["score"])
 
+    @with_navigation
     def test_hard_f3_fihris_heading_phrase_is_typed_and_downranked(self):
         rows = db.search(
             "مرتبة الإنسان الكامل", book_ids=["b12"],
