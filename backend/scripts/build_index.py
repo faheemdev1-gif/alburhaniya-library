@@ -48,6 +48,8 @@ MAPPING_FILE = os.path.join(DATA_DIR, "mapping.json")
 SOURCES_FILE = os.path.join(DATA_DIR, "sources.json")
 DB_PATH = os.environ.get("LIBRARY_DB_PATH", os.path.join(HERE, "..", "library.db"))
 
+
+# faheem
 SCHEMA = """
 CREATE TABLE grades (
     grade       TEXT PRIMARY KEY,   -- 'أصلي' | 'ثانوي'
