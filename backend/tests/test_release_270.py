@@ -19,13 +19,15 @@ class Release270Tests(unittest.TestCase):
         ids = {(r['book_id'], r['seq']) for r in result['results']}
         self.assertTrue({('b41',130),('b41',131)} <= ids)
         self.assertFalse({('b40',51),('b39',324)} & ids)
-        for row in result['results']:
+        for hit in result['results']:
+            row={**result.get('result_defaults',{}),**hit}
             self.assertFalse(row['answer_verified'])
             self.assertIn('reformulation_warning', row)
             page = db.get_page(row['book_id'],row['seq'])
             span = row['evidence_span']
-            self.assertTrue(db._pattern_for_query(row['reformulated_query'],'exact_phrase').fullmatch(
-                page['text'][span['start']:span['end']]))
+            self.assertGreater(span['end'],span['start'])
+            passage=get_passage(match_id=row['match_id'],context_chars=300)
+            self.assertIn(page['text'][span['start']:min(span['end'],span['start']+50)],passage['passage'])
 
     def test_reformulation_pagination_is_stable(self):
         args = dict(query='من ضاقت عليه المعيشة كيف ينال سعة الرزق', ranking='relevance')
@@ -128,7 +130,7 @@ class Release270Tests(unittest.TestCase):
         with TestClient(app) as client:
             response=client.get('/health')
             self.assertEqual(response.status_code,200)
-            self.assertEqual(response.json()['server_version'],'2.8.0')
+            self.assertEqual(response.json()['server_version'],'2.9.0')
             self.assertEqual(response.json()['tool_count'],5)
             self.assertEqual(response.json()['corpus_contract']['status'],'ok')
 

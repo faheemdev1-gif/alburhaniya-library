@@ -101,7 +101,7 @@ def compact_search_response(
             for field in ("selected_queries", "match_attribution_scope", "evidence_type_method", "evidence_type_confidence", "original_queries",
                       "intent_term_coverage", "reformulation_warning", "question_relevance",
                       "reformulation_status", "page_id", "pagination_status", "pagination_warning", "evidence_type_scope",
-                      "intent_method", "answer_verified", "intent_evidence", "lexical_score"):
+                      "intent_method", "answer_verified", "intent_evidence", "lexical_score", "alternate_locations", "dialogue_role", "speaker", "speaker_basis", "citation_basis", "matched_source_question"):
                 if field in row:
                     hit[field] = row[field]
             if row.get("reformulated_query"):
@@ -169,7 +169,7 @@ def compact_search_response(
                       "match_attribution_scope", "evidence_type_method", "evidence_type_confidence", "original_queries",
                       "intent_term_coverage", "reformulation_warning", "question_relevance",
                       "reformulation_status", "page_id", "pagination_status", "pagination_warning", "evidence_type_scope",
-                      "intent_method", "answer_verified", "intent_evidence", "lexical_score"):
+                      "intent_method", "answer_verified", "intent_evidence", "lexical_score", "alternate_locations", "dialogue_role", "speaker", "speaker_basis", "citation_basis", "matched_source_question"):
             if row.get(field) is not None:
                 hit[field] = row[field]
         if row.get("canonical_book_id") and row["canonical_book_id"] != row["book_id"]:
@@ -204,3 +204,27 @@ def compact_search_response(
     if has_more:
         response["next_offset"] = offset + limit
     return response
+
+def slim_response(payload,*,detail='summary',ultra=False):
+    """Contract 11: row values inherit explicitly declared response defaults."""
+    rows=payload.get('results',[])
+    shared=('reformulation_warning','original_queries','reformulation_method','intent_method','answer_verified','evidence_type_method','evidence_type_confidence','evidence_type_scope','match_attribution_scope','normalization_level','pagination_status','pagination_warning','reformulation_status','block_type','blk','score_kind','sk','whole_word','footnotes_excluded','selected_queries','question_relevance')
+    defaults={}
+    for key in shared:
+        if rows and all(key in r and r[key]==rows[0].get(key) for r in rows):
+            defaults[key]=rows[0][key]
+            for r in rows:r.pop(key)
+    if defaults:payload['result_defaults']=defaults
+    if detail!='full':
+        payload.pop('query_plan',None)
+        for r in rows:
+            for evidence in r.get('matched_terms',{}).values():
+                for key in ('surface_form','normalized_form','safe_normalized_form','query_normalized'):evidence.pop(key,None)
+            for key in ('intent_evidence','lexical_score','reformulated_query','page_id','intent_term_coverage','matched_source_question'):r.pop(key,None)
+    if detail!='full' and not ultra:
+        for meta in payload.get('books',{}).values():
+            for key in ('source_author','compiler','authorship_mode'):meta.pop(key,None)
+        payload['book_metadata_tool']='get_book'
+    if ultra:
+        payload['books']={bid:{'tier':meta['tier']} for bid,meta in payload.get('books',{}).items()};payload['book_metadata_tool']='get_book'
+    return payload

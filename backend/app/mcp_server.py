@@ -216,6 +216,7 @@ def get_book(book_id: str) -> dict[str, Any]:
         }
 
     book["searchable_by_default"] = bool(book["searchable_by_default"])
+    book["review_basis"] = {"status":"documentary_review_pending","basis":book.get("provenance_status"),"reviewer":None,"review_date":None}
     book["connector_contract"] = contract_metadata(REQUIRED_TOOLS)
     return book
 
@@ -488,6 +489,8 @@ def search_library(
     qasida_number: Optional[int] = None,
     expand_top: int = 0,
     expand_chars: int = 600,
+    detail: Literal["summary", "full"] = "summary",
+    keep_terms: Optional[list[str]] = None,
 ) -> dict[str, Any]:
     """Search the Al Burhania Library.
 
@@ -643,7 +646,8 @@ def search_library(
     question_mode = match_mode == "auto" and any(is_question(q) for q in raw_queries)
     if question_mode:
         effective_match_mode = "reformulated"
-        rows = db.reformulated_search(query=query, queries=raw_queries, operator=operator,
+        from app.services.question_search import search_questions
+        rows = search_questions(query=query, queries=raw_queries, operator=operator, keep_terms=keep_terms,
             ranking=ranking, book_ids=book_ids, source_code=source_code,
             page_from=page_from, page_to=page_to, limit=limit+1, offset=offset,
             context_chars=context_chars, diversify_books=diversify_books,
@@ -784,6 +788,7 @@ def search_library(
         )
         if count_details:
             payload.update(count_details)
+            payload["census_version"] = {"server_version":TOOL_META["server_version"],"navigation_scope":"body_and_toc" if include_toc else "body_only"}
         if (
             include_counts and total_hits == 0 and len(raw_queries) == 1
             and qasida_number is None
@@ -796,9 +801,11 @@ def search_library(
         payload["navigation_scope"] = "body_and_toc" if include_toc else "body_only"
         payload["reformulation_status"] = (
             ("ok" if any(r.get("question_relevance")=="relation_candidate" for r in results) else "degraded")
-            if question_mode and results else ("failed" if question_mode else "not_needed"))
+            if effective_match_mode == "reformulated" and results else ("failed" if effective_match_mode == "reformulated" else "not_needed"))
         if question_mode:
-            payload["query_plan"] = [{"original_query":q, **plan(q)} for q in raw_queries]
+            from app.services.question_search import anchor_plan
+            payload["query_plan"] = [{"original_query":q, **anchor_plan(q,keep_terms or ())} for q in raw_queries]
+            payload["dropped_function_words"] = list(dict.fromkeys(t for p in payload["query_plan"] for t in p["dropped_function_words"]))
             payload["answer_verified"] = False
         payload["ranking_policy"] = db.ranking_policy(ranking)
         payload["effective_match_mode"] = effective_match_mode
@@ -811,7 +818,7 @@ def search_library(
             payload["diagnostics"] = db.zero_result_diagnostics(
                 raw_queries,
                 attempted_modes=(
-                    (["reformulated"] if question_mode else ["exact", "terms", "hybrid", "reformulated"])
+                    (["subject_phrase", "passage_terms", "reformulated"] if question_mode else ["exact", "terms", "hybrid", "reformulated"])
                     if match_mode == "auto" else [effective_match_mode]
                 ),
                 book_ids=book_ids, source_code=source_code,
@@ -827,7 +834,8 @@ def search_library(
                     "literal_inclusion_warning": True,
                     "message": "Eligible literal pages are missing before pagination; inspect retrieval_completeness.",
                 })
-        return payload
+        from app.services.compact_response import slim_response
+        return slim_response(payload,detail=detail,ultra=mode=="ultra_compact")
 
     primary_hits = sum(
         1 for result in results
@@ -883,5 +891,7 @@ def search_library(
 # prevents the application from starting instead of silently shipping drift.
 DISCOVERABLE_TOOLS = validate_registered_tools(mcp)
 bind_callable_schema(mcp)
+from app.core.machine_http import enable_threaded_tools
+enable_threaded_tools(mcp)
 
 app = mcp.streamable_http_app()

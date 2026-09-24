@@ -8,6 +8,9 @@ import re
 import sqlite3
 import time
 import uuid
+import json
+from app.core.budget import DEADLINE,expired,BudgetExceeded,QUEUE_WAIT,AUTH_TIME
+from app.core.config import get_settings
 from app.core.observability import start_phases, phase_snapshot
 
 
@@ -64,13 +67,20 @@ def safe_tool_call(function):
                                         "retryable":False,"request_id":request_id}
                 payload["contract"] = dict(TOOL_META)
                 payload["request_id"] = request_id
-                payload["timing"] = {"total_ms": round((time.perf_counter() - started) * 1000, 2), "attempts": attempts, "phases_ms": phase_snapshot(), "phase_semantics": "inclusive_nested"}
+                from app.core.observability import record_phase
+                serialized=time.perf_counter();json.dumps(payload,ensure_ascii=False,default=str);record_phase('serialization_probe',serialized)
+                phases=phase_snapshot();phases['queue_wait']=round(QUEUE_WAIT.get(),3);phases['authentication']=round(AUTH_TIME.get(),3)
+                payload['timing']={'total_ms':round(sum(phases.values()),3),'attempts':attempts,'phases_ms':phases,'phase_semantics':'exclusive','scope':'tool_execution_plus_measured_queue_and_auth; excludes network and final transport serialization'}
+                if expired():payload['truncated_by_budget']=True
             return payload
         for attempt, delay in enumerate((0.0, 0.05, 0.15), start=1):
             if delay:
                 time.sleep(delay)
             try:
                 return finish(function(*args, **kwargs), attempt)
+            except BudgetExceeded:
+                result=safe_error_payload('time_budget_exceeded','Request budget exhausted; narrow the query.',retryable=True);result['truncated_by_budget']=True
+                return finish(result,attempt)
             except ValueError as exc:
                 logger.info(
                     "invalid tool request operation=%s request_id=%s error=%s",
@@ -80,6 +90,9 @@ def safe_tool_call(function):
                     "invalid_request", str(exc), retryable=False,
                 )
             except sqlite3.OperationalError as exc:
+                if expired():
+                    result=safe_error_payload("time_budget_exceeded","Request budget exhausted; narrow the query.",retryable=True);result["truncated_by_budget"]=True
+                    return finish(result,attempt)
                 if is_transient_sqlite_error(exc) and attempt < 3:
                     logger.warning(
                         "transient sqlite error operation=%s request_id=%s attempt=%d",
@@ -113,4 +126,9 @@ def safe_tool_call(function):
             retry_after_seconds=1,
         )
 
-    return wrapped
+    @wraps(function)
+    def scoped(*args,**kwargs):
+        inherited=DEADLINE.get();deadline=time.monotonic()+min(19.0,max(.01,get_settings().request_budget_seconds));token=DEADLINE.set(min(inherited,deadline) if inherited is not None else deadline)
+        try:return wrapped(*args,**kwargs)
+        finally:DEADLINE.reset(token)
+    return scoped

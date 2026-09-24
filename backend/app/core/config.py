@@ -58,6 +58,12 @@ class Settings(BaseSettings):
     embedding_model: str = "intfloat/multilingual-e5-base"
     embedding_dim: int = 768
 
+    request_budget_seconds: float = 18.0
+    mcp_requests_per_minute: int = 2400
+    mcp_api_keys: str = ""
+    rate_limit_db_path: str = "/tmp/alburhaniya-rate-limits.db"
+    monitor_summary_path: str = ""
+
     model_config = SettingsConfigDict(env_file=".env")
 
 

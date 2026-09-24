@@ -1,0 +1,10 @@
+........................................................................ [ 35%]
+........................................................................ [ 70%]
+............................................................             [100%]
+=============================== warnings summary ===============================
+tests/test_release_270.py::Release270Tests::test_http_health_and_all_five_tools
+  /workspace/scratch/ec2b97711283/project/Al_Burhaniya_Connector_2.7.0/.venv/lib/python3.12/site-packages/starlette/testclient.py:41: DeprecationWarning: The anyio.abc.BlockingPortal alias is deprecated, use anyio.from_thread.BlockingPortal instead.
+    [], typing.ContextManager[anyio.abc.BlockingPortal]
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+204 passed, 1 warning in 174.84s (0:02:54)

@@ -7,21 +7,20 @@ from functools import lru_cache
 from app.core.arabic_utils import ARABIC_STOPWORDS, safe_tokens, normalize_search_text
 
 POLICY = 'local-question-facets-v2'
-FUNCTION_WORDS = ARABIC_STOPWORDS | set('هل كيف ماذا متى متي أين اين لماذا التي عليه عليها عليهم له لها لهم على إلى أن إن وما وهو وهي هذا هذه ذلك تلك هو هي مع حتى لكي كي لا إلا كل بين عند من غير بس لو لما إزاي ايه إيه عشان أنا انا حاسس عايز أعمل أفعل يفعل بماذا ما يوصي تنصحني تنصحون نصيحة النصيحة توجيه النصيحه الشيخ المريد الإنسان يتعامل يشعر يجد أهمية للمريد التعاليم'.split())
-_FUNCTION_KEYS={normalize_search_text(x,level='broad') for x in FUNCTION_WORDS}
+from app.services.query_language import FUNCTION_WORDS,language_plan,FRAMES,morphological_forms
 
 # Each concept has explicit forms; ambiguous bare صدر / مال / عيش / يوم
 # are deliberately absent. Clitic forms are generated conservatively below.
 CONCEPTS = {
- 'provision': 'الرزق رزق رزقه الأرزاق للرزق المعيشة معيشة دخلي الدخل الفقر فقر الغنى قلة المال كسب العيش لقمة العيش',
+ 'provision': 'الرزق رزق رزقه الأرزاق للرزق المعيشة معيشة الدخل الفقر فقر الغنى قلة المال كسب العيش لقمة العيش',
  'work': 'السعي سعي العمل عمل للعمل الكسب للكسب كسب لكسب شغل الشغل بتعمل اشتغل طلب الرزق يترك العمل ترك العمل',
  'litanies': 'الأوراد أوراد الورد بالذكر الذكر يقرأ الأوراد قراءة الأوراد',
  'prayer': 'الصلاة صلاة الصلوات صلاتي صلاته الفرائض الفريضة فريضة',
- 'timing': 'وقتها أوقاتها اوقاتها مواعيدها أوقاتها ميقات مواقيت الأوقات يؤخر تأخير تأخيرها أأخرهاش لوقتها لمواقيتها',
+ 'timing': 'وقتها أوقاتها اوقاتها مواعيدها أوقاتها ميقات مواقيت الأوقات يؤخر تأخير تأخيرها لوقتها لمواقيتها',
  'anger': 'الغضب غضب غضبت غضبه غاضب الغيظ غيظ كظم الغيظ أتعصب تعصب',
- 'speech': 'اللسان لسان لساني لسانه كلام الكلام بكلامي الجارح الجارحة أجرحش أؤذي السب الشتم الغيبة حفظ اللسان ضبط اللسان',
+ 'speech': 'اللسان لسان لساني لسانه كلام الكلام بكلامي الجارح الجارحة أؤذي السب الشتم الغيبة حفظ اللسان ضبط اللسان',
  'quran': 'القرآن قرآن القران قران المصحف',
- 'continuity': 'أداوم المداومة للمداومة يداوم داوم دائما دائم الاستمرار أستمر يستمر أنتظم أواظب المحافظة للمحافظة أحافظ يحافظ منتظم يومي يوميا يومية كل يوم ورد يومي أنقطع انقطع أسيبش',
+ 'continuity': 'أداوم المداومة للمداومة يداوم داوم دائما دائم الاستمرار أستمر يستمر أنتظم أواظب المحافظة للمحافظة أحافظ يحافظ منتظم يومي يوميا يومية كل يوم ورد يومي أنقطع انقطع',
  'distress': 'الحزن حزن حزنا حزين الهم مهموم الهموم الكرب كرب كربه ضيق الصدر ضيق صدرك ضاق صدرك تضيق ضيق بضيق ضاقت فقد الأمل اليأس',
  'relief': 'الطمأنينة طمأنينة يطمئن اطمأن الاطمئنان الفرج فرج تفريج الصبر صبر اصبر صبرا الاستغفار استغفر التوكل توكل الرجاء الأمل مخرجا',
 }
@@ -45,7 +44,7 @@ def concept_regex(name):
 
 
 def content_terms(query):
- return list(dict.fromkeys(t for t in safe_tokens(query) if normalize_search_text(t,level='broad') not in _FUNCTION_KEYS))
+ return language_plan(query)['terms']
 
 @lru_cache(maxsize=2048)
 def concept_patterns(name):
@@ -61,6 +60,9 @@ def concept_patterns(name):
 def plan(query):
  found={k: [m.group() for m in concept_regex(k).finditer(query)] for k in CONCEPTS}
  found={k:v for k,v in found.items() if v}
+ for term in content_terms(query):
+  for group in CONCEPTS:
+   if group not in found and any(concept_regex(group).fullmatch(f) for f in morphological_forms(term)):found[group]=[term]
  # Different questions use the same compositional facets. Supporting facets
  # may be proposed for discovery, but are disclosed rather than inferred facts.
  if 'litanies' in found and ('work' in found or 'provision' in found):groups=['litanies','work','provision'];required=['litanies','work','provision']
@@ -79,7 +81,7 @@ def livelihood_intent(query):
 
 
 def is_question(query):
- return len(safe_tokens(query))>=4 and (bool(plan(query)['groups']) or any(t in query.split() for t in ('كيف','هل','ماذا','ما','إزاي','بماذا')))
+ return len(safe_tokens(query))>=2 and (bool(plan(query)['groups']) or any(query.startswith(frame+' ') for frame in FRAMES))
 
 
 def discovery_phrases(queries,limit=6):

@@ -7,9 +7,9 @@ import json
 from typing import Any
 
 
-SERVER_VERSION = "2.8.0"
-TOOL_CONTRACT_VERSION = "10.0"
-TOOL_CONTRACT_ID = "alburhaniya-tools-v10"
+SERVER_VERSION = "2.9.0"
+TOOL_CONTRACT_VERSION = "11.0"
+TOOL_CONTRACT_ID = "alburhaniya-tools-v11"
 
 REQUIRED_TOOLS = frozenset({
     "search_library",
@@ -28,7 +28,7 @@ SCHEMA_CAPABILITIES = {
             "include_counts", "check_completeness", "include_toc", "include_topic_only", "count_basis", "whole_word", "min_tier",
             "expand_top", "expand_chars", "min_score", "match_mode", "mode",
             "operator", "limit", "offset", "source_code", "page_from", "page_to",
-            "context_chars", "search_mode", "ranking", "diversify_books", "max_per_book",
+            "detail", "keep_terms", "context_chars", "search_mode", "ranking", "diversify_books", "max_per_book",
         ],
     },
     "get_passage": {
@@ -94,6 +94,11 @@ def contract_metadata(tools: Iterable[str] | None = None) -> dict[str, Any]:
     """Versioned metadata for health checks and deployment diagnostics."""
     actual = validate_tool_names(tools or REQUIRED_TOOLS)
     return {
+        "changes_since_previous":["Phrase-first/passsage/Q&A discovery","Source-local ranking and inherited defaults","Bounded threaded execution and per-client quota","Render PORT launcher with two workers"],
+        "known_issues":["Documentary source review remains open","Topic/Q&A proposals require review","Independent held-out and deployed acceptance are pending"],
+        "result_defaults_policy":"Search hits inherit result_defaults; explicit hit fields override defaults. Contract 11 clients must expand defaults.",
+        "monitoring":__import__("app.services.monitoring",fromlist=["monitoring_summary"]).monitoring_summary(),
+        "rate_limit":{"requests_per_minute":__import__("app.core.config",fromlist=["get_settings"]).get_settings().mcp_requests_per_minute,"scope":"authenticated_client_or_peer_ip","retry_policy":"HTTP 429 JSON-RPC with Retry-After and retry_after_ms"},
         "server_version": SERVER_VERSION,
         "tool_contract_version": TOOL_CONTRACT_VERSION,
         "tool_contract": TOOL_CONTRACT_ID,

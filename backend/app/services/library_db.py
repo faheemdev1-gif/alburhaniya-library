@@ -127,6 +127,8 @@ def _connection() -> sqlite3.Connection:
     readers avoid shared cursor/transaction state while retaining connection
     reuse and SQLite page caching.
     """
+    from app.core.budget import expired,check
+    check()
     s = get_settings()
     path = os.path.abspath(s.library_db_path)
     state = getattr(_connection, "_state", None)
@@ -140,6 +142,7 @@ def _connection() -> sqlite3.Connection:
         conn.close()
     conn = sqlite3.connect(path, timeout=2.0)
     conn.row_factory = sqlite3.Row
+    conn.set_progress_handler(lambda: int(expired()),10000)
     conn.execute("PRAGMA query_only = ON")
     conn.execute("PRAGMA busy_timeout = 1500")
     state.conn = conn
@@ -246,9 +249,14 @@ def content_types(text: str) -> list[str]:
 
 def evidence_type(text: str, start: int, end: int) -> str:
     """Classify the evidence span without upgrading ambiguous prose."""
-    for kind, pattern in (("quran", _QURAN_RANGE_RE), ("hadith", _HADITH_RANGE_RE)):
+    for kind, pattern in (("quran", _QURAN_RANGE_RE),):
         if any(left < end and right > start for left, right in _content_ranges(pattern, text)):
             return kind
+    for match in re.finditer(r'[«"“]([^»"”]{8,800})[»"”]',text):
+        cue=text[max(0,match.start()-100):match.start()]
+        if match.start()<end and match.end()>start and re.search(r'قال رسول الله|قال النبي|عن النبي|روى|رواه|حدثنا|أخبرنا',cue):return "hadith"
+    from app.services.question_search import dialogue_at
+    if dialogue_at(text,start):return "dialogue"
     heading = _QASIDA_HEADING_RE.search(text or "")
     if heading and heading.start() < end and heading.end() > start:
         return "heading"
@@ -435,9 +443,12 @@ def citation_metadata(book_id, seq, printed_page):
     repeated = bool(printed_page is not None and _connection().execute(
         "SELECT COUNT(*) FROM pages WHERE book_id=? AND printed_page=?",
         (book_id, printed_page)).fetchone()[0] > 1)
-    return {"page_id": f"{book_id}-p{seq}",
-            "pagination_status": "repeated_printed_label_unresolved" if repeated else "unique_in_index",
-            "pagination_warning": "Printed label repeats; cite the included sequence locator. Original scan review is pending." if repeated else None}
+    result={"page_id":f"{book_id}-p{seq}","pagination_status":"repeated_printed_label_unresolved" if repeated else "unique_in_index","pagination_warning":"Printed label repeats; cite by sequence. Original scan review remains pending." if repeated else None}
+    if repeated:
+        title=_connection().execute("SELECT title FROM books WHERE book_id=?",(book_id,)).fetchone()[0]
+        result.update(citation_label=f"{title}، الموضع {book_id}-p{seq}",citation_basis="sequence_only_unreliable_printed_label")
+    return result
+
 
 def _page_texts(keys: Iterable[tuple[str, int]]) -> dict[tuple[str, int], str]:
     """Fetch candidate page text in bounded batches.
@@ -767,6 +778,7 @@ def count_search(
 
 
 @profiled("literal_census")
+@__import__("app.core.census_cache",fromlist=["cached_census"]).cached_census
 def search_stats(
     queries: list[str], operator: str = "OR", book_ids: list[str] | None = None,
     source_code: str | None = None, page_from: int | None = None,
@@ -1304,9 +1316,7 @@ def search(
     requested_limit, requested_offset = limit, offset
     requested_min = max(0.0, min(float(min_score or 0.0), 1.0))
     from app.core.evidence_blocks import INCLUDE_TOC, block_at
-    terms_pool = (not INCLUDE_TOC.get() and search_mode == "exact_phrase") or _audit_candidates or search_mode in {"all_words", "lexeme"} or (
-        search_mode == "exact_phrase" and any(len(safe_tokens(q)) > 8 for q in raw_queries)
-    )
+    terms_pool = True  # Final scoring precedes pagination, including TOC penalties.
     needs_post_filter = terms_pool or requested_min > 0.0
     if terms_pool:
         sql_limit = int(conn.execute("SELECT COUNT(*) FROM pages").fetchone()[0])
@@ -1531,7 +1541,7 @@ def search(
             results.sort(key=primary_first_sort_key)
         else:
             results.sort(key=lambda item: (
-                item.get("block_type") == "toc", -item["score"],
+                -item["score"],
                 item["source_tier"], item["book_id"], item["seq"],
             ))
     if requested_min > 0.0:
@@ -1765,10 +1775,12 @@ def reformulated_search(**kwargs) -> list[dict]:
     expression=(' OR '.join('('+e+')' for e in expressions)) if expressions else _fts_expression(forms,'OR','exact_phrase')
     scope={k:kwargs.get(k) for k in ('book_ids','source_code','page_from','page_to','qasida_number','min_tier')}
     filters,params=_search_filters(**scope)
-    candidates=_connection().execute('SELECT p.book_id,p.seq,p.text,p.block_type,bm25(pages_fts) AS relevance FROM pages_fts JOIN pages p ON p.id=pages_fts.rowid JOIN books b ON b.book_id=p.book_id WHERE pages_fts MATCH ?'+filters+' ORDER BY relevance,p.book_id,p.seq LIMIT 300',[expression,*params]).fetchall()
+    candidates=_connection().execute('SELECT p.book_id,p.seq,p.text,p.block_type,bm25(pages_fts) AS relevance FROM pages_fts JOIN pages p ON p.id=pages_fts.rowid JOIN books b ON b.book_id=p.book_id WHERE pages_fts MATCH ?'+filters+' ORDER BY relevance,p.book_id,p.seq LIMIT 160',[expression,*params]).fetchall()
     patterns=[(form,_pattern_for_query(form,'exact_phrase')) for form in forms]
     records=[]
     for candidate in candidates:
+        from app.core.budget import expired
+        if expired():break
         if candidate['block_type']=='toc' and not INCLUDE_TOC.get():continue
         source=_indexable_text(candidate['text'])
         evidence=[]
@@ -2215,9 +2227,14 @@ def zero_result_diagnostics(
     scope=dict(book_ids=book_ids,source_code=source_code,page_from=page_from,
                page_to=page_to,qasida_number=qasida_number,min_tier=min_tier)
     per_term=[]
-    for term in terms:
-        stats=search_stats([term],whole_word=whole_word,**scope)
-        per_term.append(dict(term=term,matching_pages=stats['matching_pages'],occurrences=stats['matching_occurrences']))
+    if 'reformulated' not in attempted_modes:
+        for term in terms[:8]:
+            stats=search_stats([term],whole_word=whole_word,**scope)
+            per_term.append(dict(term=term,matching_pages=stats['matching_pages'],occurrences=stats['matching_occurrences']))
+    else:
+        for term in terms[:16]:
+            row=_connection().execute("SELECT documents FROM term_document_frequency WHERE term=?",(normalize_search_text(term,level='broad'),)).fetchone()
+            per_term.append({'term':term,'matching_pages':row[0] if row else 0,'frequency_scope':'whole_corpus_precomputed_not_scoped_census'})
     retry=None;stage='matching_or_scope'
     base=dict(queries=queries,operator=operator,whole_word=whole_word,limit=1,
               diversify_books=False,**scope)
@@ -2229,6 +2246,13 @@ def zero_result_diagnostics(
             stage='pagination';retry={'offset':0,'match_mode':'auto' if mode=='reformulated' else mode}
     if retry is None and min_score>0 and fn(**base,min_score=0):
         stage='score_filter';retry={'offset':0,'min_score':0,'match_mode':'auto' if mode=='reformulated' else mode}
+    if retry is None:
+        from itertools import combinations
+        for pair in list(combinations(terms,2))[:12]:
+            phrase=' '.join(pair);candidates=search(query=phrase,search_mode='all_words',limit=4,ranking='primary_first',**scope)
+            if candidates:
+                retry={'query':phrase,'match_mode':'terms','offset':0,'min_score':0}
+                if any(r['source_tier']<=3 for r in candidates):break
     if retry is None and mode=='reformulated' and not include_topic_only and reformulated_search(**base,include_topic_only=True):
         stage='relation_filter';retry={'match_mode':'auto','include_topic_only':True,'offset':0,'min_score':0}
     # A safe exact single-term recovery is useful exploration, explicitly not
@@ -2239,6 +2263,10 @@ def zero_result_diagnostics(
             term=min(available,key=lambda x:x['matching_pages'])['term']
             if search(query=term,search_mode='exact_phrase',limit=1,**scope):
                 retry={'query':term,'match_mode':'exact','offset':0,'min_score':0}
+    retry_tiers=[]
+    if retry and retry.get('query'):
+        checked=search(query=retry['query'],search_mode='all_words' if retry['match_mode']=='terms' else 'exact_phrase',limit=4,ranking='primary_first',**scope)
+        retry_tiers=sorted({r['source_tier'] for r in checked})
     if retry:
         from app.core.evidence_blocks import INCLUDE_TOC
         if 'query' not in retry:retry['queries']=queries
@@ -2249,5 +2277,7 @@ def zero_result_diagnostics(
             'dropped_stopwords':[t for q in queries for t in safe_tokens(q) if t not in terms],
             'suggested_mode':retry.get('match_mode') if retry else None,
             'verified_retry':dict(retry,**{k:v for k,v in scope.items() if v is not None},whole_word=whole_word) if retry else None,
+            'retry_source_tiers':retry_tiers,
+            'retry_warning':'Only tier 4/5 evidence was found by this checked retry.' if retry_tiers and min(retry_tiers)>=4 else None,
             'retry_scope':'exploration_not_verified_answer',
             'message':'No displayed evidence met the request; do not infer corpus absence. A verified_retry, when present, was checked in the same source scope.'}

@@ -1,0 +1,608 @@
+{
+  "contract": {
+    "changes_since_previous": [
+      "Phrase-first/passsage/Q&A discovery",
+      "Source-local ranking and inherited defaults",
+      "Bounded threaded execution and per-client quota",
+      "Render PORT launcher with two workers"
+    ],
+    "known_issues": [
+      "Documentary source review remains open",
+      "Topic/Q&A proposals require review",
+      "Independent held-out and deployed acceptance are pending"
+    ],
+    "result_defaults_policy": "Search hits inherit result_defaults; explicit hit fields override defaults. Contract 11 clients must expand defaults.",
+    "monitoring": {
+      "status": "not_configured",
+      "success_rate_24h": null,
+      "scope": "scheduled_samples_not_all_traffic"
+    },
+    "rate_limit": {
+      "requests_per_minute": 2400,
+      "scope": "authenticated_client_or_peer_ip",
+      "retry_policy": "HTTP 429 JSON-RPC with Retry-After and retry_after_ms"
+    },
+    "server_version": "2.9.0",
+    "tool_contract_version": "11.0",
+    "tool_contract": "alburhaniya-tools-v11",
+    "tool_count": 5,
+    "tools": [
+      "get_book",
+      "get_page",
+      "get_passage",
+      "list_books",
+      "search_library"
+    ],
+    "schema_digest": "cb7eb57c85d260be98e3866608e34ce96ab2f9817aa7c1eb7f57bae69eb241d3",
+    "tool_schema_digest": "67eb72e89ab25cad317b45f6aca20cd00bdd83b639024b2ed4900ae6ca9fcf4c",
+    "schema_digest_kind": "capability_manifest",
+    "schema_capabilities": {
+      "search_library": {
+        "match_modes": [
+          "auto",
+          "exact",
+          "terms",
+          "hybrid",
+          "lexeme"
+        ],
+        "response_modes": [
+          "compact",
+          "ultra_compact"
+        ],
+        "supported_parameters": [
+          "query",
+          "queries",
+          "book_ids",
+          "book_scope",
+          "qasida_number",
+          "include_counts",
+          "check_completeness",
+          "include_toc",
+          "include_topic_only",
+          "count_basis",
+          "whole_word",
+          "min_tier",
+          "expand_top",
+          "expand_chars",
+          "min_score",
+          "match_mode",
+          "mode",
+          "operator",
+          "limit",
+          "offset",
+          "source_code",
+          "page_from",
+          "page_to",
+          "detail",
+          "keep_terms",
+          "context_chars",
+          "search_mode",
+          "ranking",
+          "diversify_books",
+          "max_per_book"
+        ]
+      },
+      "get_passage": {
+        "supported_parameters": [
+          "match_id",
+          "match_ids",
+          "stable_id",
+          "qasida_number",
+          "context_mode",
+          "max_chars",
+          "context_chars",
+          "query",
+          "include_parallels",
+          "parallel_limit"
+        ],
+        "selector_policy": "exactly_one; qasida_number_returns_full_structure",
+        "selectors": [
+          "match_id",
+          "match_ids",
+          "stable_id",
+          "qasida_number"
+        ],
+        "parallel_candidates": true,
+        "context_modes": [
+          "bounded",
+          "paragraph"
+        ],
+        "default_max_chars": 12000,
+        "cross_page_context": true,
+        "max_context_pages": 12
+      },
+      "get_page": {
+        "default_max_chars": 20000,
+        "declares_truncation": true,
+        "effective_cap_disclosed": true,
+        "ultra_compact": "omits_book_metadata"
+      },
+      "list_books": {
+        "supported_parameters": [
+          "include_legend",
+          "projection",
+          "book_ids"
+        ],
+        "projections": [
+          "compact",
+          "ids",
+          "full"
+        ]
+      }
+    },
+    "compatibility_policy": "Compare tool_contract_version, schema_digest and tool_schema_digest on every response. Any digest change requires refreshing tools/list before the next call. A major version change may alter semantics; minor changes are additive. tool_count is cardinality, not a version."
+  },
+  "tools": [
+    {
+      "name": "list_books",
+      "inputSchema": {
+        "properties": {
+          "include_legend": {
+            "default": false,
+            "title": "Include Legend",
+            "type": "boolean"
+          },
+          "projection": {
+            "default": "compact",
+            "enum": [
+              "compact",
+              "ids",
+              "full"
+            ],
+            "title": "Projection",
+            "type": "string"
+          },
+          "book_ids": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Book Ids"
+          }
+        },
+        "title": "list_booksArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "get_book",
+      "inputSchema": {
+        "properties": {
+          "book_id": {
+            "title": "Book Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "book_id"
+        ],
+        "title": "get_bookArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "get_page",
+      "inputSchema": {
+        "properties": {
+          "book_id": {
+            "title": "Book Id",
+            "type": "string"
+          },
+          "seq": {
+            "title": "Seq",
+            "type": "integer"
+          },
+          "mode": {
+            "default": "compact",
+            "enum": [
+              "compact",
+              "ultra_compact"
+            ],
+            "title": "Mode",
+            "type": "string"
+          },
+          "max_chars": {
+            "default": 20000,
+            "title": "Max Chars",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "book_id",
+          "seq"
+        ],
+        "title": "get_pageArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "get_passage",
+      "inputSchema": {
+        "properties": {
+          "match_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Match Id"
+          },
+          "match_ids": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Match Ids"
+          },
+          "context_chars": {
+            "default": 600,
+            "title": "Context Chars",
+            "type": "integer"
+          },
+          "query": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Query"
+          },
+          "stable_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Stable Id"
+          },
+          "qasida_number": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Qasida Number"
+          },
+          "include_parallels": {
+            "default": false,
+            "title": "Include Parallels",
+            "type": "boolean"
+          },
+          "parallel_limit": {
+            "default": 5,
+            "title": "Parallel Limit",
+            "type": "integer"
+          },
+          "context_mode": {
+            "default": "bounded",
+            "enum": [
+              "bounded",
+              "paragraph"
+            ],
+            "title": "Context Mode",
+            "type": "string"
+          },
+          "max_chars": {
+            "default": 12000,
+            "title": "Max Chars",
+            "type": "integer"
+          }
+        },
+        "title": "get_passageArguments",
+        "type": "object"
+      }
+    },
+    {
+      "name": "search_library",
+      "inputSchema": {
+        "properties": {
+          "query": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Query"
+          },
+          "queries": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Queries"
+          },
+          "operator": {
+            "default": "OR",
+            "enum": [
+              "OR",
+              "AND"
+            ],
+            "title": "Operator",
+            "type": "string"
+          },
+          "limit": {
+            "default": 8,
+            "title": "Limit",
+            "type": "integer"
+          },
+          "offset": {
+            "default": 0,
+            "title": "Offset",
+            "type": "integer"
+          },
+          "book_ids": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Book Ids"
+          },
+          "book_scope": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Book Scope"
+          },
+          "source_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Source Code"
+          },
+          "page_from": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Page From"
+          },
+          "page_to": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Page To"
+          },
+          "context_chars": {
+            "default": 60,
+            "title": "Context Chars",
+            "type": "integer"
+          },
+          "mode": {
+            "default": "compact",
+            "enum": [
+              "compact",
+              "ultra_compact"
+            ],
+            "title": "Mode",
+            "type": "string"
+          },
+          "match_mode": {
+            "default": "auto",
+            "enum": [
+              "auto",
+              "exact",
+              "terms",
+              "hybrid",
+              "lexeme"
+            ],
+            "title": "Match Mode",
+            "type": "string"
+          },
+          "search_mode": {
+            "anyOf": [
+              {
+                "enum": [
+                  "exact_phrase",
+                  "all_words",
+                  "any_word",
+                  "lexeme"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Search Mode"
+          },
+          "ranking": {
+            "default": "primary_first",
+            "enum": [
+              "relevance",
+              "primary_first",
+              "chronological",
+              "book_order"
+            ],
+            "title": "Ranking",
+            "type": "string"
+          },
+          "diversify_books": {
+            "default": true,
+            "title": "Diversify Books",
+            "type": "boolean"
+          },
+          "max_per_book": {
+            "default": 2,
+            "title": "Max Per Book",
+            "type": "integer"
+          },
+          "include_counts": {
+            "default": false,
+            "title": "Include Counts",
+            "type": "boolean"
+          },
+          "check_completeness": {
+            "default": false,
+            "title": "Check Completeness",
+            "type": "boolean"
+          },
+          "include_toc": {
+            "default": false,
+            "title": "Include Toc",
+            "type": "boolean"
+          },
+          "include_topic_only": {
+            "default": false,
+            "title": "Include Topic Only",
+            "type": "boolean"
+          },
+          "count_basis": {
+            "default": "phrase",
+            "enum": [
+              "phrase",
+              "term_bag"
+            ],
+            "title": "Count Basis",
+            "type": "string"
+          },
+          "whole_word": {
+            "default": true,
+            "title": "Whole Word",
+            "type": "boolean"
+          },
+          "min_score": {
+            "default": 0.0,
+            "title": "Min Score",
+            "type": "number"
+          },
+          "min_tier": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Min Tier"
+          },
+          "qasida_number": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Qasida Number"
+          },
+          "expand_top": {
+            "default": 0,
+            "title": "Expand Top",
+            "type": "integer"
+          },
+          "expand_chars": {
+            "default": 600,
+            "title": "Expand Chars",
+            "type": "integer"
+          },
+          "detail": {
+            "default": "summary",
+            "enum": [
+              "summary",
+              "full"
+            ],
+            "title": "Detail",
+            "type": "string"
+          },
+          "keep_terms": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Keep Terms"
+          }
+        },
+        "title": "search_libraryArguments",
+        "type": "object"
+      }
+    }
+  ]
+}

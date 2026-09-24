@@ -1,0 +1,11 @@
+{
+  "negative_control": "pass",
+  "mutation": "one canonical bayt stable_id replaced",
+  "audit_status": "fail",
+  "detected_malformed_ids": [
+    "deliberately-malformed-id"
+  ],
+  "audit_failures": [
+    "malformed stable IDs: ['deliberately-malformed-id']"
+  ]
+}

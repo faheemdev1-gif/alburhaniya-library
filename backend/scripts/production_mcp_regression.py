@@ -453,7 +453,7 @@ async def run(endpoint: str, discovery_only: bool = False) -> dict[str, Any]:
                         "ultra_compact silently dropped requested expansions"
                     )
                 if not ultra_rows or any(
-                    row.get("blk") not in {"body", "toc"} for row in ultra_rows
+                    row.get("blk",ultra_expansion.get("result_defaults",{}).get("blk")) not in {"body", "toc"} for row in ultra_rows
                 ):
                     raise AssertionError(
                         "ultra_compact did not expose block_type under blk"
@@ -471,7 +471,7 @@ async def run(endpoint: str, discovery_only: bool = False) -> dict[str, Any]:
                     },
                 ))
                 toc_by_seq = {
-                    row.get("s"): row for row in ultra_toc.get("results") or []
+                    row.get("s"): {**ultra_toc.get("result_defaults",{}),**row} for row in ultra_toc.get("results") or []
                 }
                 if not (
                     toc_by_seq.get(255, {}).get("blk") == "body"

@@ -48,8 +48,6 @@ MAPPING_FILE = os.path.join(DATA_DIR, "mapping.json")
 SOURCES_FILE = os.path.join(DATA_DIR, "sources.json")
 DB_PATH = os.environ.get("LIBRARY_DB_PATH", os.path.join(HERE, "..", "library.db"))
 
-
-# faheem
 SCHEMA = """
 CREATE TABLE grades (
     grade       TEXT PRIMARY KEY,   -- 'أصلي' | 'ثانوي'
@@ -499,6 +497,8 @@ def build():
             conn.execute("INSERT INTO evidence_blocks VALUES (?,?,?,?)",(row[0],block['start'],block['end'],block['type']))
     validate_diwan_structure(conn)
     research_stats = build_research_indexes(conn)
+    from app.services.discovery_index import build_discovery_indexes
+    print("Discovery index:", build_discovery_indexes(conn))
 
     # NOTE: only `pages` feeds the FTS index. Grades / notes / authors
     # deliberately stay out of it.

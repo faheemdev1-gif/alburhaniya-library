@@ -140,6 +140,7 @@ def corpus_contract_snapshot(db_path: str | None = None) -> dict[str, Any]:
         ) else "broken"
         return {
             "status": status,
+            "repeated_printed_labels": [{"book_id":r[0],"printed_label":r[1],"locations":r[2]} for r in conn.execute("SELECT book_id,printed_page,COUNT(*) FROM pages WHERE printed_page IS NOT NULL GROUP BY book_id,printed_page HAVING COUNT(*)>1")],
             "books": book_count,
             "pages": page_count,
             "edition_deduplication": {

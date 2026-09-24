@@ -26,7 +26,7 @@ def test_mixed_toc_counts_search_and_round_trip_and_scope_reset():
         assert r['census_matching_pages']==expected
         assert r['retrieval_completeness']['status']=='ok'
         if expected:
-            h=r['results'][0]
+            h={**r.get('result_defaults',{}),**r['results'][0]}
             assert h['block_type']=='toc'
             assert get_passage(match_id=h['match_id'])['block_type']=='toc'
     assert get_passage(match_id='b41-p154-c667')['block_type']=='toc'
@@ -60,7 +60,8 @@ def test_heading_and_invalid_selectors():
         assert isinstance(r['error'],dict) and r['error']['retryable'] is False
 
 def test_evidence_classification_round_trip():
-    h=search_library(query='الأوراد',book_ids=['b41'],page_from=131,page_to=131,match_mode='exact')['results'][0]
+    r=search_library(query='الأوراد',book_ids=['b41'],page_from=131,page_to=131,match_mode='exact')
+    h={**r.get('result_defaults',{}),**r['results'][0]}
     p=get_passage(match_id=h['match_id'])
     for k in ('evidence_type','evidence_type_method','evidence_type_confidence','evidence_type_scope'):
         assert h[k]==p[k]

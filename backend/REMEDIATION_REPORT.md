@@ -1,3 +1,5 @@
+> Historical 2.8.0 report. Current status: FIX_REPORT.md. Its figure of 15 open provenance records was incomplete.
+
 # Al Burhania 2.8.0 remediation report
 
 Prepared 21 September 2026. Source: the supplied 2.7.0 project, two assessments

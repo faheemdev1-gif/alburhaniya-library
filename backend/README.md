@@ -1,88 +1,65 @@
-# Al Burhania Library Connector 2.8.0
+# Al Burhania Connector 2.9.0
 
-MCP contract **10.0** (`alburhaniya-tools-v10`), with exactly five tools.
-This release addresses the supplied 2.7.0 audit. Read `REMEDIATION_REPORT.md`
-for verified results and external acceptance gates. It has not been deployed
-by this workspace and carries no independently awarded quality score.
+Five MCP tools; contract 11.0. See `FIX_REPORT.md` for the status of every
+assessment item. This package has not been deployed to Render here.
 
 ## Run
 
-Use Python 3.11 (Docker target) or 3.12:
+Python 3.11 (Docker target) or 3.12:
 
 ```bash
 python -m venv .venv
 source .venv/bin/activate
 python -m pip install -r requirements-dev.txt
 python scripts/build_index.py
-python scripts/finalize_verification.py
-python -m uvicorn app.main:app --host 0.0.0.0 --port 8000
+python -m pytest -q
+python scripts/independent_corpus_audit.py library.db
+python scripts/start_server.py
 ```
 
-The database is generated from the included original sources. Stop the service
-before rebuilding: the builder replaces `library.db`. No corpus text or
-attribution has been silently rewritten. The corpus contains 43 books, 6,935
-pages, 95 qasidas and 2,682 bayts. Default edition scope remains 42 books and
-6,885 pages; default evidence matching now excludes navigation blocks within
-that scope.
+The original texts and catalogue are included. The generated `library.db` is
+built from them; it is intentionally excluded from the ZIP. Stop the service
+before rebuilding. The launcher validates the database and discovery schema,
+binds `0.0.0.0:$PORT` (8000 locally), and starts two workers by default.
 
-Health: `/health`. Streamable HTTP MCP: `/mcp/`.
+Health `/health`; MCP `/mcp/`; callable schemas `/schemas/tools.json`.
+Docker builds run the index builder, full pytest suite and corpus audit.
+An actual Docker build/Render deployment remains unverified in this environment.
 
-```bash
-docker build -t alburhaniya:2.8.0 .
-docker run --rm -p 8000:8000 alburhaniya:2.8.0
+## Contract 11 migration
+
+Search hits inherit `result_defaults`. Explicit hit values override defaults:
+
+```python
+hits = [{**response.get('result_defaults', {}), **hit}
+        for hit in response['results']]
 ```
 
-The image builds the index, runs the full pytest suite (including the new audit
-regressions), and runs the independent corpus audit. The Docker engine itself
-was not available for verification in this workspace; local Python and HTTP
-checks are reported separately.
+`detail="full"` retains query/intent/normalization traces; summary is the default.
+`keep_terms=[...]` preserves selected words in the planner. Dropped function words
+are disclosed. Ultra-compact books carry ID/tier; get_book supplies attribution.
+Compact summary keeps titles, source tiers, attribution confidence and provenance status; detailed authorship/compilation fields remain in detail=full or get_book.
+Citations and excerpts remain in all modes. Near-duplicates keep alternate_locations.
 
-## Contract changes
+Question discovery retains exact subject-phrase witnesses, adds passage/Q&A and
+morphological candidates, and uses corpus-derived topic proposals. These are
+candidate sources, not verified answers. `answer_verified` stays false.
+The topic proposals are unreviewed; Q&A segmentation is within-page only.
+Optional semantic vectors remain disabled pending independent evaluation.
+Repeated unreliable printed labels use sequence-only citations without inventing
+original page numbers or changing attribution.
 
-- Repeated printed-page labels keep the source number and add an unambiguous
-  sequence locator. `pagination_status` flags unresolved repeated pagination.
-- Mixed pages expose offset-preserving body/contents blocks. Search and census
-  exclude contents by default. Set `include_toc=true` for a navigation-inclusive
-  census, including comparisons with the old 2.7.0 counts.
-- The question planner preserves explicit concepts and local relational clues.
-  It includes versioned Arabic vocabulary and conversational forms. It is a
-  conservative lexical system, not a general semantic model. Its known-audit
-  results are not evidence of generalization to unseen topics.
-- Question results declare `answer_verified=false`. `relation_candidate` means
-  local lexical relation evidence, not a confirmed answer. Weak results require
-  `include_topic_only=true`. Unknown relationships can return no default results;
-  inspect the plan and the verified exploratory retry.
-- `reformulation_status`, preserved/dropped concept metadata and source-local
-  evidence offsets explain the planner's limits.
-- Empty-result diagnostics identify score, pagination or relation filtering
-  when a successful controlled retry proves that cause. Other empty responses
-  remain `matching_or_scope`; they do not assert absence from the corpus.
-- `get_page(max_chars=100)` respects that character budget, including ellipsis.
-  It reports requested/effective caps. `ultra_compact` preserves text and citations
-  and omits repeated book metadata; retrieve full provenance with `get_book`.
-- Qasida headings such as `b14-q007-h` work with `get_passage(stable_id=...)`.
-- Search and passage evidence types share a disclosed `start_anchor` scope and
-  retain heuristic/unverified metadata.
+## Runtime settings
 
-Full paragraph controls, exact/lexeme inclusion checks, explicit edition
-selection, qasida structure and unverified parallel-candidate warnings remain.
-Optional semantic vectors are retained unchanged for traceability and remain
-disabled: regenerate and evaluate compatible vectors before enabling them.
+- `WEB_CONCURRENCY=2`, valid range 1–8.
+- `REQUEST_BUDGET_SECONDS=18`, execution capped below 20 seconds.
+- `MCP_REQUESTS_PER_MINUTE=2400`, per authenticated client or peer IP.
+- `MCP_API_KEYS`: optional comma-separated Bearer keys. Configure clients first.
+- `RATE_LIMIT_DB_PATH`: writable quota SQLite database shared by local workers.
+  Multiple service instances require a shared quota service.
+- `MONITOR_SUMMARY_PATH`: real monitoring-history JSON. Unconfigured monitoring
+  reports no invented success rate.
 
-## Verification and deployment
-
-`verification/final_checks.json` records the current checks. The original release's
-logs are preserved under `verification/2.7.0/` and are historical evidence only.
-Use `scripts/finalize_verification.py` for this release, not the legacy 2.7.0
-benchmark commands. `tests/data/audit_270_regressions.json` freezes the 30 supplied
-queries; `audit_270_false_relations.json` preserves all 18 reviewed false labels.
-
-After deployment, run:
-
-```bash
-python scripts/production_mcp_regression.py --endpoint https://YOUR-HOST/mcp/
-```
-
-Refresh connector discovery in each supported client. The server cannot replace
-a plugin's cached wrapper schema. Consult `docs/RELEASE_CHECKLIST.md` for the
-required post-deployment checks and independent review.
+The origin response guard cannot remove an upstream browser challenge.
+See `docs/RENDER_DEPLOYMENT.md` and `docs/OPERATIONS_290.md`.
+Current evidence lives in `verification/2.9.0/`; older reports/logs are historical.

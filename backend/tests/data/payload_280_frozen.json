@@ -1,0 +1,1405 @@
+{
+  "source": "Unmodified 2.8.0 formatter and search code from supplied baseline; same original corpus",
+  "scope": "Frozen payloads for formatter-only comparison; not new ranking evaluation",
+  "fixtures": [
+    {
+      "fixture": "six_hit_literal",
+      "mode": "compact",
+      "payload": {
+        "returned_count": 6,
+        "books": {
+          "b09": {
+            "title": "تأويل التائية",
+            "source": "secondary",
+            "tier": 4,
+            "source_author": "كروما علي (أحد مريدي الطريقة من السودان)",
+            "compiler": null,
+            "authorship_mode": "unresolved",
+            "attribution_confidence": "unverified",
+            "provenance_status": "needs_review"
+          },
+          "b25": {
+            "title": "شرح شراب الوصل 6",
+            "source": "secondary",
+            "tier": 4,
+            "source_author": "مجهول الشارح",
+            "compiler": null,
+            "authorship_mode": "murid_commentary",
+            "attribution_confidence": "low",
+            "provenance_status": "needs_review"
+          },
+          "b11": {
+            "title": "تبرئة الذمة المحقق 2 الجزء الثانى كامل",
+            "source": "primary",
+            "tier": 1,
+            "source_author": "سيدي الإمام فخر الدين قدّس سرّه",
+            "compiler": null,
+            "authorship_mode": "authored_critical_edition",
+            "attribution_confidence": "high",
+            "provenance_status": "classified_canonical_work"
+          },
+          "b07": {
+            "title": "انتصار أولياء الرحمن على أولياء الشيطان",
+            "source": "primary",
+            "tier": 1,
+            "source_author": "سيدي الإمام فخر الدين قدّس سرّه",
+            "compiler": null,
+            "authorship_mode": "authored",
+            "attribution_confidence": "high",
+            "provenance_status": "classified_canonical_work"
+          },
+          "b40": {
+            "title": "من خواطر الامام فخر الدين",
+            "source": "primary",
+            "tier": 2,
+            "source_author": "سيدي الإمام فخر الدين قدّس سرّه",
+            "compiler": null,
+            "authorship_mode": "dictated_inspirations",
+            "attribution_confidence": "medium",
+            "provenance_status": "compiler_not_identified"
+          },
+          "b42": {
+            "title": "من علومى فى الفيافى",
+            "source": "primary",
+            "tier": 3,
+            "source_author": "سيدي الإمام فخر الدين قدّس سرّه",
+            "compiler": null,
+            "authorship_mode": "recorded_durus",
+            "attribution_confidence": "medium",
+            "provenance_status": "compiler_unverified_do_not_assume_safwat"
+          }
+        },
+        "results": [
+          {
+            "book_id": "b09",
+            "seq": 92,
+            "match_id": "b09-p92-c384",
+            "excerpt": "…بناءه الأسباط ولم يعاقبهم بجلاله من محاكمتهم على ما ارتكبوه في حق أخيهم بل سترهم حتى يجد الله أمرا كان مفعولا . *** الجمال والجلال هى جوامع الأسماء الإلهية والعلم والتعليم والتلقى <mark>بالطمأنينة</mark> ويقال { آلا بذكر الله تطمئن القلوب } والجلال للخشوع والرهبة والوجل ومنه { إذا ذكر الله وجلت قلوبهم } وأغشيتكم من الغشاء والتغطية والستر هو كل ما يستر به ويحتجب خلقه والستر الجميل …",
+            "score": 0.751935,
+            "score_kind": "bm25_lexeme",
+            "rank": 1,
+            "match_type": "lexeme",
+            "rank_score": 0.771935,
+            "printed_page": "91",
+            "citation_label": "تأويل التائية، الصفحة 91",
+            "block_type": "body",
+            "evidence_type": "body",
+            "matched_terms": {
+              "الطمأنينة": {
+                "corpus_form": "بالطمأنينة",
+                "surface_form": "بالطمأنينة",
+                "normalized_form": "بالطمانينه",
+                "safe_normalized_form": "بالطمأنينة",
+                "query_normalized": "الطمانينه",
+                "relation": "inflection"
+              }
+            },
+            "whole_word": true,
+            "normalization_level": "broad_discovery",
+            "footnotes_excluded": true,
+            "selected_queries": [
+              "الطمأنينة"
+            ],
+            "match_attribution_scope": "selected_evidence_span",
+            "evidence_type_method": "heuristic",
+            "evidence_type_confidence": "unverified",
+            "page_id": "b09-p92",
+            "pagination_status": "unique_in_index",
+            "evidence_type_scope": "start_anchor",
+            "evidence_span": {
+              "start": 384,
+              "end": 394
+            }
+          },
+          {
+            "book_id": "b25",
+            "seq": 32,
+            "match_id": "b25-p32-c851",
+            "excerpt": "…اتِهِمْ فِي قَوْلِهَا *** وَلِنَهْجِ غَيْرِي قَدْ هُدُوَا وتَرسَّمُوا\n\nالمعني: وَجَدُوا: الفاعل ضمير مستتر تقديره \"هُم\" يعود علي أهل الوثيقة طُمَأْنِينَاتِهِمْ: للجمع منهم, مفردها <mark>طُمَأْنِينَة</mark>, و <mark>الطُمَأْنِينَة</mark>: السكون و اليقين فِي قَوْلِهَا: وجدوا في قولها (ما نسبت إملاءه لها للشيخ) ما يطمئنهم علي سلامة حالهم, قال تعالي: (وَمِنَ النَّاسِ مَن يَعْبُدُ اللَّهَ عَلَى حَرْ…",
+            "score": 0.749393,
+            "score_kind": "bm25_lexeme",
+            "rank": 2,
+            "match_type": "lexeme",
+            "rank_score": 0.769393,
+            "printed_page": "32",
+            "citation_label": "شرح شراب الوصل 6، الصفحة 32",
+            "block_type": "body",
+            "evidence_type": "body",
+            "matched_terms": {
+              "الطمأنينة": {
+                "corpus_form": "طُمَأْنِينَة",
+                "surface_form": "طُمَأْنِينَة",
+                "normalized_form": "طمانينه",
+                "safe_normalized_form": "طمأنينة",
+                "query_normalized": "الطمانينه",
+                "relation": "safe_normalized"
+              }
+            },
+            "whole_word": true,
+            "normalization_level": "broad_discovery",
+            "footnotes_excluded": true,
+            "selected_queries": [
+              "الطمأنينة"
+            ],
+            "match_attribution_scope": "selected_evidence_span",
+            "evidence_type_method": "heuristic",
+            "evidence_type_confidence": "unverified",
+            "page_id": "b25-p32",
+            "pagination_status": "unique_in_index",
+            "evidence_type_scope": "start_anchor",
+            "evidence_span": {
+              "start": 851,
+              "end": 863
+            }
+          },
+          {
+            "book_id": "b11",
+            "seq": 132,
+            "match_id": "b11-p132-c304",
+            "excerpt": "…جاسة الكلبية سبعاً، وثبت فى الصحيحين:\"لا صلاة لمن لم يقرأ بفاتحة الكتاب\" (2) وأنت تصحح الصلاة بدونها، وثبت فى الصحيحين: \" ثم ارفع رأسك حتى تعتدل قائماً \" (3) وأنت تصحح الصلاة بدون <mark>الطمأنينة</mark> فى الاعتدال، وصح فى الحديث \" إذا بلغ الماء قلتين لم يحمل خبثاً \" (4) وأنت لاتعتبر القلتين، وصح فى الصحيحين أنه صلى الله عليه وسلم باع المدبر، وأنت لا تقول ببيع المدبر، فكيف خالفت …",
+            "score": 0.622154,
+            "score_kind": "bm25_lexeme",
+            "rank": 3,
+            "match_type": "lexeme",
+            "rank_score": 0.722154,
+            "printed_page": "132",
+            "citation_label": "تبرئة الذمة المحقق 2 الجزء الثانى كامل، الصفحة 132",
+            "block_type": "body",
+            "evidence_type": "body",
+            "matched_terms": {
+              "الطمأنينة": {
+                "corpus_form": "الطمأنينة",
+                "surface_form": "الطمأنينة",
+                "normalized_form": "الطمانينه",
+                "safe_normalized_form": "الطمأنينة",
+                "query_normalized": "الطمانينه",
+                "relation": "exact"
+              }
+            },
+            "whole_word": true,
+            "normalization_level": "broad_discovery",
+            "footnotes_excluded": true,
+            "selected_queries": [
+              "الطمأنينة"
+            ],
+            "match_attribution_scope": "selected_evidence_span",
+            "evidence_type_method": "heuristic",
+            "evidence_type_confidence": "unverified",
+            "page_id": "b11-p132",
+            "pagination_status": "unique_in_index",
+            "evidence_type_scope": "start_anchor",
+            "evidence_span": {
+              "start": 304,
+              "end": 313
+            }
+          },
+          {
+            "book_id": "b07",
+            "seq": 96,
+            "match_id": "b07-p96-c294",
+            "excerpt": "…. وعلامة الابتلاء تكفيراً وتمحيصاً للخطيئات، وجود الصبر الجميل من غير شكوى ولا جزع ولا ضجر، ولا ثقل في أداء الأوامر والطاعات، وعلامة الابتلاء لارتفاع الدرجات وجود الرضا والموافقة، <mark>وطمأنينة</mark> النفس والسكون للأقدار حتى تنكشف. وكان رضي الله عنه يقول من أراد الآخرة فعليه بالزهد في الدنيا، ومن أراد الله فعليه بالزهد في الأخرى وما دام قلب العبد متعلقاً بشهوة من شهوات الدنيا…",
+            "score": 0.603261,
+            "score_kind": "bm25_lexeme",
+            "rank": 4,
+            "match_type": "lexeme",
+            "rank_score": 0.703261,
+            "printed_page": "96",
+            "citation_label": "انتصار أولياء الرحمن على أولياء الشيطان، الصفحة 96",
+            "block_type": "body",
+            "evidence_type": "body",
+            "matched_terms": {
+              "الطمأنينة": {
+                "corpus_form": "وطمأنينة",
+                "surface_form": "وطمأنينة",
+                "normalized_form": "وطمانينه",
+                "safe_normalized_form": "وطمأنينة",
+                "query_normalized": "الطمانينه",
+                "relation": "inflection"
+              }
+            },
+            "whole_word": true,
+            "normalization_level": "broad_discovery",
+            "footnotes_excluded": true,
+            "selected_queries": [
+              "الطمأنينة"
+            ],
+            "match_attribution_scope": "selected_evidence_span",
+            "evidence_type_method": "heuristic",
+            "evidence_type_confidence": "unverified",
+            "page_id": "b07-p96",
+            "pagination_status": "unique_in_index",
+            "evidence_type_scope": "start_anchor",
+            "evidence_span": {
+              "start": 294,
+              "end": 302
+            }
+          },
+          {
+            "book_id": "b40",
+            "seq": 95,
+            "match_id": "b40-p95-c258",
+            "excerpt": "… ما حدش بحث عنها. فالخلاف أقره رسول الله صلى الله عليه وسلم في الأصول والفروع وهو ده الرحمة ذاتها. في الأصول: عندنا المالكية .. الركوع فرض والاعتدال فرض .. الرفع فرض والاعتدال فرض <mark>والطمأنينة</mark> في الاثنين فرض .. الحنفية ما عندهمش زي ده .. عندهم الركوع قدر الانحناء والارتفاع قدر بسيط بس بقدر ما يفوت الهواء (وده اختلاف في الأصول). وعندنا المالكية الواحد يرفع يديه حذا منكبي…",
+            "score": 0.587427,
+            "score_kind": "bm25_lexeme",
+            "rank": 5,
+            "match_type": "lexeme",
+            "rank_score": 0.677427,
+            "printed_page": "95",
+            "citation_label": "من خواطر الامام فخر الدين، الصفحة 95",
+            "block_type": "body",
+            "evidence_type": "body",
+            "matched_terms": {
+              "الطمأنينة": {
+                "corpus_form": "والطمأنينة",
+                "surface_form": "والطمأنينة",
+                "normalized_form": "والطمانينه",
+                "safe_normalized_form": "والطمأنينة",
+                "query_normalized": "الطمانينه",
+                "relation": "inflection"
+              }
+            },
+            "whole_word": true,
+            "normalization_level": "broad_discovery",
+            "footnotes_excluded": true,
+            "selected_queries": [
+              "الطمأنينة"
+            ],
+            "match_attribution_scope": "selected_evidence_span",
+            "evidence_type_method": "heuristic",
+            "evidence_type_confidence": "unverified",
+            "page_id": "b40-p95",
+            "pagination_status": "unique_in_index",
+            "evidence_type_scope": "start_anchor",
+            "evidence_span": {
+              "start": 258,
+              "end": 268
+            }
+          },
+          {
+            "book_id": "b42",
+            "seq": 83,
+            "match_id": "b42-p83-c405",
+            "excerpt": "…لمن ندم على ما فات وأقلع عن السيئات وصح عزمه على ألا يعود إلى ذنبه {قل للذين كفروا أن ينتهوا يغفر لهم ما قد سلف} قال السائل: أشعر بالخزي والتقصير فما الذي أفعله ليكون سبباً للقبول <mark>وطمأنينة</mark> النفس إلى حسن سيرها وسلامة عملها وسداد خطاها في طريق هداها؟ فقال رضي الله عنه: الإجتهاد في العبادات المفروضة موصولة بالنوافل وكثرتها لأن كثرة النوافل ترجح كفة الحسنات من ميزان الأ…",
+            "score": 0.593401,
+            "score_kind": "bm25_lexeme",
+            "rank": 6,
+            "match_type": "lexeme",
+            "rank_score": 0.673401,
+            "printed_page": "76",
+            "citation_label": "من علومى فى الفيافى، الصفحة 76",
+            "block_type": "body",
+            "evidence_type": "body",
+            "matched_terms": {
+              "الطمأنينة": {
+                "corpus_form": "وطمأنينة",
+                "surface_form": "وطمأنينة",
+                "normalized_form": "وطمانينه",
+                "safe_normalized_form": "وطمأنينة",
+                "query_normalized": "الطمانينه",
+                "relation": "inflection"
+              }
+            },
+            "whole_word": true,
+            "normalization_level": "broad_discovery",
+            "footnotes_excluded": true,
+            "selected_queries": [
+              "الطمأنينة"
+            ],
+            "match_attribution_scope": "selected_evidence_span",
+            "evidence_type_method": "heuristic",
+            "evidence_type_confidence": "unverified",
+            "page_id": "b42-p83",
+            "pagination_status": "unique_in_index",
+            "evidence_type_scope": "start_anchor",
+            "evidence_span": {
+              "start": 405,
+              "end": 413
+            }
+          }
+        ]
+      }
+    },
+    {
+      "fixture": "six_hit_literal",
+      "mode": "ultra_compact",
+      "payload": {
+        "n": 6,
+        "books": {
+          "b09": {
+            "title": "تأويل التائية",
+            "tier": 4,
+            "am": "unresolved",
+            "ac": "unverified",
+            "source": "secondary",
+            "source_author": "كروما علي (أحد مريدي الطريقة من السودان)",
+            "compiler": null,
+            "provenance_status": "needs_review"
+          },
+          "b25": {
+            "title": "شرح شراب الوصل 6",
+            "tier": 4,
+            "am": "murid_commentary",
+            "ac": "low",
+            "source": "secondary",
+            "source_author": "مجهول الشارح",
+            "compiler": null,
+            "provenance_status": "needs_review"
+          },
+          "b11": {
+            "title": "تبرئة الذمة المحقق 2 الجزء الثانى كامل",
+            "tier": 1,
+            "am": "authored_critical_edition",
+            "ac": "high",
+            "source": "primary",
+            "source_author": "سيدي الإمام فخر الدين قدّس سرّه",
+            "compiler": null,
+            "provenance_status": "classified_canonical_work"
+          },
+          "b07": {
+            "title": "انتصار أولياء الرحمن على أولياء الشيطان",
+            "tier": 1,
+            "am": "authored",
+            "ac": "high",
+            "source": "primary",
+            "source_author": "سيدي الإمام فخر الدين قدّس سرّه",
+            "compiler": null,
+            "provenance_status": "classified_canonical_work"
+          },
+          "b40": {
+            "title": "من خواطر الامام فخر الدين",
+            "tier": 2,
+            "am": "dictated_inspirations",
+            "ac": "medium",
+            "source": "primary",
+            "source_author": "سيدي الإمام فخر الدين قدّس سرّه",
+            "compiler": null,
+            "provenance_status": "compiler_not_identified"
+          },
+          "b42": {
+            "title": "من علومى فى الفيافى",
+            "tier": 3,
+            "am": "recorded_durus",
+            "ac": "medium",
+            "source": "primary",
+            "source_author": "سيدي الإمام فخر الدين قدّس سرّه",
+            "compiler": null,
+            "provenance_status": "compiler_unverified_do_not_assume_safwat"
+          }
+        },
+        "results": [
+          {
+            "b": "b09",
+            "s": 92,
+            "m": "b09-p92-c384",
+            "x": "…بناءه الأسباط ولم يعاقبهم بجلاله من محاكمتهم على ما ارتكبوه في حق أخيهم بل سترهم حتى يجد الله أمرا كان مفعولا . *** الجمال والجلال هى جوامع الأسماء الإلهية والعلم والتعليم والتلقى <mark>بالطمأنينة</mark> ويقال { آلا بذكر الله تطمئن القلوب } والجلال للخشوع والرهبة والوجل ومنه { إذا ذكر الله وجلت قلوبهم } وأغشيتكم من الغشاء والتغطية والستر هو كل ما يستر به ويحتجب خلقه والستر الجميل …",
+            "score": 0.751935,
+            "type": "lexeme",
+            "sk": "bm25_lexeme",
+            "r": 1,
+            "rs": 0.771935,
+            "p": "91",
+            "c": "تأويل التائية، الصفحة 91",
+            "blk": "body",
+            "et": "body",
+            "matched_terms": {
+              "الطمأنينة": {
+                "corpus_form": "بالطمأنينة",
+                "safe_normalized_form": "بالطمأنينة",
+                "query_normalized": "الطمانينه",
+                "relation": "inflection"
+              }
+            },
+            "selected_queries": [
+              "الطمأنينة"
+            ],
+            "match_attribution_scope": "selected_evidence_span",
+            "evidence_type_method": "heuristic",
+            "evidence_type_confidence": "unverified",
+            "page_id": "b09-p92",
+            "pagination_status": "unique_in_index",
+            "pagination_warning": null,
+            "evidence_type_scope": "start_anchor",
+            "evidence_span": {
+              "start": 384,
+              "end": 394
+            }
+          },
+          {
+            "b": "b25",
+            "s": 32,
+            "m": "b25-p32-c851",
+            "x": "…اتِهِمْ فِي قَوْلِهَا *** وَلِنَهْجِ غَيْرِي قَدْ هُدُوَا وتَرسَّمُوا\n\nالمعني: وَجَدُوا: الفاعل ضمير مستتر تقديره \"هُم\" يعود علي أهل الوثيقة طُمَأْنِينَاتِهِمْ: للجمع منهم, مفردها <mark>طُمَأْنِينَة</mark>, و <mark>الطُمَأْنِينَة</mark>: السكون و اليقين فِي قَوْلِهَا: وجدوا في قولها (ما نسبت إملاءه لها للشيخ) ما يطمئنهم علي سلامة حالهم, قال تعالي: (وَمِنَ النَّاسِ مَن يَعْبُدُ اللَّهَ عَلَى حَرْ…",
+            "score": 0.749393,
+            "type": "lexeme",
+            "sk": "bm25_lexeme",
+            "r": 2,
+            "rs": 0.769393,
+            "p": "32",
+            "c": "شرح شراب الوصل 6، الصفحة 32",
+            "blk": "body",
+            "et": "body",
+            "matched_terms": {
+              "الطمأنينة": {
+                "corpus_form": "طُمَأْنِينَة",
+                "safe_normalized_form": "طمأنينة",
+                "query_normalized": "الطمانينه",
+                "relation": "safe_normalized"
+              }
+            },
+            "selected_queries": [
+              "الطمأنينة"
+            ],
+            "match_attribution_scope": "selected_evidence_span",
+            "evidence_type_method": "heuristic",
+            "evidence_type_confidence": "unverified",
+            "page_id": "b25-p32",
+            "pagination_status": "unique_in_index",
+            "pagination_warning": null,
+            "evidence_type_scope": "start_anchor",
+            "evidence_span": {
+              "start": 851,
+              "end": 863
+            }
+          },
+          {
+            "b": "b11",
+            "s": 132,
+            "m": "b11-p132-c304",
+            "x": "…جاسة الكلبية سبعاً، وثبت فى الصحيحين:\"لا صلاة لمن لم يقرأ بفاتحة الكتاب\" (2) وأنت تصحح الصلاة بدونها، وثبت فى الصحيحين: \" ثم ارفع رأسك حتى تعتدل قائماً \" (3) وأنت تصحح الصلاة بدون <mark>الطمأنينة</mark> فى الاعتدال، وصح فى الحديث \" إذا بلغ الماء قلتين لم يحمل خبثاً \" (4) وأنت لاتعتبر القلتين، وصح فى الصحيحين أنه صلى الله عليه وسلم باع المدبر، وأنت لا تقول ببيع المدبر، فكيف خالفت …",
+            "score": 0.622154,
+            "type": "lexeme",
+            "sk": "bm25_lexeme",
+            "r": 3,
+            "rs": 0.722154,
+            "p": "132",
+            "c": "تبرئة الذمة المحقق 2 الجزء الثانى كامل، الصفحة 132",
+            "blk": "body",
+            "et": "body",
+            "matched_terms": {
+              "الطمأنينة": {
+                "corpus_form": "الطمأنينة",
+                "safe_normalized_form": "الطمأنينة",
+                "query_normalized": "الطمانينه",
+                "relation": "exact"
+              }
+            },
+            "selected_queries": [
+              "الطمأنينة"
+            ],
+            "match_attribution_scope": "selected_evidence_span",
+            "evidence_type_method": "heuristic",
+            "evidence_type_confidence": "unverified",
+            "page_id": "b11-p132",
+            "pagination_status": "unique_in_index",
+            "pagination_warning": null,
+            "evidence_type_scope": "start_anchor",
+            "evidence_span": {
+              "start": 304,
+              "end": 313
+            }
+          },
+          {
+            "b": "b07",
+            "s": 96,
+            "m": "b07-p96-c294",
+            "x": "…. وعلامة الابتلاء تكفيراً وتمحيصاً للخطيئات، وجود الصبر الجميل من غير شكوى ولا جزع ولا ضجر، ولا ثقل في أداء الأوامر والطاعات، وعلامة الابتلاء لارتفاع الدرجات وجود الرضا والموافقة، <mark>وطمأنينة</mark> النفس والسكون للأقدار حتى تنكشف. وكان رضي الله عنه يقول من أراد الآخرة فعليه بالزهد في الدنيا، ومن أراد الله فعليه بالزهد في الأخرى وما دام قلب العبد متعلقاً بشهوة من شهوات الدنيا…",
+            "score": 0.603261,
+            "type": "lexeme",
+            "sk": "bm25_lexeme",
+            "r": 4,
+            "rs": 0.703261,
+            "p": "96",
+            "c": "انتصار أولياء الرحمن على أولياء الشيطان، الصفحة 96",
+            "blk": "body",
+            "et": "body",
+            "matched_terms": {
+              "الطمأنينة": {
+                "corpus_form": "وطمأنينة",
+                "safe_normalized_form": "وطمأنينة",
+                "query_normalized": "الطمانينه",
+                "relation": "inflection"
+              }
+            },
+            "selected_queries": [
+              "الطمأنينة"
+            ],
+            "match_attribution_scope": "selected_evidence_span",
+            "evidence_type_method": "heuristic",
+            "evidence_type_confidence": "unverified",
+            "page_id": "b07-p96",
+            "pagination_status": "unique_in_index",
+            "pagination_warning": null,
+            "evidence_type_scope": "start_anchor",
+            "evidence_span": {
+              "start": 294,
+              "end": 302
+            }
+          },
+          {
+            "b": "b40",
+            "s": 95,
+            "m": "b40-p95-c258",
+            "x": "… ما حدش بحث عنها. فالخلاف أقره رسول الله صلى الله عليه وسلم في الأصول والفروع وهو ده الرحمة ذاتها. في الأصول: عندنا المالكية .. الركوع فرض والاعتدال فرض .. الرفع فرض والاعتدال فرض <mark>والطمأنينة</mark> في الاثنين فرض .. الحنفية ما عندهمش زي ده .. عندهم الركوع قدر الانحناء والارتفاع قدر بسيط بس بقدر ما يفوت الهواء (وده اختلاف في الأصول). وعندنا المالكية الواحد يرفع يديه حذا منكبي…",
+            "score": 0.587427,
+            "type": "lexeme",
+            "sk": "bm25_lexeme",
+            "r": 5,
+            "rs": 0.677427,
+            "p": "95",
+            "c": "من خواطر الامام فخر الدين، الصفحة 95",
+            "blk": "body",
+            "et": "body",
+            "matched_terms": {
+              "الطمأنينة": {
+                "corpus_form": "والطمأنينة",
+                "safe_normalized_form": "والطمأنينة",
+                "query_normalized": "الطمانينه",
+                "relation": "inflection"
+              }
+            },
+            "selected_queries": [
+              "الطمأنينة"
+            ],
+            "match_attribution_scope": "selected_evidence_span",
+            "evidence_type_method": "heuristic",
+            "evidence_type_confidence": "unverified",
+            "page_id": "b40-p95",
+            "pagination_status": "unique_in_index",
+            "pagination_warning": null,
+            "evidence_type_scope": "start_anchor",
+            "evidence_span": {
+              "start": 258,
+              "end": 268
+            }
+          },
+          {
+            "b": "b42",
+            "s": 83,
+            "m": "b42-p83-c405",
+            "x": "…لمن ندم على ما فات وأقلع عن السيئات وصح عزمه على ألا يعود إلى ذنبه {قل للذين كفروا أن ينتهوا يغفر لهم ما قد سلف} قال السائل: أشعر بالخزي والتقصير فما الذي أفعله ليكون سبباً للقبول <mark>وطمأنينة</mark> النفس إلى حسن سيرها وسلامة عملها وسداد خطاها في طريق هداها؟ فقال رضي الله عنه: الإجتهاد في العبادات المفروضة موصولة بالنوافل وكثرتها لأن كثرة النوافل ترجح كفة الحسنات من ميزان الأ…",
+            "score": 0.593401,
+            "type": "lexeme",
+            "sk": "bm25_lexeme",
+            "r": 6,
+            "rs": 0.673401,
+            "p": "76",
+            "c": "من علومى فى الفيافى، الصفحة 76",
+            "blk": "body",
+            "et": "body",
+            "matched_terms": {
+              "الطمأنينة": {
+                "corpus_form": "وطمأنينة",
+                "safe_normalized_form": "وطمأنينة",
+                "query_normalized": "الطمانينه",
+                "relation": "inflection"
+              }
+            },
+            "selected_queries": [
+              "الطمأنينة"
+            ],
+            "match_attribution_scope": "selected_evidence_span",
+            "evidence_type_method": "heuristic",
+            "evidence_type_confidence": "unverified",
+            "page_id": "b42-p83",
+            "pagination_status": "unique_in_index",
+            "pagination_warning": null,
+            "evidence_type_scope": "start_anchor",
+            "evidence_span": {
+              "start": 405,
+              "end": 413
+            }
+          }
+        ]
+      }
+    },
+    {
+      "fixture": "question",
+      "mode": "compact",
+      "payload": {
+        "returned_count": 5,
+        "books": {
+          "b29": {
+            "title": "علموا عنى 4 الجزء الرابع",
+            "source": "primary",
+            "tier": 2,
+            "source_author": "سيدي الإمام فخر الدين قدّس سرّه",
+            "compiler": null,
+            "authorship_mode": "recorded_durus",
+            "attribution_confidence": "medium",
+            "provenance_status": "compiler_not_identified"
+          },
+          "b44": {
+            "title": "خطابات مولانا الإمام الشيخ محمد الشيخ إبراهيم الشيخ محمد عثمان عبده البرهاني رضي الله عنه",
+            "source": "primary",
+            "tier": 3,
+            "source_author": "الشيخ محمد الشيخ إبراهيم الشيخ محمد عثمان عبده البرهاني",
+            "compiler": null,
+            "authorship_mode": "official_speeches",
+            "attribution_confidence": "high",
+            "provenance_status": "identified_speaker_compiler_not_identified"
+          },
+          "b07": {
+            "title": "انتصار أولياء الرحمن على أولياء الشيطان",
+            "source": "primary",
+            "tier": 1,
+            "source_author": "سيدي الإمام فخر الدين قدّس سرّه",
+            "compiler": null,
+            "authorship_mode": "authored",
+            "attribution_confidence": "high",
+            "provenance_status": "classified_canonical_work"
+          },
+          "b40": {
+            "title": "من خواطر الامام فخر الدين",
+            "source": "primary",
+            "tier": 2,
+            "source_author": "سيدي الإمام فخر الدين قدّس سرّه",
+            "compiler": null,
+            "authorship_mode": "dictated_inspirations",
+            "attribution_confidence": "medium",
+            "provenance_status": "compiler_not_identified"
+          },
+          "b28": {
+            "title": "علموا عنى 3 الجزء الثالث",
+            "source": "primary",
+            "tier": 2,
+            "source_author": "سيدي الإمام فخر الدين قدّس سرّه",
+            "compiler": null,
+            "authorship_mode": "recorded_durus",
+            "attribution_confidence": "medium",
+            "provenance_status": "compiler_not_identified"
+          }
+        },
+        "results": [
+          {
+            "book_id": "b29",
+            "seq": 104,
+            "match_id": "b29-p104-c1088",
+            "excerpt": "… أهو ده كمان يخليني نعمل شكلة، مش بشري، أكد ليهم إن جايهم مصيبة. السائل: يا مولانا بالنسبة لتلاوة القرآن، في كل الأوقات ولا؟ مولانا الشيخ: ما بيلزم ما بيلزم عند تلاوة القرآن بعد <mark>صلاة</mark> الضهر أو في أي وقت، بعد الصبح النبي عليه <mark>الصلاة</mark> والسلام يقول: تعملوا الأوراد {من صلي الصبح في جماعة وجلس يذكر الله حتى تطلع الشمس وصلي ركعتين كانت له كحجة وعمرة تامتين تامتين} (…",
+            "score": 0.784876,
+            "score_kind": "local_intent_bm25_discovery",
+            "rank": 1,
+            "match_type": "reformulated",
+            "rank_score": 0.874876,
+            "printed_page": "104",
+            "citation_label": "علموا عنى 4 الجزء الرابع، الصفحة 104",
+            "block_type": "body",
+            "evidence_type": "body",
+            "matched_terms": {
+              "صلاة": {
+                "corpus_form": "صلاة",
+                "surface_form": "صلاة",
+                "normalized_form": "صلاه",
+                "safe_normalized_form": "صلاة",
+                "query_normalized": "صلاة",
+                "relation": "exact"
+              }
+            },
+            "reformulated_query": "صلاة",
+            "reformulation_method": "local-question-facets-v2",
+            "evidence_type_method": "heuristic",
+            "evidence_type_confidence": "unverified",
+            "original_queries": [
+              "كيف أحافظ على الصلاة في وقتها"
+            ],
+            "intent_term_coverage": 0.3333,
+            "reformulation_warning": "Discovery only; local concept co-occurrence does not verify an answer.",
+            "question_relevance": "relation_candidate",
+            "reformulation_status": "ok",
+            "page_id": "b29-p104",
+            "pagination_status": "unique_in_index",
+            "evidence_type_scope": "start_anchor",
+            "intent_method": "local-question-facets-v2",
+            "answer_verified": false,
+            "intent_evidence": {
+              "query_terms": [
+                "الصلاة"
+              ],
+              "topic_terms": [
+                "الصلاة",
+                "صلاة"
+              ],
+              "relation_terms": [
+                "الأوقات",
+                "دائما"
+              ],
+              "preserved_concepts": [
+                "prayer",
+                "timing"
+              ],
+              "dropped_concepts": [],
+              "proposed_concepts": [],
+              "relation_check": "local_anchor_cooccurrence_unverified",
+              "start": 668,
+              "end": 1482
+            },
+            "lexical_score": 0.7379789574361606,
+            "evidence_span": {
+              "start": 1088,
+              "end": 1092
+            }
+          },
+          {
+            "book_id": "b44",
+            "seq": 55,
+            "match_id": "b44-p55-c2722",
+            "excerpt": "…يَنَّهُ، وَلَئِنِ اسْتَعَاذَنِى لَأُعِيذَنَّهُ ﴾.\n\nفهذا مقام المحبة، وهو غاية الطريق: أن يصير العبد محفوظًا بعناية الله، مؤيدًا بنوره، يسير بالله، ويعمل بالله، ويرى بنور الله.\n\n<mark>فالصلاة</mark> الصلاة -رحمكم الله- فهى عماد الدين، ومفتاح القرب، وروح الطاعة، حافظوا عليها فى أوقاتها، وأقيموها بقلوب خاشعة، وجوارح ساكنة، كما كنتم فى أيام رمضان، ولا تجعلوا الطاعة موسمًا ين…",
+            "score": 0.787085,
+            "score_kind": "local_intent_bm25_discovery",
+            "rank": 2,
+            "match_type": "reformulated",
+            "rank_score": 0.867085,
+            "citation_label": "خطبة عيد الفطر 2026",
+            "block_type": "body",
+            "evidence_type": "body",
+            "matched_terms": {
+              "فالصلاة": {
+                "corpus_form": "فالصلاة",
+                "surface_form": "فالصلاة",
+                "normalized_form": "فالصلاه",
+                "safe_normalized_form": "فالصلاة",
+                "query_normalized": "فالصلاة",
+                "relation": "exact"
+              }
+            },
+            "reformulated_query": "فالصلاة",
+            "reformulation_method": "local-question-facets-v2",
+            "evidence_type_method": "heuristic",
+            "evidence_type_confidence": "unverified",
+            "original_queries": [
+              "كيف أحافظ على الصلاة في وقتها"
+            ],
+            "intent_term_coverage": 0.3333,
+            "reformulation_warning": "Discovery only; local concept co-occurrence does not verify an answer.",
+            "question_relevance": "relation_candidate",
+            "reformulation_status": "ok",
+            "page_id": "b44-p55",
+            "pagination_status": "unique_in_index",
+            "evidence_type_scope": "start_anchor",
+            "intent_method": "local-question-facets-v2",
+            "answer_verified": false,
+            "intent_evidence": {
+              "query_terms": [
+                "الصلاة"
+              ],
+              "topic_terms": [
+                "الصلاة",
+                "صلاته",
+                "فالصلاة"
+              ],
+              "relation_terms": [
+                "أوقاتها",
+                "داوم",
+                "يستمر"
+              ],
+              "preserved_concepts": [
+                "prayer",
+                "timing"
+              ],
+              "dropped_concepts": [],
+              "proposed_concepts": [],
+              "relation_check": "local_anchor_cooccurrence_unverified",
+              "start": 2722,
+              "end": 3149
+            },
+            "lexical_score": 0.7695350764726255,
+            "evidence_span": {
+              "start": 2722,
+              "end": 2729
+            }
+          },
+          {
+            "book_id": "b07",
+            "seq": 166,
+            "match_id": "b07-p166-c861",
+            "excerpt": "…الشريف الذي يرويه البخاري وغيره: (يا معشر الناس توبوا إلى اللّه فإني أوب إليه في اليوم والليلة مائة مرة) فكان هذا ضرورياً عند تلقين العهد ليكون هذا كالطهارة للدخول على الذكر ثم <mark>الصلاة</mark> والسلام على رسول اللّه صلى الله عليه وسلم ليكون أدعى للقبول لما ورد في ذلك من قوله الشريف: (ثم صلوا علي ومن قوله: (من صلي عليَّ عشرا) الحديث ومن قوله: (قولوا اللّهم صل على محمد…",
+            "score": 0.764344,
+            "score_kind": "local_intent_bm25_discovery",
+            "rank": 3,
+            "match_type": "reformulated",
+            "rank_score": 0.864344,
+            "printed_page": "166",
+            "citation_label": "انتصار أولياء الرحمن على أولياء الشيطان، الصفحة 166",
+            "block_type": "body",
+            "evidence_type": "body",
+            "matched_terms": {
+              "الصلاة": {
+                "corpus_form": "الصلاة",
+                "surface_form": "الصلاة",
+                "normalized_form": "الصلاه",
+                "safe_normalized_form": "الصلاة",
+                "query_normalized": "الصلاة",
+                "relation": "exact"
+              }
+            },
+            "reformulated_query": "الصلاة",
+            "reformulation_method": "local-question-facets-v2",
+            "evidence_type_method": "heuristic",
+            "evidence_type_confidence": "unverified",
+            "original_queries": [
+              "كيف أحافظ على الصلاة في وقتها"
+            ],
+            "intent_term_coverage": 0.3333,
+            "reformulation_warning": "Discovery only; local concept co-occurrence does not verify an answer.",
+            "question_relevance": "relation_candidate",
+            "reformulation_status": "ok",
+            "page_id": "b07-p166",
+            "pagination_status": "unique_in_index",
+            "evidence_type_scope": "start_anchor",
+            "intent_method": "local-question-facets-v2",
+            "answer_verified": false,
+            "intent_evidence": {
+              "query_terms": [
+                "الصلاة"
+              ],
+              "topic_terms": [
+                "الصلاة",
+                "الصلوات"
+              ],
+              "relation_terms": [
+                "أوقاتها"
+              ],
+              "preserved_concepts": [
+                "prayer",
+                "timing"
+              ],
+              "dropped_concepts": [],
+              "proposed_concepts": [],
+              "relation_check": "local_anchor_cooccurrence_unverified",
+              "start": 441,
+              "end": 1287
+            },
+            "lexical_score": 0.752745991921607,
+            "evidence_span": {
+              "start": 861,
+              "end": 867
+            }
+          },
+          {
+            "book_id": "b40",
+            "seq": 51,
+            "match_id": "b40-p51-c427",
+            "excerpt": "… .. على أي حال .. بس عبادة. سؤال: سيدنا موسى كان سأل ربه على الحكاية دي يا مولانا؟ أيوة .. سيدنا موسى .. رسول الله صلوات الله وسلامه عليه روي عن سيدنا موسى عليه وعلى نبينا أفضل <mark>الصلاة</mark> والسلام قال: اللهم دلني على أفضل ما يتقرب به إلى ك المقربون .. قال له: إدمان ذکري يا موسي .. جاء بعد أيام قال: اللهم إنا نكون على حالة نستحي أن نذكرك فيها .. قال له: أذكرني على…",
+            "score": 0.764906,
+            "score_kind": "local_intent_bm25_discovery",
+            "rank": 4,
+            "match_type": "reformulated",
+            "rank_score": 0.854906,
+            "printed_page": "51",
+            "citation_label": "من خواطر الامام فخر الدين، الصفحة 51",
+            "block_type": "body",
+            "evidence_type": "body",
+            "matched_terms": {
+              "الصلاة": {
+                "corpus_form": "الصلاة",
+                "surface_form": "الصلاة",
+                "normalized_form": "الصلاه",
+                "safe_normalized_form": "الصلاة",
+                "query_normalized": "الصلاة",
+                "relation": "exact"
+              }
+            },
+            "reformulated_query": "الصلاة",
+            "reformulation_method": "local-question-facets-v2",
+            "evidence_type_method": "heuristic",
+            "evidence_type_confidence": "unverified",
+            "original_queries": [
+              "كيف أحافظ على الصلاة في وقتها"
+            ],
+            "intent_term_coverage": 0.3333,
+            "reformulation_warning": "Discovery only; local concept co-occurrence does not verify an answer.",
+            "question_relevance": "relation_candidate",
+            "reformulation_status": "ok",
+            "page_id": "b40-p51",
+            "pagination_status": "unique_in_index",
+            "evidence_type_scope": "start_anchor",
+            "intent_method": "local-question-facets-v2",
+            "answer_verified": false,
+            "intent_evidence": {
+              "query_terms": [
+                "الصلاة"
+              ],
+              "topic_terms": [
+                "الصلاة"
+              ],
+              "relation_terms": [
+                "الأوقات"
+              ],
+              "preserved_concepts": [
+                "prayer",
+                "timing"
+              ],
+              "dropped_concepts": [],
+              "proposed_concepts": [],
+              "relation_check": "local_anchor_cooccurrence_unverified",
+              "start": 7,
+              "end": 853
+            },
+            "lexical_score": 0.7607677938255862,
+            "evidence_span": {
+              "start": 427,
+              "end": 433
+            }
+          },
+          {
+            "book_id": "b28",
+            "seq": 70,
+            "match_id": "b28-p70-c58",
+            "excerpt": "مولانا الشيخ: تفضيل الأوقات مابالشريعة، التلت الأخير، بعد <mark>صلاة</mark> العصر بيقسموا فيه رزق الأرواح، بعد <mark>صلاة</mark> الصبح بيقسموا فيه رزق الأجساد، مش كده؟ والضحى، ده بعضهم أفضل من بعض، لكن في أى وقت، في أى وقت وبأى كيفية، بوضوء بلا وضوء، ماشى وقاعد راقد…",
+            "score": 0.764771,
+            "score_kind": "local_intent_bm25_discovery",
+            "rank": 5,
+            "match_type": "reformulated",
+            "rank_score": 0.854771,
+            "printed_page": "70",
+            "citation_label": "علموا عنى 3 الجزء الثالث، الصفحة 70",
+            "block_type": "body",
+            "evidence_type": "body",
+            "matched_terms": {
+              "صلاة": {
+                "corpus_form": "صلاة",
+                "surface_form": "صلاة",
+                "normalized_form": "صلاه",
+                "safe_normalized_form": "صلاة",
+                "query_normalized": "صلاة",
+                "relation": "exact"
+              }
+            },
+            "reformulated_query": "صلاة",
+            "reformulation_method": "local-question-facets-v2",
+            "evidence_type_method": "heuristic",
+            "evidence_type_confidence": "unverified",
+            "original_queries": [
+              "كيف أحافظ على الصلاة في وقتها"
+            ],
+            "intent_term_coverage": 0.3333,
+            "reformulation_warning": "Discovery only; local concept co-occurrence does not verify an answer.",
+            "question_relevance": "relation_candidate",
+            "reformulation_status": "ok",
+            "page_id": "b28-p70",
+            "pagination_status": "unique_in_index",
+            "evidence_type_scope": "start_anchor",
+            "intent_method": "local-question-facets-v2",
+            "answer_verified": false,
+            "intent_evidence": {
+              "query_terms": [
+                "الصلاة"
+              ],
+              "topic_terms": [
+                "صلاة"
+              ],
+              "relation_terms": [
+                "الأوقات"
+              ],
+              "preserved_concepts": [
+                "prayer",
+                "timing"
+              ],
+              "dropped_concepts": [],
+              "proposed_concepts": [],
+              "relation_check": "local_anchor_cooccurrence_unverified",
+              "start": 0,
+              "end": 482
+            },
+            "lexical_score": 0.758838535141176,
+            "evidence_span": {
+              "start": 58,
+              "end": 62
+            }
+          }
+        ]
+      }
+    },
+    {
+      "fixture": "question",
+      "mode": "ultra_compact",
+      "payload": {
+        "n": 5,
+        "books": {
+          "b29": {
+            "title": "علموا عنى 4 الجزء الرابع",
+            "tier": 2,
+            "am": "recorded_durus",
+            "ac": "medium",
+            "source": "primary",
+            "source_author": "سيدي الإمام فخر الدين قدّس سرّه",
+            "compiler": null,
+            "provenance_status": "compiler_not_identified"
+          },
+          "b44": {
+            "title": "خطابات مولانا الإمام الشيخ محمد الشيخ إبراهيم الشيخ محمد عثمان عبده البرهاني رضي الله عنه",
+            "tier": 3,
+            "am": "official_speeches",
+            "ac": "high",
+            "source": "primary",
+            "source_author": "الشيخ محمد الشيخ إبراهيم الشيخ محمد عثمان عبده البرهاني",
+            "compiler": null,
+            "provenance_status": "identified_speaker_compiler_not_identified"
+          },
+          "b07": {
+            "title": "انتصار أولياء الرحمن على أولياء الشيطان",
+            "tier": 1,
+            "am": "authored",
+            "ac": "high",
+            "source": "primary",
+            "source_author": "سيدي الإمام فخر الدين قدّس سرّه",
+            "compiler": null,
+            "provenance_status": "classified_canonical_work"
+          },
+          "b40": {
+            "title": "من خواطر الامام فخر الدين",
+            "tier": 2,
+            "am": "dictated_inspirations",
+            "ac": "medium",
+            "source": "primary",
+            "source_author": "سيدي الإمام فخر الدين قدّس سرّه",
+            "compiler": null,
+            "provenance_status": "compiler_not_identified"
+          },
+          "b28": {
+            "title": "علموا عنى 3 الجزء الثالث",
+            "tier": 2,
+            "am": "recorded_durus",
+            "ac": "medium",
+            "source": "primary",
+            "source_author": "سيدي الإمام فخر الدين قدّس سرّه",
+            "compiler": null,
+            "provenance_status": "compiler_not_identified"
+          }
+        },
+        "results": [
+          {
+            "b": "b29",
+            "s": 104,
+            "m": "b29-p104-c1088",
+            "x": "… أهو ده كمان يخليني نعمل شكلة، مش بشري، أكد ليهم إن جايهم مصيبة. السائل: يا مولانا بالنسبة لتلاوة القرآن، في كل الأوقات ولا؟ مولانا الشيخ: ما بيلزم ما بيلزم عند تلاوة القرآن بعد <mark>صلاة</mark> الضهر أو في أي وقت، بعد الصبح النبي عليه <mark>الصلاة</mark> والسلام يقول: تعملوا الأوراد {من صلي الصبح في جماعة وجلس يذكر الله حتى تطلع الشمس وصلي ركعتين كانت له كحجة وعمرة تامتين تامتين} (…",
+            "score": 0.784876,
+            "type": "reformulated",
+            "sk": "local_intent_bm25_discovery",
+            "r": 1,
+            "rs": 0.874876,
+            "p": "104",
+            "c": "علموا عنى 4 الجزء الرابع، الصفحة 104",
+            "blk": "body",
+            "et": "body",
+            "matched_terms": {
+              "صلاة": {
+                "corpus_form": "صلاة",
+                "safe_normalized_form": "صلاة",
+                "query_normalized": "صلاة",
+                "relation": "exact"
+              }
+            },
+            "evidence_type_method": "heuristic",
+            "evidence_type_confidence": "unverified",
+            "original_queries": [
+              "كيف أحافظ على الصلاة في وقتها"
+            ],
+            "intent_term_coverage": 0.3333,
+            "reformulation_warning": "Discovery only; local concept co-occurrence does not verify an answer.",
+            "question_relevance": "relation_candidate",
+            "reformulation_status": "ok",
+            "page_id": "b29-p104",
+            "pagination_status": "unique_in_index",
+            "pagination_warning": null,
+            "evidence_type_scope": "start_anchor",
+            "intent_method": "local-question-facets-v2",
+            "answer_verified": false,
+            "intent_evidence": {
+              "query_terms": [
+                "الصلاة"
+              ],
+              "topic_terms": [
+                "الصلاة",
+                "صلاة"
+              ],
+              "relation_terms": [
+                "الأوقات",
+                "دائما"
+              ],
+              "preserved_concepts": [
+                "prayer",
+                "timing"
+              ],
+              "dropped_concepts": [],
+              "proposed_concepts": [],
+              "relation_check": "local_anchor_cooccurrence_unverified",
+              "start": 668,
+              "end": 1482
+            },
+            "lexical_score": 0.7379789574361606,
+            "reformulated_query": "صلاة",
+            "reformulation_method": "local-question-facets-v2",
+            "evidence_span": {
+              "start": 1088,
+              "end": 1092
+            }
+          },
+          {
+            "b": "b44",
+            "s": 55,
+            "m": "b44-p55-c2722",
+            "x": "…يَنَّهُ، وَلَئِنِ اسْتَعَاذَنِى لَأُعِيذَنَّهُ ﴾.\n\nفهذا مقام المحبة، وهو غاية الطريق: أن يصير العبد محفوظًا بعناية الله، مؤيدًا بنوره، يسير بالله، ويعمل بالله، ويرى بنور الله.\n\n<mark>فالصلاة</mark> الصلاة -رحمكم الله- فهى عماد الدين، ومفتاح القرب، وروح الطاعة، حافظوا عليها فى أوقاتها، وأقيموها بقلوب خاشعة، وجوارح ساكنة، كما كنتم فى أيام رمضان، ولا تجعلوا الطاعة موسمًا ين…",
+            "score": 0.787085,
+            "type": "reformulated",
+            "sk": "local_intent_bm25_discovery",
+            "r": 2,
+            "rs": 0.867085,
+            "c": "خطبة عيد الفطر 2026",
+            "blk": "body",
+            "et": "body",
+            "matched_terms": {
+              "فالصلاة": {
+                "corpus_form": "فالصلاة",
+                "safe_normalized_form": "فالصلاة",
+                "query_normalized": "فالصلاة",
+                "relation": "exact"
+              }
+            },
+            "evidence_type_method": "heuristic",
+            "evidence_type_confidence": "unverified",
+            "original_queries": [
+              "كيف أحافظ على الصلاة في وقتها"
+            ],
+            "intent_term_coverage": 0.3333,
+            "reformulation_warning": "Discovery only; local concept co-occurrence does not verify an answer.",
+            "question_relevance": "relation_candidate",
+            "reformulation_status": "ok",
+            "page_id": "b44-p55",
+            "pagination_status": "unique_in_index",
+            "pagination_warning": null,
+            "evidence_type_scope": "start_anchor",
+            "intent_method": "local-question-facets-v2",
+            "answer_verified": false,
+            "intent_evidence": {
+              "query_terms": [
+                "الصلاة"
+              ],
+              "topic_terms": [
+                "الصلاة",
+                "صلاته",
+                "فالصلاة"
+              ],
+              "relation_terms": [
+                "أوقاتها",
+                "داوم",
+                "يستمر"
+              ],
+              "preserved_concepts": [
+                "prayer",
+                "timing"
+              ],
+              "dropped_concepts": [],
+              "proposed_concepts": [],
+              "relation_check": "local_anchor_cooccurrence_unverified",
+              "start": 2722,
+              "end": 3149
+            },
+            "lexical_score": 0.7695350764726255,
+            "reformulated_query": "فالصلاة",
+            "reformulation_method": "local-question-facets-v2",
+            "evidence_span": {
+              "start": 2722,
+              "end": 2729
+            }
+          },
+          {
+            "b": "b07",
+            "s": 166,
+            "m": "b07-p166-c861",
+            "x": "…الشريف الذي يرويه البخاري وغيره: (يا معشر الناس توبوا إلى اللّه فإني أوب إليه في اليوم والليلة مائة مرة) فكان هذا ضرورياً عند تلقين العهد ليكون هذا كالطهارة للدخول على الذكر ثم <mark>الصلاة</mark> والسلام على رسول اللّه صلى الله عليه وسلم ليكون أدعى للقبول لما ورد في ذلك من قوله الشريف: (ثم صلوا علي ومن قوله: (من صلي عليَّ عشرا) الحديث ومن قوله: (قولوا اللّهم صل على محمد…",
+            "score": 0.764344,
+            "type": "reformulated",
+            "sk": "local_intent_bm25_discovery",
+            "r": 3,
+            "rs": 0.864344,
+            "p": "166",
+            "c": "انتصار أولياء الرحمن على أولياء الشيطان، الصفحة 166",
+            "blk": "body",
+            "et": "body",
+            "matched_terms": {
+              "الصلاة": {
+                "corpus_form": "الصلاة",
+                "safe_normalized_form": "الصلاة",
+                "query_normalized": "الصلاة",
+                "relation": "exact"
+              }
+            },
+            "evidence_type_method": "heuristic",
+            "evidence_type_confidence": "unverified",
+            "original_queries": [
+              "كيف أحافظ على الصلاة في وقتها"
+            ],
+            "intent_term_coverage": 0.3333,
+            "reformulation_warning": "Discovery only; local concept co-occurrence does not verify an answer.",
+            "question_relevance": "relation_candidate",
+            "reformulation_status": "ok",
+            "page_id": "b07-p166",
+            "pagination_status": "unique_in_index",
+            "pagination_warning": null,
+            "evidence_type_scope": "start_anchor",
+            "intent_method": "local-question-facets-v2",
+            "answer_verified": false,
+            "intent_evidence": {
+              "query_terms": [
+                "الصلاة"
+              ],
+              "topic_terms": [
+                "الصلاة",
+                "الصلوات"
+              ],
+              "relation_terms": [
+                "أوقاتها"
+              ],
+              "preserved_concepts": [
+                "prayer",
+                "timing"
+              ],
+              "dropped_concepts": [],
+              "proposed_concepts": [],
+              "relation_check": "local_anchor_cooccurrence_unverified",
+              "start": 441,
+              "end": 1287
+            },
+            "lexical_score": 0.752745991921607,
+            "reformulated_query": "الصلاة",
+            "reformulation_method": "local-question-facets-v2",
+            "evidence_span": {
+              "start": 861,
+              "end": 867
+            }
+          },
+          {
+            "b": "b40",
+            "s": 51,
+            "m": "b40-p51-c427",
+            "x": "… .. على أي حال .. بس عبادة. سؤال: سيدنا موسى كان سأل ربه على الحكاية دي يا مولانا؟ أيوة .. سيدنا موسى .. رسول الله صلوات الله وسلامه عليه روي عن سيدنا موسى عليه وعلى نبينا أفضل <mark>الصلاة</mark> والسلام قال: اللهم دلني على أفضل ما يتقرب به إلى ك المقربون .. قال له: إدمان ذکري يا موسي .. جاء بعد أيام قال: اللهم إنا نكون على حالة نستحي أن نذكرك فيها .. قال له: أذكرني على…",
+            "score": 0.764906,
+            "type": "reformulated",
+            "sk": "local_intent_bm25_discovery",
+            "r": 4,
+            "rs": 0.854906,
+            "p": "51",
+            "c": "من خواطر الامام فخر الدين، الصفحة 51",
+            "blk": "body",
+            "et": "body",
+            "matched_terms": {
+              "الصلاة": {
+                "corpus_form": "الصلاة",
+                "safe_normalized_form": "الصلاة",
+                "query_normalized": "الصلاة",
+                "relation": "exact"
+              }
+            },
+            "evidence_type_method": "heuristic",
+            "evidence_type_confidence": "unverified",
+            "original_queries": [
+              "كيف أحافظ على الصلاة في وقتها"
+            ],
+            "intent_term_coverage": 0.3333,
+            "reformulation_warning": "Discovery only; local concept co-occurrence does not verify an answer.",
+            "question_relevance": "relation_candidate",
+            "reformulation_status": "ok",
+            "page_id": "b40-p51",
+            "pagination_status": "unique_in_index",
+            "pagination_warning": null,
+            "evidence_type_scope": "start_anchor",
+            "intent_method": "local-question-facets-v2",
+            "answer_verified": false,
+            "intent_evidence": {
+              "query_terms": [
+                "الصلاة"
+              ],
+              "topic_terms": [
+                "الصلاة"
+              ],
+              "relation_terms": [
+                "الأوقات"
+              ],
+              "preserved_concepts": [
+                "prayer",
+                "timing"
+              ],
+              "dropped_concepts": [],
+              "proposed_concepts": [],
+              "relation_check": "local_anchor_cooccurrence_unverified",
+              "start": 7,
+              "end": 853
+            },
+            "lexical_score": 0.7607677938255862,
+            "reformulated_query": "الصلاة",
+            "reformulation_method": "local-question-facets-v2",
+            "evidence_span": {
+              "start": 427,
+              "end": 433
+            }
+          },
+          {
+            "b": "b28",
+            "s": 70,
+            "m": "b28-p70-c58",
+            "x": "مولانا الشيخ: تفضيل الأوقات مابالشريعة، التلت الأخير، بعد <mark>صلاة</mark> العصر بيقسموا فيه رزق الأرواح، بعد <mark>صلاة</mark> الصبح بيقسموا فيه رزق الأجساد، مش كده؟ والضحى، ده بعضهم أفضل من بعض، لكن في أى وقت، في أى وقت وبأى كيفية، بوضوء بلا وضوء، ماشى وقاعد راقد…",
+            "score": 0.764771,
+            "type": "reformulated",
+            "sk": "local_intent_bm25_discovery",
+            "r": 5,
+            "rs": 0.854771,
+            "p": "70",
+            "c": "علموا عنى 3 الجزء الثالث، الصفحة 70",
+            "blk": "body",
+            "et": "body",
+            "matched_terms": {
+              "صلاة": {
+                "corpus_form": "صلاة",
+                "safe_normalized_form": "صلاة",
+                "query_normalized": "صلاة",
+                "relation": "exact"
+              }
+            },
+            "evidence_type_method": "heuristic",
+            "evidence_type_confidence": "unverified",
+            "original_queries": [
+              "كيف أحافظ على الصلاة في وقتها"
+            ],
+            "intent_term_coverage": 0.3333,
+            "reformulation_warning": "Discovery only; local concept co-occurrence does not verify an answer.",
+            "question_relevance": "relation_candidate",
+            "reformulation_status": "ok",
+            "page_id": "b28-p70",
+            "pagination_status": "unique_in_index",
+            "pagination_warning": null,
+            "evidence_type_scope": "start_anchor",
+            "intent_method": "local-question-facets-v2",
+            "answer_verified": false,
+            "intent_evidence": {
+              "query_terms": [
+                "الصلاة"
+              ],
+              "topic_terms": [
+                "صلاة"
+              ],
+              "relation_terms": [
+                "الأوقات"
+              ],
+              "preserved_concepts": [
+                "prayer",
+                "timing"
+              ],
+              "dropped_concepts": [],
+              "proposed_concepts": [],
+              "relation_check": "local_anchor_cooccurrence_unverified",
+              "start": 0,
+              "end": 482
+            },
+            "lexical_score": 0.758838535141176,
+            "reformulated_query": "صلاة",
+            "reformulation_method": "local-question-facets-v2",
+            "evidence_span": {
+              "start": 58,
+              "end": 62
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

@@ -2,6 +2,7 @@
 FROM python:3.11-slim
 
 WORKDIR /app
+ENV PYTHONUNBUFFERED=1
 
 # Optional legacy PDF/DOCX ingestion dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -30,4 +31,4 @@ RUN python -m pytest -q \
 
 EXPOSE 8000
 
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["python", "scripts/start_server.py"]

@@ -1,0 +1,257 @@
+Starting library HTTP service on 0.0.0.0:55915; health=/health; MCP=/mcp/
+INFO:     Uvicorn running on http://0.0.0.0:55915 (Press CTRL+C to quit)
+INFO:     Started parent process [41]
+INFO:     Started server process [43]
+INFO:     Waiting for application startup.
+[09/24/26 11:58:57] INFO     Startup stage 1/3: verifying search      main.py:55
+                             backend                                            
+                    INFO     library.db found at library.db ✓         main.py:49
+                    INFO     Startup stage 2/3: validating corpus     main.py:57
+                             contract                                           
+INFO:     Started server process [44]
+INFO:     Waiting for application startup.
+[09/24/26 11:58:57] INFO     Startup stage 1/3: verifying search      main.py:55
+                             backend                                            
+                    INFO     library.db found at library.db ✓         main.py:49
+                    INFO     Startup stage 2/3: validating corpus     main.py:57
+                             contract                                           
+                    INFO     Startup stage 3/3: starting MCP session  main.py:65
+                             manager                                            
+                    INFO     StreamableHTTP       streamable_http_manager.py:131
+                             session manager                                    
+                             started                                            
+                    INFO     Library startup complete in 0.040s       main.py:67
+INFO:     Application startup complete.
+                    INFO     Startup stage 3/3: starting MCP session  main.py:65
+                             manager                                            
+                    INFO     StreamableHTTP       streamable_http_manager.py:131
+                             session manager                                    
+                             started                                            
+                    INFO     Library startup complete in 0.047s       main.py:67
+INFO:     Application startup complete.
+                    INFO     request complete method=GET             main.py:102
+                             path=/health status=200 elapsed_ms=48              
+                             request_id=f05b781cbb8b46d9849567ebcba1            
+                             cdf1                                               
+INFO:     127.0.0.1:37070 - "GET /health HTTP/1.1" 200 OK
+                    INFO     request complete method=GET             main.py:102
+                             path=/health status=200 elapsed_ms=29              
+                             request_id=63a498d7a86f4f158c30a3b66b5e            
+                             165a                                               
+INFO:     127.0.0.1:37076 - "GET /health HTTP/1.1" 200 OK
+                    INFO     request complete method=POST path=/mcp/ main.py:102
+                             status=200 elapsed_ms=2                            
+                             request_id=2c8e847bc1214c14ba6d6aac8ab1            
+                             79bf                                               
+INFO:     127.0.0.1:37086 - "POST /mcp/ HTTP/1.1" 200 OK
+                    INFO     Terminating session: None    streamable_http.py:788
+                    INFO     request complete method=POST path=/mcp/ main.py:102
+                             status=202 elapsed_ms=1                            
+                             request_id=e88211bf8e7a4684bbfefeb548e6            
+                             cb21                                               
+INFO:     127.0.0.1:37100 - "POST /mcp/ HTTP/1.1" 202 Accepted
+                    INFO     Terminating session: None    streamable_http.py:788
+                    INFO     request complete method=POST path=/mcp/ main.py:102
+                             status=200 elapsed_ms=1                            
+                             request_id=c2163f2f43fe4e2092b3ed0532f7            
+                             94cf                                               
+INFO:     127.0.0.1:37114 - "POST /mcp/ HTTP/1.1" 200 OK
+                    INFO     Processing request of type            server.py:733
+                             ListToolsRequest                                   
+                    INFO     Terminating session: None    streamable_http.py:788
+                    INFO     request complete method=POST path=/mcp/ main.py:102
+                             status=200 elapsed_ms=1                            
+                             request_id=5613ebf7db4b45fcb4fe6a7fd6ee            
+                             795e                                               
+INFO:     127.0.0.1:37118 - "POST /mcp/ HTTP/1.1" 200 OK
+                    INFO     Processing request of type            server.py:733
+                             CallToolRequest                                    
+[09/24/26 11:58:58] INFO     Terminating session: None    streamable_http.py:788
+                    INFO     request complete method=POST path=/mcp/ main.py:102
+                             status=200 elapsed_ms=1                            
+                             request_id=c7f9c2d2c9dd4196a19a188736b6            
+                             294a                                               
+INFO:     127.0.0.1:37128 - "POST /mcp/ HTTP/1.1" 200 OK
+                    INFO     Processing request of type            server.py:733
+                             CallToolRequest                                    
+                    INFO     Terminating session: None    streamable_http.py:788
+                    INFO     request complete method=POST path=/mcp/ main.py:102
+                             status=200 elapsed_ms=1                            
+                             request_id=5c85249f7f15436c93c9aeddd79b            
+                             45fa                                               
+INFO:     127.0.0.1:37132 - "POST /mcp/ HTTP/1.1" 200 OK
+                    INFO     Processing request of type            server.py:733
+                             CallToolRequest                                    
+                    INFO     Terminating session: None    streamable_http.py:788
+                    INFO     request complete method=POST path=/mcp/ main.py:102
+                             status=200 elapsed_ms=1                            
+                             request_id=6c15555745e246ecab4dccdf17c5            
+                             8289                                               
+INFO:     127.0.0.1:37146 - "POST /mcp/ HTTP/1.1" 200 OK
+                    INFO     Processing request of type            server.py:733
+                             CallToolRequest                                    
+                    INFO     Terminating session: None    streamable_http.py:788
+[09/24/26 11:58:58] INFO     request complete method=POST path=/mcp/ main.py:102
+                             status=200 elapsed_ms=1                            
+                             request_id=15d60c4fbc8947bab8bc5c871f72            
+                             2f73                                               
+INFO:     127.0.0.1:37158 - "POST /mcp/ HTTP/1.1" 200 OK
+                    INFO     Processing request of type            server.py:733
+                             CallToolRequest                                    
+                    INFO     Terminating session: None    streamable_http.py:788
+                    INFO     request complete method=POST path=/mcp/ main.py:102
+                             status=200 elapsed_ms=1                            
+                             request_id=cffd86c17dfc458e9290448f3168            
+                             30c4                                               
+INFO:     127.0.0.1:37172 - "POST /mcp/ HTTP/1.1" 200 OK
+                    INFO     Processing request of type            server.py:733
+                             CallToolRequest                                    
+                    INFO     Terminating session: None    streamable_http.py:788
+                    INFO     request complete method=POST path=/mcp/ main.py:102
+                             status=200 elapsed_ms=1                            
+                             request_id=06e5059a4e814f12afb45b964a9b            
+                             6501                                               
+INFO:     127.0.0.1:37186 - "POST /mcp/ HTTP/1.1" 200 OK
+                    INFO     Processing request of type            server.py:733
+                             CallToolRequest                                    
+                    INFO     Terminating session: None    streamable_http.py:788
+                    INFO     request complete method=POST path=/mcp/ main.py:102
+                             status=200 elapsed_ms=1                            
+                             request_id=0208c033d3694d7f96270315ef73            
+                             ab92                                               
+INFO:     127.0.0.1:37198 - "POST /mcp/ HTTP/1.1" 200 OK
+                    INFO     Processing request of type            server.py:733
+                             CallToolRequest                                    
+                    INFO     Terminating session: None    streamable_http.py:788
+                    INFO     request complete method=POST path=/mcp/ main.py:102
+                             status=200 elapsed_ms=3                            
+                             request_id=ef37641f2bf244ffb4796867fd71            
+                             9370                                               
+INFO:     127.0.0.1:37200 - "POST /mcp/ HTTP/1.1" 200 OK
+                    INFO     Processing request of type            server.py:733
+                             CallToolRequest                                    
+                    INFO     Terminating session: None    streamable_http.py:788
+                    INFO     request complete method=POST path=/mcp/ main.py:102
+                             status=200 elapsed_ms=1                            
+                             request_id=76a29e6f0e0545e6af7348fa74ad            
+                             0bb3                                               
+INFO:     127.0.0.1:51920 - "POST /mcp/ HTTP/1.1" 200 OK
+                    INFO     Processing request of type            server.py:733
+                             CallToolRequest                                    
+                    INFO     Terminating session: None    streamable_http.py:788
+                    INFO     request complete method=POST path=/mcp/ main.py:102
+                             status=200 elapsed_ms=1                            
+                             request_id=d85bec204bb44edba40b883099be            
+                             9cc2                                               
+INFO:     127.0.0.1:51934 - "POST /mcp/ HTTP/1.1" 200 OK
+                    INFO     Processing request of type            server.py:733
+                             CallToolRequest                                    
+[09/24/26 11:58:59] INFO     Terminating session: None    streamable_http.py:788
+                    INFO     request complete method=POST path=/mcp/ main.py:102
+                             status=200 elapsed_ms=1                            
+                             request_id=e42172287f9a46dcad58b827e254            
+                             b89f                                               
+INFO:     127.0.0.1:51938 - "POST /mcp/ HTTP/1.1" 200 OK
+                    INFO     Processing request of type            server.py:733
+                             CallToolRequest                                    
+                    INFO     Terminating session: None    streamable_http.py:788
+                    INFO     request complete method=POST path=/mcp/ main.py:102
+                             status=200 elapsed_ms=1                            
+                             request_id=c70562ad368e4b47a13ba7096bb1            
+                             4cb7                                               
+INFO:     127.0.0.1:51954 - "POST /mcp/ HTTP/1.1" 200 OK
+                    INFO     Processing request of type            server.py:733
+                             CallToolRequest                                    
+[09/24/26 11:59:00] INFO     Terminating session: None    streamable_http.py:788
+[09/24/26 11:59:00] INFO     request complete method=POST path=/mcp/ main.py:102
+                             status=200 elapsed_ms=1                            
+                             request_id=4bf59688ecbf4daf85b07c508171            
+                             ca1f                                               
+INFO:     127.0.0.1:51968 - "POST /mcp/ HTTP/1.1" 200 OK
+                    INFO     Processing request of type            server.py:733
+                             CallToolRequest                                    
+[09/24/26 11:59:02] INFO     Terminating session: None    streamable_http.py:788
+                    INFO     request complete method=POST path=/mcp/ main.py:102
+                             status=200 elapsed_ms=2                            
+                             request_id=0b1111934e5140db81aa28b79e7a            
+                             195d                                               
+INFO:     127.0.0.1:51972 - "POST /mcp/ HTTP/1.1" 200 OK
+                    INFO     Processing request of type            server.py:733
+                             CallToolRequest                                    
+                    INFO     Terminating session: None    streamable_http.py:788
+                    INFO     request complete method=POST path=/mcp/ main.py:102
+                             status=200 elapsed_ms=1                            
+                             request_id=2b34c84e782c4909a7dbb793e3b7            
+                             fd12                                               
+INFO:     127.0.0.1:51984 - "POST /mcp/ HTTP/1.1" 200 OK
+                    INFO     Processing request of type            server.py:733
+                             CallToolRequest                                    
+                    INFO     Terminating session: None    streamable_http.py:788
+[09/24/26 11:59:02] INFO     request complete method=POST path=/mcp/ main.py:102
+                             status=200 elapsed_ms=1                            
+                             request_id=2edcc7670d784cae96b27e6a79a3            
+                             4c3b                                               
+INFO:     127.0.0.1:52000 - "POST /mcp/ HTTP/1.1" 200 OK
+                    INFO     Processing request of type            server.py:733
+                             CallToolRequest                                    
+                    INFO     Terminating session: None    streamable_http.py:788
+                    INFO     request complete method=POST path=/mcp/ main.py:102
+                             status=200 elapsed_ms=1                            
+                             request_id=746e0b3da66741bab1a3b7140232            
+                             2979                                               
+INFO:     127.0.0.1:52008 - "POST /mcp/ HTTP/1.1" 200 OK
+                    INFO     Processing request of type            server.py:733
+                             CallToolRequest                                    
+                    INFO     Terminating session: None    streamable_http.py:788
+                    INFO     request complete method=POST path=/mcp/ main.py:102
+                             status=200 elapsed_ms=1                            
+                             request_id=1d9ba9ea0ff840be82fb0d2f163e            
+                             710f                                               
+INFO:     127.0.0.1:52010 - "POST /mcp/ HTTP/1.1" 200 OK
+                    INFO     Processing request of type            server.py:733
+                             CallToolRequest                                    
+                    INFO     Terminating session: None    streamable_http.py:788
+                    INFO     request complete method=POST path=/mcp/ main.py:102
+                             status=200 elapsed_ms=1                            
+                             request_id=9fdef5379b7a440c84e92386462f            
+                             6d02                                               
+INFO:     127.0.0.1:52026 - "POST /mcp/ HTTP/1.1" 200 OK
+                    INFO     Processing request of type            server.py:733
+                             CallToolRequest                                    
+                    INFO     Terminating session: None    streamable_http.py:788
+                    INFO     request complete method=POST path=/mcp/ main.py:102
+                             status=200 elapsed_ms=1                            
+                             request_id=64e6c3ea9e9242518755132cb948            
+                             85e1                                               
+INFO:     127.0.0.1:52028 - "POST /mcp/ HTTP/1.1" 200 OK
+                    INFO     Processing request of type            server.py:733
+                             CallToolRequest                                    
+                    INFO     Terminating session: None    streamable_http.py:788
+                    INFO     request complete method=POST path=/mcp/ main.py:102
+                             status=200 elapsed_ms=1                            
+                             request_id=d82db03934174495ac6e7e509dd6            
+                             6f48                                               
+INFO:     127.0.0.1:52044 - "POST /mcp/ HTTP/1.1" 200 OK
+                    INFO     Processing request of type            server.py:733
+                             CallToolRequest                                    
+                    INFO     Terminating session: None    streamable_http.py:788
+INFO:     Received SIGTERM, exiting.
+INFO:     Terminated child process [43]
+INFO:     Terminated child process [44]
+INFO:     Waiting for child process [43]
+INFO:     Shutting down
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+[09/24/26 11:59:03] INFO     StreamableHTTP       streamable_http_manager.py:135
+                             session manager                                    
+                             shutting down                                      
+INFO:     Application shutdown complete.
+INFO:     Finished server process [44]
+INFO:     Waiting for application shutdown.
+[09/24/26 11:59:03] INFO     StreamableHTTP       streamable_http_manager.py:135
+                             session manager                                    
+                             shutting down                                      
+INFO:     Application shutdown complete.
+INFO:     Finished server process [43]
+INFO:     Waiting for child process [44]
+INFO:     Stopping parent process [41]

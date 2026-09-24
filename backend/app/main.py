@@ -51,8 +51,10 @@ def _init_search_backend():
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Run the same startup checks as before.
+    started = time.monotonic()
+    logger.info("Startup stage 1/3: verifying search backend")
     _init_search_backend()
+    logger.info("Startup stage 2/3: validating corpus contract")
     corpus = corpus_contract_snapshot()
     if corpus["status"] != "ok":
         raise RuntimeError(f"BROKEN CORPUS CONTRACT: {corpus}")
@@ -60,7 +62,9 @@ async def lifespan(app: FastAPI):
     # group started as part of the ASGI lifespan — app.mount() alone does
     # NOT forward a sub-app's lifespan, so without this the MCP endpoint
     # throws "Task group is not initialized. Make sure to use run()."
+    logger.info("Startup stage 3/3: starting MCP session manager")
     async with mcp.session_manager.run():
+        logger.info("Library startup complete in %.3fs", time.monotonic() - started)
         yield
 
 
@@ -109,6 +113,13 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+from app.core.machine_http import MachineHTTP
+app.add_middleware(MachineHTTP)
+
+@app.get("/schemas/tools.json")
+def tool_schemas():
+    return {"contract":contract_metadata(),"tools":[{"name":t.name,"inputSchema":t.parameters} for t in mcp._tool_manager.list_tools()]}
 
 app.include_router(books.router)
 app.include_router(search.router)

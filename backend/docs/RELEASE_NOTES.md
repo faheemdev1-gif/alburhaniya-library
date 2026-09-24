@@ -1,3 +1,27 @@
+# 2.9.0, contract 11
+
+Phrase-first and Q&A discovery; source-local ranking; sequence-only citations;
+shared response defaults; bounded threaded execution; per-client quotas;
+two-worker PORT launcher and schema/monitoring tools. See FIX_REPORT.md for
+verified results and open external acceptance work. Refresh client schemas.
+
+---
+
+# Release 2.8.1 / contract 10.0
+
+Deployment patch: Docker now starts `scripts/start_server.py`, which binds the
+persistent HTTP service to `0.0.0.0:$PORT` (8000 only when PORT is absent).
+It validates the port, resolves the project root and passes signals directly
+to Uvicorn. Runtime startup stages are logged immediately.
+
+See `RENDER_DEPLOYMENT.md` for existing service settings and
+`../verification/2.8.1/SUMMARY.md` for validation. The reported Render failure
+has not been reproduced locally, and its original cause remains unconfirmed.
+The patch has not been deployed to Render by this workspace. Retrieval and
+source-verification acceptance gates from 2.8.0 remain open.
+
+---
+
 # Release 2.8.0 / contract 10.0
 
 | Audit defect | Implementation | Verification |
