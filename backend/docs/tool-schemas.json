@@ -1,7 +1,7 @@
 {
   "contract": {
     "changes_since_previous": [
-      "Phrase-first/passsage/Q&A discovery",
+      "Phrase-first/passage/Q&A discovery",
       "Source-local ranking and inherited defaults",
       "Bounded threaded execution and per-client quota",
       "Render PORT launcher with two workers"
@@ -9,11 +9,26 @@
     "known_issues": [
       "Documentary source review remains open",
       "Topic/Q&A proposals require review",
-      "Independent held-out and deployed acceptance are pending"
+      "Independent held-out and deployed acceptance are pending",
+      "Seven-day monitoring acceptance pending",
+      "Client schema refresh must be verified in each client"
+    ],
+    "reformulation_status_policy": {
+      "ok": "All planned discovery stages completed; not an answer-quality judgement",
+      "degraded": "A stage was skipped or stopped; inspect partial results",
+      "not_needed": "Literal/terms/lexeme path, no question rewrite"
+    },
+    "coverage_register": [
+      {
+        "topic": "raising children",
+        "status": "weak_coverage",
+        "basis": "Supplied audit: two passing mentions, no substantive guidance",
+        "grading_policy": "exclude from direct-answer denominator; do not invent filler"
+      }
     ],
     "result_defaults_policy": "Search hits inherit result_defaults; explicit hit fields override defaults. Contract 11 clients must expand defaults.",
     "monitoring": {
-      "status": "not_configured",
+      "status": "awaiting_samples",
       "success_rate_24h": null,
       "scope": "scheduled_samples_not_all_traffic"
     },
@@ -22,9 +37,9 @@
       "scope": "authenticated_client_or_peer_ip",
       "retry_policy": "HTTP 429 JSON-RPC with Retry-After and retry_after_ms"
     },
-    "server_version": "2.9.0",
-    "tool_contract_version": "11.0",
-    "tool_contract": "alburhaniya-tools-v11",
+    "server_version": "2.10.0",
+    "tool_contract_version": "12.0",
+    "tool_contract": "alburhaniya-tools-v12",
     "tool_count": 5,
     "tools": [
       "get_book",

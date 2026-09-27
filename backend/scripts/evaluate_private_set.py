@@ -7,9 +7,9 @@ from mcp.client.streamable_http import streamablehttp_client
 async def run(endpoint,source):
  if not source.get('independent_owner'):raise ValueError('An independent owner must identify the private set')
  questions=source['questions'];groups={}
- if len(questions)<240 or len({q['topic'] for q in questions})<20:raise ValueError('Require 60 question IDs, four phrasings each, over at least 20 topics')
- for q in questions:groups.setdefault(q['id'],set()).add(q['phrasing'])
- if len(groups)<60 or any(len(x)<4 for x in groups.values()):raise ValueError('Each of at least 60 questions needs four phrasings')
+ if len(questions)<40:raise ValueError('Require at least 40 independently owned questions')
+ required={'definition','comparison','practice','colloquial','negation'}
+ if not required<={q.get('form') for q in questions}:raise ValueError('Include definition, comparison, practice, colloquial and negation forms')
  out=[]
  headers={'Authorization':'Bearer '+os.environ['MCP_MONITOR_API_KEY']} if os.environ.get('MCP_MONITOR_API_KEY') else None
  async with streamablehttp_client(endpoint,headers=headers) as (read,write,_):

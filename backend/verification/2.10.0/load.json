@@ -1,0 +1,2840 @@
+{
+  "scope": "Local HTTP, two workers, response cache misses via distinct excerpt controls. Network/deployed hardware not tested.",
+  "runs": [
+    {
+      "clients": 1,
+      "calls": 16,
+      "completion": 1.0,
+      "p95_seconds": 3.6848743660002583,
+      "max_seconds": 3.6848743660002583,
+      "samples": [
+        {
+          "i": 0,
+          "seconds": 3.6848743660002583,
+          "ok": true,
+          "nonempty": true,
+          "timing": {
+            "total_ms": 3643.519,
+            "attempts": 1,
+            "phases_ms": {
+              "other_tool_execution": 2.747,
+              "cache_lookup": 1.193,
+              "response_building": 2303.832,
+              "question_pipeline": 4.126,
+              "question_parsing": 2.659,
+              "candidate_sql": 44.218,
+              "evidence_validation": 22.152,
+              "ranking_and_pagination": 0.004,
+              "candidate_union": 14.036,
+              "window_scoring": 1195.149,
+              "relation_check": 22.555,
+              "deduplication": 28.958,
+              "serialization_probe": 0.099,
+              "queue_wait": 1.79,
+              "authentication": 0.001
+            },
+            "phase_semantics": "exclusive",
+            "scope": "tool_execution_plus_measured_queue_and_auth; excludes network and final transport serialization"
+          },
+          "request_id": "596abae3faab4b858217e1c7f9988559",
+          "error": null,
+          "cache": {
+            "status": "miss",
+            "scope": "process",
+            "corpus_bound": true
+          }
+        },
+        {
+          "i": 1,
+          "seconds": 1.2196384370004125,
+          "ok": true,
+          "nonempty": true,
+          "timing": {
+            "total_ms": 1175.946,
+            "attempts": 1,
+            "phases_ms": {
+              "other_tool_execution": 0.154,
+              "cache_lookup": 0.179,
+              "response_building": 4.846,
+              "question_pipeline": 1.007,
+              "question_parsing": 1.106,
+              "candidate_sql": 6.313,
+              "evidence_validation": 25.995,
+              "ranking_and_pagination": 0.003,
+              "candidate_union": 16.257,
+              "window_scoring": 1106.258,
+              "relation_check": 8.859,
+              "deduplication": 4.371,
+              "serialization_probe": 0.1,
+              "queue_wait": 0.497,
+              "authentication": 0.001
+            },
+            "phase_semantics": "exclusive",
+            "scope": "tool_execution_plus_measured_queue_and_auth; excludes network and final transport serialization"
+          },
+          "request_id": "c1dbe224496443008273da05251122ed",
+          "error": null,
+          "cache": {
+            "status": "miss",
+            "scope": "process",
+            "corpus_bound": true
+          }
+        },
+        {
+          "i": 2,
+          "seconds": 0.9315791779999927,
+          "ok": true,
+          "nonempty": true,
+          "timing": {
+            "total_ms": 881.696,
+            "attempts": 1,
+            "phases_ms": {
+              "other_tool_execution": 0.151,
+              "cache_lookup": 0.09,
+              "response_building": 2.959,
+              "question_pipeline": 0.66,
+              "question_parsing": 1.031,
+              "candidate_sql": 5.686,
+              "evidence_validation": 21.536,
+              "ranking_and_pagination": 0.003,
+              "candidate_union": 12.171,
+              "window_scoring": 802.05,
+              "relation_check": 15.023,
+              "deduplication": 19.889,
+              "serialization_probe": 0.098,
+              "queue_wait": 0.348,
+              "authentication": 0.001
+            },
+            "phase_semantics": "exclusive",
+            "scope": "tool_execution_plus_measured_queue_and_auth; excludes network and final transport serialization"
+          },
+          "request_id": "6273e8f94c8543b398cb8a7bcc87a134",
+          "error": null,
+          "cache": {
+            "status": "miss",
+            "scope": "process",
+            "corpus_bound": true
+          }
+        },
+        {
+          "i": 3,
+          "seconds": 0.9275816379999924,
+          "ok": true,
+          "nonempty": true,
+          "timing": {
+            "total_ms": 891.794,
+            "attempts": 1,
+            "phases_ms": {
+              "other_tool_execution": 0.157,
+              "cache_lookup": 0.11,
+              "response_building": 3.275,
+              "question_pipeline": 0.627,
+              "question_parsing": 1.693,
+              "candidate_sql": 3.064,
+              "evidence_validation": 22.246,
+              "ranking_and_pagination": 0.003,
+              "candidate_union": 13.22,
+              "window_scoring": 827.53,
+              "relation_check": 9.43,
+              "deduplication": 7.863,
+              "serialization_probe": 0.102,
+              "queue_wait": 2.473,
+              "authentication": 0.001
+            },
+            "phase_semantics": "exclusive",
+            "scope": "tool_execution_plus_measured_queue_and_auth; excludes network and final transport serialization"
+          },
+          "request_id": "aefe262f5fc44fe29c55e46c810d8dfe",
+          "error": null,
+          "cache": {
+            "status": "miss",
+            "scope": "process",
+            "corpus_bound": true
+          }
+        },
+        {
+          "i": 4,
+          "seconds": 2.9551800910003294,
+          "ok": true,
+          "nonempty": true,
+          "timing": {
+            "total_ms": 2900.332,
+            "attempts": 1,
+            "phases_ms": {
+              "other_tool_execution": 2.211,
+              "cache_lookup": 0.583,
+              "response_building": 2389.482,
+              "question_pipeline": 2.708,
+              "question_parsing": 6.406,
+              "candidate_sql": 177.44,
+              "evidence_validation": 35.631,
+              "ranking_and_pagination": 0.091,
+              "relation_check": 53.625,
+              "candidate_union": 17.622,
+              "window_scoring": 186.746,
+              "deduplication": 26.471,
+              "serialization_probe": 0.162,
+              "queue_wait": 1.153,
+              "authentication": 0.001
+            },
+            "phase_semantics": "exclusive",
+            "scope": "tool_execution_plus_measured_queue_and_auth; excludes network and final transport serialization"
+          },
+          "request_id": "6f8daa56743d442684e48557cc6eab71",
+          "error": null,
+          "cache": {
+            "status": "miss",
+            "scope": "process",
+            "corpus_bound": true
+          }
+        },
+        {
+          "i": 5,
+          "seconds": 0.9146182219997172,
+          "ok": true,
+          "nonempty": true,
+          "timing": {
+            "total_ms": 870.015,
+            "attempts": 1,
+            "phases_ms": {
+              "other_tool_execution": 0.254,
+              "cache_lookup": 0.113,
+              "response_building": 4.691,
+              "question_pipeline": 0.951,
+              "question_parsing": 1.887,
+              "candidate_sql": 8.06,
+              "evidence_validation": 24.287,
+              "ranking_and_pagination": 0.004,
+              "candidate_union": 31.66,
+              "window_scoring": 760.559,
+              "relation_check": 17.27,
+              "deduplication": 19.79,
+              "serialization_probe": 0.154,
+              "queue_wait": 0.334,
+              "authentication": 0.001
+            },
+            "phase_semantics": "exclusive",
+            "scope": "tool_execution_plus_measured_queue_and_auth; excludes network and final transport serialization"
+          },
+          "request_id": "e8654a7f602547c2ba7437ae690fe492",
+          "error": null,
+          "cache": {
+            "status": "miss",
+            "scope": "process",
+            "corpus_bound": true
+          }
+        },
+        {
+          "i": 6,
+          "seconds": 0.8705944339999405,
+          "ok": true,
+          "nonempty": true,
+          "timing": {
+            "total_ms": 830.538,
+            "attempts": 1,
+            "phases_ms": {
+              "other_tool_execution": 0.316,
+              "cache_lookup": 0.134,
+              "response_building": 2.685,
+              "question_pipeline": 0.658,
+              "question_parsing": 0.997,
+              "candidate_sql": 0.885,
+              "evidence_validation": 17.867,
+              "ranking_and_pagination": 0.004,
+              "candidate_union": 17.122,
+              "window_scoring": 767.587,
+              "relation_check": 10.239,
+              "deduplication": 11.377,
+              "serialization_probe": 0.269,
+              "queue_wait": 0.397,
+              "authentication": 0.001
+            },
+            "phase_semantics": "exclusive",
+            "scope": "tool_execution_plus_measured_queue_and_auth; excludes network and final transport serialization"
+          },
+          "request_id": "2cd064106cd747278b31c9de790f978f",
+          "error": null,
+          "cache": {
+            "status": "miss",
+            "scope": "process",
+            "corpus_bound": true
+          }
+        },
+        {
+          "i": 7,
+          "seconds": 0.6667699029999312,
+          "ok": true,
+          "nonempty": true,
+          "timing": {
+            "total_ms": 634.27,
+            "attempts": 1,
+            "phases_ms": {
+              "other_tool_execution": 0.304,
+              "cache_lookup": 0.103,
+              "response_building": 3.982,
+              "question_pipeline": 0.755,
+              "question_parsing": 3.201,
+              "candidate_sql": 0.741,
+              "evidence_validation": 20.547,
+              "ranking_and_pagination": 0.003,
+              "candidate_union": 15.646,
+              "window_scoring": 576.446,
+              "relation_check": 7.42,
+              "deduplication": 4.549,
+              "serialization_probe": 0.101,
+              "queue_wait": 0.471,
+              "authentication": 0.001
+            },
+            "phase_semantics": "exclusive",
+            "scope": "tool_execution_plus_measured_queue_and_auth; excludes network and final transport serialization"
+          },
+          "request_id": "3941e8bd29b742c886f9af5043c4b388",
+          "error": null,
+          "cache": {
+            "status": "miss",
+            "scope": "process",
+            "corpus_bound": true
+          }
+        },
+        {
+          "i": 8,
+          "seconds": 1.268749790000129,
+          "ok": true,
+          "nonempty": true,
+          "timing": {
+            "total_ms": 1227.404,
+            "attempts": 1,
+            "phases_ms": {
+              "other_tool_execution": 0.15,
+              "cache_lookup": 0.13,
+              "response_building": 0.228,
+              "question_pipeline": 1.105,
+              "question_parsing": 1.308,
+              "candidate_sql": 34.058,
+              "evidence_validation": 0.013,
+              "ranking_and_pagination": 0.005,
+              "candidate_union": 20.152,
+              "window_scoring": 1061.658,
+              "relation_check": 25.699,
+              "deduplication": 82.491,
+              "serialization_probe": 0.102,
+              "queue_wait": 0.304,
+              "authentication": 0.001
+            },
+            "phase_semantics": "exclusive",
+            "scope": "tool_execution_plus_measured_queue_and_auth; excludes network and final transport serialization"
+          },
+          "request_id": "47f969b2648146d5a068b2d7655f3148",
+          "error": null,
+          "cache": {
+            "status": "miss",
+            "scope": "process",
+            "corpus_bound": true
+          }
+        },
+        {
+          "i": 9,
+          "seconds": 1.1468086170002607,
+          "ok": true,
+          "nonempty": true,
+          "timing": {
+            "total_ms": 1108.98,
+            "attempts": 1,
+            "phases_ms": {
+              "other_tool_execution": 0.153,
+              "cache_lookup": 0.106,
+              "response_building": 0.234,
+              "question_pipeline": 0.775,
+              "question_parsing": 1.027,
+              "candidate_sql": 18.93,
+              "evidence_validation": 0.011,
+              "ranking_and_pagination": 0.005,
+              "candidate_union": 15.98,
+              "window_scoring": 1055.919,
+              "relation_check": 7.198,
+              "deduplication": 6.927,
+              "serialization_probe": 0.1,
+              "queue_wait": 1.614,
+              "authentication": 0.001
+            },
+            "phase_semantics": "exclusive",
+            "scope": "tool_execution_plus_measured_queue_and_auth; excludes network and final transport serialization"
+          },
+          "request_id": "96262211c20146cd9367d9c41a809d1f",
+          "error": null,
+          "cache": {
+            "status": "miss",
+            "scope": "process",
+            "corpus_bound": true
+          }
+        },
+        {
+          "i": 10,
+          "seconds": 0.8846263649998036,
+          "ok": true,
+          "nonempty": true,
+          "timing": {
+            "total_ms": 847.564,
+            "attempts": 1,
+            "phases_ms": {
+              "other_tool_execution": 0.158,
+              "cache_lookup": 0.147,
+              "response_building": 0.226,
+              "question_pipeline": 0.915,
+              "question_parsing": 1.39,
+              "candidate_sql": 25.533,
+              "evidence_validation": 0.012,
+              "ranking_and_pagination": 0.005,
+              "candidate_union": 26.185,
+              "window_scoring": 758.804,
+              "relation_check": 16.444,
+              "deduplication": 17.189,
+              "serialization_probe": 0.099,
+              "queue_wait": 0.456,
+              "authentication": 0.001
+            },
+            "phase_semantics": "exclusive",
+            "scope": "tool_execution_plus_measured_queue_and_auth; excludes network and final transport serialization"
+          },
+          "request_id": "66e91435704648d3bbc1e2400f4c98b2",
+          "error": null,
+          "cache": {
+            "status": "miss",
+            "scope": "process",
+            "corpus_bound": true
+          }
+        },
+        {
+          "i": 11,
+          "seconds": 0.9674434190001193,
+          "ok": true,
+          "nonempty": true,
+          "timing": {
+            "total_ms": 929.708,
+            "attempts": 1,
+            "phases_ms": {
+              "other_tool_execution": 0.21,
+              "cache_lookup": 0.147,
+              "response_building": 4.85,
+              "question_pipeline": 0.871,
+              "question_parsing": 1.894,
+              "candidate_sql": 4.057,
+              "evidence_validation": 28.47,
+              "ranking_and_pagination": 0.004,
+              "candidate_union": 13.178,
+              "window_scoring": 857.961,
+              "relation_check": 9.622,
+              "deduplication": 7.692,
+              "serialization_probe": 0.395,
+              "queue_wait": 0.355,
+              "authentication": 0.002
+            },
+            "phase_semantics": "exclusive",
+            "scope": "tool_execution_plus_measured_queue_and_auth; excludes network and final transport serialization"
+          },
+          "request_id": "5421c275e0334b448289749692890b1e",
+          "error": null,
+          "cache": {
+            "status": "miss",
+            "scope": "process",
+            "corpus_bound": true
+          }
+        },
+        {
+          "i": 12,
+          "seconds": 0.43785092100006295,
+          "ok": true,
+          "nonempty": true,
+          "timing": {
+            "total_ms": 397.492,
+            "attempts": 1,
+            "phases_ms": {
+              "other_tool_execution": 0.224,
+              "cache_lookup": 0.176,
+              "response_building": 4.252,
+              "question_pipeline": 2.108,
+              "question_parsing": 1.297,
+              "candidate_sql": 160.126,
+              "evidence_validation": 27.845,
+              "ranking_and_pagination": 0.047,
+              "relation_check": 41.179,
+              "candidate_union": 19.095,
+              "window_scoring": 117.161,
+              "deduplication": 23.449,
+              "serialization_probe": 0.127,
+              "queue_wait": 0.405,
+              "authentication": 0.001
+            },
+            "phase_semantics": "exclusive",
+            "scope": "tool_execution_plus_measured_queue_and_auth; excludes network and final transport serialization"
+          },
+          "request_id": "a7b89cbae4644ac997720d67b9fd8d9f",
+          "error": null,
+          "cache": {
+            "status": "miss",
+            "scope": "process",
+            "corpus_bound": true
+          }
+        },
+        {
+          "i": 13,
+          "seconds": 0.7684420840000712,
+          "ok": true,
+          "nonempty": true,
+          "timing": {
+            "total_ms": 733.769,
+            "attempts": 1,
+            "phases_ms": {
+              "other_tool_execution": 0.158,
+              "cache_lookup": 0.098,
+              "response_building": 3.263,
+              "question_pipeline": 0.984,
+              "question_parsing": 1.169,
+              "candidate_sql": 5.13,
+              "evidence_validation": 21.268,
+              "ranking_and_pagination": 0.003,
+              "candidate_union": 30.624,
+              "window_scoring": 640.377,
+              "relation_check": 12.817,
+              "deduplication": 17.296,
+              "serialization_probe": 0.099,
+              "queue_wait": 0.482,
+              "authentication": 0.001
+            },
+            "phase_semantics": "exclusive",
+            "scope": "tool_execution_plus_measured_queue_and_auth; excludes network and final transport serialization"
+          },
+          "request_id": "79136ae1296f418090620f447f0cc8a4",
+          "error": null,
+          "cache": {
+            "status": "miss",
+            "scope": "process",
+            "corpus_bound": true
+          }
+        },
+        {
+          "i": 14,
+          "seconds": 0.6618269540003894,
+          "ok": true,
+          "nonempty": true,
+          "timing": {
+            "total_ms": 630.975,
+            "attempts": 1,
+            "phases_ms": {
+              "other_tool_execution": 0.157,
+              "cache_lookup": 0.127,
+              "response_building": 0.217,
+              "question_pipeline": 0.69,
+              "question_parsing": 1.068,
+              "candidate_sql": 0.879,
+              "evidence_validation": 0.006,
+              "ranking_and_pagination": 0.003,
+              "candidate_union": 19.044,
+              "window_scoring": 588.795,
+              "relation_check": 10.102,
+              "deduplication": 9.436,
+              "serialization_probe": 0.1,
+              "queue_wait": 0.35,
+              "authentication": 0.001
+            },
+            "phase_semantics": "exclusive",
+            "scope": "tool_execution_plus_measured_queue_and_auth; excludes network and final transport serialization"
+          },
+          "request_id": "b2589468b09241ce8a4d45d231861753",
+          "error": null,
+          "cache": {
+            "status": "miss",
+            "scope": "process",
+            "corpus_bound": true
+          }
+        },
+        {
+          "i": 15,
+          "seconds": 0.5207669589999568,
+          "ok": true,
+          "nonempty": true,
+          "timing": {
+            "total_ms": 479.395,
+            "attempts": 1,
+            "phases_ms": {
+              "other_tool_execution": 0.319,
+              "cache_lookup": 0.098,
+              "response_building": 0.193,
+              "question_pipeline": 0.863,
+              "question_parsing": 0.933,
+              "candidate_sql": 0.851,
+              "evidence_validation": 0.007,
+              "ranking_and_pagination": 0.003,
+              "candidate_union": 11.855,
+              "window_scoring": 452.626,
+              "relation_check": 6.934,
+              "deduplication": 4.31,
+              "serialization_probe": 0.1,
+              "queue_wait": 0.302,
+              "authentication": 0.001
+            },
+            "phase_semantics": "exclusive",
+            "scope": "tool_execution_plus_measured_queue_and_auth; excludes network and final transport serialization"
+          },
+          "request_id": "ac48bb7f63484395878e807961ccccb9",
+          "error": null,
+          "cache": {
+            "status": "miss",
+            "scope": "process",
+            "corpus_bound": true
+          }
+        }
+      ]
+    },
+    {
+      "clients": 2,
+      "calls": 16,
+      "completion": 1.0,
+      "p95_seconds": 2.5796493000002556,
+      "max_seconds": 2.5796493000002556,
+      "samples": [
+        {
+          "i": 0,
+          "seconds": 1.6691257299999052,
+          "ok": true,
+          "nonempty": true,
+          "timing": {
+            "total_ms": 1611.368,
+            "attempts": 1,
+            "phases_ms": {
+              "other_tool_execution": 0.254,
+              "cache_lookup": 0.111,
+              "response_building": 0.352,
+              "question_pipeline": 1.307,
+              "question_parsing": 1.332,
+              "candidate_sql": 12.71,
+              "evidence_validation": 0.01,
+              "ranking_and_pagination": 0.004,
+              "candidate_union": 15.513,
+              "window_scoring": 1514.835,
+              "relation_check": 23.528,
+              "deduplication": 40.94,
+              "serialization_probe": 0.145,
+              "queue_wait": 0.326,
+              "authentication": 0.001
+            },
+            "phase_semantics": "exclusive",
+            "scope": "tool_execution_plus_measured_queue_and_auth; excludes network and final transport serialization"
+          },
+          "request_id": "d10a83f4b1a3406e9e42d7dd57c48b7c",
+          "error": null,
+          "cache": {
+            "status": "miss",
+            "scope": "process",
+            "corpus_bound": true
+          }
+        },
+        {
+          "i": 1,
+          "seconds": 1.7925244460002432,
+          "ok": true,
+          "nonempty": true,
+          "timing": {
+            "total_ms": 1755.865,
+            "attempts": 1,
+            "phases_ms": {
+              "other_tool_execution": 0.191,
+              "cache_lookup": 0.304,
+              "response_building": 2.87,
+              "question_pipeline": 0.993,
+              "question_parsing": 1.847,
+              "candidate_sql": 8.39,
+              "evidence_validation": 35.34,
+              "ranking_and_pagination": 0.004,
+              "candidate_union": 20.497,
+              "window_scoring": 1671.304,
+              "relation_check": 8.574,
+              "deduplication": 5.128,
+              "serialization_probe": 0.099,
+              "queue_wait": 0.323,
+              "authentication": 0.001
+            },
+            "phase_semantics": "exclusive",
+            "scope": "tool_execution_plus_measured_queue_and_auth; excludes network and final transport serialization"
+          },
+          "request_id": "283799734ced435297d9dd5e6dddad60",
+          "error": null,
+          "cache": {
+            "status": "miss",
+            "scope": "process",
+            "corpus_bound": true
+          }
+        },
+        {
+          "i": 2,
+          "seconds": 1.8217331729997568,
+          "ok": true,
+          "nonempty": true,
+          "timing": {
+            "total_ms": 1735.65,
+            "attempts": 1,
+            "phases_ms": {
+              "other_tool_execution": 0.151,
+              "cache_lookup": 0.17,
+              "response_building": 3.686,
+              "question_pipeline": 1.086,
+              "question_parsing": 25.639,
+              "candidate_sql": 19.291,
+              "evidence_validation": 22.009,
+              "ranking_and_pagination": 0.003,
+              "candidate_union": 23.242,
+              "window_scoring": 1402.149,
+              "relation_check": 216.857,
+              "deduplication": 17.786,
+              "serialization_probe": 0.1,
+              "queue_wait": 3.48,
+              "authentication": 0.001
+            },
+            "phase_semantics": "exclusive",
+            "scope": "tool_execution_plus_measured_queue_and_auth; excludes network and final transport serialization"
+          },
+          "request_id": "1f6794d6f744432396a78e95e679bcc0",
+          "error": null,
+          "cache": {
+            "status": "miss",
+            "scope": "process",
+            "corpus_bound": true
+          }
+        },
+        {
+          "i": 3,
+          "seconds": 1.6012611859996468,
+          "ok": true,
+          "nonempty": true,
+          "timing": {
+            "total_ms": 1556.74,
+            "attempts": 1,
+            "phases_ms": {
+              "other_tool_execution": 0.211,
+              "cache_lookup": 0.114,
+              "response_building": 0.215,
+              "question_pipeline": 0.789,
+              "question_parsing": 9.733,
+              "candidate_sql": 6.225,
+              "evidence_validation": 0.008,
+              "ranking_and_pagination": 0.003,
+              "candidate_union": 145.363,
+              "window_scoring": 1290.726,
+              "relation_check": 93.055,
+              "deduplication": 9.716,
+              "serialization_probe": 0.109,
+              "queue_wait": 0.472,
+              "authentication": 0.001
+            },
+            "phase_semantics": "exclusive",
+            "scope": "tool_execution_plus_measured_queue_and_auth; excludes network and final transport serialization"
+          },
+          "request_id": "ea0b287ce4754ca6a71778bf59879283",
+          "error": null,
+          "cache": {
+            "status": "miss",
+            "scope": "process",
+            "corpus_bound": true
+          }
+        },
+        {
+          "i": 4,
+          "seconds": 0.7661616389996198,
+          "ok": true,
+          "nonempty": true,
+          "timing": {
+            "total_ms": 729.601,
+            "attempts": 1,
+            "phases_ms": {
+              "other_tool_execution": 0.224,
+              "cache_lookup": 0.142,
+              "response_building": 0.226,
+              "question_pipeline": 9.356,
+              "question_parsing": 1.531,
+              "candidate_sql": 80.117,
+              "evidence_validation": 7.022,
+              "ranking_and_pagination": 0.033,
+              "relation_check": 173.612,
+              "candidate_union": 75.835,
+              "window_scoring": 354.06,
+              "deduplication": 26.912,
+              "serialization_probe": 0.152,
+              "queue_wait": 0.378,
+              "authentication": 0.001
+            },
+            "phase_semantics": "exclusive",
+            "scope": "tool_execution_plus_measured_queue_and_auth; excludes network and final transport serialization"
+          },
+          "request_id": "7d5372088d0b488697c920123f35cc37",
+          "error": null,
+          "cache": {
+            "status": "miss",
+            "scope": "process",
+            "corpus_bound": true
+          }
+        },
+        {
+          "i": 5,
+          "seconds": 0.8763738860002377,
+          "ok": true,
+          "nonempty": true,
+          "timing": {
+            "total_ms": 827.213,
+            "attempts": 1,
+            "phases_ms": {
+              "other_tool_execution": 0.147,
+              "cache_lookup": 0.134,
+              "response_building": 0.27,
+              "question_pipeline": 1.064,
+              "question_parsing": 5.642,
+              "candidate_sql": 45.873,
+              "evidence_validation": 0.017,
+              "ranking_and_pagination": 0.005,
+              "candidate_union": 56.104,
+              "window_scoring": 651.393,
+              "relation_check": 46.616,
+              "deduplication": 18.513,
+              "serialization_probe": 0.095,
+              "queue_wait": 1.339,
+              "authentication": 0.001
+            },
+            "phase_semantics": "exclusive",
+            "scope": "tool_execution_plus_measured_queue_and_auth; excludes network and final transport serialization"
+          },
+          "request_id": "367fa69298724a3da6f9a8774332ccaf",
+          "error": null,
+          "cache": {
+            "status": "miss",
+            "scope": "process",
+            "corpus_bound": true
+          }
+        },
+        {
+          "i": 6,
+          "seconds": 1.057123466000121,
+          "ok": true,
+          "nonempty": true,
+          "timing": {
+            "total_ms": 928.39,
+            "attempts": 1,
+            "phases_ms": {
+              "other_tool_execution": 0.153,
+              "cache_lookup": 0.126,
+              "response_building": 0.29,
+              "question_pipeline": 1.045,
+              "question_parsing": 25.099,
+              "candidate_sql": 2.189,
+              "evidence_validation": 0.009,
+              "ranking_and_pagination": 0.004,
+              "candidate_union": 52.433,
+              "window_scoring": 821.606,
+              "relation_check": 14.863,
+              "deduplication": 9.87,
+              "serialization_probe": 0.147,
+              "queue_wait": 0.555,
+              "authentication": 0.001
+            },
+            "phase_semantics": "exclusive",
+            "scope": "tool_execution_plus_measured_queue_and_auth; excludes network and final transport serialization"
+          },
+          "request_id": "960d056b514a4473b16693e75408dafe",
+          "error": null,
+          "cache": {
+            "status": "miss",
+            "scope": "process",
+            "corpus_bound": true
+          }
+        },
+        {
+          "i": 7,
+          "seconds": 0.8067004919998908,
+          "ok": true,
+          "nonempty": true,
+          "timing": {
+            "total_ms": 751.298,
+            "attempts": 1,
+            "phases_ms": {
+              "other_tool_execution": 0.16,
+              "cache_lookup": 0.098,
+              "response_building": 3.127,
+              "question_pipeline": 0.563,
+              "question_parsing": 1.243,
+              "candidate_sql": 3.354,
+              "evidence_validation": 24.993,
+              "ranking_and_pagination": 0.003,
+              "candidate_union": 17.415,
+              "window_scoring": 687.061,
+              "relation_check": 8.408,
+              "deduplication": 4.275,
+              "serialization_probe": 0.141,
+              "queue_wait": 0.456,
+              "authentication": 0.001
+            },
+            "phase_semantics": "exclusive",
+            "scope": "tool_execution_plus_measured_queue_and_auth; excludes network and final transport serialization"
+          },
+          "request_id": "d2d0604141a54d248241d471ba549602",
+          "error": null,
+          "cache": {
+            "status": "miss",
+            "scope": "process",
+            "corpus_bound": true
+          }
+        },
+        {
+          "i": 8,
+          "seconds": 2.5796493000002556,
+          "ok": true,
+          "nonempty": true,
+          "timing": {
+            "total_ms": 2495.329,
+            "attempts": 1,
+            "phases_ms": {
+              "other_tool_execution": 0.156,
+              "cache_lookup": 0.104,
+              "response_building": 4.269,
+              "question_pipeline": 3.413,
+              "question_parsing": 4.554,
+              "candidate_sql": 52.426,
+              "evidence_validation": 25.857,
+              "ranking_and_pagination": 0.003,
+              "candidate_union": 37.544,
+              "window_scoring": 2046.279,
+              "relation_check": 286.343,
+              "deduplication": 32.117,
+              "serialization_probe": 0.099,
+              "queue_wait": 2.164,
+              "authentication": 0.001
+            },
+            "phase_semantics": "exclusive",
+            "scope": "tool_execution_plus_measured_queue_and_auth; excludes network and final transport serialization"
+          },
+          "request_id": "711dd607c2944212b72278f7ae60fb79",
+          "error": null,
+          "cache": {
+            "status": "miss",
+            "scope": "process",
+            "corpus_bound": true
+          }
+        },
+        {
+          "i": 9,
+          "seconds": 2.4286441449999074,
+          "ok": true,
+          "nonempty": true,
+          "timing": {
+            "total_ms": 2373.331,
+            "attempts": 1,
+            "phases_ms": {
+              "other_tool_execution": 0.203,
+              "cache_lookup": 0.104,
+              "response_building": 0.216,
+              "question_pipeline": 0.819,
+              "question_parsing": 9.644,
+              "candidate_sql": 41.242,
+              "evidence_validation": 0.013,
+              "ranking_and_pagination": 0.005,
+              "candidate_union": 220.106,
+              "window_scoring": 1996.35,
+              "relation_check": 97.762,
+              "deduplication": 6.176,
+              "serialization_probe": 0.198,
+              "queue_wait": 0.492,
+              "authentication": 0.001
+            },
+            "phase_semantics": "exclusive",
+            "scope": "tool_execution_plus_measured_queue_and_auth; excludes network and final transport serialization"
+          },
+          "request_id": "e82410f73ab54b5eaaaec4015bc701f8",
+          "error": null,
+          "cache": {
+            "status": "miss",
+            "scope": "process",
+            "corpus_bound": true
+          }
+        },
+        {
+          "i": 10,
+          "seconds": 1.8708955520000927,
+          "ok": true,
+          "nonempty": true,
+          "timing": {
+            "total_ms": 1785.276,
+            "attempts": 1,
+            "phases_ms": {
+              "other_tool_execution": 0.276,
+              "cache_lookup": 0.129,
+              "response_building": 0.243,
+              "question_pipeline": 1.324,
+              "question_parsing": 6.931,
+              "candidate_sql": 6.814,
+              "evidence_validation": 0.064,
+              "ranking_and_pagination": 0.004,
+              "candidate_union": 16.446,
+              "window_scoring": 1536.89,
+              "relation_check": 195.447,
+              "deduplication": 20.173,
+              "serialization_probe": 0.098,
+              "queue_wait": 0.436,
+              "authentication": 0.001
+            },
+            "phase_semantics": "exclusive",
+            "scope": "tool_execution_plus_measured_queue_and_auth; excludes network and final transport serialization"
+          },
+          "request_id": "5e6fd8a395244028a3e87119b743925b",
+          "error": null,
+          "cache": {
+            "status": "miss",
+            "scope": "process",
+            "corpus_bound": true
+          }
+        },
+        {
+          "i": 11,
+          "seconds": 1.7576282280001578,
+          "ok": true,
+          "nonempty": true,
+          "timing": {
+            "total_ms": 1654.206,
+            "attempts": 1,
+            "phases_ms": {
+              "other_tool_execution": 0.323,
+              "cache_lookup": 3.435,
+              "response_building": 0.356,
+              "question_pipeline": 1.718,
+              "question_parsing": 54.355,
+              "candidate_sql": 22.275,
+              "evidence_validation": 0.009,
+              "ranking_and_pagination": 0.004,
+              "candidate_union": 95.013,
+              "window_scoring": 1383.624,
+              "relation_check": 69.285,
+              "deduplication": 13.178,
+              "serialization_probe": 0.153,
+              "queue_wait": 10.477,
+              "authentication": 0.001
+            },
+            "phase_semantics": "exclusive",
+            "scope": "tool_execution_plus_measured_queue_and_auth; excludes network and final transport serialization"
+          },
+          "request_id": "a2db4e618d3a4e08b1114888660f4ae5",
+          "error": null,
+          "cache": {
+            "status": "miss",
+            "scope": "process",
+            "corpus_bound": true
+          }
+        },
+        {
+          "i": 12,
+          "seconds": 0.5095260299999609,
+          "ok": true,
+          "nonempty": true,
+          "timing": {
+            "total_ms": 452.365,
+            "attempts": 1,
+            "phases_ms": {
+              "other_tool_execution": 0.225,
+              "cache_lookup": 0.1,
+              "response_building": 0.445,
+              "question_pipeline": 2.412,
+              "question_parsing": 1.467,
+              "candidate_sql": 215.716,
+              "evidence_validation": 8.631,
+              "ranking_and_pagination": 0.043,
+              "relation_check": 17.357,
+              "candidate_union": 24.94,
+              "window_scoring": 157.195,
+              "deduplication": 23.332,
+              "serialization_probe": 0.126,
+              "queue_wait": 0.375,
+              "authentication": 0.001
+            },
+            "phase_semantics": "exclusive",
+            "scope": "tool_execution_plus_measured_queue_and_auth; excludes network and final transport serialization"
+          },
+          "request_id": "b9ddd9dd92bb4c1694231df6a224b54d",
+          "error": null,
+          "cache": {
+            "status": "miss",
+            "scope": "process",
+            "corpus_bound": true
+          }
+        },
+        {
+          "i": 13,
+          "seconds": 1.0238536880001448,
+          "ok": true,
+          "nonempty": true,
+          "timing": {
+            "total_ms": 954.159,
+            "attempts": 1,
+            "phases_ms": {
+              "other_tool_execution": 0.153,
+              "cache_lookup": 0.121,
+              "response_building": 0.198,
+              "question_pipeline": 0.816,
+              "question_parsing": 1.239,
+              "candidate_sql": 25.534,
+              "evidence_validation": 0.014,
+              "ranking_and_pagination": 0.005,
+              "candidate_union": 38.076,
+              "window_scoring": 835.261,
+              "relation_check": 18.249,
+              "deduplication": 32.165,
+              "serialization_probe": 0.285,
+              "queue_wait": 2.042,
+              "authentication": 0.001
+            },
+            "phase_semantics": "exclusive",
+            "scope": "tool_execution_plus_measured_queue_and_auth; excludes network and final transport serialization"
+          },
+          "request_id": "7238ec5d19f64e9f8af8358e2ec0b73e",
+          "error": null,
+          "cache": {
+            "status": "miss",
+            "scope": "process",
+            "corpus_bound": true
+          }
+        },
+        {
+          "i": 14,
+          "seconds": 0.9911547719998453,
+          "ok": true,
+          "nonempty": true,
+          "timing": {
+            "total_ms": 923.28,
+            "attempts": 1,
+            "phases_ms": {
+              "other_tool_execution": 0.42,
+              "cache_lookup": 0.121,
+              "response_building": 0.327,
+              "question_pipeline": 0.703,
+              "question_parsing": 1.633,
+              "candidate_sql": 1.573,
+              "evidence_validation": 0.01,
+              "ranking_and_pagination": 0.004,
+              "candidate_union": 32.555,
+              "window_scoring": 857.962,
+              "relation_check": 16.686,
+              "deduplication": 10.275,
+              "serialization_probe": 0.105,
+              "queue_wait": 0.905,
+              "authentication": 0.001
+            },
+            "phase_semantics": "exclusive",
+            "scope": "tool_execution_plus_measured_queue_and_auth; excludes network and final transport serialization"
+          },
+          "request_id": "83333092a3804f868cf0ee92255dfbab",
+          "error": null,
+          "cache": {
+            "status": "miss",
+            "scope": "process",
+            "corpus_bound": true
+          }
+        },
+        {
+          "i": 15,
+          "seconds": 0.7409191609999652,
+          "ok": true,
+          "nonempty": true,
+          "timing": {
+            "total_ms": 686.985,
+            "attempts": 1,
+            "phases_ms": {
+              "other_tool_execution": 0.547,
+              "cache_lookup": 0.104,
+              "response_building": 0.194,
+              "question_pipeline": 0.527,
+              "question_parsing": 1.014,
+              "candidate_sql": 0.691,
+              "evidence_validation": 0.006,
+              "ranking_and_pagination": 0.003,
+              "candidate_union": 12.751,
+              "window_scoring": 656.013,
+              "relation_check": 10.445,
+              "deduplication": 4.159,
+              "serialization_probe": 0.102,
+              "queue_wait": 0.428,
+              "authentication": 0.001
+            },
+            "phase_semantics": "exclusive",
+            "scope": "tool_execution_plus_measured_queue_and_auth; excludes network and final transport serialization"
+          },
+          "request_id": "c8c91ca45b52463f8eb1dce1f24cac37",
+          "error": null,
+          "cache": {
+            "status": "miss",
+            "scope": "process",
+            "corpus_bound": true
+          }
+        }
+      ]
+    },
+    {
+      "clients": 4,
+      "calls": 16,
+      "completion": 1.0,
+      "p95_seconds": 3.9252630770001815,
+      "max_seconds": 3.9252630770001815,
+      "samples": [
+        {
+          "i": 0,
+          "seconds": 2.9785081840000203,
+          "ok": true,
+          "nonempty": true,
+          "timing": {
+            "total_ms": 2904.195,
+            "attempts": 1,
+            "phases_ms": {
+              "other_tool_execution": 0.149,
+              "cache_lookup": 0.093,
+              "response_building": 0.234,
+              "question_pipeline": 1.141,
+              "question_parsing": 16.615,
+              "candidate_sql": 19.308,
+              "evidence_validation": 0.011,
+              "ranking_and_pagination": 0.004,
+              "candidate_union": 136.299,
+              "window_scoring": 2278.541,
+              "relation_check": 410.454,
+              "deduplication": 38.637,
+              "serialization_probe": 0.103,
+              "queue_wait": 2.605,
+              "authentication": 0.001
+            },
+            "phase_semantics": "exclusive",
+            "scope": "tool_execution_plus_measured_queue_and_auth; excludes network and final transport serialization"
+          },
+          "request_id": "0ecd0432fd934bb0a7a08af0242e9df6",
+          "error": null,
+          "cache": {
+            "status": "miss",
+            "scope": "process",
+            "corpus_bound": true
+          }
+        },
+        {
+          "i": 1,
+          "seconds": 2.713268603000415,
+          "ok": true,
+          "nonempty": true,
+          "timing": {
+            "total_ms": 2654.072,
+            "attempts": 1,
+            "phases_ms": {
+              "other_tool_execution": 0.186,
+              "cache_lookup": 0.105,
+              "response_building": 0.292,
+              "question_pipeline": 0.899,
+              "question_parsing": 16.456,
+              "candidate_sql": 19.767,
+              "evidence_validation": 0.009,
+              "ranking_and_pagination": 0.021,
+              "candidate_union": 28.084,
+              "window_scoring": 2479.049,
+              "relation_check": 103.86,
+              "deduplication": 4.907,
+              "serialization_probe": 0.106,
+              "queue_wait": 0.33,
+              "authentication": 0.001
+            },
+            "phase_semantics": "exclusive",
+            "scope": "tool_execution_plus_measured_queue_and_auth; excludes network and final transport serialization"
+          },
+          "request_id": "eaead11ff77a4cf2a66cab6ae8203108",
+          "error": null,
+          "cache": {
+            "status": "miss",
+            "scope": "process",
+            "corpus_bound": true
+          }
+        },
+        {
+          "i": 2,
+          "seconds": 1.9189659570001822,
+          "ok": true,
+          "nonempty": true,
+          "timing": {
+            "total_ms": 1855.369,
+            "attempts": 1,
+            "phases_ms": {
+              "other_tool_execution": 0.22,
+              "cache_lookup": 0.238,
+              "response_building": 0.211,
+              "question_pipeline": 0.861,
+              "question_parsing": 3.344,
+              "candidate_sql": 16.143,
+              "evidence_validation": 0.01,
+              "ranking_and_pagination": 0.004,
+              "candidate_union": 57.037,
+              "window_scoring": 1561.758,
+              "relation_check": 193.184,
+              "deduplication": 21.975,
+              "serialization_probe": 0.102,
+              "queue_wait": 0.281,
+              "authentication": 0.001
+            },
+            "phase_semantics": "exclusive",
+            "scope": "tool_execution_plus_measured_queue_and_auth; excludes network and final transport serialization"
+          },
+          "request_id": "21f3de3037854cc39501c7993ee00be6",
+          "error": null,
+          "cache": {
+            "status": "miss",
+            "scope": "process",
+            "corpus_bound": true
+          }
+        },
+        {
+          "i": 3,
+          "seconds": 1.768092254000294,
+          "ok": true,
+          "nonempty": true,
+          "timing": {
+            "total_ms": 1673.929,
+            "attempts": 1,
+            "phases_ms": {
+              "other_tool_execution": 0.162,
+              "cache_lookup": 0.459,
+              "response_building": 0.208,
+              "question_pipeline": 0.942,
+              "question_parsing": 7.926,
+              "candidate_sql": 5.824,
+              "evidence_validation": 0.008,
+              "ranking_and_pagination": 0.003,
+              "candidate_union": 19.017,
+              "window_scoring": 1524.538,
+              "relation_check": 103.326,
+              "deduplication": 7.814,
+              "serialization_probe": 0.104,
+              "queue_wait": 3.597,
+              "authentication": 0.001
+            },
+            "phase_semantics": "exclusive",
+            "scope": "tool_execution_plus_measured_queue_and_auth; excludes network and final transport serialization"
+          },
+          "request_id": "3054009284bb4033a80b4cb459b8c755",
+          "error": null,
+          "cache": {
+            "status": "miss",
+            "scope": "process",
+            "corpus_bound": true
+          }
+        },
+        {
+          "i": 4,
+          "seconds": 0.44476916600024197,
+          "ok": true,
+          "nonempty": true,
+          "timing": {
+            "total_ms": 359.871,
+            "attempts": 1,
+            "phases_ms": {
+              "other_tool_execution": 0.258,
+              "cache_lookup": 0.157,
+              "response_building": 0.265,
+              "question_pipeline": 2.634,
+              "question_parsing": 18.355,
+              "candidate_sql": 97.301,
+              "evidence_validation": 5.893,
+              "ranking_and_pagination": 0.032,
+              "relation_check": 19.361,
+              "candidate_union": 21.748,
+              "window_scoring": 158.249,
+              "deduplication": 29.202,
+              "serialization_probe": 0.151,
+              "queue_wait": 6.264,
+              "authentication": 0.001
+            },
+            "phase_semantics": "exclusive",
+            "scope": "tool_execution_plus_measured_queue_and_auth; excludes network and final transport serialization"
+          },
+          "request_id": "1add8faee5b9424d80e7d39ff9699e2e",
+          "error": null,
+          "cache": {
+            "status": "miss",
+            "scope": "process",
+            "corpus_bound": true
+          }
+        },
+        {
+          "i": 5,
+          "seconds": 2.451037603000259,
+          "ok": true,
+          "nonempty": true,
+          "timing": {
+            "total_ms": 2339.527,
+            "attempts": 1,
+            "phases_ms": {
+              "other_tool_execution": 0.178,
+              "cache_lookup": 0.919,
+              "response_building": 0.249,
+              "question_pipeline": 1.209,
+              "question_parsing": 46.195,
+              "candidate_sql": 47.221,
+              "evidence_validation": 0.01,
+              "ranking_and_pagination": 0.004,
+              "candidate_union": 102.058,
+              "window_scoring": 1291.846,
+              "relation_check": 180.413,
+              "deduplication": 37.717,
+              "serialization_probe": 0.192,
+              "queue_wait": 631.315,
+              "authentication": 0.001
+            },
+            "phase_semantics": "exclusive",
+            "scope": "tool_execution_plus_measured_queue_and_auth; excludes network and final transport serialization"
+          },
+          "request_id": "eb6253fb7ba848a2b72c818d2e0578d2",
+          "error": null,
+          "cache": {
+            "status": "miss",
+            "scope": "process",
+            "corpus_bound": true
+          }
+        },
+        {
+          "i": 6,
+          "seconds": 2.46807169099975,
+          "ok": true,
+          "nonempty": true,
+          "timing": {
+            "total_ms": 2393.685,
+            "attempts": 1,
+            "phases_ms": {
+              "other_tool_execution": 0.159,
+              "cache_lookup": 0.154,
+              "response_building": 4.271,
+              "question_pipeline": 7.422,
+              "question_parsing": 13.625,
+              "candidate_sql": 0.896,
+              "evidence_validation": 48.449,
+              "ranking_and_pagination": 0.003,
+              "candidate_union": 96.451,
+              "window_scoring": 1407.29,
+              "relation_check": 152.96,
+              "deduplication": 11.433,
+              "serialization_probe": 0.103,
+              "queue_wait": 650.468,
+              "authentication": 0.001
+            },
+            "phase_semantics": "exclusive",
+            "scope": "tool_execution_plus_measured_queue_and_auth; excludes network and final transport serialization"
+          },
+          "request_id": "236661c0147948d482500125757b4be7",
+          "error": null,
+          "cache": {
+            "status": "miss",
+            "scope": "process",
+            "corpus_bound": true
+          }
+        },
+        {
+          "i": 7,
+          "seconds": 0.7016096930001368,
+          "ok": true,
+          "nonempty": true,
+          "timing": {
+            "total_ms": 660.025,
+            "attempts": 1,
+            "phases_ms": {
+              "other_tool_execution": 0.16,
+              "cache_lookup": 0.102,
+              "response_building": 0.221,
+              "question_pipeline": 0.608,
+              "question_parsing": 0.983,
+              "candidate_sql": 0.628,
+              "evidence_validation": 0.006,
+              "ranking_and_pagination": 0.003,
+              "candidate_union": 11.589,
+              "window_scoring": 627.218,
+              "relation_check": 13.695,
+              "deduplication": 4.382,
+              "serialization_probe": 0.102,
+              "queue_wait": 0.327,
+              "authentication": 0.001
+            },
+            "phase_semantics": "exclusive",
+            "scope": "tool_execution_plus_measured_queue_and_auth; excludes network and final transport serialization"
+          },
+          "request_id": "d122586e21894719913e59c2ab8a5678",
+          "error": null,
+          "cache": {
+            "status": "miss",
+            "scope": "process",
+            "corpus_bound": true
+          }
+        },
+        {
+          "i": 8,
+          "seconds": 3.9252630770001815,
+          "ok": true,
+          "nonempty": true,
+          "timing": {
+            "total_ms": 3837.609,
+            "attempts": 1,
+            "phases_ms": {
+              "other_tool_execution": 0.178,
+              "cache_lookup": 0.215,
+              "response_building": 0.251,
+              "question_pipeline": 3.078,
+              "question_parsing": 3.302,
+              "candidate_sql": 46.843,
+              "evidence_validation": 0.009,
+              "ranking_and_pagination": 0.004,
+              "candidate_union": 98.994,
+              "window_scoring": 2015.539,
+              "relation_check": 316.909,
+              "deduplication": 29.115,
+              "serialization_probe": 0.097,
+              "queue_wait": 1323.074,
+              "authentication": 0.001
+            },
+            "phase_semantics": "exclusive",
+            "scope": "tool_execution_plus_measured_queue_and_auth; excludes network and final transport serialization"
+          },
+          "request_id": "e2b70c7b407a496ca38bbd1d5c4a8429",
+          "error": null,
+          "cache": {
+            "status": "miss",
+            "scope": "process",
+            "corpus_bound": true
+          }
+        },
+        {
+          "i": 9,
+          "seconds": 1.400014500999987,
+          "ok": true,
+          "nonempty": true,
+          "timing": {
+            "total_ms": 1360.385,
+            "attempts": 1,
+            "phases_ms": {
+              "other_tool_execution": 0.254,
+              "cache_lookup": 0.103,
+              "response_building": 0.276,
+              "question_pipeline": 0.911,
+              "question_parsing": 2.148,
+              "candidate_sql": 5.001,
+              "evidence_validation": 0.008,
+              "ranking_and_pagination": 0.003,
+              "candidate_union": 20.608,
+              "window_scoring": 1316.695,
+              "relation_check": 8.559,
+              "deduplication": 5.351,
+              "serialization_probe": 0.149,
+              "queue_wait": 0.318,
+              "authentication": 0.001
+            },
+            "phase_semantics": "exclusive",
+            "scope": "tool_execution_plus_measured_queue_and_auth; excludes network and final transport serialization"
+          },
+          "request_id": "5c5158d718154d40b56ebd3cbd1bf90e",
+          "error": null,
+          "cache": {
+            "status": "miss",
+            "scope": "process",
+            "corpus_bound": true
+          }
+        },
+        {
+          "i": 10,
+          "seconds": 2.2803222199995616,
+          "ok": true,
+          "nonempty": true,
+          "timing": {
+            "total_ms": 2209.698,
+            "attempts": 1,
+            "phases_ms": {
+              "other_tool_execution": 0.256,
+              "cache_lookup": 6.917,
+              "response_building": 0.283,
+              "question_pipeline": 3.826,
+              "question_parsing": 15.259,
+              "candidate_sql": 15.003,
+              "evidence_validation": 0.009,
+              "ranking_and_pagination": 0.004,
+              "candidate_union": 84.703,
+              "window_scoring": 1691.492,
+              "relation_check": 202.601,
+              "deduplication": 36.16,
+              "serialization_probe": 0.142,
+              "queue_wait": 153.042,
+              "authentication": 0.001
+            },
+            "phase_semantics": "exclusive",
+            "scope": "tool_execution_plus_measured_queue_and_auth; excludes network and final transport serialization"
+          },
+          "request_id": "4177164cdd464cf5b0ee8e73bf0e46d2",
+          "error": null,
+          "cache": {
+            "status": "miss",
+            "scope": "process",
+            "corpus_bound": true
+          }
+        },
+        {
+          "i": 11,
+          "seconds": 1.2177776099997573,
+          "ok": true,
+          "nonempty": true,
+          "timing": {
+            "total_ms": 1083.901,
+            "attempts": 1,
+            "phases_ms": {
+              "other_tool_execution": 0.187,
+              "cache_lookup": 0.346,
+              "response_building": 0.251,
+              "question_pipeline": 9.533,
+              "question_parsing": 6.222,
+              "candidate_sql": 11.638,
+              "evidence_validation": 0.009,
+              "ranking_and_pagination": 0.004,
+              "candidate_union": 26.593,
+              "window_scoring": 987.248,
+              "relation_check": 25.689,
+              "deduplication": 8.553,
+              "serialization_probe": 0.13,
+              "queue_wait": 7.497,
+              "authentication": 0.001
+            },
+            "phase_semantics": "exclusive",
+            "scope": "tool_execution_plus_measured_queue_and_auth; excludes network and final transport serialization"
+          },
+          "request_id": "569a0a551f014d93a5912b86fd5a8c35",
+          "error": null,
+          "cache": {
+            "status": "miss",
+            "scope": "process",
+            "corpus_bound": true
+          }
+        },
+        {
+          "i": 12,
+          "seconds": 1.0727662489998693,
+          "ok": true,
+          "nonempty": true,
+          "timing": {
+            "total_ms": 950.539,
+            "attempts": 1,
+            "phases_ms": {
+              "other_tool_execution": 0.243,
+              "cache_lookup": 0.198,
+              "response_building": 0.622,
+              "question_pipeline": 21.369,
+              "question_parsing": 2.282,
+              "candidate_sql": 189.645,
+              "evidence_validation": 26.978,
+              "ranking_and_pagination": 0.033,
+              "relation_check": 178.665,
+              "candidate_union": 116.379,
+              "window_scoring": 383.939,
+              "deduplication": 29.639,
+              "serialization_probe": 0.132,
+              "queue_wait": 0.414,
+              "authentication": 0.001
+            },
+            "phase_semantics": "exclusive",
+            "scope": "tool_execution_plus_measured_queue_and_auth; excludes network and final transport serialization"
+          },
+          "request_id": "7570e5ca7c784100b459573f2aca6260",
+          "error": null,
+          "cache": {
+            "status": "miss",
+            "scope": "process",
+            "corpus_bound": true
+          }
+        },
+        {
+          "i": 13,
+          "seconds": 1.4248881570001686,
+          "ok": true,
+          "nonempty": true,
+          "timing": {
+            "total_ms": 1294.938,
+            "attempts": 1,
+            "phases_ms": {
+              "other_tool_execution": 0.283,
+              "cache_lookup": 0.204,
+              "response_building": 0.344,
+              "question_pipeline": 7.461,
+              "question_parsing": 15.669,
+              "candidate_sql": 20.997,
+              "evidence_validation": 0.01,
+              "ranking_and_pagination": 0.004,
+              "candidate_union": 112.812,
+              "window_scoring": 490.124,
+              "relation_check": 18.128,
+              "deduplication": 20.768,
+              "serialization_probe": 0.156,
+              "queue_wait": 607.977,
+              "authentication": 0.001
+            },
+            "phase_semantics": "exclusive",
+            "scope": "tool_execution_plus_measured_queue_and_auth; excludes network and final transport serialization"
+          },
+          "request_id": "13db33bf4a49435fa7d160a9c0531136",
+          "error": null,
+          "cache": {
+            "status": "miss",
+            "scope": "process",
+            "corpus_bound": true
+          }
+        },
+        {
+          "i": 14,
+          "seconds": 0.9220872410000993,
+          "ok": true,
+          "nonempty": true,
+          "timing": {
+            "total_ms": 846.181,
+            "attempts": 1,
+            "phases_ms": {
+              "other_tool_execution": 0.157,
+              "cache_lookup": 0.097,
+              "response_building": 0.262,
+              "question_pipeline": 0.827,
+              "question_parsing": 10.931,
+              "candidate_sql": 1.043,
+              "evidence_validation": 0.008,
+              "ranking_and_pagination": 0.003,
+              "candidate_union": 18.591,
+              "window_scoring": 787.519,
+              "relation_check": 13.366,
+              "deduplication": 12.913,
+              "serialization_probe": 0.099,
+              "queue_wait": 0.364,
+              "authentication": 0.001
+            },
+            "phase_semantics": "exclusive",
+            "scope": "tool_execution_plus_measured_queue_and_auth; excludes network and final transport serialization"
+          },
+          "request_id": "dab8c4206abd4e4293f9c24f050d9d85",
+          "error": null,
+          "cache": {
+            "status": "miss",
+            "scope": "process",
+            "corpus_bound": true
+          }
+        },
+        {
+          "i": 15,
+          "seconds": 0.6050024870000925,
+          "ok": true,
+          "nonempty": true,
+          "timing": {
+            "total_ms": 535.405,
+            "attempts": 1,
+            "phases_ms": {
+              "other_tool_execution": 0.159,
+              "cache_lookup": 0.138,
+              "response_building": 0.233,
+              "question_pipeline": 0.572,
+              "question_parsing": 1.177,
+              "candidate_sql": 2.75,
+              "evidence_validation": 0.008,
+              "ranking_and_pagination": 0.003,
+              "candidate_union": 63.817,
+              "window_scoring": 453.836,
+              "relation_check": 7.321,
+              "deduplication": 4.637,
+              "serialization_probe": 0.308,
+              "queue_wait": 0.445,
+              "authentication": 0.001
+            },
+            "phase_semantics": "exclusive",
+            "scope": "tool_execution_plus_measured_queue_and_auth; excludes network and final transport serialization"
+          },
+          "request_id": "291e47d89bbe466e8a21956e9f294bff",
+          "error": null,
+          "cache": {
+            "status": "miss",
+            "scope": "process",
+            "corpus_bound": true
+          }
+        }
+      ]
+    },
+    {
+      "clients": 8,
+      "calls": 16,
+      "completion": 1.0,
+      "p95_seconds": 6.202331617999789,
+      "max_seconds": 6.202331617999789,
+      "samples": [
+        {
+          "i": 0,
+          "seconds": 5.259436937999908,
+          "ok": true,
+          "nonempty": true,
+          "timing": {
+            "total_ms": 5080.9,
+            "attempts": 1,
+            "phases_ms": {
+              "other_tool_execution": 0.166,
+              "cache_lookup": 0.925,
+              "response_building": 0.252,
+              "question_pipeline": 8.09,
+              "question_parsing": 18.716,
+              "candidate_sql": 26.038,
+              "evidence_validation": 0.012,
+              "ranking_and_pagination": 0.004,
+              "candidate_union": 102.138,
+              "window_scoring": 1973.592,
+              "relation_check": 352.495,
+              "deduplication": 30.241,
+              "serialization_probe": 0.11,
+              "queue_wait": 2568.12,
+              "authentication": 0.001
+            },
+            "phase_semantics": "exclusive",
+            "scope": "tool_execution_plus_measured_queue_and_auth; excludes network and final transport serialization"
+          },
+          "request_id": "dee5e7fe17c043d889cd05632dca3416",
+          "error": null,
+          "cache": {
+            "status": "miss",
+            "scope": "process",
+            "corpus_bound": true
+          }
+        },
+        {
+          "i": 1,
+          "seconds": 2.753735101000075,
+          "ok": true,
+          "nonempty": true,
+          "timing": {
+            "total_ms": 2579.355,
+            "attempts": 1,
+            "phases_ms": {
+              "other_tool_execution": 0.355,
+              "cache_lookup": 0.318,
+              "response_building": 0.285,
+              "question_pipeline": 0.95,
+              "question_parsing": 28.451,
+              "candidate_sql": 9.725,
+              "evidence_validation": 0.008,
+              "ranking_and_pagination": 0.003,
+              "candidate_union": 79.618,
+              "window_scoring": 2384.492,
+              "relation_check": 39.646,
+              "deduplication": 5.398,
+              "serialization_probe": 0.191,
+              "queue_wait": 29.914,
+              "authentication": 0.001
+            },
+            "phase_semantics": "exclusive",
+            "scope": "tool_execution_plus_measured_queue_and_auth; excludes network and final transport serialization"
+          },
+          "request_id": "54d7120cfbfa4c08813064c3621ee774",
+          "error": null,
+          "cache": {
+            "status": "miss",
+            "scope": "process",
+            "corpus_bound": true
+          }
+        },
+        {
+          "i": 2,
+          "seconds": 1.8704005089998645,
+          "ok": true,
+          "nonempty": true,
+          "timing": {
+            "total_ms": 1716.654,
+            "attempts": 1,
+            "phases_ms": {
+              "other_tool_execution": 0.276,
+              "cache_lookup": 0.347,
+              "response_building": 0.304,
+              "question_pipeline": 3.028,
+              "question_parsing": 15.405,
+              "candidate_sql": 20.157,
+              "evidence_validation": 0.007,
+              "ranking_and_pagination": 0.003,
+              "candidate_union": 43.251,
+              "window_scoring": 1470.861,
+              "relation_check": 123.113,
+              "deduplication": 31.888,
+              "serialization_probe": 0.162,
+              "queue_wait": 7.851,
+              "authentication": 0.001
+            },
+            "phase_semantics": "exclusive",
+            "scope": "tool_execution_plus_measured_queue_and_auth; excludes network and final transport serialization"
+          },
+          "request_id": "a590cba00c234fb7a7a696dc2ae22a16",
+          "error": null,
+          "cache": {
+            "status": "miss",
+            "scope": "process",
+            "corpus_bound": true
+          }
+        },
+        {
+          "i": 3,
+          "seconds": 5.136644260000139,
+          "ok": true,
+          "nonempty": true,
+          "timing": {
+            "total_ms": 4962.226,
+            "attempts": 1,
+            "phases_ms": {
+              "other_tool_execution": 0.191,
+              "cache_lookup": 1.275,
+              "response_building": 0.383,
+              "question_pipeline": 1.442,
+              "question_parsing": 42.883,
+              "candidate_sql": 18.93,
+              "evidence_validation": 0.011,
+              "ranking_and_pagination": 0.005,
+              "candidate_union": 98.989,
+              "window_scoring": 1414.193,
+              "relation_check": 141.738,
+              "deduplication": 10.699,
+              "serialization_probe": 0.13,
+              "queue_wait": 3231.357,
+              "authentication": 0.0
+            },
+            "phase_semantics": "exclusive",
+            "scope": "tool_execution_plus_measured_queue_and_auth; excludes network and final transport serialization"
+          },
+          "request_id": "6913c31312164de2bfdbb4e76588ab0c",
+          "error": null,
+          "cache": {
+            "status": "miss",
+            "scope": "process",
+            "corpus_bound": true
+          }
+        },
+        {
+          "i": 4,
+          "seconds": 2.5586371069998677,
+          "ok": true,
+          "nonempty": true,
+          "timing": {
+            "total_ms": 2376.195,
+            "attempts": 1,
+            "phases_ms": {
+              "other_tool_execution": 0.254,
+              "cache_lookup": 0.143,
+              "response_building": 0.438,
+              "question_pipeline": 17.523,
+              "question_parsing": 11.113,
+              "candidate_sql": 233.087,
+              "evidence_validation": 26.445,
+              "ranking_and_pagination": 0.043,
+              "relation_check": 281.715,
+              "candidate_union": 84.864,
+              "window_scoring": 571.354,
+              "deduplication": 27.955,
+              "serialization_probe": 0.157,
+              "queue_wait": 1121.103,
+              "authentication": 0.001
+            },
+            "phase_semantics": "exclusive",
+            "scope": "tool_execution_plus_measured_queue_and_auth; excludes network and final transport serialization"
+          },
+          "request_id": "14b38953cd54483daa0b285cfb13d0c2",
+          "error": null,
+          "cache": {
+            "status": "miss",
+            "scope": "process",
+            "corpus_bound": true
+          }
+        },
+        {
+          "i": 5,
+          "seconds": 1.74820932800003,
+          "ok": true,
+          "nonempty": true,
+          "timing": {
+            "total_ms": 1649.32,
+            "attempts": 1,
+            "phases_ms": {
+              "other_tool_execution": 0.161,
+              "cache_lookup": 0.102,
+              "response_building": 0.221,
+              "question_pipeline": 0.971,
+              "question_parsing": 11.149,
+              "candidate_sql": 9.617,
+              "evidence_validation": 0.013,
+              "ranking_and_pagination": 0.005,
+              "candidate_union": 40.025,
+              "window_scoring": 1212.046,
+              "relation_check": 265.221,
+              "deduplication": 109.246,
+              "serialization_probe": 0.102,
+              "queue_wait": 0.44,
+              "authentication": 0.001
+            },
+            "phase_semantics": "exclusive",
+            "scope": "tool_execution_plus_measured_queue_and_auth; excludes network and final transport serialization"
+          },
+          "request_id": "e6616770d1c54fdc8097f8515e29d3d6",
+          "error": null,
+          "cache": {
+            "status": "miss",
+            "scope": "process",
+            "corpus_bound": true
+          }
+        },
+        {
+          "i": 6,
+          "seconds": 3.4372191329998714,
+          "ok": true,
+          "nonempty": true,
+          "timing": {
+            "total_ms": 3226.827,
+            "attempts": 1,
+            "phases_ms": {
+              "other_tool_execution": 0.221,
+              "cache_lookup": 3.865,
+              "response_building": 0.299,
+              "question_pipeline": 2.82,
+              "question_parsing": 35.595,
+              "candidate_sql": 1.012,
+              "evidence_validation": 0.009,
+              "ranking_and_pagination": 0.004,
+              "candidate_union": 60.918,
+              "window_scoring": 1423.116,
+              "relation_check": 163.203,
+              "deduplication": 10.682,
+              "serialization_probe": 0.169,
+              "queue_wait": 1524.913,
+              "authentication": 0.001
+            },
+            "phase_semantics": "exclusive",
+            "scope": "tool_execution_plus_measured_queue_and_auth; excludes network and final transport serialization"
+          },
+          "request_id": "1abc78191560453d9e89f38a8ed1eabe",
+          "error": null,
+          "cache": {
+            "status": "miss",
+            "scope": "process",
+            "corpus_bound": true
+          }
+        },
+        {
+          "i": 7,
+          "seconds": 1.3008460410001135,
+          "ok": true,
+          "nonempty": true,
+          "timing": {
+            "total_ms": 1211.456,
+            "attempts": 1,
+            "phases_ms": {
+              "other_tool_execution": 0.282,
+              "cache_lookup": 0.134,
+              "response_building": 0.236,
+              "question_pipeline": 0.601,
+              "question_parsing": 8.305,
+              "candidate_sql": 1.242,
+              "evidence_validation": 0.008,
+              "ranking_and_pagination": 0.003,
+              "candidate_union": 53.248,
+              "window_scoring": 1054.31,
+              "relation_check": 87.919,
+              "deduplication": 4.433,
+              "serialization_probe": 0.107,
+              "queue_wait": 0.627,
+              "authentication": 0.001
+            },
+            "phase_semantics": "exclusive",
+            "scope": "tool_execution_plus_measured_queue_and_auth; excludes network and final transport serialization"
+          },
+          "request_id": "e7bf6b5250694ca1ae58061b8a03f493",
+          "error": null,
+          "cache": {
+            "status": "miss",
+            "scope": "process",
+            "corpus_bound": true
+          }
+        },
+        {
+          "i": 8,
+          "seconds": 6.17281489700008,
+          "ok": true,
+          "nonempty": true,
+          "timing": {
+            "total_ms": 6052.081,
+            "attempts": 1,
+            "phases_ms": {
+              "other_tool_execution": 0.232,
+              "cache_lookup": 0.504,
+              "response_building": 0.626,
+              "question_pipeline": 1.847,
+              "question_parsing": 19.8,
+              "candidate_sql": 34.588,
+              "evidence_validation": 0.012,
+              "ranking_and_pagination": 0.005,
+              "candidate_union": 92.868,
+              "window_scoring": 1876.103,
+              "relation_check": 286.683,
+              "deduplication": 28.168,
+              "serialization_probe": 0.122,
+              "queue_wait": 3710.522,
+              "authentication": 0.001
+            },
+            "phase_semantics": "exclusive",
+            "scope": "tool_execution_plus_measured_queue_and_auth; excludes network and final transport serialization"
+          },
+          "request_id": "5062b6fb7d724dbea8584edb4a81101d",
+          "error": null,
+          "cache": {
+            "status": "miss",
+            "scope": "process",
+            "corpus_bound": true
+          }
+        },
+        {
+          "i": 9,
+          "seconds": 1.6290084039997055,
+          "ok": true,
+          "nonempty": true,
+          "timing": {
+            "total_ms": 1525.882,
+            "attempts": 1,
+            "phases_ms": {
+              "other_tool_execution": 0.169,
+              "cache_lookup": 2.4,
+              "response_building": 0.356,
+              "question_pipeline": 2.84,
+              "question_parsing": 6.755,
+              "candidate_sql": 18.59,
+              "evidence_validation": 0.01,
+              "ranking_and_pagination": 0.004,
+              "candidate_union": 27.826,
+              "window_scoring": 1431.854,
+              "relation_check": 25.804,
+              "deduplication": 8.335,
+              "serialization_probe": 0.115,
+              "queue_wait": 0.823,
+              "authentication": 0.001
+            },
+            "phase_semantics": "exclusive",
+            "scope": "tool_execution_plus_measured_queue_and_auth; excludes network and final transport serialization"
+          },
+          "request_id": "7539800624754a2888a268d078606fbd",
+          "error": null,
+          "cache": {
+            "status": "miss",
+            "scope": "process",
+            "corpus_bound": true
+          }
+        },
+        {
+          "i": 10,
+          "seconds": 5.305088124000122,
+          "ok": true,
+          "nonempty": true,
+          "timing": {
+            "total_ms": 5164.579,
+            "attempts": 1,
+            "phases_ms": {
+              "other_tool_execution": 0.174,
+              "cache_lookup": 0.547,
+              "response_building": 0.293,
+              "question_pipeline": 1.442,
+              "question_parsing": 16.351,
+              "candidate_sql": 12.604,
+              "evidence_validation": 0.015,
+              "ranking_and_pagination": 0.006,
+              "candidate_union": 147.663,
+              "window_scoring": 1475.187,
+              "relation_check": 295.528,
+              "deduplication": 18.369,
+              "serialization_probe": 0.114,
+              "queue_wait": 3196.285,
+              "authentication": 0.001
+            },
+            "phase_semantics": "exclusive",
+            "scope": "tool_execution_plus_measured_queue_and_auth; excludes network and final transport serialization"
+          },
+          "request_id": "03cfe72e9a934ab4813d5346add87a45",
+          "error": null,
+          "cache": {
+            "status": "miss",
+            "scope": "process",
+            "corpus_bound": true
+          }
+        },
+        {
+          "i": 11,
+          "seconds": 6.202331617999789,
+          "ok": true,
+          "nonempty": true,
+          "timing": {
+            "total_ms": 6053.256,
+            "attempts": 1,
+            "phases_ms": {
+              "other_tool_execution": 0.171,
+              "cache_lookup": 0.19,
+              "response_building": 0.326,
+              "question_pipeline": 7.805,
+              "question_parsing": 17.041,
+              "candidate_sql": 8.82,
+              "evidence_validation": 0.012,
+              "ranking_and_pagination": 0.004,
+              "candidate_union": 55.806,
+              "window_scoring": 1360.988,
+              "relation_check": 84.41,
+              "deduplication": 9.656,
+              "serialization_probe": 0.116,
+              "queue_wait": 4507.909,
+              "authentication": 0.002
+            },
+            "phase_semantics": "exclusive",
+            "scope": "tool_execution_plus_measured_queue_and_auth; excludes network and final transport serialization"
+          },
+          "request_id": "0f6afc067f59493fbacd92d98b917f95",
+          "error": null,
+          "cache": {
+            "status": "miss",
+            "scope": "process",
+            "corpus_bound": true
+          }
+        },
+        {
+          "i": 12,
+          "seconds": 0.9203736839999692,
+          "ok": true,
+          "nonempty": true,
+          "timing": {
+            "total_ms": 738.341,
+            "attempts": 1,
+            "phases_ms": {
+              "other_tool_execution": 0.249,
+              "cache_lookup": 0.152,
+              "response_building": 0.31,
+              "question_pipeline": 35.966,
+              "question_parsing": 9.219,
+              "candidate_sql": 152.055,
+              "evidence_validation": 18.162,
+              "ranking_and_pagination": 0.042,
+              "relation_check": 84.273,
+              "candidate_union": 129.387,
+              "window_scoring": 283.692,
+              "deduplication": 24.188,
+              "serialization_probe": 0.146,
+              "queue_wait": 0.498,
+              "authentication": 0.002
+            },
+            "phase_semantics": "exclusive",
+            "scope": "tool_execution_plus_measured_queue_and_auth; excludes network and final transport serialization"
+          },
+          "request_id": "f2259f1584cc477ab3363a03b54aefe0",
+          "error": null,
+          "cache": {
+            "status": "miss",
+            "scope": "process",
+            "corpus_bound": true
+          }
+        },
+        {
+          "i": 13,
+          "seconds": 0.8472557149998465,
+          "ok": true,
+          "nonempty": true,
+          "timing": {
+            "total_ms": 763.852,
+            "attempts": 1,
+            "phases_ms": {
+              "other_tool_execution": 0.166,
+              "cache_lookup": 0.219,
+              "response_building": 0.244,
+              "question_pipeline": 2.756,
+              "question_parsing": 5.184,
+              "candidate_sql": 20.515,
+              "evidence_validation": 0.01,
+              "ranking_and_pagination": 0.005,
+              "candidate_union": 55.835,
+              "window_scoring": 638.017,
+              "relation_check": 20.651,
+              "deduplication": 17.956,
+              "serialization_probe": 0.111,
+              "queue_wait": 2.182,
+              "authentication": 0.001
+            },
+            "phase_semantics": "exclusive",
+            "scope": "tool_execution_plus_measured_queue_and_auth; excludes network and final transport serialization"
+          },
+          "request_id": "6266eda3dc864dcfb1c599008a4110d5",
+          "error": null,
+          "cache": {
+            "status": "miss",
+            "scope": "process",
+            "corpus_bound": true
+          }
+        },
+        {
+          "i": 14,
+          "seconds": 5.424422279999817,
+          "ok": true,
+          "nonempty": true,
+          "timing": {
+            "total_ms": 5293.628,
+            "attempts": 1,
+            "phases_ms": {
+              "other_tool_execution": 0.174,
+              "cache_lookup": 0.178,
+              "response_building": 0.652,
+              "question_pipeline": 1.181,
+              "question_parsing": 6.699,
+              "candidate_sql": 4.791,
+              "evidence_validation": 0.034,
+              "ranking_and_pagination": 0.005,
+              "candidate_union": 98.071,
+              "window_scoring": 1153.11,
+              "relation_check": 126.149,
+              "deduplication": 15.675,
+              "serialization_probe": 0.117,
+              "queue_wait": 3886.79,
+              "authentication": 0.002
+            },
+            "phase_semantics": "exclusive",
+            "scope": "tool_execution_plus_measured_queue_and_auth; excludes network and final transport serialization"
+          },
+          "request_id": "9ddafb5af672459287aa87b7978e7013",
+          "error": null,
+          "cache": {
+            "status": "miss",
+            "scope": "process",
+            "corpus_bound": true
+          }
+        },
+        {
+          "i": 15,
+          "seconds": 5.645690843000011,
+          "ok": true,
+          "nonempty": true,
+          "timing": {
+            "total_ms": 5532.293,
+            "attempts": 1,
+            "phases_ms": {
+              "other_tool_execution": 0.228,
+              "cache_lookup": 3.166,
+              "response_building": 0.244,
+              "question_pipeline": 6.873,
+              "question_parsing": 2.339,
+              "candidate_sql": 18.015,
+              "evidence_validation": 0.04,
+              "ranking_and_pagination": 0.005,
+              "candidate_union": 94.238,
+              "window_scoring": 510.545,
+              "relation_check": 10.487,
+              "deduplication": 4.977,
+              "serialization_probe": 0.149,
+              "queue_wait": 4880.986,
+              "authentication": 0.001
+            },
+            "phase_semantics": "exclusive",
+            "scope": "tool_execution_plus_measured_queue_and_auth; excludes network and final transport serialization"
+          },
+          "request_id": "f04e092590394e6ea6467827a49db147",
+          "error": null,
+          "cache": {
+            "status": "miss",
+            "scope": "process",
+            "corpus_bound": true
+          }
+        }
+      ]
+    }
+  ],
+  "client_parity": {
+    "scope": "fresh local MCP SDK client; ChatGPT/Claude client refresh unverified",
+    "schemas": {
+      "list_books": {
+        "properties": {
+          "include_legend": {
+            "default": false,
+            "title": "Include Legend",
+            "type": "boolean"
+          },
+          "projection": {
+            "default": "compact",
+            "enum": [
+              "compact",
+              "ids",
+              "full"
+            ],
+            "title": "Projection",
+            "type": "string"
+          },
+          "book_ids": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Book Ids"
+          }
+        },
+        "title": "list_booksArguments",
+        "type": "object"
+      },
+      "get_book": {
+        "properties": {
+          "book_id": {
+            "title": "Book Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "book_id"
+        ],
+        "title": "get_bookArguments",
+        "type": "object"
+      },
+      "get_page": {
+        "properties": {
+          "book_id": {
+            "title": "Book Id",
+            "type": "string"
+          },
+          "seq": {
+            "title": "Seq",
+            "type": "integer"
+          },
+          "mode": {
+            "default": "compact",
+            "enum": [
+              "compact",
+              "ultra_compact"
+            ],
+            "title": "Mode",
+            "type": "string"
+          },
+          "max_chars": {
+            "default": 20000,
+            "title": "Max Chars",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "book_id",
+          "seq"
+        ],
+        "title": "get_pageArguments",
+        "type": "object"
+      },
+      "get_passage": {
+        "properties": {
+          "match_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Match Id"
+          },
+          "match_ids": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Match Ids"
+          },
+          "context_chars": {
+            "default": 600,
+            "title": "Context Chars",
+            "type": "integer"
+          },
+          "query": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Query"
+          },
+          "stable_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Stable Id"
+          },
+          "qasida_number": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Qasida Number"
+          },
+          "include_parallels": {
+            "default": false,
+            "title": "Include Parallels",
+            "type": "boolean"
+          },
+          "parallel_limit": {
+            "default": 5,
+            "title": "Parallel Limit",
+            "type": "integer"
+          },
+          "context_mode": {
+            "default": "bounded",
+            "enum": [
+              "bounded",
+              "paragraph"
+            ],
+            "title": "Context Mode",
+            "type": "string"
+          },
+          "max_chars": {
+            "default": 12000,
+            "title": "Max Chars",
+            "type": "integer"
+          }
+        },
+        "title": "get_passageArguments",
+        "type": "object"
+      },
+      "search_library": {
+        "properties": {
+          "query": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Query"
+          },
+          "queries": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Queries"
+          },
+          "operator": {
+            "default": "OR",
+            "enum": [
+              "OR",
+              "AND"
+            ],
+            "title": "Operator",
+            "type": "string"
+          },
+          "limit": {
+            "default": 8,
+            "title": "Limit",
+            "type": "integer"
+          },
+          "offset": {
+            "default": 0,
+            "title": "Offset",
+            "type": "integer"
+          },
+          "book_ids": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Book Ids"
+          },
+          "book_scope": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Book Scope"
+          },
+          "source_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Source Code"
+          },
+          "page_from": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Page From"
+          },
+          "page_to": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Page To"
+          },
+          "context_chars": {
+            "default": 60,
+            "title": "Context Chars",
+            "type": "integer"
+          },
+          "mode": {
+            "default": "compact",
+            "enum": [
+              "compact",
+              "ultra_compact"
+            ],
+            "title": "Mode",
+            "type": "string"
+          },
+          "match_mode": {
+            "default": "auto",
+            "enum": [
+              "auto",
+              "exact",
+              "terms",
+              "hybrid",
+              "lexeme"
+            ],
+            "title": "Match Mode",
+            "type": "string"
+          },
+          "search_mode": {
+            "anyOf": [
+              {
+                "enum": [
+                  "exact_phrase",
+                  "all_words",
+                  "any_word",
+                  "lexeme"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Search Mode"
+          },
+          "ranking": {
+            "default": "primary_first",
+            "enum": [
+              "relevance",
+              "primary_first",
+              "chronological",
+              "book_order"
+            ],
+            "title": "Ranking",
+            "type": "string"
+          },
+          "diversify_books": {
+            "default": true,
+            "title": "Diversify Books",
+            "type": "boolean"
+          },
+          "max_per_book": {
+            "default": 2,
+            "title": "Max Per Book",
+            "type": "integer"
+          },
+          "include_counts": {
+            "default": false,
+            "title": "Include Counts",
+            "type": "boolean"
+          },
+          "check_completeness": {
+            "default": false,
+            "title": "Check Completeness",
+            "type": "boolean"
+          },
+          "include_toc": {
+            "default": false,
+            "title": "Include Toc",
+            "type": "boolean"
+          },
+          "include_topic_only": {
+            "default": false,
+            "title": "Include Topic Only",
+            "type": "boolean"
+          },
+          "count_basis": {
+            "default": "phrase",
+            "enum": [
+              "phrase",
+              "term_bag"
+            ],
+            "title": "Count Basis",
+            "type": "string"
+          },
+          "whole_word": {
+            "default": true,
+            "title": "Whole Word",
+            "type": "boolean"
+          },
+          "min_score": {
+            "default": 0.0,
+            "title": "Min Score",
+            "type": "number"
+          },
+          "min_tier": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Min Tier"
+          },
+          "qasida_number": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Qasida Number"
+          },
+          "expand_top": {
+            "default": 0,
+            "title": "Expand Top",
+            "type": "integer"
+          },
+          "expand_chars": {
+            "default": 600,
+            "title": "Expand Chars",
+            "type": "integer"
+          },
+          "detail": {
+            "default": "summary",
+            "enum": [
+              "summary",
+              "full"
+            ],
+            "title": "Detail",
+            "type": "string"
+          },
+          "keep_terms": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Keep Terms"
+          }
+        },
+        "title": "search_libraryArguments",
+        "type": "object"
+      }
+    },
+    "calls": [
+      {
+        "tool": "search_library",
+        "parameters": [
+          "query",
+          "check_completeness",
+          "include_toc",
+          "include_topic_only",
+          "detail",
+          "keep_terms"
+        ],
+        "ok": true,
+        "request_id": "763c71713d9849b2b42b1b5fc75235d2"
+      },
+      {
+        "tool": "get_passage",
+        "parameters": [
+          "match_id",
+          "context_mode",
+          "max_chars"
+        ],
+        "ok": true,
+        "request_id": "b674ff439dd5431fb23fa1b617c8412f"
+      },
+      {
+        "tool": "list_books",
+        "parameters": [
+          "projection",
+          "book_ids"
+        ],
+        "ok": true,
+        "request_id": "575ff4911aef4b428d34f18e7b40e5ac"
+      }
+    ]
+  }
+}

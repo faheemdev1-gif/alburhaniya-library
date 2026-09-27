@@ -1,3 +1,9 @@
+# Release 2.10.0 - 26 September 2026
+
+Bounded passage search replaces repeated full-page reformulation. Partial evidence is retained, cached responses are corpus-bound, and census requests remain independently auditable. Subject phrases, detached conjunctions, duplicate biographies, opposing-view warnings, explicit relevance/type cues and weak coverage are corrected. IDs-only payloads are compact. Monitoring and client digest checks are included. See README and the 32-item matrix for open acceptance gates; no 9+ certification is issued.
+
+---
+
 # 2.9.0, contract 11
 
 Phrase-first and Q&A discovery; source-local ranking; sequence-only citations;

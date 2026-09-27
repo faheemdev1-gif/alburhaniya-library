@@ -1,0 +1,111 @@
+{
+  "records": [
+    {
+      "book_id": "b05",
+      "seq": 1,
+      "start": 50,
+      "end": 310,
+      "source_excerpt": "الدكتور خالد العروسي الأستاذ المساعد بقسم الشريعة كلية الشريعة والدراسات الإسلامية – جامعة أم القرى\n\nملخص البحث مسألة الترخّص بمسائل الخلاف ، من المسائل التي بحثها الأصوليون والفقهاء على حدٍّ سواء، وهي مسألة أحسب أنّا أحوج ما نكون إلى ضبطها الآن ، فالواقعون في",
+      "source_text_sha256": "fed9c3512ce859d0fdc0f0d159c3068b96a8066acd7f9b6103b6f5d6e10af891",
+      "before": {
+        "grade": "ثانوي",
+        "author": "د. خالد العروسي — جامعة أم القرى (من خارج السلسلة)",
+        "note": "بحثٌ لعالمٍ من خارج السلسلة في مسألة الترخّص بمسائل الخلاف بين الفقهاء والأصوليين، مع بيان ضوابط العمل بمسائل الخلاف."
+      },
+      "after": {
+        "grade": "ثانوي",
+        "author": "خالد العروسي",
+        "note": "بحثٌ لعالمٍ من خارج السلسلة في مسألة الترخّص بمسائل الخلاف بين الفقهاء والأصوليين، مع بيان ضوابط العمل بمسائل الخلاف.",
+        "compiler": null,
+        "authorship_mode": "authored_work",
+        "attribution_confidence": "medium",
+        "provenance_status": "identified_in_supplied_front_matter"
+      },
+      "basis": "Visible attribution in supplied text; scan authenticity not independently established",
+      "reviewer": "Codex source-text review",
+      "review_date": "2026-09-26"
+    },
+    {
+      "book_id": "b16",
+      "seq": 72,
+      "start": 946,
+      "end": 1206,
+      "source_excerpt": "نبذة عن المؤلف فضيلة الأستاذ فوزى محمد أبوزيد - المولد: 18/ 10/1948 م، الجميزة، مركز السنطة، محافظة الغربية. - المؤهل: ليسانس كلية دار العلوم، جامعة القاهرة 1970 م. - العمل: مدير عام بمديرية طنطا التعليمية. - النشاط: 1 - يعمل رئيسا للجمعية العامة للدعوة إلى ال",
+      "source_text_sha256": "74e71318e99566de046f56ae3afe7a780278813cff00f4d25e85e5bc9aa43e5d",
+      "before": {
+        "grade": "ثانوي",
+        "author": "فوزي محمد أبوزيد (من خارج السلسلة)",
+        "note": "كتابٌ لعالمٍ من خارج السلسلة في سيرة سيدي إبراهيم القرشي الدسوقي رضي الله عنه (باني السلسلة) وشخصيته وتعاليمه ومنهجه."
+      },
+      "after": {
+        "grade": "ثانوي",
+        "author": "فوزى محمد أبوزيد",
+        "note": "كتابٌ لعالمٍ من خارج السلسلة في سيرة سيدي إبراهيم القرشي الدسوقي رضي الله عنه (باني السلسلة) وشخصيته وتعاليمه ومنهجه.",
+        "compiler": null,
+        "authorship_mode": "authored_work",
+        "attribution_confidence": "medium",
+        "provenance_status": "identified_in_supplied_author_biography"
+      },
+      "basis": "Visible attribution in supplied text; scan authenticity not independently established",
+      "reviewer": "Codex source-text review",
+      "review_date": "2026-09-26"
+    },
+    {
+      "book_id": "b17",
+      "seq": 1,
+      "start": 254,
+      "end": 514,
+      "source_excerpt": "جمعه وحقَّقه وعلَّق عَلَيْه الراجي القبول والسعادة وبلوغ المأمول في الدارين الخويدم إبراهيم الدّسوقيّ مُحَمَّد بدور\n\nمقدمة الحمدُ للهِ الذي بنعمتِهِ تتمُّ الصالحاتُ ، وصلَّى اللهُ على سَيِّدِنَا مُحَمَّدٍ - عَبْدِ الذّاتِ ورسول الأسماء والصّفات - وآلهِ والأمّه",
+      "source_text_sha256": "8a88d23a828cabad43ce05cc7d7c75b8b0172a1121f19b9ed6177810b980a8c9",
+      "before": {
+        "grade": "ثانوي",
+        "author": "إبراهيم الدسوقي محمد بدُّور",
+        "note": "لأحد مريدي الطريقة، يشرح أوراد وأذكار الطريقة البرهانية ويوضّح معانيها وحكمها."
+      },
+      "after": {
+        "grade": "ثانوي",
+        "author": "إبراهيم الدسوقي محمد بدور",
+        "note": "لأحد مريدي الطريقة، يشرح أوراد وأذكار الطريقة البرهانية ويوضّح معانيها وحكمها.",
+        "compiler": "إبراهيم الدسوقي محمد بدور",
+        "authorship_mode": "murid_commentary",
+        "attribution_confidence": "medium",
+        "provenance_status": "identified_in_supplied_front_matter"
+      },
+      "basis": "Visible attribution in supplied text; scan authenticity not independently established",
+      "reviewer": "Codex source-text review",
+      "review_date": "2026-09-26"
+    },
+    {
+      "book_id": "b37",
+      "seq": 1,
+      "start": 326,
+      "end": 586,
+      "source_excerpt": "أما أنا فلو لقيت عمنا عبد الحميد با بكر لقبلت يده وقدميه جزاء ما يقدم لنا من كنوز سيدي فخر الدين ومشايخنا الكرام. جزاك الله أنت ألف خير و كل من شجعنا من الأخوان علي المضي في هذا الجهد ....... سيدي فخر الدين و مولانا الإمام الحسين (في مصر و السودان):\n\nأقول: بقد",
+      "source_text_sha256": "f5a789a47a2554d28a6fc4284825d2be1837fee5bb45627b7ff05bf1fca72ff2",
+      "before": {
+        "grade": "ثانوي",
+        "author": "مجهول المُعِدّ — من دروس سيدي الإمام فخر الدين",
+        "note": "منتخبٌ من دروس سيدي الإمام فخر الدين قدّس سرّه، جمعه أحد المريدين، واسم الجامع غير معروف حاليًا، ولذا يُعامَل بوصفه مصدرًا ثانويًا حتى يتحقق التثبت من ضبطه ونسبته.",
+        "canonical_book_id": "b37",
+        "edition_relation": "canonical",
+        "searchable_by_default": true
+      },
+      "after": {
+        "grade": "ثانوي",
+        "author": "مجهول المُعِدّ — من دروس سيدي الإمام فخر الدين",
+        "note": "منتخبٌ من دروس سيدي الإمام فخر الدين قدّس سرّه، جمعه أحد المريدين، واسم الجامع غير معروف حاليًا، ولذا يُعامَل بوصفه مصدرًا ثانويًا حتى يتحقق التثبت من ضبطه ونسبته.",
+        "canonical_book_id": "b37",
+        "edition_relation": "canonical",
+        "searchable_by_default": true,
+        "compiler": "عبد الحميد بابكر",
+        "authorship_mode": "compiled_durus",
+        "attribution_confidence": "medium",
+        "provenance_status": "identified_in_supplied_front_matter"
+      },
+      "basis": "Visible attribution in supplied text; scan authenticity not independently established",
+      "reviewer": "Codex source-text review",
+      "review_date": "2026-09-26"
+    }
+  ],
+  "no_tier_upgrades": true
+}

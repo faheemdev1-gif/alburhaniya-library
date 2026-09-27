@@ -3,11 +3,16 @@ from functools import lru_cache
 from app.core.arabic_utils import safe_tokens,normalize_search_text
 FUNCTION_WORDS=set('ما ماذا هل كيف لماذا متى أين اين من في على إلى الى عن مع و أو أم ثم هذا هذه ذلك تلك هو هي هم هن نحن أنا انا أنت انت الذي التي الذين إن أن كان كانت يكون وهل وما وهو وهي به بها لهم له لها عليه عليها عليهم لكي حتى عند بين كل أي اي ولا إلا لا لم لن بس لو لما عشان إزاي ازاي إيه ايه ليه عايز عاوز أعمل اعمل بماذا'.split())
 KEYS={normalize_search_text(t,level='broad') for t in FUNCTION_WORDS}
-FRAMES=sorted(['إيه رأي مولانا في','ما هي','ما هو','ما حكم','ما معنى','إيه أعمل','ما','كيف','هل','لماذا','بماذا','إيه','ايه','عايز','عاوز','ليه','إزاي','ازاي'],key=len,reverse=True)
+FRAMES=sorted(['إيه رأي مولانا في','ما المراد بـ','ما المراد ب','ما المراد','ما فضل','ما هي','ما هو','ما حكم','ما معنى','إيه أعمل','ما','كيف','هل','لماذا','بماذا','إيه','ايه','عايز','عاوز','ليه','إزاي','ازاي'],key=len,reverse=True)
 def subject_phrase(query):
  query=query.strip(' ؟?')
  for frame in FRAMES:
-  if query.startswith(frame+' '):return query[len(frame):].strip()
+  if query.startswith(frame+' '):
+   query=query[len(frame):].strip();break
+ # Keep the noun phrase; a trailing request is a separate clause.
+ import re
+ query=re.split(r'\s+(?:وكيف|وهل|ولماذا|في طريق القوم)\b',query,maxsplit=1)[0]
+ query=re.sub(r'^ب(?=الأعيان|المعنى|المقصود)', '', query)
  return query
 def language_plan(query,keep_terms=()):
  keep={normalize_search_text(t,level='broad') for t in keep_terms}

@@ -46,6 +46,6 @@ def enable_threaded_tools(mcp):
     with anyio.fail_after(seconds):return await anyio.to_thread.run_sync(execute,limiter=limiter,abandon_on_cancel=True)
    except TimeoutError:
     from app.core.resilience import safe_error_payload
-    result=safe_error_payload('time_budget_exceeded','Request budget exhausted; narrow the query.',retryable=True);result['truncated_by_budget']=True;return result
+    result=safe_error_payload('time_budget_exceeded','Request budget exhausted; narrow the query.',retryable=True);result['truncated_by_budget']=True;result['stage']='queue_or_worker_deadline';result['candidate_counts']={};result['partial_results_available']=False;result['timing']={'total_ms':round((time.perf_counter()-enqueued)*1000,3),'scope':'queue_and_worker_wait'};return result
    finally:DEADLINE.reset(token)
   tool.fn=threaded;tool.is_async=True

@@ -167,7 +167,7 @@ def list_books(include_legend: bool = False, projection: Literal["compact", "ids
         for book in catalogue
     ]
     if projection == "ids":
-        books = [b["book_id"] for b in catalogue]
+        return {"books":[b["book_id"] for b in catalogue],"contract_digest":TOOL_META.get("tool_schema_digest",TOOL_META["schema_digest"])}
     elif projection == "full":
         books = [db.get_book(b["book_id"]) for b in catalogue]
     elif projection != "compact":
@@ -182,6 +182,7 @@ def list_books(include_legend: bool = False, projection: Literal["compact", "ids
         "corpus_contract": corpus_contract_snapshot(),
     }
 
+    if projection!="full":result["corpus_contract"].pop("repeated_printed_labels",None)
     from app.services import semantic_search as semantic
     result["active_indexes"] = {
         "lexical": "sqlite_fts5_safe",
@@ -676,6 +677,8 @@ def search_library(
             cascade = (("exact", "exact_phrase", db.search),
                        ("terms", "all_words", db.search),
                        ("hybrid", "all_words", db.hybrid_search))
+            from app.core.arabic_utils import safe_tokens
+            if all(len(safe_tokens(q))<=3 for q in raw_queries):cascade=cascade[:2]
             for effective_match_mode, resolved_search_mode, candidate_fn in cascade:
                 probe = dict(query=query, queries=raw_queries, operator=operator,
                              search_mode=resolved_search_mode, ranking=ranking,
@@ -692,7 +695,8 @@ def search_library(
                     break
         if not rows:
             effective_match_mode = "reformulated"
-            rows = db.reformulated_search(
+            from app.services.question_search import search_questions
+            rows = search_questions(
                 query=query, queries=raw_queries, operator=operator,
                 ranking=ranking, book_ids=book_ids, source_code=source_code,
                 page_from=page_from, page_to=page_to, limit=limit + 1,
@@ -802,7 +806,10 @@ def search_library(
         payload["reformulation_status"] = (
             ("ok" if any(r.get("question_relevance")=="relation_candidate" for r in results) else "degraded")
             if effective_match_mode == "reformulated" and results else ("failed" if effective_match_mode == "reformulated" else "not_needed"))
-        if question_mode:
+        if effective_match_mode=="reformulated":
+            from app.services.question_search import SEARCH_STATE
+            payload.update(SEARCH_STATE.get() or {})
+            payload['reformulation_status']='degraded' if payload.get('completion')=='partial' else 'ok'
             from app.services.question_search import anchor_plan
             payload["query_plan"] = [{"original_query":q, **anchor_plan(q,keep_terms or ())} for q in raw_queries]
             payload["dropped_function_words"] = list(dict.fromkeys(t for p in payload["query_plan"] for t in p["dropped_function_words"]))

@@ -3,8 +3,8 @@ import hashlib,json,re
 from collections import Counter
 from app.core.arabic_utils import normalize_search_text,safe_tokens
 from app.services.query_language import KEYS
-QUESTION=re.compile(r'(?:^|\n)\s*(?:سؤال|السؤال|س\s*[:：])\s*[:：-]?')
-ANSWER=re.compile(r'(?:الجواب|الإجابة|الاجابة|أجاب|ج\s*[:：])\s*[:：-]?')
+QUESTION=re.compile(r'(?:^|\n|(?<= ))\s*(?:سؤال|السؤال|السائل|س)\s*[:：]')
+ANSWER=re.compile(r'(?:الجواب|الإجابة|الاجابة|مولانا الشيخ|سيدي فخر الدين|ج)\s*[:：]')
 def build_discovery_indexes(conn):
  for t in ('discovery_fts','discovery_passages','term_document_frequency','discovery_topics','discovery_meta'):conn.execute('DROP TABLE IF EXISTS '+t)
  conn.execute('CREATE TABLE discovery_passages(id INTEGER PRIMARY KEY,page_id INTEGER,start_char INTEGER,end_char INTEGER,question TEXT,kind TEXT)')

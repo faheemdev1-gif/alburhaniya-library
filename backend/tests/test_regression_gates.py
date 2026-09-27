@@ -125,7 +125,7 @@ class FinalRegressionGates(unittest.TestCase):
             evidence for row in unrelated
             for evidence in row.get("matched_terms", {}).values()
             if evidence.get("surface_form") == "مُريد"
-            and evidence.get("relation") == "normalized"
+            and evidence.get("relation") == "article_variant"
         )
         self.assertNotIn("normalization_warning", article_variant)
 

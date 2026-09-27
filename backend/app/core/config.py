@@ -62,7 +62,9 @@ class Settings(BaseSettings):
     mcp_requests_per_minute: int = 2400
     mcp_api_keys: str = ""
     rate_limit_db_path: str = "/tmp/alburhaniya-rate-limits.db"
-    monitor_summary_path: str = ""
+    monitor_summary_path: str = "/tmp/alburhaniya-monitor-history.json"
+    monitor_enabled: bool = True
+    client_schema_digests: str = ""
 
     model_config = SettingsConfigDict(env_file=".env")
 

@@ -187,13 +187,22 @@ def _build_highlight_regex(
     return re.compile(pattern, re.IGNORECASE)
 
 
+def conjunction_variants(variants):
+    """Safe spacing variants, not a change to literal census normalization."""
+    output=set(variants)
+    for word in variants:
+        if word.startswith('و') and len(word)>3:
+            for tail in safe_term_variants(word[1:]):output.update(('و'+tail,'و '+tail))
+    return sorted(output)
+
+
 @lru_cache(maxsize=2048)
 def _build_exact_variant_regex(
     raw_query: str, *, whole_word: bool = True,
     normalization_level: str = "safe",
 ) -> re.Pattern:
     """Locate the same article-normalized forms accepted by exact FTS."""
-    words = safe_tokens(raw_query)
+    words = safe_tokens(re.sub(r'\bو\s+(?=[ء-ي])','و',raw_query))
     if not words:
         return _build_highlight_regex(
             raw_query, whole_word=whole_word,
@@ -206,7 +215,7 @@ def _build_exact_variant_regex(
         groups.append("(?:" + "|".join(
             _build_highlight_regex(variant, whole_word=False,
                 normalization_level=normalization_level).pattern
-            for variant in safe_term_variants(word)
+            for variant in conjunction_variants(safe_term_variants(word))
         ) + ")")
     separator = r"(?:[\s\u060c\u061b\u061f،؛؟.,:;!()\[\]{}]+)"
     phrase = separator.join(groups)
@@ -249,12 +258,15 @@ def content_types(text: str) -> list[str]:
 
 def evidence_type(text: str, start: int, end: int) -> str:
     """Classify the evidence span without upgrading ambiguous prose."""
-    for kind, pattern in (("quran", _QURAN_RANGE_RE),):
-        if any(left < end and right > start for left, right in _content_ranges(pattern, text)):
-            return kind
-    for match in re.finditer(r'[«"“]([^»"”]{8,800})[»"”]',text):
-        cue=text[max(0,match.start()-100):match.start()]
-        if match.start()<end and match.end()>start and re.search(r'قال رسول الله|قال النبي|عن النبي|روى|رواه|حدثنا|أخبرنا',cue):return "hadith"
+    local=text[max(0,start-160):min(len(text),end+160)]
+    for match in _QURAN_RANGE_RE.finditer(text):
+        if match.start()<end and match.end()>start:
+            cue=text[max(0,match.start()-100):match.start()]
+            if re.search(r'قال ﷺ|وقال ﷺ|المصطفى ﷺ|المحبوب ﷺ|قال رسول الله|قال النبي|عن النبي|حديث|قوله صلى',cue):return 'hadith'
+            if '﴿' in match.group() or re.search(r'قال تعالى|قوله تعالى|يقول تعالى|قال الله|قوله سبحانه',cue):return 'quran'
+    for match in re.finditer(r'[«"“\[\]]([^»"”\[\]]{8,800})[»"”\[\]]',text):
+        cue=text[max(0,match.start()-130):match.start()]
+        if match.start()<end and match.end()>start and re.search(r'قال رسول الله|قال النبي|عن النبي|روى|رواه|حدثنا|أخبرنا|قوله صلى',cue):return "hadith"
     from app.services.question_search import dialogue_at
     if dialogue_at(text,start):return "dialogue"
     heading = _QASIDA_HEADING_RE.search(text or "")
@@ -583,6 +595,7 @@ def _query_expression(query: str, search_mode: str = "exact_phrase") -> str:
     normalized = normalize_search_text(query, level="safe")
     if not normalized:
         return ""
+    if search_mode=='exact_phrase':normalized=re.sub(r'\bو\s+(?=[ء-ي])','و',normalized)
     words = [w for w in normalized.split() if w]
     if search_mode == "lexeme":
         if len(words) != 1:
@@ -595,7 +608,7 @@ def _query_expression(query: str, search_mode: str = "exact_phrase") -> str:
         # matches merely because the article is attached.
         choices = []
         for word in words:
-            variants = set(safe_term_variants(word))
+            variants = set(conjunction_variants(safe_term_variants(word)))
             choices.append(sorted(variants))
         if len(choices) > 8:
             # A broad FTS gate only; original-text phrase validation below is
@@ -1145,10 +1158,14 @@ def _matched_literal_terms(
         for display, normalized in lookup.get(corpus_normalized, ()):
             if display in evidence:
                 continue
-            relation = "exact" if _surface_key(corpus_form) == _surface_key(display) else "normalized"
+            relation = "exact" if _surface_key(corpus_form) == _surface_key(display) else ("article_variant" if corpus_normalized != normalized and corpus_normalized.removeprefix('ال') == normalized.removeprefix('ال') else "normalized")
             evidence[display] = _term_evidence(
                 display, normalized, corpus_form, relation,
             )
+    # Phrase-level spacing is declared separately from per-token evidence.
+    for query in raw_queries:
+        if re.sub(r'\bو\s+(?=[ء-ي])','و',normalize_search_text(evidence_text)) == re.sub(r'\bو\s+(?=[ء-ي])','و',normalize_search_text(query)) and normalize_search_text(evidence_text)!=normalize_search_text(query):
+            evidence[query]=_term_evidence(query,normalize_search_text(query),evidence_text,'detached_conjunction')
     return evidence
 
 
@@ -1381,6 +1398,8 @@ def search(
     results = []
     query_candidates = {q: set() for q in raw_queries}
     for row in rows:
+        from app.core.budget import check
+        check()
         source_text = row["text"]
         plain_text = _indexable_text(source_text)
         if row["block_type"] == "toc" and not INCLUDE_TOC.get():

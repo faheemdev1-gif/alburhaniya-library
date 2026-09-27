@@ -25,5 +25,8 @@ def main():
   if not 1<=workers<=8:raise ValueError
  except ValueError:raise SystemExit('Invalid WEB_CONCURRENCY: use 1 to 8.')
  os.environ['PYTHONUNBUFFERED']='1';print(f'Starting library HTTP service on 0.0.0.0:{port}; health=/health; MCP=/mcp/',flush=True)
+ if settings.monitor_enabled:
+  import subprocess
+  subprocess.Popen([sys.executable,str(root/'scripts/monitor_service.py')],stdin=subprocess.DEVNULL)
  os.execv(sys.executable,[sys.executable,'-m','uvicorn','app.main:app','--host','0.0.0.0','--port',str(port),'--workers',str(workers)])
 if __name__=='__main__':main()

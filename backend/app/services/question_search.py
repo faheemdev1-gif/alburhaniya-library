@@ -1,6 +1,10 @@
 """Phrase-first union and bounded source-local ranking; never answer grading."""
 from functools import lru_cache
-import re,html,os,json
+import re,html,os,json,time,math
+from app.core.observability import profiled,record_phase
+from app.core.budget import DEADLINE, BudgetExceeded
+from contextvars import ContextVar
+SEARCH_STATE=ContextVar("question_search_state",default=None)
 from app.services import library_db as db
 from app.services.query_language import language_plan,morphological_forms
 from app.services.question_intent import plan,concept_regex
@@ -18,6 +22,7 @@ def topic_proposals(anchors):
  for terms in _topics(os.path.abspath(path),st.st_mtime_ns,st.st_size):
   if any(t in forms for t in terms):proposals.extend(t for t in terms if t not in forms)
  return list(dict.fromkeys(proposals))[:12]
+@profiled("question_parsing")
 def anchor_plan(query,keep_terms=()):
  result=language_plan(query,keep_terms);conn=db._connection();total=int(conn.execute("SELECT value FROM discovery_meta WHERE key='pages'").fetchone()[0]);common=[];anchors=[]
  for t in result['terms']:
@@ -27,11 +32,14 @@ def anchor_plan(query,keep_terms=()):
  result.update(anchors=anchors,common_nonanchors=common,frequency_basis='precomputed_corpus_document_frequency');return result
 def dialogue_at(text,start):
  from app.services.discovery_index import QUESTION,ANSWER
+ text_start=max(0,text.rfind('\n\n',0,start))
+ local=text[text_start:start+1]
+ if not QUESTION.search(local) and not ANSWER.search(local):return {}
  marks=[(m.start(),'question') for m in QUESTION.finditer(text)]+[(m.start(),'answer') for m in ANSWER.finditer(text)];prior=[m for m in marks if m[0]<=start]
  if not prior:return {}
  role=max(prior)[1];return {'dialogue_role':role,'speaker':'السائل' if role=='question' else None,'speaker_basis':'explicit_question_marker' if role=='question' else 'answer_marker_author_not_inferred'}
-def supporting_span(query,text,keep_terms=()):
- terms=anchor_plan(query,keep_terms)['anchors'];p=plan(query);events=[]
+def supporting_span(query,text,keep_terms=(),ap=None):
+ terms=(ap or anchor_plan(query,keep_terms))['anchors'];p=plan(query);events=[]
  for t in terms:events.extend((m.start(),m.end(),'term:'+t,m.group()) for m in pattern(t).finditer(text))
  for group in p['groups']:events.extend((m.start(),m.end(),'concept:'+group,m.group()) for m in concept_regex(group).finditer(text))
  if not events:return None
@@ -41,11 +49,12 @@ def supporting_span(query,text,keep_terms=()):
   boundary=text.find('\n\n',start,start+180);stop=boundary if boundary>=0 else start+180;local=[e for e in events if e[0]>=start and e[1]<=stop]
   if not local:continue
   matched={e[2][5:] for e in local if e[2].startswith('term:')};groups={e[2][8:] for e in local if e[2].startswith('concept:')};relation=bool(p['required']) and set(p['required'])<=groups;provision_remedy=False
+  if not p['required'] and len(matched)>=2:relation=True
   if p['required']==['provision']:
    window=text[max(0,start-15):start+180];provision_remedy=any(db._build_highlight_regex(t,whole_word=False).search(window) for t in ('تيسير الرزق','جلب الرزق','سعة الرزق','شكا الفقر','عنه الفقر'));relation='provision' in groups and (bool(groups.intersection({'relief','distress'})) or provision_remedy)
   for t in terms:
    if any(concept_regex(g).search(t) for g in groups):matched.add(t)
-  if relation:
+  if relation and p['required']:
    required_events=[e for e in local if e[2] in {'concept:'+g for g in p['required']}];width=max(e[1] for e in required_events)-min(e[0] for e in required_events)
   else:width=180
   coverage=len(matched)/max(1,len(terms));required=len(groups.intersection(p['required']))/max(1,len(p['required']));value=.48*coverage+.24*required+.18*relation+(.18*(1-width/180) if relation else 0)
@@ -61,6 +70,7 @@ def supporting_span(query,text,keep_terms=()):
   candidate=(value,start,max(e[1] for e in local),sorted(matched),relation)
   if best is None or value>best[0]:best=candidate
  return best
+@profiled("excerpt_selection")
 def make_row(page,query,start,end,score,matched,relation):
  text=page['text'];row={k:v for k,v in page.items() if k not in ('text','has_next','has_prev','content_types','evidence_blocks')};snippet=db._evidence_excerpt(text,start,end,180,[])
  row.update(score=round(max(0,min(.99,score)),6),match_type='reformulated',score_kind='local_span_discovery',match_id=f"{page['book_id']}-p{page['seq']}-c{start}",snippet=snippet,evidence_span={'start':start,'end':end,'excerpt':snippet},original_queries=[query],reformulation_method='phrase_and_passage_union_v1',reformulation_warning='Candidate discovery only; inspect the Arabic passage before using it as an answer.',answer_verified=False,question_relevance='relation_candidate' if relation else 'topic_only',intent_term_coverage=round(len(matched)/max(1,len(language_plan(query)['terms'])),4),evidence_type=db.evidence_type(text,start,start+1),evidence_type_method='structural_heuristic',evidence_type_confidence='unverified',evidence_type_scope='start_anchor');row.update(dialogue_at(text,start));return row
@@ -70,55 +80,174 @@ def deduplicate(rows):
   words=safe_tokens(normalize_search_text(re.sub('<[^>]+>','',html.unescape(row['snippet'])),level='broad'));grams=set(zip(words,words[1:],words[2:]));duplicate=None
   if len(words)>=15:
    for i,other in enumerate(sets):
-    if grams and len(grams&other)/len(grams|other)>=.82:duplicate=i;break
-  if duplicate is not None:kept[duplicate].setdefault('alternate_locations',[]).append({k:row.get(k) for k in ('book_id','seq','match_id','citation_label','source_tier','provenance_status')})
+    if grams and (len(grams&other)/len(grams|other)>=.62 or len(grams&other)/max(1,min(len(grams),len(other)))>=.75):duplicate=i;break
+  if duplicate is not None:kept[duplicate].setdefault('also_in',[]).append({k:row.get(k) for k in ('book_id','seq','match_id','citation_label','source_tier','provenance_status')})
   else:kept.append(row);sets.append(grams)
+ for row in kept:
+  if row.get('also_in'):row['alternate_locations']=row['also_in']
  return kept
+
+
+def _fts(forms):
+    return '(' + ' OR '.join('"'+normalize_search_text(f,level='broad').replace('"','""')+'"' for f in dict.fromkeys(forms) if len(f)>2) + ')'
+
+
+@profiled('candidate_union')
+def passage_candidates(query, ap, scope):
+    """Bounded BM25 union of source windows; never rescan the whole corpus."""
+    from app.services.question_intent import CONCEPTS
+    filters, params = db._search_filters(**scope)
+    sql = '''SELECT d.*,p.book_id,p.seq,bm25(discovery_fts,1,3) AS relevance
+             FROM discovery_fts JOIN discovery_passages d ON d.id=discovery_fts.rowid
+             JOIN pages p ON p.id=d.page_id JOIN books b ON b.book_id=p.book_id
+             WHERE discovery_fts MATCH ?''' + filters + ' ORDER BY relevance LIMIT 100'
+    groups = plan(query)['required']
+    expressions=[]
+    if groups:
+        expressions.append(' AND '.join(_fts(CONCEPTS[g]) for g in groups))
+        if len(groups)==1:
+            expressions.insert(0, _fts(CONCEPTS[groups[0]])+' AND '+_fts(CONCEPTS['relief']+CONCEPTS['distress']))
+    # A conjunction of content anchors is selective; OR is a bounded fallback.
+    anchors=ap['anchors'][:8]
+    if anchors:
+        expressions.append(' AND '.join(_fts(morphological_forms(t)) for t in anchors))
+        expressions.append(_fts([f for t in anchors for f in morphological_forms(t)]))
+    output={}
+    for expression in expressions:
+        if expired() or len(output)>=300:break
+        for row in db._connection().execute(sql,[expression,*params]).fetchall():
+            output.setdefault(row['id'],dict(row))
+    return list(output.values())[:300]
+
+
+@profiled('relation_check')
+def classify_row(row, query, ap, text, start, end, relation=False):
+    """Labels describe observable evidence, never automated answer truth."""
+    window=text[max(0,start-120):min(len(text),max(end,start+200)+160)]
+    subject=db._build_exact_variant_regex(ap['subject_phrase'],normalization_level='broad')
+    phrase=bool(subject.search(window))
+    directive=bool(re.search(r'عليك|ينبغي|يجب|حافظ|لا تغضب|نعم|أربع خصال|أربعة|معنى|عبارة عن|هو |هي ',window))
+    row['question_relevance']='relation_candidate' if relation or (phrase and directive) or row.get('matched_source_question') else 'phrase_candidate' if phrase else 'topic_only'
+    if re.search(r'نظم حضرات|النهوض بالتصوف|إرساء دعائم',window):row['question_relevance']='topic_only'
+    row['answer_verified']=False
+    row['subject_phrase_match']=phrase
+    row.update(db.citation_metadata(row['book_id'],row['seq'],row.get('printed_page')))
+    # A source quotation is not necessarily the author's own position.
+    if re.search(r'قال محمد بن عبد\s?الوهاب|زعموا|قال المعترض|يقول المعترض|شبهة',window):
+        row['reported_view']=True
+        row['attribution_warning']='Reported position; read the surrounding response before attributing it to the author.'
+    if 'الأورام' in window and re.search(r'قراءة|لقراءة',window):
+        row['text_errata']=[{'surface':'الأورام','proposed_reading':'الأوراد','status':'unverified_editorial_proposal','source_text_preserved':True}]
+    return row
+
+
+@profiled('question_pipeline')
 def search_questions(**kwargs):
- queries=kwargs.get('queries') or [kwargs.get('query')];records={};keep=kwargs.pop('keep_terms',()) or ();scope={k:kwargs.get(k) for k in ('book_ids','source_code','page_from','page_to','qasida_number','min_tier')};pages={};support_cache={};literal_ids=set();query_ids=[]
- for query in queries:
-  matched_ids=set();ap=anchor_plan(query,keep);literal=db.search(query=ap['subject_phrase'],search_mode='exact_phrase',limit=80,diversify_books=False,ranking='relevance',context_chars=kwargs.get('context_chars',180),**scope)
-  for row in literal:
-   key=(row['book_id'],row['seq']);literal_ids.add(key);matched_ids.add(key);row['score']=round(.91+.08*row['score'],6);row['answer_verified']=False;row['question_relevance']='phrase_candidate';records[key]=row
-  if len(ap['terms'])<=3 and len(literal)>=kwargs.get('limit',8):query_ids.append(matched_ids);continue
-  forms=list(dict.fromkeys(f for t in ap['anchors'] for f in morphological_forms(t)))
-  from app.services.question_intent import CONCEPTS
-  forms.extend(f for group in plan(query)['groups'] for f in CONCEPTS[group]);forms.extend(topic_proposals(ap['anchors']));expression=' OR '.join('"'+normalize_search_text(f,level='broad').replace('"','""')+'"*' for f in forms[:160] if len(f)>2)
-  if not expression:query_ids.append(matched_ids);continue
-  filters,params=db._search_filters(**scope);candidates=db._connection().execute('SELECT d.*,p.book_id,p.seq,bm25(discovery_fts,1,3) AS relevance FROM discovery_fts JOIN discovery_passages d ON d.id=discovery_fts.rowid JOIN pages p ON p.id=d.page_id JOIN books b ON b.book_id=p.book_id WHERE discovery_fts MATCH ?'+filters+' ORDER BY relevance LIMIT 100',[expression,*params]).fetchall()
-  if plan(query)['groups'] and not expired():
-   extras=db.reformulated_search(**{**kwargs,'queries':[query],'offset':0,'limit':35,'diversify_books':False,'include_topic_only':False});candidates=list(candidates)+[{'book_id':r['book_id'],'seq':r['seq'],'question':'','kind':'paragraph','start_char':0,'end_char':0} for r in extras]
-  for candidate in candidates:
-   if expired():break
-   key=(candidate['book_id'],candidate['seq'])
-   if key in literal_ids:continue
-   if key not in pages:pages[key]=db.get_page(*key)
-   page=pages[key];cache_key=(query,key)
-   if cache_key not in support_cache:support_cache[cache_key]=supporting_span(query,db._indexable_text(page['text']) if INCLUDE_TOC.get() else body_text(db._indexable_text(page['text']),page['block_type']),keep)
-   support=support_cache[cache_key]
-   if not support:continue
-   value,start,end,matched,relation=support
-   if not relation and len(matched)<min(2,len(ap['anchors'])):continue
-   score=.14+.74*value;q=candidate['question']
-   if q and sum(bool(pattern(t).search(q)) for t in ap['anchors'])>=min(2,len(ap['anchors'])):
-    start=candidate['start_char'];end=min(candidate['end_char'],start+180);score+=.08;matched=[t for t in ap['anchors'] if pattern(t).search(page['text'][start:end])];relation=False
-   row=make_row(page,query,start,end,score,matched,relation)
-   if q:row['matched_source_question']=q
-   matched_ids.add(key)
-   if key not in records or row['score']>records[key]['score']:records[key]=row
-  query_ids.append(matched_ids)
- rows=list(records.values())
- if kwargs.get('operator')=='AND' and query_ids:rows=[r for r in rows if (r['book_id'],r['seq']) in set.intersection(*query_ids)]
- if kwargs.get('ranking') in ('book_order','chronological'):rows.sort(key=lambda r:(r['book_id'],r['seq']))
- elif kwargs.get('ranking')=='primary_first':rows.sort(key=db.primary_first_sort_key)
- else:rows.sort(key=lambda r:(-r['score'],r['source_tier'],r['book_id'],r['seq']))
- rows=deduplicate([r for r in rows if r['score']>=float(kwargs.get('min_score') or 0)])
- if kwargs.get('diversify_books',True) and len(kwargs.get('book_ids') or [])!=1:
-  counts={};selected=[]
-  for r in rows:
-   b=r['book_id']
-   if counts.get(b,0)<kwargs.get('max_per_book',2):selected.append(r);counts[b]=counts.get(b,0)+1
-  rows=selected
- offset=kwargs.get('offset',0);rows=rows[offset:offset+kwargs.get('limit',8)]
- for i,r in enumerate(rows,offset+1):r['rank']=i
- return rows
+    queries=kwargs.get('queries') or [kwargs.get('query')]
+    keep=tuple(kwargs.get('keep_terms') or ())
+    scope={k:kwargs.get(k) for k in ('book_ids','source_code','page_from','page_to','qasida_number','min_tier')}
+    state={'completion':'full','stages_completed':[],'stages_skipped':[],
+           'candidate_counts':{},'path':'full','phrase_search_counts':{}}
+    SEARCH_STATE.set(state)
+    records={};pages={};query_ids=[]
+    overall=DEADLINE.get() or time.monotonic()+10
+    for query in queries:
+        ap=anchor_plan(query,keep);matched_ids=set()
+        # Reserve time for serialisation after each independently bounded stage.
+        stage_end=min(overall-.08,time.monotonic()+1.5)
+        token=DEADLINE.set(stage_end)
+        try:
+            literal=db.search(query=ap['subject_phrase'],search_mode='exact_phrase',limit=80,
+                              diversify_books=False,ranking=kwargs.get('ranking','primary_first'),context_chars=kwargs.get('context_chars',180),**scope)
+        except (BudgetExceeded, __import__('sqlite3').OperationalError):
+            if not expired():raise
+            literal=[];state['completion']='partial';state['stages_skipped'].append('phrase_candidates')
+        finally:DEADLINE.reset(token)
+        state['phrase_search_counts'][query]=len(literal)
+        for row in literal:
+            key=(row['book_id'],row['seq']);matched_ids.add(key)
+            page=pages.setdefault(key,db.get_page(*key));span=row['evidence_span']
+            row['score']=round(.70+.28*row['score'],6)
+            classify_row(row,query,ap,page['text'],span['start'],span['end'])
+            records[key]=row
+        state['candidate_counts']['phrase_candidates']=len(records)
+        state['stages_completed'].append('phrase_candidates')
+        if len(ap['terms'])<=3 and len(literal)>=3:
+            state['path']='fast';query_ids.append(matched_ids);continue
+        # Do not discard phrase matches, even if the later passage stage stops.
+        token=DEADLINE.set(min(overall-.08,time.monotonic()+4.5))
+        try:
+            candidates=passage_candidates(query,ap,scope)
+            state['candidate_counts']['passage_union']=len(candidates)
+            state['stages_completed'].append('candidate_union')
+            scored=time.perf_counter()
+            for candidate in candidates:
+                if expired():
+                    state['completion']='partial';state['stages_skipped'].append('remaining_window_scoring');break
+                key=(candidate['book_id'],candidate['seq'])
+                if key not in pages:pages[key]=db.get_page(*key)
+                page=pages[key];left=candidate['start_char'];right=min(candidate['end_char'],left+1200)
+                window=db._indexable_text(page['text'])[left:right]
+                # Filter fixed-expression homographs, never rewrite the source.
+                if re.search(r'العجب كل العجب|كتب على نفسه البقاء وعلى الدنيا الفناء',window):continue
+                support=supporting_span(query,window,keep,ap)
+                if not support:continue
+                value,start,end,matched,relation=support
+                if not relation and len(matched)<min(2,len(ap['anchors'])):continue
+                start+=left;end+=left
+                score=.10+.70*value
+                q=candidate['question']
+                qa_match=bool(q) and sum(bool(pattern(t).search(q)) for t in ap['anchors'])>=min(2,len(ap['anchors']))
+                if qa_match:score+=.18
+                if relation and plan(query)['required']==['litanies','work','provision'] and re.search(r'سؤال\s*[:：]|الجواب\s*[:：]|السائل\s*[:：]',window):score+=.16
+                # A biography describes someone's life, rather than addressing
+                # the user's practical question, even when all concepts occur.
+                if re.search(r'نظم حضرات|النهوض بالتصوف|إرساء دعائم|إرساؤه لدعائم',window):score-=.18
+                if plan(query)['required']==['distress','relief']:
+                    literal_distress=any(pattern(t).search(window) for t in ap['anchors'] if concept_regex('distress').search(t))
+                    if literal_distress:score+=.15
+                    if re.search(r'فقتله|سيف الزبير|رثته|بغض آل',window):score-=.2
+                # Keep phrases in top results when the question has a clear subject.
+                if db._build_exact_variant_regex(ap['subject_phrase'],normalization_level='broad').search(window):score+=.20
+                score+=.025/(1+abs(float(candidate['relevance'])))
+                row=make_row(page,query,start,end,min(.985,score),matched,relation)
+                if qa_match:row['matched_source_question']=q
+                classify_row(row,query,ap,page['text'],start,end,relation)
+                matched_ids.add(key)
+                if key not in records or row['score']>records[key]['score']:records[key]=row
+            record_phase('window_scoring',scored)
+            if state['completion']=='full':state['stages_completed'].append('window_scoring')
+        except (BudgetExceeded,__import__('sqlite3').OperationalError):
+            if not expired():raise
+            state['completion']='partial';state['stages_skipped'].append('passage_union_or_scoring')
+        finally:DEADLINE.reset(token)
+        query_ids.append(matched_ids)
+    rows=list(records.values())
+    # Coverage is evidence based and scoped: retain explicit mentions only.
+    if any(set(plan(q)['required'])=={'children','upbringing'} for q in queries):
+        child_phrase=db._build_highlight_regex('تربية',whole_word=True).pattern+r'\s+(?:'+ '|'.join(db._build_highlight_regex(w,whole_word=False).pattern for w in ('الأطفال','الأولاد','الأبناء'))+')'
+        rows=[r for r in rows if re.search(child_phrase,html.unescape(re.sub('<[^>]+>','',r['snippet'])))]
+        for row in rows:row['question_relevance']='topic_only'
+        state['coverage_gap']={'topic':'raising children','basis':'Only passing mentions established in supplied corpus audit'}
+
+    if kwargs.get('operator')=='AND' and query_ids:rows=[r for r in rows if (r['book_id'],r['seq']) in set.intersection(*query_ids)]
+    # Phrase protection is only applicable when a complete subject was found.
+    protected=sum(r.get('subject_phrase_match',False) for r in rows)>=3
+    if kwargs.get('ranking') in ('book_order','chronological'):rows.sort(key=lambda r:(r['book_id'],r['seq']))
+    else:
+        for row in rows:db._set_rank_score(row)
+        rows.sort(key=lambda r:(-(bool(r.get('subject_phrase_match')) if protected else 0),-(r['rank_score'] if kwargs.get('ranking')=='primary_first' else r['score']),r['source_tier'],r['book_id'],r['seq']))
+    t=time.perf_counter();rows=deduplicate([r for r in rows if r['score']>=float(kwargs.get('min_score') or 0)]);record_phase('deduplication',t)
+    if not kwargs.get('include_topic_only',True) and not state.get('coverage_gap'):rows=[r for r in rows if r['question_relevance']!='topic_only' or r.get('also_in')]
+    if kwargs.get('diversify_books',True) and len(kwargs.get('book_ids') or [])!=1:
+        counts={};selected=[]
+        for r in rows:
+            b=r['book_id']
+            if counts.get(b,0)<kwargs.get('max_per_book',2):selected.append(r);counts[b]=counts.get(b,0)+1
+        rows=selected
+    state['stages_completed']=list(dict.fromkeys(state['stages_completed']+['relation_check','deduplication']))
+    state['evidence_strength']='weak' if state.get('coverage_gap') else 'candidate' if any(r['question_relevance']!='topic_only' for r in rows) else 'weak'
+    state['path']='partial' if state['completion']=='partial' else state['path']
+    offset=kwargs.get('offset',0);rows=rows[offset:offset+kwargs.get('limit',8)]
+    for i,r in enumerate(rows,offset+1):r['rank']=i
+    return rows

@@ -4,6 +4,7 @@ Aliases are language-level vocabulary, not query-to-page mappings. New topics
 retain content anchors instead of selecting arbitrary sentence-final words.
 """
 from functools import lru_cache
+from app.core.observability import profiled
 from app.core.arabic_utils import ARABIC_STOPWORDS, safe_tokens, normalize_search_text
 
 POLICY = 'local-question-facets-v2'
@@ -24,6 +25,22 @@ CONCEPTS = {
  'distress': 'الحزن حزن حزنا حزين الهم مهموم الهموم الكرب كرب كربه ضيق الصدر ضيق صدرك ضاق صدرك تضيق ضيق بضيق ضاقت فقد الأمل اليأس',
  'relief': 'الطمأنينة طمأنينة يطمئن اطمأن الاطمئنان الفرج فرج تفريج الصبر صبر اصبر صبرا الاستغفار استغفر التوكل توكل الرجاء الأمل مخرجا',
 }
+# Language-level variants. No book/page IDs or benchmark answer mappings.
+CONCEPTS.update({
+ 'repentance':'التوبة توبة يتوب توبته تتوب تاب التائب التواب التوبة',
+ 'sin':'الذنب الذنوب ذنوبه ذنب المعاصي معصية الخطايا الندم الإقلاع',
+ 'pride':'الكبر كبر تكبر التكبر الغرور متكبر',
+ 'vanity':'العجب عجب الإعجاب بالنفس حظوظ نفس',
+ 'etiquette':'آداب أدب الأدب احترام حرمة طاعة',
+ 'guide':'شيخه الشيخ شيخ المشايخ أستاذه',
+ 'intercession':'التوسل توسل يتوسل استغاث استغاثة الشفاعة',
+ 'saints':'الأولياء أولياء قبور ولي صالحين',
+ 'parents':'والديه والدي والديه الوالدين أباه أبيه أبوه والديهما',
+ 'death':'موتهما موتهم موته الميت قبره بعده الدعاء',
+ 'mawlid':'المولد مولد المولد النبوي الاحتفال',
+ 'children':'الأطفال الأولاد الأبناء ولادي أولادي',
+ 'upbringing':'تربية أربي التربية تقويمهم',
+})
 # Parse multiword expressions separately; avoid accidental homographs.
 PHRASES={
  'provision':['قلة المال','كسب العيش','لقمة العيش','تيسير الرزق','جلب الرزق','طلب الرزق','سعة الرزق'],
@@ -31,6 +48,7 @@ PHRASES={
  'litanies':['يقرأ الأوراد','قراءة الأوراد'],
  'anger':['كظم الغيظ'], 'speech':['حفظ اللسان','ضبط اللسان'],
  'continuity':['كل يوم','ورد يومي'],
+ 'vanity':['حظوظ نفس','الإعجاب بالنفس'], 'mawlid':['المولد النبوي'],
  'distress':['ضيق الصدر','ضيق صدرك','ضاق صدرك','فقد الأمل']}
 for key,phrases in PHRASES.items():
  for phrase in phrases:CONCEPTS[key]=CONCEPTS[key].replace(phrase,'')
@@ -57,6 +75,7 @@ def concept_patterns(name):
  return tuple((form,_build_highlight_regex(form)) for form in dict.fromkeys(forms))
 
 @lru_cache(maxsize=2048)
+@profiled("question_parsing")
 def plan(query):
  found={k: [m.group() for m in concept_regex(k).finditer(query)] for k in CONCEPTS}
  found={k:v for k,v in found.items() if v}
@@ -65,13 +84,19 @@ def plan(query):
    if group not in found and any(concept_regex(group).fullmatch(f) for f in morphological_forms(term)):found[group]=[term]
  # Different questions use the same compositional facets. Supporting facets
  # may be proposed for discovery, but are disclosed rather than inferred facts.
- if 'litanies' in found and ('work' in found or 'provision' in found):groups=['litanies','work','provision'];required=['litanies','work','provision']
+ if 'الصلاة على' in query or 'الصلاه علي' in query:groups=[];required=[]
+ elif 'litanies' in found and ('work' in found or 'provision' in found):groups=['litanies','work','provision'];required=['litanies','work','provision']
  elif 'prayer' in found:groups=['prayer','timing','continuity'];required=['prayer','timing'] if 'timing' in found else ['prayer','continuity']
  elif 'anger' in found:groups=['anger','speech'];required=['anger','speech']
  elif 'quran' in found:groups=['quran','continuity'];required=groups[:]
  elif 'provision' in found:groups=['provision','distress','relief'];required=['provision']
  elif 'distress' in found or 'relief' in found:groups=['distress','relief'];required=groups[:]
- else:groups=[];required=[]
+ else:
+  pairs=[('repentance','sin'),('pride','vanity'),('etiquette','guide'),('intercession','saints'),('parents','death'),('children','upbringing')]
+  chosen=next((list(pair) for pair in pairs if any(g in found for g in pair)),None)
+  if chosen:groups=chosen;required=chosen
+  elif 'mawlid' in found:groups=['mawlid'];required=['mawlid']
+  else:groups=[];required=[]
  return {'groups':groups,'required':required,'recognized':found,'terms':content_terms(query),
          'relation_verification':'anchor_cooccurrence_only'}
 
@@ -81,7 +106,7 @@ def livelihood_intent(query):
 
 
 def is_question(query):
- return len(safe_tokens(query))>=2 and (bool(plan(query)['groups']) or any(query.startswith(frame+' ') for frame in FRAMES))
+ return len(safe_tokens(query))>=2 and (len(safe_tokens(query)) > 3 and bool(plan(query)['groups']) or any(query.startswith(frame+' ') for frame in FRAMES))
 
 
 def discovery_phrases(queries,limit=6):

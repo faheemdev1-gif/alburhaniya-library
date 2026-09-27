@@ -1,0 +1,162 @@
+[
+  {
+    "id": "REL-1",
+    "status": "Implemented; tested",
+    "evidence": "Bounded stages retain earlier evidence with completion=partial. Forced later-stage timeout test passes."
+  },
+  {
+    "id": "REL-2",
+    "status": "Implemented; tested",
+    "evidence": "BM25 passage union capped at 300 windows; window scoring uses precomputed offsets and bounded text. Failing families complete locally."
+  },
+  {
+    "id": "REL-3",
+    "status": "Implemented; tested",
+    "evidence": "Bare phrases try exact and terms before bounded passage discovery; the slow legacy fallback is removed for short phrases."
+  },
+  {
+    "id": "REL-4",
+    "status": "Implemented; measured",
+    "evidence": "Named parsing, candidate, scoring, relation, excerpt and deduplication phases. Profile evidence included; microsecond overhead can exceed 10% on cache hits."
+  },
+  {
+    "id": "REL-5",
+    "status": "Local acceptance passed",
+    "evidence": "Real HTTP at 1, 2, 4 and 8 clients: 64/64 completed. Four-client p95 3.93 s; deployment hardware still needs replay."
+  },
+  {
+    "id": "REL-6",
+    "status": "Implemented; tested",
+    "evidence": "Bounded process cache keys include complete controls, corpus hash and file identity. Census/audit requests bypass response cache."
+  },
+  {
+    "id": "REL-7",
+    "status": "Acceptance passed locally",
+    "evidence": "Census retains 14 literal pages within 20 lexeme matches, zero missing. Timed evidence in acceptance.json."
+  },
+  {
+    "id": "REL-8",
+    "status": "Implemented; operational gate open",
+    "evidence": "Launcher starts five-minute monitored probes. Real seven-day production history has not elapsed; proxy/origin correlation still requires deployment review."
+  },
+  {
+    "id": "REL-9",
+    "status": "Local schema passed; client gate open",
+    "evidence": "Nine controls invoked through a fresh local MCP SDK session. Export and optional CLIENT_SCHEMA_DIGESTS startup guard included. ChatGPT/Claude refresh not performed."
+  },
+  {
+    "id": "RET-1",
+    "status": "Targeted acceptance passed",
+    "evidence": "Subject phrases protected from trailing question verbs; Laylat al-Qadr answer ranks first in regression."
+  },
+  {
+    "id": "RET-2",
+    "status": "Implemented; targeted checks",
+    "evidence": "Co-occurring concepts and fixed-expression penalties suppress vanity/amazement and sermon-opener false matches. Broad homograph precision still needs independent grading."
+  },
+  {
+    "id": "RET-3",
+    "status": "Acceptance passed",
+    "evidence": "Attached and detached conjunction queries return the same three pages; relaxed spacing is declared."
+  },
+  {
+    "id": "RET-4",
+    "status": "Implemented; broader gate open",
+    "evidence": "Literal subject candidates are retained in the union; prefix-preservation regression passes. Best-phrase top-ten inclusion for every Appendix C question has not been independently certified."
+  },
+  {
+    "id": "RET-5",
+    "status": "Acceptance passed",
+    "evidence": "Near-duplicate snippets are grouped with also_in citations. W1/W2/W4 contain at most one biography copy."
+  },
+  {
+    "id": "RET-6",
+    "status": "Targeted acceptance passed",
+    "evidence": "W1/W2/W4 answer b41:131 ranks first. Local span and BM25 features break common ties; universal no-more-than-two-ties acceptance remains ungraded."
+  },
+  {
+    "id": "RET-7",
+    "status": "Acceptance passed",
+    "evidence": "Child-raising query returns only b44:29 and b44:35, marked weak; no root-drift filler."
+  },
+  {
+    "id": "RET-8",
+    "status": "Implemented",
+    "evidence": "Coverage register is published in the connector contract; coverage gaps are not invented away."
+  },
+  {
+    "id": "RET-9",
+    "status": "Owner-dependent gate open",
+    "evidence": "Runner accepts 40 independently owned questions over five forms. No unseen owner set was provided; no private accuracy is claimed."
+  },
+  {
+    "id": "CIT-1",
+    "status": "Acceptance passed",
+    "evidence": "Quoted opposing view at b07:256 carries reported_view and attribution_warning in both compact modes."
+  },
+  {
+    "id": "CIT-2",
+    "status": "Implemented; scan review open",
+    "evidence": "Errata register records the b39:5 typo and proposed reading; source text is unchanged. Parallel biography evidence flags it."
+  },
+  {
+    "id": "CIT-3",
+    "status": "Preserved; scan review open",
+    "evidence": "Sequence-only locators remain protected by regressions. b01 label 70 and b42 label 118 are recorded for original-scan review."
+  },
+  {
+    "id": "PROV-1",
+    "status": "Partially resolved",
+    "evidence": "Four source-supported metadata decisions documented: b05, b16, b17, b37. The broad automated inventory still flags 29 records; missing scans/colophons prevent the <=5 goal."
+  },
+  {
+    "id": "META-1",
+    "status": "Implemented; grading gate open",
+    "evidence": "Relevance is computed per hit and not inherited as a shared default. Targeted answer/biography tests pass. The required 100-hit human calibration is outstanding."
+  },
+  {
+    "id": "META-2",
+    "status": "Implemented; grading gate open",
+    "evidence": "Explicit Q&A markers and quotation cues replace broad dialogue/Quran guesses. Hadith-in-ornamental-brackets regressions pass. The 100-hit 95% precision gate is outstanding."
+  },
+  {
+    "id": "META-3",
+    "status": "Implemented",
+    "evidence": "ok means planned stages completed, degraded means partial processing, not_needed means literal path. fast/full/partial path is disclosed."
+  },
+  {
+    "id": "META-4",
+    "status": "Acceptance passed",
+    "evidence": "Article relaxation is declared article_variant; authoritative surface forms and safe/broad distinctions remain protected."
+  },
+  {
+    "id": "DIAG-1",
+    "status": "Implemented; tested",
+    "evidence": "Tool errors include timing, stage, candidate counts and a concrete exact-query retry. Transport cancellation reports queue_or_worker_deadline."
+  },
+  {
+    "id": "DIAG-2",
+    "status": "Implemented",
+    "evidence": "Known issues retain documentary, independent grading, live deployment, client refresh and monitoring limitations. Local timeout measurements are reported separately."
+  },
+  {
+    "id": "TOK-1",
+    "status": "Acceptance passed",
+    "evidence": "Two-book IDs response is 826 bytes including contract and timing; repeated page-label inventory is only in full catalogue projection."
+  },
+  {
+    "id": "TOK-2",
+    "status": "Implemented; tested",
+    "evidence": "Shared pagination/default fields remain hoisted; individual relevance labels and citation warnings remain explicit."
+  },
+  {
+    "id": "TOK-3",
+    "status": "Measured; exact E17/E18 unavailable",
+    "evidence": "cl100k_base token counts recorded on supplied frozen identical-evidence fixtures. Literal formatting is unchanged from supplied 2.9 measurements; exact external E17/E18 response bytes were not supplied."
+  },
+  {
+    "id": "VER-1",
+    "status": "Implemented",
+    "evidence": "Release 2.10.0, contract 12.0; typo fixed, current instructions and full open-gate list included. Historical release evidence retained."
+  }
+]

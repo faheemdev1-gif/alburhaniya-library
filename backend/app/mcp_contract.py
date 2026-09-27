@@ -7,9 +7,9 @@ import json
 from typing import Any
 
 
-SERVER_VERSION = "2.9.0"
-TOOL_CONTRACT_VERSION = "11.0"
-TOOL_CONTRACT_ID = "alburhaniya-tools-v11"
+SERVER_VERSION = "2.10.0"
+TOOL_CONTRACT_VERSION = "12.0"
+TOOL_CONTRACT_ID = "alburhaniya-tools-v12"
 
 REQUIRED_TOOLS = frozenset({
     "search_library",
@@ -94,8 +94,10 @@ def contract_metadata(tools: Iterable[str] | None = None) -> dict[str, Any]:
     """Versioned metadata for health checks and deployment diagnostics."""
     actual = validate_tool_names(tools or REQUIRED_TOOLS)
     return {
-        "changes_since_previous":["Phrase-first/passsage/Q&A discovery","Source-local ranking and inherited defaults","Bounded threaded execution and per-client quota","Render PORT launcher with two workers"],
-        "known_issues":["Documentary source review remains open","Topic/Q&A proposals require review","Independent held-out and deployed acceptance are pending"],
+        "changes_since_previous":["Phrase-first/passage/Q&A discovery","Source-local ranking and inherited defaults","Bounded threaded execution and per-client quota","Render PORT launcher with two workers"],
+        "known_issues":["Documentary source review remains open","Topic/Q&A proposals require review","Independent held-out and deployed acceptance are pending","Seven-day monitoring acceptance pending","Client schema refresh must be verified in each client"],
+        "reformulation_status_policy":{"ok":"All planned discovery stages completed; not an answer-quality judgement","degraded":"A stage was skipped or stopped; inspect partial results","not_needed":"Literal/terms/lexeme path, no question rewrite"},
+        "coverage_register":[{"topic":"raising children","status":"weak_coverage","basis":"Supplied audit: two passing mentions, no substantive guidance","grading_policy":"exclude from direct-answer denominator; do not invent filler"}],
         "result_defaults_policy":"Search hits inherit result_defaults; explicit hit fields override defaults. Contract 11 clients must expand defaults.",
         "monitoring":__import__("app.services.monitoring",fromlist=["monitoring_summary"]).monitoring_summary(),
         "rate_limit":{"requests_per_minute":__import__("app.core.config",fromlist=["get_settings"]).get_settings().mcp_requests_per_minute,"scope":"authenticated_client_or_peer_ip","retry_policy":"HTTP 429 JSON-RPC with Retry-After and retry_after_ms"},
@@ -127,6 +129,12 @@ def bind_callable_schema(server: Any) -> None:
     TOOL_META['tool_schema_digest'] = hashlib.sha256(json.dumps(
         schemas, sort_keys=True, ensure_ascii=False, separators=(',', ':'),
     ).encode()).hexdigest()
+    from app.core.config import get_settings
+    configured=get_settings().client_schema_digests
+    if configured:
+        clients=json.loads(configured)
+        stale=[name for name,digest in clients.items() if digest!=TOOL_META['tool_schema_digest']]
+        if stale:raise RuntimeError('Client schema refresh required: '+', '.join(stale))
     for tool in tools:
         if tool.meta is not None:
             tool.meta.update(TOOL_META)
