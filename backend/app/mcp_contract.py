@@ -7,7 +7,7 @@ import json
 from typing import Any
 
 
-SERVER_VERSION = "2.10.0"
+SERVER_VERSION = "2.10.1"
 TOOL_CONTRACT_VERSION = "12.0"
 TOOL_CONTRACT_ID = "alburhaniya-tools-v12"
 
@@ -39,7 +39,7 @@ SCHEMA_CAPABILITIES = {
         "context_modes": ["bounded", "paragraph"],
         "default_max_chars": 12000,
         "cross_page_context": True,
-        "max_context_pages": 12,
+        "max_context_pages": 3,
     },
     "get_page": {"default_max_chars": 20000, "declares_truncation": True, "effective_cap_disclosed": True, "ultra_compact": "omits_book_metadata"},
     "list_books": {"supported_parameters": ["include_legend", "projection", "book_ids"],

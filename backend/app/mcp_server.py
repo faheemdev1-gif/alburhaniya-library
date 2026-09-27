@@ -420,7 +420,7 @@ def _explicit_count_details(
             raw_queries, operator=operator, count_basis="phrase", **count_args,
         )
     )
-    relation = "exact"
+    relation = "article_normalized_phrase"
     scope = "matching_pages_before_ranking_and_score_filter"
     if effective_match_mode == "exact":
         retrieval_count = literal["matching_pages"]
@@ -451,8 +451,10 @@ def _explicit_count_details(
         "retrieval_hit_count": int(retrieval_count),
         "retrieval_hit_count_relation": relation,
         "retrieval_hit_count_scope": scope,
-        "literal_matching_pages": int(literal["matching_pages"]),
-        "literal_occurrences": int(literal["matching_occurrences"]),
+        "literal_matching_pages": int(literal["surface_matching_pages"]),
+        "literal_occurrences": int(literal["surface_occurrences"]),
+        "normalized_matching_pages": int(literal["matching_pages"]),
+        "normalized_occurrences": int(literal["matching_occurrences"]),
         "census_matching_pages": int(stats["matching_pages"]),
         "census_occurrences": int(stats["matching_occurrences"]),
     }

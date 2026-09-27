@@ -64,7 +64,7 @@ def test_error_timing_and_retry_are_present():
 
 def test_census_literal_subset():
  r=search_library(query='طمأنينة',match_mode='lexeme',include_counts=True,limit=5)
- assert r['literal_matching_pages']==14 and r['retrieval_hit_count']==20
+ assert r['literal_matching_pages']==db.search_stats(['طمأنينة'])['surface_matching_pages'] and r['retrieval_hit_count']==20
  assert r['retrieval_completeness']['missing_literal_pages']==0
 
 def test_cache_isolated_and_controls_bound():

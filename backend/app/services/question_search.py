@@ -8,7 +8,7 @@ SEARCH_STATE=ContextVar("question_search_state",default=None)
 from app.services import library_db as db
 from app.services.query_language import language_plan,morphological_forms
 from app.services.question_intent import plan,concept_regex
-from app.core.arabic_utils import normalize_search_text,safe_tokens
+from app.core.arabic_utils import normalize_search_text,safe_tokens,safe_term_variants
 from app.core.budget import expired
 from app.core.evidence_blocks import body_text,INCLUDE_TOC
 @lru_cache(maxsize=8192)
@@ -25,8 +25,13 @@ def topic_proposals(anchors):
 @profiled("question_parsing")
 def anchor_plan(query,keep_terms=()):
  result=language_plan(query,keep_terms);conn=db._connection();total=int(conn.execute("SELECT value FROM discovery_meta WHERE key='pages'").fetchone()[0]);common=[];anchors=[]
- for t in result['terms']:
-  forms=morphological_forms(t);row=conn.execute('SELECT MAX(documents) FROM term_document_frequency WHERE term IN ('+','.join('?'*len(forms))+')',forms).fetchone()
+ # A comparison needs both named subjects, not the generic word "difference".
+ terms=result['comparison_subjects'] or result['terms']
+ for t in terms:
+  # Corpus frequency estimates must refer to the query word. Loose morphology
+  # turns بالهم into the ubiquitous pronoun هم and discards a crucial anchor.
+  forms=tuple(normalize_search_text(f,level='broad') for f in safe_term_variants(t))
+  row=conn.execute('SELECT MAX(documents) FROM term_document_frequency WHERE term IN ('+','.join('?'*len(forms))+')',forms).fetchone()
   if (row[0] or 0)>total*.15 and t not in keep_terms:common.append(t)
   else:anchors.append(t)
  result.update(anchors=anchors,common_nonanchors=common,frequency_basis='precomputed_corpus_document_frequency');return result
@@ -39,9 +44,15 @@ def dialogue_at(text,start):
  if not prior:return {}
  role=max(prior)[1];return {'dialogue_role':role,'speaker':'السائل' if role=='question' else None,'speaker_basis':'explicit_question_marker' if role=='question' else 'answer_marker_author_not_inferred'}
 def supporting_span(query,text,keep_terms=(),ap=None):
- terms=(ap or anchor_plan(query,keep_terms))['anchors'];p=plan(query);events=[]
- for t in terms:events.extend((m.start(),m.end(),'term:'+t,m.group()) for m in pattern(t).finditer(text))
- for group in p['groups']:events.extend((m.start(),m.end(),'concept:'+group,m.group()) for m in concept_regex(group).finditer(text))
+ ap=ap or anchor_plan(query,keep_terms)
+ terms=ap['anchors'];comparison=ap['comparison_subjects'];p=plan(query);events=[]
+ for t in terms:
+  # The comparison subjects are distinct words: broad morphology can collapse
+  # توكل and تواكل or accidentally score الفرق against فرج.
+  matcher=db._build_exact_variant_regex(t) if comparison else pattern(t)
+  events.extend((m.start(),m.end(),'term:'+t,m.group()) for m in matcher.finditer(text))
+ if not comparison:
+  for group in p['groups']:events.extend((m.start(),m.end(),'concept:'+group,m.group()) for m in concept_regex(group).finditer(text))
  if not events:return None
  events.sort();best=None
  for start,end,tag,form in events:
@@ -49,6 +60,14 @@ def supporting_span(query,text,keep_terms=(),ap=None):
   boundary=text.find('\n\n',start,start+180);stop=boundary if boundary>=0 else start+180;local=[e for e in events if e[0]>=start and e[1]<=stop]
   if not local:continue
   matched={e[2][5:] for e in local if e[2].startswith('term:')};groups={e[2][8:] for e in local if e[2].startswith('concept:')};relation=bool(p['required']) and set(p['required'])<=groups;provision_remedy=False
+  if comparison:
+   relation=set(comparison)<=matched
+   if not relation:continue
+   width=max(e[1] for e in local)-min(e[0] for e in local)
+   value=.70+.25*(1-min(width,180)/180)
+   candidate=(value,start,max(e[1] for e in local),sorted(matched),True)
+   if best is None or value>best[0]:best=candidate
+   continue
   if not p['required'] and len(matched)>=2:relation=True
   if p['required']==['provision']:
    window=text[max(0,start-15):start+180];provision_remedy=any(db._build_highlight_regex(t,whole_word=False).search(window) for t in ('تيسير الرزق','جلب الرزق','سعة الرزق','شكا الفقر','عنه الفقر'));relation='provision' in groups and (bool(groups.intersection({'relief','distress'})) or provision_remedy)
@@ -73,7 +92,8 @@ def supporting_span(query,text,keep_terms=(),ap=None):
 @profiled("excerpt_selection")
 def make_row(page,query,start,end,score,matched,relation):
  text=page['text'];row={k:v for k,v in page.items() if k not in ('text','has_next','has_prev','content_types','evidence_blocks')};snippet=db._evidence_excerpt(text,start,end,180,[])
- row.update(score=round(max(0,min(.99,score)),6),match_type='reformulated',score_kind='local_span_discovery',match_id=f"{page['book_id']}-p{page['seq']}-c{start}",snippet=snippet,evidence_span={'start':start,'end':end,'excerpt':snippet},original_queries=[query],reformulation_method='phrase_and_passage_union_v1',reformulation_warning='Candidate discovery only; inspect the Arabic passage before using it as an answer.',answer_verified=False,question_relevance='relation_candidate' if relation else 'topic_only',intent_term_coverage=round(len(matched)/max(1,len(language_plan(query)['terms'])),4),evidence_type=db.evidence_type(text,start,start+1),evidence_type_method='structural_heuristic',evidence_type_confidence='unverified',evidence_type_scope='start_anchor');row.update(dialogue_at(text,start));return row
+ query_plan=language_plan(query)
+ row.update(score=round(max(0,min(.99,score)),6),match_type='reformulated',score_kind='local_span_discovery',match_id=f"{page['book_id']}-p{page['seq']}-c{start}",snippet=snippet,evidence_span={'start':start,'end':end,'excerpt':snippet},original_queries=[query],reformulation_method='phrase_and_passage_union_v1',reformulation_warning='Candidate discovery only; inspect the Arabic passage before using it as an answer.',answer_verified=False,question_relevance='relation_candidate' if relation else 'topic_only',intent_term_coverage=round(len(matched)/max(1,len(query_plan['comparison_subjects'] or query_plan['terms'])),4),evidence_type=db.evidence_type(text,start,start+1),evidence_type_method='structural_heuristic',evidence_type_confidence='unverified',evidence_type_scope='start_anchor');row.update(dialogue_at(text,start));return row
 def deduplicate(rows):
  kept=[];sets=[]
  for row in rows:
@@ -101,7 +121,7 @@ def passage_candidates(query, ap, scope):
              FROM discovery_fts JOIN discovery_passages d ON d.id=discovery_fts.rowid
              JOIN pages p ON p.id=d.page_id JOIN books b ON b.book_id=p.book_id
              WHERE discovery_fts MATCH ?''' + filters + ' ORDER BY relevance LIMIT 100'
-    groups = plan(query)['required']
+    groups = [] if ap['comparison_subjects'] else plan(query)['required']
     expressions=[]
     if groups:
         expressions.append(' AND '.join(_fts(CONCEPTS[g]) for g in groups))
@@ -110,8 +130,10 @@ def passage_candidates(query, ap, scope):
     # A conjunction of content anchors is selective; OR is a bounded fallback.
     anchors=ap['anchors'][:8]
     if anchors:
-        expressions.append(' AND '.join(_fts(morphological_forms(t)) for t in anchors))
-        expressions.append(_fts([f for t in anchors for f in morphological_forms(t)]))
+        forms=(lambda t: safe_term_variants(t)) if ap['comparison_subjects'] else morphological_forms
+        expressions.append(' AND '.join(_fts(forms(t)) for t in anchors))
+        if not ap['comparison_subjects']:
+            expressions.append(_fts([f for t in anchors for f in forms(t)]))
     output={}
     for expression in expressions:
         if expired() or len(output)>=300:break
@@ -128,6 +150,13 @@ def classify_row(row, query, ap, text, start, end, relation=False):
     phrase=bool(subject.search(window))
     directive=bool(re.search(r'عليك|ينبغي|يجب|حافظ|لا تغضب|نعم|أربع خصال|أربعة|معنى|عبارة عن|هو |هي ',window))
     row['question_relevance']='relation_candidate' if relation or (phrase and directive) or row.get('matched_source_question') else 'phrase_candidate' if phrase else 'topic_only'
+    # A discussion *about* the literature on etiquette is not itself advice
+    # about how to behave. Require an actionable conduct term in the local span.
+    if plan(query)['required']==['etiquette','guide'] and not re.search(
+        r'التزام|يلتزم|خدمة|يحفظ|حفظ|ملازمة|يستأذن|الاستئذان|يجب\s+على\s+المريد|يراعي|تأدب\s+له',window
+    ):
+        row['question_relevance']='topic_only'
+        row['score']=round(max(0,row['score']-.22),6)
     if re.search(r'نظم حضرات|النهوض بالتصوف|إرساء دعائم',window):row['question_relevance']='topic_only'
     row['answer_verified']=False
     row['subject_phrase_match']=phrase
@@ -197,7 +226,7 @@ def search_questions(**kwargs):
                 start+=left;end+=left
                 score=.10+.70*value
                 q=candidate['question']
-                qa_match=bool(q) and sum(bool(pattern(t).search(q)) for t in ap['anchors'])>=min(2,len(ap['anchors']))
+                qa_match=bool(q) and sum(bool((db._build_exact_variant_regex(t) if ap['comparison_subjects'] else pattern(t)).search(q)) for t in ap['anchors'])>=min(2,len(ap['anchors']))
                 if qa_match:score+=.18
                 if relation and plan(query)['required']==['litanies','work','provision'] and re.search(r'سؤال\s*[:：]|الجواب\s*[:：]|السائل\s*[:：]',window):score+=.16
                 # A biography describes someone's life, rather than addressing

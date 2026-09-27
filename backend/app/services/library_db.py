@@ -810,7 +810,7 @@ def search_stats(
     expression = _fts_expression(queries, operator, count_mode)
     if not expression:
         return {
-            "matching_pages": 0, "normalized_occurrences": 0,
+            "matching_pages": 0, "surface_matching_pages": 0, "normalized_occurrences": 0,
             "surface_occurrences": 0, "matching_occurrences": 0,
             "count_basis": count_basis, "whole_word": bool(whole_word),
             "normalization_level": "safe", "footnotes_excluded": True,
@@ -857,6 +857,10 @@ def search_stats(
         per_query.append({
             "query": query,
             "matching_pages": len(q_rows),
+            "surface_matching_pages": sum(
+                bool(surface_pattern.search(_indexable_text(r["text"])))
+                for r in q_rows
+            ),
             "normalized_occurrences": sum(
                 _unique_occurrence_count(_indexable_text(r["text"]), q_patterns)
                 for r in q_rows
@@ -879,8 +883,15 @@ def search_stats(
         ) for q in queries)
         for r in rows
     )
+    surface_matching_pages = sum(
+        any(_build_highlight_regex(q, whole_word=whole_word,
+                                   normalization_level="surface").search(_indexable_text(r["text"]))
+            for q in queries)
+        for r in rows
+    )
     return {
         "matching_pages": len(rows),
+        "surface_matching_pages": surface_matching_pages,
         "normalized_occurrences": normalized_occurrences,
         "surface_occurrences": surface_occurrences,
         # Compatibility alias; unlike the old field its polarity is explicit.
@@ -1892,7 +1903,7 @@ def _cap_context_window(
     return capped_start, capped_end, True
 
 
-def _cross_page_paragraph(page, match_start, match_end, max_chars, max_pages=12):
+def _cross_page_paragraph(page, match_start, match_end, max_chars, max_pages=3):
     """Join source paragraphs across adjacent prose pages, with honest caps.
 
     Blank lines are the declared source boundary policy. A TOC or structured

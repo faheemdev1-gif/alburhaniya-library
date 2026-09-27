@@ -1,4 +1,13 @@
-# Al Burhaniya Connector 2.10.0
+# Al Burhaniya Connector 2.10.1
+
+This patch fixes the live 2.10.0 audit regressions: comparison questions now
+require both distinct subject terms in one local passage; interrogative `ما`
+is no longer reported as negation; `literal_*` count fields use source surface
+forms while `normalized_*` fields retain the article-aware census; paragraph
+context is bounded to three pages; and the b37 compiler note agrees with its
+metadata. The five-tool MCP schema and contract major version remain unchanged.
+The corrected release must be deployed and independently graded before a 9+
+retrieval rating can be claimed.
 
 This release implements the 2.9 developer report's engineering corrections. It is a tested source package, not a deployed or independently scored release. **A final 9+ score is not certified.**
 

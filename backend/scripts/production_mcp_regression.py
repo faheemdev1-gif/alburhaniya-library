@@ -201,7 +201,11 @@ async def run(endpoint: str, discovery_only: bool = False) -> dict[str, Any]:
                     and connector.get("schema_digest") == SCHEMA_DIGEST
                 ):
                     raise AssertionError("list_books MCP contract evidence is stale")
-                if catalogue.get("corpus_contract") != health["corpus_contract"]:
+                # Compact catalogue intentionally omits the long repeated-page
+                # register; compare the rest of the contract verbatim.
+                expected_corpus = {k: v for k, v in health["corpus_contract"].items()
+                                   if k != "repeated_printed_labels"}
+                if catalogue.get("corpus_contract") != expected_corpus:
                     raise AssertionError("list_books corpus evidence differs from /health")
                 smoke["list_books"] = "pass"
 

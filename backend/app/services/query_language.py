@@ -1,5 +1,6 @@
 """Language-level discovery rules, not assertions of quotation equivalence."""
 from functools import lru_cache
+import re
 from app.core.arabic_utils import safe_tokens,normalize_search_text
 FUNCTION_WORDS=set('ما ماذا هل كيف لماذا متى أين اين من في على إلى الى عن مع و أو أم ثم هذا هذه ذلك تلك هو هي هم هن نحن أنا انا أنت انت الذي التي الذين إن أن كان كانت يكون وهل وما وهو وهي به بها لهم له لها عليه عليها عليهم لكي حتى عند بين كل أي اي ولا إلا لا لم لن بس لو لما عشان إزاي ازاي إيه ايه ليه عايز عاوز أعمل اعمل بماذا'.split())
 KEYS={normalize_search_text(t,level='broad') for t in FUNCTION_WORDS}
@@ -18,7 +19,12 @@ def language_plan(query,keep_terms=()):
  keep={normalize_search_text(t,level='broad') for t in keep_terms}
  tokens=list(dict.fromkeys(safe_tokens(subject_phrase(query))+[t for t in safe_tokens(query) if normalize_search_text(t,level='broad') in keep]))
  terms=[t for t in tokens if normalize_search_text(t,level='broad') not in KEYS or normalize_search_text(t,level='broad') in keep]
- return {'subject_phrase':subject_phrase(query),'terms':terms,'dropped_function_words':[t for t in safe_tokens(query) if normalize_search_text(t,level='broad') in KEYS and normalize_search_text(t,level='broad') not in keep],'negation_present':any(t in safe_tokens(query) for t in ('لا','لم','لن','ما','ولا')) or any(t.endswith('ش') and len(t)>4 for t in tokens)}
+ negation=any(t in safe_tokens(query) for t in ('لا','لم','لن','ولا')) or any(t.endswith('ش') and len(t)>4 for t in tokens)
+ # Initial ما is an interrogative in these frames. Only a later ما can negate.
+ negation=negation or bool(re.search(r'\S+\s+ما\s+',query))
+ comparison=re.match(r'^(?:ما\s+(?:هو\s+|هي\s+)?)?الفرق\s+بين\s+([ء-ي]+)\s+و([ء-ي]+)\s*[؟?]?$',query.strip())
+ subjects=list(comparison.groups()) if comparison else []
+ return {'subject_phrase':subject_phrase(query),'terms':terms,'dropped_function_words':[t for t in safe_tokens(query) if normalize_search_text(t,level='broad') in KEYS and normalize_search_text(t,level='broad') not in keep],'negation_present':negation,'comparison_subjects':subjects}
 @lru_cache(maxsize=4096)
 def morphological_forms(term):
  word=normalize_search_text(term,level='broad');bases={word}
