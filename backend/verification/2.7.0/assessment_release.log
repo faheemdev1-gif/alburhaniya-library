@@ -1,8 +1,0 @@
-{"fixture_passed": 36, "fixture_total": 36, "benchmarks": [{"query": "طمأنينة", "match_mode": "lexeme", "p50_ms": 10.75, "p95_ms": 11.17, "errors": 0}, {"query": "المحافظة على الصلاة وعدم تأخيرها عن وقتها", "match_mode": "auto", "p50_ms": 1034.47, "p95_ms": 1308.21, "errors": 0}, {"query": "من ضاقت عليه المعيشة كيف ينال سعة الرزق", "match_mode": "auto", "p50_ms": 230.41, "p95_ms": 827.08, "errors": 0}]}
-
-[09/15/26 20:25:12] INFO     invalid tool request               resilience.py:72
-                             operation=search_library                           
-                             request_id=afa9d4b42c1f4b4c80cd3ac                 
-                             3d6ae5bab error=search_mode                        
-                             conflicts with match_mode; use one                 
-                             mode selector                                      
