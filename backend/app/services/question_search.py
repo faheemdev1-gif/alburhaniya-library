@@ -1,6 +1,6 @@
 """Phrase-first union and bounded source-local ranking; never answer grading."""
 from functools import lru_cache
-import re,html,os,json,time,math
+import re,html,os,json,time,math,bisect
 from app.core.observability import profiled,record_phase
 from app.core.budget import DEADLINE, BudgetExceeded
 from contextvars import ContextVar
@@ -16,6 +16,15 @@ from app.core.attribution import attribution_at
 def pattern(term):
  inner='|'.join(db._build_highlight_regex(t,whole_word=False,normalization_level='broad').pattern for t in morphological_forms(term))
  return re.compile(r'(?<![ء-ي])(?:[وفبل])?(?:'+inner+r')(?:ات|ون|ين|ها|هم|ه|ي)?(?![ء-ي])')
+@lru_cache(maxsize=4096)
+def comparison_forms(term):
+ """Distinct source tokens, including attached conjunctions, for comparisons."""
+ bases=safe_term_variants(term)
+ return tuple(dict.fromkeys((*bases,*(prefix+form for form in bases for prefix in ('و','ف','ب')),
+                             *('ل'+form[1:] for form in bases if form.startswith('ال')))))
+@lru_cache(maxsize=4096)
+def comparison_pattern(term):
+ return re.compile('|'.join('(?:'+db._build_exact_variant_regex(form).pattern+')' for form in comparison_forms(term)))
 @lru_cache(maxsize=4)
 def _topics(path,mtime,size):return [json.loads(r[0]) for r in db._connection().execute('SELECT terms FROM discovery_topics')]
 def topic_proposals(anchors):
@@ -35,7 +44,15 @@ def anchor_plan(query,keep_terms=()):
   row=conn.execute('SELECT MAX(documents) FROM term_document_frequency WHERE term IN ('+','.join('?'*len(forms))+')',forms).fetchone()
   if (row[0] or 0)>total*.15 and t not in keep_terms:common.append(t)
   else:anchors.append(t)
- result.update(anchors=anchors,common_nonanchors=common,frequency_basis='precomputed_corpus_document_frequency');return result
+ # Preserve the rarest subject when a generic question has no recognized
+ # relation. A page about a generic companion word is not evidence about it.
+ frequencies={t:conn.execute('SELECT MAX(documents) FROM term_document_frequency WHERE term IN ('+','.join('?'*len(safe_term_variants(t)))+')',tuple(normalize_search_text(f,level='broad') for f in safe_term_variants(t))).fetchone()[0] or 0 for t in anchors}
+ subject_anchors=anchors
+ # In an action/object phrase the object is the protected subject: a page
+ # mentioning "استعمال" alone is not evidence about استعمال الهاتف.
+ if len(anchors)>1 and normalize_search_text(anchors[0],level='broad') in {'استعمال','استخدام','شرب','تناول','قراءه','قراءة','زياره','زيارة'}:
+  subject_anchors=anchors[1:]
+ result.update(anchors=anchors,common_nonanchors=common,protected_anchor=min(subject_anchors,key=lambda t:frequencies[t]) if subject_anchors else None,frequency_basis='precomputed_corpus_document_frequency');return result
 def dialogue_at(text,start):
  from app.services.discovery_index import QUESTION,ANSWER
  text_start=max(0,text.rfind('\n\n',0,start))
@@ -50,26 +67,26 @@ def supporting_span(query,text,keep_terms=(),ap=None):
  for t in terms:
   # The comparison subjects are distinct words: broad morphology can collapse
   # توكل and تواكل or accidentally score الفرق against فرج.
-  matcher=db._build_exact_variant_regex(t) if comparison else pattern(t)
+  matcher=comparison_pattern(t) if comparison else pattern(t)
   events.extend((m.start(),m.end(),'term:'+t,m.group()) for m in matcher.finditer(text))
  if not comparison:
   for group in p['groups']:events.extend((m.start(),m.end(),'concept:'+group,m.group()) for m in concept_regex(group).finditer(text))
  if not events:return None
- events.sort();best=None
- for start,end,tag,form in events:
+ events.sort();starts=[event[0] for event in events];best=None
+ for i,(start,end,tag,form) in enumerate(events):
   if expired():break
-  boundary=text.find('\n\n',start,start+180);stop=boundary if boundary>=0 else start+180;local=[e for e in events if e[0]>=start and e[1]<=stop]
+  boundary=text.find('\n\n',start,start+180);stop=boundary if boundary>=0 else start+180;local=[e for e in events[i:bisect.bisect_left(starts,stop,i)] if e[1]<=stop]
   if not local:continue
   matched={e[2][5:] for e in local if e[2].startswith('term:')};groups={e[2][8:] for e in local if e[2].startswith('concept:')};relation=bool(p['required']) and set(p['required'])<=groups;provision_remedy=False
   if comparison:
    relation=set(comparison)<=matched
-   if not relation:continue
    width=max(e[1] for e in local)-min(e[0] for e in local)
-   value=.70+.25*(1-min(width,180)/180)
-   candidate=(value,start,max(e[1] for e in local),sorted(matched),True)
+   value=(.70+.25*(1-min(width,180)/180)) if relation else .22
+   candidate=(value,start,max(e[1] for e in local),sorted(matched),relation)
    if best is None or value>best[0]:best=candidate
    continue
-  if not p['required'] and len(matched)>=2:relation=True
+  # Co-occurrence of generic words alone does not establish the requested
+  # relation (e.g. a passing mention of a phone and prayer is not a ruling).
   if p['required']==['provision']:
    window=text[max(0,start-15):start+180];provision_remedy=any(db._build_highlight_regex(t,whole_word=False).search(window) for t in ('تيسير الرزق','جلب الرزق','سعة الرزق','شكا الفقر','عنه الفقر'));relation='provision' in groups and (bool(groups.intersection({'relief','distress'})) or provision_remedy)
   for t in terms:
@@ -94,7 +111,10 @@ def supporting_span(query,text,keep_terms=(),ap=None):
 def make_row(page,query,start,end,score,matched,relation):
  text=page['text'];row={k:v for k,v in page.items() if k not in ('text','has_next','has_prev','content_types','evidence_blocks')};snippet=db._evidence_excerpt(text,start,end,180,[])
  query_plan=language_plan(query)
- row.update(score=round(max(0,min(.99,score)),6),match_type='reformulated',score_kind='local_span_discovery',match_id=f"{page['book_id']}-p{page['seq']}-c{start}",snippet=snippet,evidence_span={'start':start,'end':end,'excerpt':snippet},original_queries=[query],reformulation_method='phrase_and_passage_union_v1',reformulation_warning='Candidate discovery only; inspect the Arabic passage before using it as an answer.',answer_verified=False,question_relevance='relation_candidate' if relation else 'topic_only',intent_term_coverage=round(len(matched)/max(1,len(query_plan['comparison_subjects'] or query_plan['terms'])),4),evidence_type=db.evidence_type(text,start,start+1),evidence_type_method='structural_heuristic',evidence_type_confidence='unverified',evidence_type_scope='start_anchor');row.update(dialogue_at(text,start));return row
+ row.update(score=round(max(0,min(.99,score)),6),match_type='reformulated',score_kind='local_span_discovery',match_id=f"{page['book_id']}-p{page['seq']}-c{start}",snippet=snippet,evidence_span={'start':start,'end':end,'excerpt':snippet},original_queries=[query],reformulation_method='phrase_and_passage_union_v1',reformulation_warning='Candidate discovery only; inspect the Arabic passage before using it as an answer.',answer_verified=False,question_relevance='relation_candidate' if relation else 'topic_only',intent_term_coverage=round(len(matched)/max(1,len(query_plan['comparison_subjects'] or query_plan['terms'])),4),evidence_type=db.evidence_type(text,start,start+1),evidence_type_method='structural_heuristic',evidence_type_confidence='unverified',evidence_type_scope='start_anchor');row.update(dialogue_at(text,start))
+ row['_matched_anchors']=matched
+ if query_plan['comparison_subjects'] and not relation:row['comparison_side']=matched
+ return row
 def deduplicate(rows):
  kept=[];sets=[]
  for row in rows:
@@ -119,7 +139,7 @@ def passage_candidates(query, ap, scope):
     sql = '''SELECT d.*,p.book_id,p.seq,bm25(discovery_fts,1,3) AS relevance
              FROM discovery_fts JOIN discovery_passages d ON d.id=discovery_fts.rowid
              JOIN pages p ON p.id=d.page_id JOIN books b ON b.book_id=p.book_id
-             WHERE discovery_fts MATCH ?''' + filters + ' ORDER BY relevance LIMIT 100'
+             WHERE discovery_fts MATCH ?''' + filters + ' ORDER BY relevance LIMIT 80'
     groups = [] if ap['comparison_subjects'] else plan(query)['required']
     expressions=[]
     if groups:
@@ -129,16 +149,19 @@ def passage_candidates(query, ap, scope):
     # A conjunction of content anchors is selective; OR is a bounded fallback.
     anchors=ap['anchors'][:8]
     if anchors:
-        forms=(lambda t: safe_term_variants(t)) if ap['comparison_subjects'] else morphological_forms
+        forms=comparison_forms if ap['comparison_subjects'] else morphological_forms
         expressions.append(' AND '.join(_fts(forms(t)) for t in anchors))
+        # Preserve each subject independently before the broad OR pool;
+        # this also allows an explicitly weak one-sided comparison result.
+        expressions.extend(_fts(forms(t)) for t in anchors[:3])
         if not ap['comparison_subjects']:
             expressions.append(_fts([f for t in anchors for f in forms(t)]))
     output={}
     for expression in expressions:
-        if expired() or len(output)>=300:break
+        if expired() or len(output)>=180:break
         for row in db._connection().execute(sql,[expression,*params]).fetchall():
             output.setdefault(row['id'],dict(row))
-    return list(output.values())[:300]
+    return list(output.values())[:180]
 
 
 @profiled('relation_check')
@@ -174,10 +197,10 @@ def search_questions(**kwargs):
     state={'completion':'full','stages_completed':[],'stages_skipped':[],
            'candidate_counts':{},'path':'full','phrase_search_counts':{}}
     SEARCH_STATE.set(state)
-    records={};pages={};query_ids=[]
+    records={};pages={};query_ids=[];plans={}
     overall=DEADLINE.get() or time.monotonic()+10
     for query in queries:
-        ap=anchor_plan(query,keep);matched_ids=set()
+        ap=anchor_plan(query,keep);plans[query]=ap;matched_ids=set()
         # Reserve time for serialisation after each independently bounded stage.
         stage_end=min(overall-.08,time.monotonic()+1.5)
         token=DEADLINE.set(stage_end)
@@ -218,11 +241,11 @@ def search_questions(**kwargs):
                 support=supporting_span(query,window,keep,ap)
                 if not support:continue
                 value,start,end,matched,relation=support
-                if not relation and len(matched)<min(2,len(ap['anchors'])):continue
+                if not relation and not ap['comparison_subjects'] and len(matched)<min(2,len(ap['anchors'])):continue
                 start+=left;end+=left
                 score=.10+.70*value
                 q=candidate['question']
-                qa_match=bool(q) and sum(bool((db._build_exact_variant_regex(t) if ap['comparison_subjects'] else pattern(t)).search(q)) for t in ap['anchors'])>=min(2,len(ap['anchors']))
+                qa_match=bool(q) and sum(bool((comparison_pattern(t) if ap['comparison_subjects'] else pattern(t)).search(q)) for t in ap['anchors'])>=min(2,len(ap['anchors']))
                 if qa_match:score+=.18
                 if relation and plan(query)['required']==['litanies','work','provision'] and re.search(r'سؤال\s*[:：]|الجواب\s*[:：]|السائل\s*[:：]',window):score+=.16
                 # A biography describes someone's life, rather than addressing
@@ -252,6 +275,12 @@ def search_questions(**kwargs):
         finally:DEADLINE.reset(token)
         query_ids.append(matched_ids)
     rows=list(records.values())
+    for row in rows:
+        query=row['original_queries'][0] if row.get('original_queries') else queries[0]
+        ap=plans[query]
+        if not plan(query)['required'] and not ap['comparison_subjects'] and len(ap['anchors'])>=2:
+            row['_missing_protected_subject']=ap['protected_anchor'] not in row.get('_matched_anchors',()) and not row.get('subject_phrase_match')
+    rows=[row for row in rows if not row.get('_missing_protected_subject')]
     # Coverage is evidence based and scoped: retain explicit mentions only.
     if any(set(plan(q)['required'])=={'children','upbringing'} for q in queries):
         child_phrase=db._build_highlight_regex('تربية',whole_word=True).pattern+r'\s+(?:'+ '|'.join(db._build_highlight_regex(w,whole_word=False).pattern for w in ('الأطفال','الأولاد','الأبناء'))+')'
@@ -282,5 +311,7 @@ def search_questions(**kwargs):
     state['evidence_strength']='weak' if state.get('coverage_gap') else 'candidate' if any(r['question_relevance']!='topic_only' for r in rows) else 'weak'
     state['path']='partial' if state['completion']=='partial' else state['path']
     offset=kwargs.get('offset',0);rows=rows[offset:offset+kwargs.get('limit',8)]
-    for i,r in enumerate(rows,offset+1):r['rank']=i
+    for i,r in enumerate(rows,offset+1):
+        r['rank']=i
+        r.pop('_matched_anchors',None);r.pop('_missing_protected_subject',None)
     return rows

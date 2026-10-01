@@ -4,8 +4,8 @@ import re
 from app.core.arabic_utils import safe_tokens,normalize_search_text
 FUNCTION_WORDS=set('ما ماذا هل كيف لماذا متى أين اين من في على إلى الى عن مع و أو أم ثم هذا هذه ذلك تلك هو هي هم هن نحن أنا انا أنت انت الذي التي الذين إن أن كان كانت يكون وهل وما وهو وهي به بها لهم له لها عليه عليها عليهم لكي حتى عند بين كل أي اي ولا إلا لا لم لن بس لو لما عشان إزاي ازاي إيه ايه ليه عايز عاوز أعمل اعمل بماذا'.split())
 KEYS={normalize_search_text(t,level='broad') for t in FUNCTION_WORDS}
-FRAMES=sorted(['إيه رأي مولانا في','ما المراد بـ','ما المراد ب','ما المراد','ما فضل','ما فائدة','ما أثر','ما هي','ما هو','ما حكم','ما معنى','ما الفرق بين','كيف يفرق الشيخ بين','كيف يفرق بين','كيف يجمع السالك بين','كيف يجمع بين','ما التوازن بين','لماذا تعد','لماذا يعتبر','إيه أعمل','ما','كيف','هل','لماذا','بماذا','إيه','ايه','عايز','عاوز','ليه','إزاي','ازاي'],key=len,reverse=True)
-_PAIR = re.compile(r'(?:الفرق|التوازن|يفرق|يجمع)\s+(?:(?:الشيخ|السالك)\s+)?بين\s+([ء-ي]+)\s+و\s*([ء-ي]+)')
+FRAMES=sorted(['إيه رأي مولانا في','ما المراد بـ','ما المراد ب','ما المراد','ما فضل','ما فائدة','ما أثر','ما هي','ما هو','ما حكم','ما معنى','ما الفرق بين','كيف يفرق الشيخ بين','كيف يفرق بين','كيف يجمع السالك بين','كيف يجمع بين','كيف يميز السالك بين','كيف يميز بين','كيف أميز بين','كيف يختلف','ما التوازن بين','لماذا تعد','لماذا يعتبر','إيه أعمل','ما','كيف','هل','لماذا','بماذا','إيه','ايه','عايز','عاوز','ليه','إزاي','ازاي'],key=len,reverse=True)
+_PAIR = re.compile(r'(?:الفرق|التوازن|يفرق|يجمع|يميز|أميز)\s+(?:(?:الشيخ|السالك)\s+)?بين\s+([ء-ي]+)\s+و\s*([ء-ي]+)')
 _VERSUS = re.compile(r'([ء-ي]+)\s+(?:عن|من)\s+([ء-ي]+)')
 _MEANING_VERSUS = re.compile(r'معنى\s+([ء-ي]+)\s+وكيف\s+يختلف\s+عن\s+([ء-ي]+)')
 # Source-attested vocabulary for candidate discovery only. Literal search and
@@ -34,13 +34,13 @@ def language_plan(query,keep_terms=()):
  # Initial ما is an interrogative in these frames. Only a later ما can negate.
  negation=negation or bool(re.search(r'\S+\s+ما\s+',query))
  comparison=_PAIR.search(query) or _MEANING_VERSUS.search(query)
- if not comparison and re.search(r'يختلف\s+عن|مقارنة|مقابل',query):
+ if not comparison and (('يختلف' in query and 'عن' in query) or re.search(r'مقارنة|مقابل',query)):
   comparison=_VERSUS.search(query)
   if comparison and comparison.group(1)=='يختلف':comparison=None
  subjects=list(comparison.groups()) if comparison else []
  if len(subjects)==2 and normalize_search_text(subjects[0],level='broad')==normalize_search_text(subjects[1],level='broad'):subjects=[]
  subject=subject_phrase(query)
- if subjects and subjects[1] not in subject:subject=' و'.join(subjects)
+ if subjects:subject=' و'.join(subjects)
  return {'subject_phrase':subject,'terms':terms,'dropped_function_words':[t for t in safe_tokens(query) if normalize_search_text(t,level='broad') in KEYS and normalize_search_text(t,level='broad') not in keep],'negation_present':negation,'comparison_subjects':subjects}
 @lru_cache(maxsize=4096)
 def morphological_forms(term):

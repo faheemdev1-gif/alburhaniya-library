@@ -97,7 +97,7 @@ def safe_tool_call(function):
                     k=result_cache.key(function.__name__,args,kwargs)
                     cached=result_cache.get(k)
                     if cached is not None:
-                        cached['cache']={'status':'hit','scope':'process','corpus_bound':True}
+                        cached['cache']={'status':'hit','scope':'shared_sqlite_with_process_fallback','corpus_bound':True}
                         record_phase('cache_lookup',cache_started)
                         return finish(cached,attempt)
                 record_phase('cache_lookup',cache_started)
@@ -106,7 +106,7 @@ def safe_tool_call(function):
                 finally:record_phase('response_building',execution)
                 if k is not None and isinstance(payload,dict):
                     result_cache.put(k,payload)
-                    payload['cache']={'status':'miss','scope':'process','corpus_bound':True}
+                    payload['cache']={'status':'miss','scope':'shared_sqlite_with_process_fallback','corpus_bound':True}
                 return finish(payload, attempt)
             except BudgetExceeded:
                 result=safe_error_payload('time_budget_exceeded','Request budget exhausted; retry the supplied subject phrase without counts.',retryable=True);result['truncated_by_budget']=True

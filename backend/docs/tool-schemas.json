@@ -1,10 +1,12 @@
 {
   "contract": {
     "changes_since_previous": [
-      "Source-local attribution guards in search, passage and page tools",
-      "Additional comparison frames retain both subjects",
-      "Cross-worker SQLite result cache",
-      "Removed redundant alternate_locations field"
+      "Require the query subject before showing unrecognized relation candidates",
+      "Discover companionship through source-attested guide language",
+      "Retain attached conjunctions in distinct comparison subjects",
+      "Label one-sided comparisons weak",
+      "Bound and accelerate question candidate scoring",
+      "Report shared-cache scope accurately"
     ],
     "known_issues": [
       "Independent source and documentary review remains open",
@@ -37,7 +39,7 @@
       "scope": "authenticated_client_or_peer_ip",
       "retry_policy": "HTTP 429 JSON-RPC with Retry-After and retry_after_ms"
     },
-    "server_version": "2.10.2",
+    "server_version": "2.10.3",
     "tool_contract_version": "12.0",
     "tool_contract": "alburhaniya-tools-v12",
     "tool_count": 5,

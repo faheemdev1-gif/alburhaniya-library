@@ -1,4 +1,14 @@
-# Al Burhaniya Connector 2.10.2
+# Al Burhaniya Connector 2.10.3
+
+This release repairs the live 2.10.2 retrieval regressions: it protects the
+requested subject in generic questions, discovers the companionship passage
+on b44 p43, keeps both comparison subjects when Arabic conjunctions are
+attached, and labels one-sided comparison evidence as weak. Question scoring
+uses a bounded candidate union and a source-local event index. The five-tool
+contract remains 12.0. See `docs/RELEASE_2103.md` for local verification and
+open acceptance gates.
+
+## Previous 2.10.2 corrections
 
 This source patch carries source-local attribution guards across search,
 `get_passage` and `get_page`, recognises additional comparison frames, removes

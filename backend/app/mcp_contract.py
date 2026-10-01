@@ -7,7 +7,7 @@ import json
 from typing import Any
 
 
-SERVER_VERSION = "2.10.2"
+SERVER_VERSION = "2.10.3"
 TOOL_CONTRACT_VERSION = "12.0"
 TOOL_CONTRACT_ID = "alburhaniya-tools-v12"
 
@@ -94,7 +94,7 @@ def contract_metadata(tools: Iterable[str] | None = None) -> dict[str, Any]:
     """Versioned metadata for health checks and deployment diagnostics."""
     actual = validate_tool_names(tools or REQUIRED_TOOLS)
     return {
-        "changes_since_previous":["Source-local attribution guards in search, passage and page tools","Additional comparison frames retain both subjects","Cross-worker SQLite result cache","Removed redundant alternate_locations field"],
+        "changes_since_previous":["Require the query subject before showing unrecognized relation candidates","Discover companionship through source-attested guide language","Retain attached conjunctions in distinct comparison subjects","Label one-sided comparisons weak","Bound and accelerate question candidate scoring","Report shared-cache scope accurately"],
         "known_issues":["Independent source and documentary review remains open","Automated relation labels are candidates, not verified answers","Private held-out and deployed acceptance are pending","Seven-day monitoring and client latency acceptance pending","Client schema refresh must be verified in each client"],
         "reformulation_status_policy":{"ok":"All planned discovery stages completed; not an answer-quality judgement","degraded":"A stage was skipped or stopped; inspect partial results","not_needed":"Literal/terms/lexeme path, no question rewrite"},
         "coverage_register":[{"topic":"raising children","status":"weak_coverage","basis":"Supplied audit: two passing mentions, no substantive guidance","grading_policy":"exclude from direct-answer denominator; do not invent filler"}],

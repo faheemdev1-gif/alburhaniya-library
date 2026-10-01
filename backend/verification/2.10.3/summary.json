@@ -1,0 +1,50 @@
+{
+  "server_version": "2.10.3",
+  "tool_contract_version": "12.0",
+  "scope": "local source verification, not deployed or independently scored",
+  "checks": {
+    "pytest": {
+      "status": "pass",
+      "passed": 235
+    },
+    "independent_corpus_audit": {
+      "status": "pass"
+    },
+    "isolated_mcp_http": {
+      "status": "pass",
+      "tools": 5
+    },
+    "public_replay": {
+      "status": "pass",
+      "known30_nonempty": 30,
+      "known30_reference_presence": 27,
+      "public11_nonempty": 11,
+      "errors": 0
+    },
+    "local_load": {
+      "status": "pass",
+      "calls": 64,
+      "full": 64,
+      "clients": [
+        1,
+        2,
+        4,
+        8
+      ],
+      "p95_seconds": [
+        2.28,
+        1.6,
+        2.68,
+        3.79
+      ]
+    }
+  },
+  "score_certified": false,
+  "outstanding": [
+    "private held-out relevance grading",
+    "human source and documentary review",
+    "deployed connector latency and client schema refresh",
+    "24-hour/1000-attempt monitoring window",
+    "source scan review for repeated printed labels"
+  ]
+}

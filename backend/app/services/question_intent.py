@@ -40,6 +40,7 @@ CONCEPTS.update({
  'mawlid':'المولد مولد المولد النبوي الاحتفال',
  'children':'الأطفال الأولاد الأبناء ولادي أولادي',
  'upbringing':'تربية أربي التربية تقويمهم',
+ 'companionship':'صحبة الصحبة مصاحبة الرفقة الرابطة الرباط البيعة ملازمة',
 })
 # Parse multiword expressions separately; avoid accidental homographs.
 PHRASES={
@@ -89,7 +90,8 @@ def plan(query):
  if language_plan(query)['comparison_subjects']:groups=[];required=[]
  elif 'الصلاة على' in query or 'الصلاه علي' in query:groups=[];required=[]
  elif 'litanies' in found and ('work' in found or 'provision' in found):groups=['litanies','work','provision'];required=['litanies','work','provision']
- elif 'prayer' in found:groups=['prayer','timing','continuity'];required=['prayer','timing'] if 'timing' in found else ['prayer','continuity']
+ elif 'prayer' in found and ('timing' in found or 'continuity' in found):groups=['prayer','timing','continuity'];required=['prayer','timing'] if 'timing' in found else ['prayer','continuity']
+ elif 'companionship' in found:groups=['companionship','guide'];required=groups[:]
  elif 'anger' in found:groups=['anger','speech'];required=['anger','speech']
  elif 'quran' in found:groups=['quran','continuity'];required=groups[:]
  elif 'provision' in found:groups=['provision','distress','relief'];required=['provision']
