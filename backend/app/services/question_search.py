@@ -136,10 +136,16 @@ def passage_candidates(query, ap, scope):
     """Bounded BM25 union of source windows; never rescan the whole corpus."""
     from app.services.question_intent import CONCEPTS
     filters, params = db._search_filters(**scope)
+    # Livelihood and distress vocabulary expand to particularly broad unions.
+    # Bound their scoring work more tightly; other subjects need the wider
+    # pool for attribution-sensitive passages such as b07 p256.
+    broad_intent = plan(query)['required'] in (['provision'], ['distress', 'relief'])
+    per_expression = 40 if broad_intent else 60
+    candidate_limit = 80 if broad_intent else 120
     sql = '''SELECT d.*,p.book_id,p.seq,bm25(discovery_fts,1,3) AS relevance
              FROM discovery_fts JOIN discovery_passages d ON d.id=discovery_fts.rowid
              JOIN pages p ON p.id=d.page_id JOIN books b ON b.book_id=p.book_id
-             WHERE discovery_fts MATCH ?''' + filters + ' ORDER BY relevance LIMIT 60'
+             WHERE discovery_fts MATCH ?''' + filters + f' ORDER BY relevance LIMIT {per_expression}'
     groups = [] if ap['comparison_subjects'] else plan(query)['required']
     expressions=[]
     if groups:
@@ -158,10 +164,10 @@ def passage_candidates(query, ap, scope):
             expressions.append(_fts([f for t in anchors for f in forms(t)]))
     output={}
     for expression in expressions:
-        if expired() or len(output)>=120:break
+        if expired() or len(output)>=candidate_limit:break
         for row in db._connection().execute(sql,[expression,*params]).fetchall():
             output.setdefault(row['id'],dict(row))
-    return list(output.values())[:120]
+    return list(output.values())[:candidate_limit]
 
 
 @profiled('relation_check')

@@ -1,4 +1,9 @@
-# Al Burhaniya Connector 2.10.4
+# Al Burhaniya Connector 2.10.5
+
+The live 2.10.4 search still skipped scoring on broad livelihood and distress
+questions. This release caps only those intent groups at 80 passage candidates,
+retains 120 for other subjects and labels incomplete scheduled search probes
+as monitor failures. See `docs/RELEASE_2105.md` for verification and limits.
 
 This patch bounds question passage candidates at 120 windows (60 per FTS
 expression). The live 2.10.3 distress query reached the former 180-window

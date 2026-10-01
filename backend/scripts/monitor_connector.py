@@ -18,7 +18,10 @@ async def run(url,count=20):
      if not data and r.content:
       try:data=json.loads(r.content[0].text)
       except ValueError:data={'error':str(r.content[0].text)[:500]}
-     ok=not r.isError and bool(data) and not data.get('error');error=None if ok else data
+     data=data if isinstance(data,dict) else {}
+     complete=name!='search_library' or data.get('completion')=='full'
+     ok=not r.isError and bool(data) and not data.get('error') and complete
+     error=None if ok else ({'error':{'code':'partial_completion','message':'Search skipped a planned stage'}} if not complete and not data.get('error') else data)
     except Exception as exc:ok=False;error=type(exc).__name__
     results.append({'tool':name,'ok':ok,'ms':round((time.monotonic()-start)*1000,3),'error':error,'request_id':data.get('request_id') if isinstance(locals().get('data'),dict) else None})
     if (i+1)%20==0:print(f'{i+1}/{count} completed',flush=True)
