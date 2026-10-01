@@ -139,7 +139,7 @@ def passage_candidates(query, ap, scope):
     sql = '''SELECT d.*,p.book_id,p.seq,bm25(discovery_fts,1,3) AS relevance
              FROM discovery_fts JOIN discovery_passages d ON d.id=discovery_fts.rowid
              JOIN pages p ON p.id=d.page_id JOIN books b ON b.book_id=p.book_id
-             WHERE discovery_fts MATCH ?''' + filters + ' ORDER BY relevance LIMIT 80'
+             WHERE discovery_fts MATCH ?''' + filters + ' ORDER BY relevance LIMIT 60'
     groups = [] if ap['comparison_subjects'] else plan(query)['required']
     expressions=[]
     if groups:
@@ -158,10 +158,10 @@ def passage_candidates(query, ap, scope):
             expressions.append(_fts([f for t in anchors for f in forms(t)]))
     output={}
     for expression in expressions:
-        if expired() or len(output)>=180:break
+        if expired() or len(output)>=120:break
         for row in db._connection().execute(sql,[expression,*params]).fetchall():
             output.setdefault(row['id'],dict(row))
-    return list(output.values())[:180]
+    return list(output.values())[:120]
 
 
 @profiled('relation_check')

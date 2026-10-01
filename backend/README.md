@@ -1,4 +1,11 @@
-# Al Burhaniya Connector 2.10.3
+# Al Burhaniya Connector 2.10.4
+
+This patch bounds question passage candidates at 120 windows (60 per FTS
+expression). The live 2.10.3 distress query reached the former 180-window
+limit and repeatedly declared partial after a 4.5-second scoring stage. The
+public 30-question replay retains 27/30 listed reference pages and all 30
+complete locally with the new cap. See `docs/RELEASE_2104.md` for measured
+limits and deployment checks.
 
 This release repairs the live 2.10.2 retrieval regressions: it protects the
 requested subject in generic questions, discovers the companionship passage
