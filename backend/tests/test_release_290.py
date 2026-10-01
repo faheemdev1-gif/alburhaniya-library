@@ -37,7 +37,7 @@ def test_discovery_source_offsets():
  assert c.execute("SELECT COUNT(*) FROM discovery_topics WHERE review_status<>'unreviewed'").fetchone()[0]==0
 def test_duplicate_retains_locator():
  text='هذا نص طويل يتكرر في مصدر آخر وفيه كلام كثير عن معنى العلم والعمل والصدق واليقين والمحبة والرحمة والذكر والطاعة والسلوك والأدب والخير والفضل والنور والسلام'
- rows=[{'snippet':text,'book_id':b,'seq':s,'match_id':f'{b}-p{s}-c0','citation_label':b} for b,s in [('b39',5),('b42',4)]];r=deduplicate(rows);assert len(r)==1 and r[0]['alternate_locations'][0]['book_id']=='b42'
+ rows=[{'snippet':text,'book_id':b,'seq':s,'match_id':f'{b}-p{s}-c0','citation_label':b} for b,s in [('b39',5),('b42',4)]];r=deduplicate(rows);assert len(r)==1 and r[0]['also_in'][0]['book_id']=='b42'
 def test_expired_budget_scoped():
  token=DEADLINE.set(time.monotonic()-1)
  try:r=search_library(query='الحقيقة المحمدية')

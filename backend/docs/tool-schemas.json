@@ -1,16 +1,16 @@
 {
   "contract": {
     "changes_since_previous": [
-      "Phrase-first/passage/Q&A discovery",
-      "Source-local ranking and inherited defaults",
-      "Bounded threaded execution and per-client quota",
-      "Render PORT launcher with two workers"
+      "Source-local attribution guards in search, passage and page tools",
+      "Additional comparison frames retain both subjects",
+      "Cross-worker SQLite result cache",
+      "Removed redundant alternate_locations field"
     ],
     "known_issues": [
-      "Documentary source review remains open",
-      "Topic/Q&A proposals require review",
-      "Independent held-out and deployed acceptance are pending",
-      "Seven-day monitoring acceptance pending",
+      "Independent source and documentary review remains open",
+      "Automated relation labels are candidates, not verified answers",
+      "Private held-out and deployed acceptance are pending",
+      "Seven-day monitoring and client latency acceptance pending",
       "Client schema refresh must be verified in each client"
     ],
     "reformulation_status_policy": {
@@ -26,7 +26,7 @@
         "grading_policy": "exclude from direct-answer denominator; do not invent filler"
       }
     ],
-    "result_defaults_policy": "Search hits inherit result_defaults; explicit hit fields override defaults. Contract 11 clients must expand defaults.",
+    "result_defaults_policy": "Search hits inherit result_defaults; explicit hit fields override defaults. Contract 12 clients must expand defaults.",
     "monitoring": {
       "status": "awaiting_samples",
       "success_rate_24h": null,
@@ -37,7 +37,7 @@
       "scope": "authenticated_client_or_peer_ip",
       "retry_policy": "HTTP 429 JSON-RPC with Retry-After and retry_after_ms"
     },
-    "server_version": "2.10.0",
+    "server_version": "2.10.2",
     "tool_contract_version": "12.0",
     "tool_contract": "alburhaniya-tools-v12",
     "tool_count": 5,
@@ -48,7 +48,7 @@
       "list_books",
       "search_library"
     ],
-    "schema_digest": "cb7eb57c85d260be98e3866608e34ce96ab2f9817aa7c1eb7f57bae69eb241d3",
+    "schema_digest": "fee384d0f3dcb34925d9de40aab93e8aaece0e2866200ec03ec37b200ed93a2f",
     "tool_schema_digest": "67eb72e89ab25cad317b45f6aca20cd00bdd83b639024b2ed4900ae6ca9fcf4c",
     "schema_digest_kind": "capability_manifest",
     "schema_capabilities": {
@@ -124,7 +124,7 @@
         ],
         "default_max_chars": 12000,
         "cross_page_context": true,
-        "max_context_pages": 12
+        "max_context_pages": 3
       },
       "get_page": {
         "default_max_chars": 20000,

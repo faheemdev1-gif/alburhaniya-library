@@ -84,7 +84,10 @@ def plan(query):
    if group not in found and any(concept_regex(group).fullmatch(f) for f in morphological_forms(term)):found[group]=[term]
  # Different questions use the same compositional facets. Supporting facets
  # may be proposed for discovery, but are disclosed rather than inferred facts.
- if 'الصلاة على' in query or 'الصلاه علي' in query:groups=[];required=[]
+ # Comparison subjects are extracted by the language parser. A role word such
+ # as "الشيخ" must not reroute a comparison to disciple etiquette.
+ if language_plan(query)['comparison_subjects']:groups=[];required=[]
+ elif 'الصلاة على' in query or 'الصلاه علي' in query:groups=[];required=[]
  elif 'litanies' in found and ('work' in found or 'provision' in found):groups=['litanies','work','provision'];required=['litanies','work','provision']
  elif 'prayer' in found:groups=['prayer','timing','continuity'];required=['prayer','timing'] if 'timing' in found else ['prayer','continuity']
  elif 'anger' in found:groups=['anger','speech'];required=['anger','speech']
@@ -93,7 +96,7 @@ def plan(query):
  elif 'distress' in found or 'relief' in found:groups=['distress','relief'];required=groups[:]
  else:
   pairs=[('repentance','sin'),('pride','vanity'),('etiquette','guide'),('intercession','saints'),('parents','death'),('children','upbringing')]
-  chosen=next((list(pair) for pair in pairs if any(g in found for g in pair)),None)
+  chosen=next((list(pair) for pair in pairs if all(g in found for g in pair)),None)
   if chosen:groups=chosen;required=chosen
   elif 'mawlid' in found:groups=['mawlid'];required=['mawlid']
   else:groups=[];required=[]

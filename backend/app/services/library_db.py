@@ -1525,6 +1525,8 @@ def search(
             "end": evidence_end,
             "excerpt": result["snippet"],
         }
+        from app.core.attribution import attribution_at
+        result.update(attribution_at(source_text, first_match, evidence_end))
         if include_full_text:
             safe_text = _esc(source_text)
             for pattern in patterns:
@@ -2088,6 +2090,8 @@ def get_passage(
         ),
     }.items() if value is not None}
     result.update(identity)
+    from app.core.attribution import attribution_at
+    result.update(attribution_at(text, match.start() if match else int(match_start or 0)))
     from app.core.evidence_blocks import block_at
     anchor = match.start() if match else int(match_start or 0)
     result.update(citation_metadata(book_id, seq, page["printed_page"]))

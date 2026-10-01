@@ -101,7 +101,7 @@ def compact_search_response(
             for field in ("selected_queries", "match_attribution_scope", "evidence_type_method", "evidence_type_confidence", "original_queries",
                       "intent_term_coverage", "reformulation_warning", "question_relevance",
                       "reformulation_status", "page_id", "pagination_status", "pagination_warning", "evidence_type_scope",
-                      "intent_method", "answer_verified", "intent_evidence", "lexical_score", "alternate_locations", "also_in", "reported_view", "attribution_warning", "text_errata", "subject_phrase_match", "dialogue_role", "speaker", "speaker_basis", "citation_basis", "matched_source_question"):
+                      "intent_method", "answer_verified", "intent_evidence", "lexical_score", "also_in", "reported_view", "attribution_warning", "source_role", "attribution_basis", "attribution_marker_span", "attribution_review_status", "text_errata", "subject_phrase_match", "dialogue_role", "speaker", "speaker_basis", "citation_basis", "matched_source_question"):
                 if field in row:
                     hit[field] = row[field]
             if row.get("reformulated_query"):
@@ -169,7 +169,7 @@ def compact_search_response(
                       "match_attribution_scope", "evidence_type_method", "evidence_type_confidence", "original_queries",
                       "intent_term_coverage", "reformulation_warning", "question_relevance",
                       "reformulation_status", "page_id", "pagination_status", "pagination_warning", "evidence_type_scope",
-                      "intent_method", "answer_verified", "intent_evidence", "lexical_score", "alternate_locations", "also_in", "reported_view", "attribution_warning", "text_errata", "subject_phrase_match", "dialogue_role", "speaker", "speaker_basis", "citation_basis", "matched_source_question"):
+                      "intent_method", "answer_verified", "intent_evidence", "lexical_score", "also_in", "reported_view", "attribution_warning", "source_role", "attribution_basis", "attribution_marker_span", "attribution_review_status", "text_errata", "subject_phrase_match", "dialogue_role", "speaker", "speaker_basis", "citation_basis", "matched_source_question"):
             if row.get(field) is not None:
                 hit[field] = row[field]
         if row.get("canonical_book_id") and row["canonical_book_id"] != row["book_id"]:

@@ -1,4 +1,18 @@
-# Al Burhaniya Connector 2.10.1
+# Al Burhaniya Connector 2.10.2
+
+This source patch carries source-local attribution guards across search,
+`get_passage` and `get_page`, recognises additional comparison frames, removes
+the redundant `alternate_locations` response field, and uses a bounded SQLite
+result cache across the default two worker processes. The cache defaults to
+`/tmp/alburhaniya-result-cache.sqlite3`; set `RESULT_CACHE_PATH` to a writable
+shared local path if needed. The cache key includes the release version,
+request controls, corpus identity and navigation scope. The five-tool MCP
+contract remains 12.0.
+
+The 9+ target remains an acceptance target. See `docs/RELEASE_2102.md` for
+completed checks and the independent work still needed to assign a score.
+
+## Previous 2.10.1 corrections
 
 This patch fixes the live 2.10.0 audit regressions: comparison questions now
 require both distinct subject terms in one local passage; interrogative `ما`

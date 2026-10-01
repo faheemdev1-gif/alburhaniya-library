@@ -11,6 +11,7 @@ from app.services.question_intent import plan,concept_regex
 from app.core.arabic_utils import normalize_search_text,safe_tokens,safe_term_variants
 from app.core.budget import expired
 from app.core.evidence_blocks import body_text,INCLUDE_TOC
+from app.core.attribution import attribution_at
 @lru_cache(maxsize=8192)
 def pattern(term):
  inner='|'.join(db._build_highlight_regex(t,whole_word=False,normalization_level='broad').pattern for t in morphological_forms(term))
@@ -101,10 +102,8 @@ def deduplicate(rows):
   if len(words)>=15:
    for i,other in enumerate(sets):
     if grams and (len(grams&other)/len(grams|other)>=.62 or len(grams&other)/max(1,min(len(grams),len(other)))>=.75):duplicate=i;break
-  if duplicate is not None:kept[duplicate].setdefault('also_in',[]).append({k:row.get(k) for k in ('book_id','seq','match_id','citation_label','source_tier','provenance_status')})
+  if duplicate is not None:kept[duplicate].setdefault('also_in',[]).append({k:row.get(k) for k in ('book_id','seq','match_id','citation_label','source_tier','provenance_status','source_role','reported_view','attribution_warning')})
   else:kept.append(row);sets.append(grams)
- for row in kept:
-  if row.get('also_in'):row['alternate_locations']=row['also_in']
  return kept
 
 
@@ -161,10 +160,7 @@ def classify_row(row, query, ap, text, start, end, relation=False):
     row['answer_verified']=False
     row['subject_phrase_match']=phrase
     row.update(db.citation_metadata(row['book_id'],row['seq'],row.get('printed_page')))
-    # A source quotation is not necessarily the author's own position.
-    if re.search(r'قال محمد بن عبد\s?الوهاب|زعموا|قال المعترض|يقول المعترض|شبهة',window):
-        row['reported_view']=True
-        row['attribution_warning']='Reported position; read the surrounding response before attributing it to the author.'
+    row.update(attribution_at(text,start,end))
     if 'الأورام' in window and re.search(r'قراءة|لقراءة',window):
         row['text_errata']=[{'surface':'الأورام','proposed_reading':'الأوراد','status':'unverified_editorial_proposal','source_text_preserved':True}]
     return row
@@ -233,8 +229,12 @@ def search_questions(**kwargs):
                 # the user's practical question, even when all concepts occur.
                 if re.search(r'نظم حضرات|النهوض بالتصوف|إرساء دعائم|إرساؤه لدعائم',window):score-=.18
                 if plan(query)['required']==['distress','relief']:
-                    literal_distress=any(pattern(t).search(window) for t in ap['anchors'] if concept_regex('distress').search(t))
+                    literal_distress=bool(concept_regex('distress').search(window))
                     if literal_distress:score+=.15
+                    # Practical advice can use a different distress synonym
+                    # from the user's wording; keep that local relation.
+                    normalized_window=normalize_search_text(window,level='broad')
+                    if literal_distress and re.search(r'لا تياس|اجعلها شعارك|توكل عليه|اترك له|تذكرها|اصبر|استغفر',normalized_window):score+=.14
                     if re.search(r'فقتله|سيف الزبير|رثته|بغض آل',window):score-=.2
                 # Keep phrases in top results when the question has a clear subject.
                 if db._build_exact_variant_regex(ap['subject_phrase'],normalization_level='broad').search(window):score+=.20
@@ -267,7 +267,11 @@ def search_questions(**kwargs):
         for row in rows:db._set_rank_score(row)
         rows.sort(key=lambda r:(-(bool(r.get('subject_phrase_match')) if protected else 0),-(r['rank_score'] if kwargs.get('ranking')=='primary_first' else r['score']),r['source_tier'],r['book_id'],r['seq']))
     t=time.perf_counter();rows=deduplicate([r for r in rows if r['score']>=float(kwargs.get('min_score') or 0)]);record_phase('deduplication',t)
-    if not kwargs.get('include_topic_only',True) and not state.get('coverage_gap'):rows=[r for r in rows if r['question_relevance']!='topic_only' or r.get('also_in')]
+    if not kwargs.get('include_topic_only',True) and not state.get('coverage_gap'):
+        supported=[r for r in rows if r['question_relevance']!='topic_only' or r.get('also_in')]
+        # A weak source mention is safer than an unexplained empty result when
+        # the subject is present; never promote it to an answer candidate.
+        if supported:rows=supported
     if kwargs.get('diversify_books',True) and len(kwargs.get('book_ids') or [])!=1:
         counts={};selected=[]
         for r in rows:

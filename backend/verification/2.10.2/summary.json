@@ -1,0 +1,38 @@
+{
+  "server_version": "2.10.2",
+  "tool_contract_version": "12.0",
+  "scope": "local source verification only",
+  "checks": {
+    "pytest": {
+      "status": "pass",
+      "passed": 229
+    },
+    "independent_corpus_audit": {
+      "status": "pass"
+    },
+    "isolated_mcp_http": {
+      "status": "pass",
+      "tools": 5
+    },
+    "public_replay": {
+      "status": "pass",
+      "known30_nonempty": 30,
+      "known30_reference_presence": 27,
+      "public11_nonempty": 11,
+      "errors": 0,
+      "meaning": "reference presence, not independently graded answer quality"
+    },
+    "cross_process_cache": {
+      "status": "pass",
+      "method": "two Python processes using one SQLite cache"
+    }
+  },
+  "score_certified": false,
+  "outstanding": [
+    "private held-out Arabic relevance evaluation",
+    "human source and metadata review",
+    "deployed client refresh and latency",
+    "24-hour/1000-attempt M1 observation window",
+    "original scan review for repeated printed labels"
+  ]
+}

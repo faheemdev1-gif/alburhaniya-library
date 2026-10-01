@@ -250,6 +250,15 @@ def get_page(
             "error": f"no page {seq} in book '{book_id}'",
         }
 
+    from app.core.attribution import REPORTED, attribution_at
+    # A page can contain opposing speakers. Preserve the original offsets so
+    # the reader can locate guarded statements in the unformatted source.
+    page["attribution_guards"] = [
+        {"anchor": m.start(), **guard}
+        for m in REPORTED.finditer(page["text"])
+        if (guard := attribution_at(page["text"], m.end())).get("reported_view")
+    ]
+
     page["text"] = format_page(page["text"])
     page["text"], repaired_brackets = repair_quran_display_brackets(page["text"])
     requested_max_chars = max_chars
@@ -277,6 +286,7 @@ def get_page(
             "attribution_confidence": page.get("attribution_confidence"),
             "provenance_status": page.get("provenance_status"),
             "content_types": page.get("content_types", ["body"]),
+            "attribution_guards": page["attribution_guards"],
         }
 
         if page["printed_page"] is not None:
