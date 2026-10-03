@@ -5,7 +5,7 @@ from pathlib import Path
 import httpx
 from mcp import ClientSession
 from mcp.client.streamable_http import streamablehttp_client
-CASES=[('list_books',{'projection':'ids'}),('get_book',{'book_id':'b07'}),('get_page',{'book_id':'b07','seq':166,'max_chars':200}),('get_passage',{'match_id':'b07-p166-c1180','context_chars':200})]+[('search_library',{'query':q,'limit':5}) for q in ['من ضاقت عليه المعيشة كيف ينال سعة الرزق','ماذا يفعل من ضاق رزقه واشتدت حاجته','كيف يتعامل المريد مع الحزن وضيق الصدر','ما النصيحة لمن يشعر بالهم والحزن','ما فضل الصلاة على النبي صلى الله عليه وسلم','ما هي الحقيقة المحمدية']]
+CASES=[('list_books',{'projection':'ids'}),('get_book',{'book_id':'b07'}),('get_page',{'book_id':'b07','seq':166,'max_chars':200}),('get_passage',{'match_id':'b07-p166-c1180','context_chars':200})]+[('search_library',{'query':q,'limit':5,'include_counts':True}) for q in ['من ضاقت عليه المعيشة كيف ينال سعة الرزق','ماذا يفعل من ضاق رزقه واشتدت حاجته','كيف يتعامل المريد مع الحزن وضيق الصدر','ما النصيحة لمن يشعر بالهم والحزن','ما فضل الصلاة على النبي صلى الله عليه وسلم','ما هي الحقيقة المحمدية']]
 async def run(url,count=20):
  results=[];headers={'Authorization':'Bearer '+os.environ['MCP_MONITOR_API_KEY']} if os.environ.get('MCP_MONITOR_API_KEY') else None
  async with streamablehttp_client(url,headers=headers,httpx_client_factory=lambda **kw:httpx.AsyncClient(**{**kw,'timeout':25,'trust_env':False})) as (read,write,_):

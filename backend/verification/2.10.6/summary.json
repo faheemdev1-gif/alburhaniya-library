@@ -1,0 +1,25 @@
+{
+  "release": "2.10.6",
+  "scope": "local source verification; live 2.10.6 pending",
+  "change": "40 passage candidates for provision and distress/relief; scheduled search probes bypass cache",
+  "full_suite_before_version_label_update": "235 passed",
+  "version_and_live_regressions_after_label_update": "32 passed",
+  "public_30": {
+    "completion_full": 30,
+    "listed_reference_presence": 27,
+    "reference_absent_ids": ["S2", "S3", "S4"],
+    "reference_presence_is_answer_accuracy": false
+  },
+  "four_broad_prompts_local": {
+    "completion_full": 4,
+    "count": 4,
+    "passage_union_each": 40,
+    "uncached_count_audit_completion_full": 4
+  },
+  "live_2_10_5": {
+    "version_and_contract": "2.10.5 / 12.0",
+    "fresh_key_partial_broad_searches": 4,
+    "scheduled_monitor": "19/20 full successes at review, one partial_completion, p95 about 5.3 seconds"
+  },
+  "remaining_gates": ["deployed 2.10.6 cold retest", "client wall latency", "corrected sustained monitoring", "independent held-out and documentary/source review"]
+}

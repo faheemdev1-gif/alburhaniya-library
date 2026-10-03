@@ -1,4 +1,9 @@
-# Al Burhaniya Connector 2.10.5
+# Al Burhaniya Connector 2.10.6
+
+Live 2.10.5 cold searches still skipped scoring on four broad livelihood and
+distress prompts. This patch bounds those intents to 40 source windows and
+uses uncached scheduled search probes. The larger pool for other subjects and
+the five-tool contract remain unchanged. See `docs/RELEASE_2106.md`.
 
 The live 2.10.4 search still skipped scoring on broad livelihood and distress
 questions. This release caps only those intent groups at 80 passage candidates,
