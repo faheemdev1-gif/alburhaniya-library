@@ -47,6 +47,19 @@ def anchor_plan(query,keep_terms=()):
   named_subject=normalize_search_text(t,level='broad') in {'النبي','الرسول','محمد'}
   if (row[0] or 0)>total*.15 and t not in keep_terms and not named_subject:common.append(t)
   else:anchors.append(t)
+ # A generic role noun (المريد، للمريد، السالك...) names the asker, and
+ # "ربه/ربك" names God generically. When the question has another content
+ # word, requiring these as well discards passages about the subject (Q-1).
+ from app.services.query_language import morphological_forms as _forms
+ role_bases={'مريد','سالك','عبد','انسان','ناس','مؤمن','مسلم','رب'}
+ def _generic(t):
+  word=normalize_search_text(t,level='broad')
+  bases=set(_forms(t))|{word[:-len(x)] for x in ('ه','ها','هم','ك','كم','ي','نا') if word.endswith(x)}
+  return bool(bases&role_bases)
+ if not result['comparison_subjects']:
+  roles=[t for t in anchors if _generic(t)]
+  if roles and len(anchors)>len(roles):
+   anchors=[t for t in anchors if t not in roles];common.extend(roles)
  # Preserve the rarest subject when a generic question has no recognized
  # relation. A page about a generic companion word is not evidence about it.
  frequencies={t:conn.execute('SELECT MAX(documents) FROM term_document_frequency WHERE term IN ('+','.join('?'*len(safe_term_variants(t)))+')',tuple(normalize_search_text(f,level='broad') for f in safe_term_variants(t))).fetchone()[0] or 0 for t in anchors}
@@ -55,6 +68,15 @@ def anchor_plan(query,keep_terms=()):
  # mentioning "استعمال" alone is not evidence about استعمال الهاتف.
  if len(anchors)>1 and normalize_search_text(anchors[0],level='broad') in {'استعمال','استخدام','شرب','تناول','قراءه','قراءة','زياره','زيارة'}:
   subject_anchors=anchors[1:]
+ # The protected subject is a noun. A rare verb (يعالج، يستعد) names the
+ # relation asked about; requiring it would discard the passages that
+ # discuss the subject itself (الكبر، الموت) in other words.
+ # Generic role nouns (المريد، السالك...) are the asker, not the subject,
+ # and a possessed noun (منامه) is a noun even without the article.
+ from app.services.query_language import canonical_subject
+ nouns=[t for t in subject_anchors if not _generic(t) and not any(f=='شيخ' for f in _forms(t)) and (
+        normalize_search_text(t,level='broad').startswith(('ال','وال','بال','فال','لل')) or canonical_subject(t)!=t)]
+ if nouns:subject_anchors=nouns
  result.update(anchors=anchors,common_nonanchors=common,protected_anchor=min(subject_anchors,key=lambda t:frequencies[t]) if subject_anchors else None,frequency_basis='precomputed_corpus_document_frequency');return result
 def dialogue_at(text,start):
  from app.services.discovery_index import QUESTION,ANSWER
@@ -63,7 +85,14 @@ def dialogue_at(text,start):
  if not QUESTION.search(local) and not ANSWER.search(local):return {}
  marks=[(m.start(),'question') for m in QUESTION.finditer(text)]+[(m.start(),'answer') for m in ANSWER.finditer(text)];prior=[m for m in marks if m[0]<=start]
  if not prior:return {}
- role=max(prior)[1];return {'dialogue_role':role,'speaker':'السائل' if role=='question' else None,'speaker_basis':'explicit_question_marker' if role=='question' else 'answer_marker_author_not_inferred'}
+ position,role=max(prior)
+ # Many transcripts give the reply straight after the question mark, with no
+ # الجواب marker ("سؤال: ...؟ لا لا لا ..."), or introduce it with a phrase
+ # such as "فقال رضي الله عنه". Evidence after the question's own question
+ # mark belongs to the reply, never to the questioner (MD-2).
+ if role=='question' and re.search(r'[؟?]',text[position:start]):
+  return {'dialogue_role':'answer','speaker':None,'speaker_basis':'implicit_answer_after_question_mark'}
+ return {'dialogue_role':role,'speaker':'السائل' if role=='question' else None,'speaker_basis':'explicit_question_marker' if role=='question' else 'answer_marker_author_not_inferred'}
 def supporting_span(query,text,keep_terms=(),ap=None):
  ap=ap or anchor_plan(query,keep_terms)
  terms=ap['anchors'];comparison=ap['comparison_subjects'];p=plan(query);events=[]
@@ -98,8 +127,10 @@ def supporting_span(query,text,keep_terms=(),ap=None):
    # All subject words and the reward/focus expression are in one local span.
    # This is a candidate relation, never an answer verification.
    relation=True
+  # A yes/no reply cue. نعم counts only as a reply ("…؟ نعم،"), not as the
+  # verb of praise in "نعم الشافعة".
   if query.startswith('هل ') and set(terms)<=matched and re.search(
-      r'\b(?:يجوز|جائز|جايز|وارد|نعم|لا بأس)\b',text[max(0,start-35):min(len(text),stop+100)]):
+      r'\b(?:يجوز|جائز|جايز|وارد|لا بأس)\b|(?:^|[:؟?\n])\s*نعم\b',text[max(0,start-35):min(len(text),stop+100)]):
    relation=True
   if relation and p['required']:
    required_events=[e for e in local if e[2] in {'concept:'+g for g in p['required']}];width=max(e[1] for e in required_events)-min(e[0] for e in required_events)
@@ -186,17 +217,27 @@ def classify_row(row, query, ap, text, start, end, relation=False):
     window=text[max(0,start-120):min(len(text),max(end,start+200)+160)]
     subject=db._build_exact_variant_regex(ap['subject_phrase'],normalization_level='broad')
     phrase=bool(subject.search(window))
-    directive=bool(re.search(r'عليك|ينبغي|يجب|حافظ|لا تغضب|نعم|أربع خصال|أربعة|معنى|عبارة عن|هو |هي ',window))
+    # Guidance or definition cues only. Bare "هو"/"هي" occur in nearly every
+    # passage and "نعم" is also the verb of praise; as cues they marked
+    # incidental mentions (a duʿāʾ "ولا رياء") as likely answers (LB-1).
+    directive=bool(re.search(r'عليك|ينبغي|يجب|حافظ|لا تغضب|أربع خصال|أربعة|معنى|عبارة عن|يعني|\b(?:هو|هي)\s+أن\b|المراد\s+ب|(?:^|[:؟?\n])\s*نعم\b',window))
     row['question_relevance']='relation_candidate' if relation or (phrase and directive) or row.get('matched_source_question') else 'phrase_candidate' if phrase else 'topic_only'
     focus=ap.get('focus_word')
     row['focus_match_strength']=0
-    if focus and len(safe_tokens(ap['subject_phrase']))>=3 and all(pattern(t).search(window) for t in ap['anchors'] if t!=focus):
+    subject_words=len(safe_tokens(ap['subject_phrase']))
+    # Subjects of three or more words (الصلاة على النبي) keep the original
+    # rule and 300-character proximity; two-word subjects are unchanged
+    # (no focus ranking). A single-word subject (فضل الاستغفار) is now
+    # eligible too, with its focus word within 120 characters, because a
+    # single common word gives far more chance co-occurrences.
+    reach=300 if subject_words>=3 else 120
+    if focus and subject_words!=2 and all(pattern(t).search(window) for t in ap['anchors'] if t!=focus):
         focus_forms=set(safe_term_variants(focus))
         literal_focus=re.compile('|'.join(db._build_highlight_regex(form,whole_word=True,normalization_level='broad').pattern
                                           for form in focus_forms))
         # The passage index may start at the subject while the direct reward
         # wording lies in the following sentence on the same source page.
-        direct=any(subject.search(text[max(0,m.start()-300):min(len(text),m.end()+300)])
+        direct=any(subject.search(text[max(0,m.start()-reach):min(len(text),m.end()+reach)])
                    for m in literal_focus.finditer(text))
         comparison_reward=focus=='فضل' and any(re.search(r'أفضل\s+من',text[m.end():m.end()+100])
                                                  for m in subject.finditer(text))
@@ -252,7 +293,12 @@ def search_questions(**kwargs):
             records[key]=row
         state['candidate_counts']['phrase_candidates']=len(records)
         state['stages_completed'].append('phrase_candidates')
-        if not ap.get('focus_word') and len(ap['terms'])<=3 and len(literal)>=3:
+        # A literal phrase answers a definition or a named multi-word subject.
+        # A single word under a "how/why/when" frame (كيف يتخلص من الرياء)
+        # asks about a remedy or a relation, so its passages must be scored.
+        definitional=bool(re.match(r'^(?:ما|وما)\s+(?:معنى|هو|هي|المراد|المقصود|الفرق|حقيقة|مراتب|درجات)\b',query.strip()))
+        named_phrase=len(safe_tokens(ap['subject_phrase']))>=2
+        if not ap.get('focus_word') and len(ap['terms'])<=3 and len(literal)>=3 and (named_phrase or definitional):
             state['path']='fast';query_ids.append(matched_ids);continue
         # Do not discard phrase matches, even if the later passage stage stops.
         token=DEADLINE.set(min(overall-.08,time.monotonic()+4.5))
@@ -333,7 +379,9 @@ def search_questions(**kwargs):
                                 r['source_tier'],r['book_id'],r['seq']))
     t=time.perf_counter();rows=deduplicate([r for r in rows if r['score']>=float(kwargs.get('min_score') or 0)]);record_phase('deduplication',t)
     if not kwargs.get('include_topic_only',True) and not state.get('coverage_gap'):
-        supported=[r for r in rows if r['question_relevance']!='topic_only' or r.get('also_in')]
+        # A parallel copy in another edition (also_in) is not evidence that the
+        # passage answers the question; it must not displace the other hits.
+        supported=[r for r in rows if r['question_relevance']!='topic_only']
         # A weak source mention is safer than an unexplained empty result when
         # the subject is present; never promote it to an answer candidate.
         if supported:rows=supported

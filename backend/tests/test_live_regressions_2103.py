@@ -47,8 +47,11 @@ def test_one_sided_comparison_is_explicitly_weak():
     assert response['completion'] == 'full'
     assert response['evidence_strength'] == 'weak'
     assert response['results']
-    assert all(h['question_relevance'] == 'topic_only' and h['comparison_side'] == ['الإلهام']
+    # Each hit names the one side it supports; both sides are surfaced (the
+    # waswās passages were previously hidden behind a duplicated glossary hit).
+    assert all(h['question_relevance'] == 'topic_only' and h['comparison_side'] in (['الإلهام'], ['الوسواس'])
                for h in response['results'])
+    assert {s for h in response['results'] for s in h['comparison_side']} == {'الإلهام', 'الوسواس'}
 
 
 def test_distress_question_finishes_normal_pipeline():

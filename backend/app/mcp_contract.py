@@ -7,7 +7,7 @@ import json
 from typing import Any
 
 
-SERVER_VERSION = "2.10.7"
+SERVER_VERSION = "2.10.8"
 TOOL_CONTRACT_VERSION = "12.0"
 TOOL_CONTRACT_ID = "alburhaniya-tools-v12"
 
@@ -94,8 +94,8 @@ def contract_metadata(tools: Iterable[str] | None = None) -> dict[str, Any]:
     """Versioned metadata for health checks and deployment diagnostics."""
     actual = validate_tool_names(tools or REQUIRED_TOOLS)
     return {
-        "changes_since_previous":["Require the query subject before showing unrecognized relation candidates","Discover companionship through source-attested guide language","Retain attached conjunctions in distinct comparison subjects","Label one-sided comparisons weak","Bound and accelerate question candidate scoring","Report shared-cache scope accurately"],
-        "known_issues":["Independent source and documentary review remains open","Automated relation labels are candidates, not verified answers","Private held-out and deployed acceptance are pending","Seven-day monitoring and client latency acceptance pending","Client schema refresh must be verified in each client"],
+        "changes_since_previous":["Stop routing hope, forgiveness or trust questions to the distress intent unless a distress word is present (removes the seeking-forgiveness fixed result group)","Remove bayʿa/covenant vocabulary from the companionship concept","A duplicate edition (also_in) no longer promotes a topic-only hit above other evidence","Comparison subjects: strip pronoun suffixes and prepositional modifiers; recognise preference verbs (يغلب/يرجح/يقدم/يفضل X على Y), X أم/أو Y, يميز X عن Y and علاقة X بY","Attested verb-to-noun derivation (forms III, V, X), reduplicated quadriliteral nouns, and synonym pairs النبي/الرسول and النوم/المنام for discovery","Fix morphology homographs: ta marbuta is not a pronoun (الصدقة≠صدق) and إفعال nouns keep their alif (الإنفاق≠النفاق)","Ruling and modal words (حرام، يجوز، يمكن...) and generic role nouns (المريد، السالك، ربه) are frame words, not required anchors","Single-word subjects take the scored passage path for how/why questions and receive focus-word ranking within 120 characters","Tighten guidance cues for relation labels (no bare هو/هي; نعم only as a reply)","Credit text after a question's question mark to the reply, not the questioner, in search and passage attribution"],
+        "known_issues":["Independent source and documentary review remains open","Retrieval still depends on wording for remedy questions (كيف يتخلص من X), broken plurals (وساوس/وسواس) and adjective-to-noun forms (خالصا/الإخلاص)","Automated relation labels are candidates, not verified answers","Private held-out and deployed acceptance are pending","Seven-day monitoring and client latency acceptance pending","Client schema refresh must be verified in each client"],
         "reformulation_status_policy":{"ok":"All planned discovery stages completed; not an answer-quality judgement","degraded":"A stage was skipped or stopped; inspect partial results","not_needed":"Literal/terms/lexeme path, no question rewrite"},
         "coverage_register":[{"topic":"raising children","status":"weak_coverage","basis":"Supplied audit: two passing mentions, no substantive guidance","grading_policy":"exclude from direct-answer denominator; do not invent filler"}],
         "result_defaults_policy":"Search hits inherit result_defaults; explicit hit fields override defaults. Contract 12 clients must expand defaults.",

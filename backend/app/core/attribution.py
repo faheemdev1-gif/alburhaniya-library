@@ -31,8 +31,15 @@ def attribution_at(text: str, start: int, end: int | None = None) -> dict:
     if prior:
         boundary, role = max(prior)
         if role == "question":
-            return {"source_role": "question", "speaker": "السائل",
-                    "speaker_basis": "explicit_question_marker", "attribution_review_status": "unreviewed"}
+            # Transcripts often give the reply right after the question mark
+            # with no الجواب marker ("سؤال: ...؟ لا لا لا ..."). Evidence after
+            # the question's own question mark is the reply: its speaker is
+            # not inferred, and it is never credited to the questioner.
+            closing = re.search(r"[؟?]", unit[boundary:local])
+            if not closing:
+                return {"source_role": "question", "speaker": "السائل",
+                        "speaker_basis": "explicit_question_marker", "attribution_review_status": "unreviewed"}
+            boundary += closing.end()
         unit = unit[boundary:]
         local -= boundary
         left += boundary

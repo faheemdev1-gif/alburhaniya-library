@@ -40,7 +40,9 @@ CONCEPTS.update({
  'mawlid':'المولد مولد المولد النبوي الاحتفال',
  'children':'الأطفال الأولاد الأبناء ولادي أولادي',
  'upbringing':'تربية أربي التربية تقويمهم',
- 'companionship':'صحبة الصحبة مصاحبة الرفقة الرابطة الرباط البيعة ملازمة مجالسة الجلوس يجالس',
+ # Bayʿa/ʿahd vocabulary (البيعة، الرباط، الرابطة) is the covenant, a different
+ # concept; matching it made covenant passages pose as companionship.
+ 'companionship':'صحبة الصحبة مصاحبة يصاحب الرفقة ملازمة مجالسة الجلوس يجالس',
 })
 # Parse multiword expressions separately; avoid accidental homographs.
 PHRASES={
@@ -95,7 +97,11 @@ def plan(query):
  elif 'anger' in found:groups=['anger','speech'];required=['anger','speech']
  elif 'quran' in found:groups=['quran','continuity'];required=groups[:]
  elif 'provision' in found:groups=['provision','distress','relief'];required=['provision']
- elif 'distress' in found or 'relief' in found:groups=['distress','relief'];required=groups[:]
+ # Relief words (الرجاء، الاستغفار، التوكل، الصبر) are also stations and
+ # practices in their own right. Only an explicit distress word makes a
+ # question about relief from distress; otherwise the forgiveness hadiths
+ # become a fixed result group for any question that mentions hope.
+ elif 'distress' in found:groups=['distress','relief'];required=groups[:]
  else:
   pairs=[('repentance','sin'),('pride','vanity'),('etiquette','guide'),('intercession','saints'),('parents','death'),('children','upbringing')]
   chosen=next((list(pair) for pair in pairs if all(g in found for g in pair)),None)
