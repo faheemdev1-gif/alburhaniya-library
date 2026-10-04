@@ -1,0 +1,45 @@
+{
+  "release": "2.10.7",
+  "scope": "local source verification; deployed 2.10.7 and independent grading pending",
+  "previous_release_retained": [
+    "2.10.6 40-window bound for broad provision/distress intents",
+    "2.10.6 counted monitoring probes"
+  ],
+  "full_suite": {
+    "passed": 255,
+    "failed": 0,
+    "warnings": 1,
+    "warning_kind": "third-party Starlette deprecation"
+  },
+  "public_30": {
+    "listed_reference_presence": 27,
+    "total": 30,
+    "reference_absent_ids": [
+      "S2",
+      "S3",
+      "S4"
+    ],
+    "reference_presence_is_answer_accuracy": false
+  },
+  "paired_wording_checks": [
+    "fanāʾ/baqāʾ maqām and arrival",
+    "fear/hope",
+    "certainty",
+    "sincerity/praise paraphrase",
+    "companionship",
+    "dream vision",
+    "ṣalawāt reward",
+    "smoking weak negative control"
+  ],
+  "live_2_10_6": {
+    "version": "2.10.6",
+    "fanāʾ_maqām_top_hit": "b41:95 shrine",
+    "ṣalawāt_faḍl_top_five_missing_reviewed_reward_pages": true
+  },
+  "remaining_gates": [
+    "deploy 2.10.7 and refresh clients",
+    "held-out human-graded retrieval score",
+    "production full completion and latency monitoring",
+    "source and metadata review"
+  ]
+}

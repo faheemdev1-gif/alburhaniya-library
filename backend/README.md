@@ -1,4 +1,12 @@
-# Al Burhaniya Connector 2.10.6
+# Al Burhaniya Connector 2.10.7
+
+This release broadens Arabic question understanding for comparisons, reward,
+companionship, dream vision and smoking vocabulary. It keeps unsupported
+smoking mentions weak and preserves literal census rules. It retains the
+2.10.6 candidate bound and counted monitoring probes. See
+`docs/RELEASE_2107.md` for local checks and independent grading requirements.
+
+## Previous 2.10.6 corrections
 
 Live 2.10.5 cold searches still skipped scoring on four broad livelihood and
 distress prompts. This patch bounds those intents to 40 source windows and

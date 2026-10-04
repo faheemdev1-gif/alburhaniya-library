@@ -42,7 +42,10 @@ def anchor_plan(query,keep_terms=()):
   # turns بالهم into the ubiquitous pronoun هم and discards a crucial anchor.
   forms=tuple(normalize_search_text(f,level='broad') for f in safe_term_variants(t))
   row=conn.execute('SELECT MAX(documents) FROM term_document_frequency WHERE term IN ('+','.join('?'*len(forms))+')',forms).fetchone()
-  if (row[0] or 0)>total*.15 and t not in keep_terms:common.append(t)
+  # A named entity can be common in a religious corpus and still be essential
+  # to the requested subject (e.g. a dream of the Prophet).
+  named_subject=normalize_search_text(t,level='broad') in {'النبي','الرسول','محمد'}
+  if (row[0] or 0)>total*.15 and t not in keep_terms and not named_subject:common.append(t)
   else:anchors.append(t)
  # Preserve the rarest subject when a generic question has no recognized
  # relation. A page about a generic companion word is not evidence about it.
@@ -91,6 +94,13 @@ def supporting_span(query,text,keep_terms=(),ap=None):
    window=text[max(0,start-15):start+180];provision_remedy=any(db._build_highlight_regex(t,whole_word=False).search(window) for t in ('تيسير الرزق','جلب الرزق','سعة الرزق','شكا الفقر','عنه الفقر'));relation='provision' in groups and (bool(groups.intersection({'relief','distress'})) or provision_remedy)
   for t in terms:
    if any(concept_regex(g).search(t) for g in groups):matched.add(t)
+  if ap.get('focus_word') and set(terms)<=matched:
+   # All subject words and the reward/focus expression are in one local span.
+   # This is a candidate relation, never an answer verification.
+   relation=True
+  if query.startswith('هل ') and set(terms)<=matched and re.search(
+      r'\b(?:يجوز|جائز|جايز|وارد|نعم|لا بأس)\b',text[max(0,start-35):min(len(text),stop+100)]):
+   relation=True
   if relation and p['required']:
    required_events=[e for e in local if e[2] in {'concept:'+g for g in p['required']}];width=max(e[1] for e in required_events)-min(e[0] for e in required_events)
   else:width=180
@@ -178,6 +188,22 @@ def classify_row(row, query, ap, text, start, end, relation=False):
     phrase=bool(subject.search(window))
     directive=bool(re.search(r'عليك|ينبغي|يجب|حافظ|لا تغضب|نعم|أربع خصال|أربعة|معنى|عبارة عن|هو |هي ',window))
     row['question_relevance']='relation_candidate' if relation or (phrase and directive) or row.get('matched_source_question') else 'phrase_candidate' if phrase else 'topic_only'
+    focus=ap.get('focus_word')
+    row['focus_match_strength']=0
+    if focus and len(safe_tokens(ap['subject_phrase']))>=3 and all(pattern(t).search(window) for t in ap['anchors'] if t!=focus):
+        focus_forms=set(safe_term_variants(focus))
+        literal_focus=re.compile('|'.join(db._build_highlight_regex(form,whole_word=True,normalization_level='broad').pattern
+                                          for form in focus_forms))
+        # The passage index may start at the subject while the direct reward
+        # wording lies in the following sentence on the same source page.
+        direct=any(subject.search(text[max(0,m.start()-300):min(len(text),m.end()+300)])
+                   for m in literal_focus.finditer(text))
+        comparison_reward=focus=='فضل' and any(re.search(r'أفضل\s+من',text[m.end():m.end()+100])
+                                                 for m in subject.finditer(text))
+        if direct or comparison_reward:
+            row['focus_match_strength']=2
+        elif pattern(focus).search(window):
+            row['focus_match_strength']=1
     # A discussion *about* the literature on etiquette is not itself advice
     # about how to behave. Require an actionable conduct term in the local span.
     if plan(query)['required']==['etiquette','guide'] and not re.search(
@@ -226,7 +252,7 @@ def search_questions(**kwargs):
             records[key]=row
         state['candidate_counts']['phrase_candidates']=len(records)
         state['stages_completed'].append('phrase_candidates')
-        if len(ap['terms'])<=3 and len(literal)>=3:
+        if not ap.get('focus_word') and len(ap['terms'])<=3 and len(literal)>=3:
             state['path']='fast';query_ids.append(matched_ids);continue
         # Do not discard phrase matches, even if the later passage stage stops.
         token=DEADLINE.set(min(overall-.08,time.monotonic()+4.5))
@@ -251,7 +277,7 @@ def search_questions(**kwargs):
                 start+=left;end+=left
                 score=.10+.70*value
                 q=candidate['question']
-                qa_match=bool(q) and sum(bool((comparison_pattern(t) if ap['comparison_subjects'] else pattern(t)).search(q)) for t in ap['anchors'])>=min(2,len(ap['anchors']))
+                qa_match=bool(q) and all((comparison_pattern(t) if ap['comparison_subjects'] else pattern(t)).search(q) for t in ap['anchors'])
                 if qa_match:score+=.18
                 if relation and plan(query)['required']==['litanies','work','provision'] and re.search(r'سؤال\s*[:：]|الجواب\s*[:：]|السائل\s*[:：]',window):score+=.16
                 # A biography describes someone's life, rather than addressing
@@ -300,7 +326,11 @@ def search_questions(**kwargs):
     if kwargs.get('ranking') in ('book_order','chronological'):rows.sort(key=lambda r:(r['book_id'],r['seq']))
     else:
         for row in rows:db._set_rank_score(row)
-        rows.sort(key=lambda r:(-(bool(r.get('subject_phrase_match')) if protected else 0),-(r['rank_score'] if kwargs.get('ranking')=='primary_first' else r['score']),r['source_tier'],r['book_id'],r['seq']))
+        rows.sort(key=lambda r:(-r.get('focus_match_strength',0),
+                                -(r.get('question_relevance')=='relation_candidate' if r.get('focus_match_strength') else 0),
+                                -(bool(r.get('subject_phrase_match')) if protected else 0),
+                                -(r['rank_score'] if kwargs.get('ranking')=='primary_first' else r['score']),
+                                r['source_tier'],r['book_id'],r['seq']))
     t=time.perf_counter();rows=deduplicate([r for r in rows if r['score']>=float(kwargs.get('min_score') or 0)]);record_phase('deduplication',t)
     if not kwargs.get('include_topic_only',True) and not state.get('coverage_gap'):
         supported=[r for r in rows if r['question_relevance']!='topic_only' or r.get('also_in')]

@@ -40,7 +40,7 @@ CONCEPTS.update({
  'mawlid':'المولد مولد المولد النبوي الاحتفال',
  'children':'الأطفال الأولاد الأبناء ولادي أولادي',
  'upbringing':'تربية أربي التربية تقويمهم',
- 'companionship':'صحبة الصحبة مصاحبة الرفقة الرابطة الرباط البيعة ملازمة',
+ 'companionship':'صحبة الصحبة مصاحبة الرفقة الرابطة الرباط البيعة ملازمة مجالسة الجلوس يجالس',
 })
 # Parse multiword expressions separately; avoid accidental homographs.
 PHRASES={
