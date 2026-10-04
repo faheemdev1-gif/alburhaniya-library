@@ -51,7 +51,7 @@ def anchor_plan(query,keep_terms=()):
  # "ربه/ربك" names God generically. When the question has another content
  # word, requiring these as well discards passages about the subject (Q-1).
  from app.services.query_language import morphological_forms as _forms
- role_bases={'مريد','سالك','عبد','انسان','ناس','مؤمن','مسلم','رب'}
+ role_bases={'مريد','سالك','عبد','انسان','ناس','مؤمن','مسلم','رب','سلوك','طريق'}
  def _generic(t):
   word=normalize_search_text(t,level='broad')
   bases=set(_forms(t))|{word[:-len(x)] for x in ('ه','ها','هم','ك','كم','ي','نا') if word.endswith(x)}
@@ -78,6 +78,19 @@ def anchor_plan(query,keep_terms=()):
         normalize_search_text(t,level='broad').startswith(('ال','وال','بال','فال','لل')) or canonical_subject(t)!=t)]
  if nouns:subject_anchors=nouns
  result.update(anchors=anchors,common_nonanchors=common,protected_anchor=min(subject_anchors,key=lambda t:frequencies[t]) if subject_anchors else None,frequency_basis='precomputed_corpus_document_frequency');return result
+@lru_cache(maxsize=4096)
+def relation_verb(term):
+ """An imperfect verb (يضر، يخاف، يتعامل) that names the asked relation.
+
+ Its noun reading with the article is unattested; nouns such as تربية or
+ الصلاة are never treated as optional.
+ """
+ from app.services.query_language import corpus_documents
+ word=normalize_search_text(term,level='broad')
+ return (len(word)>=3 and word[0] in 'يتن' and not word.startswith('ال')
+         and corpus_documents('ال'+word)<2)
+
+
 def dialogue_at(text,start):
  from app.services.discovery_index import QUESTION,ANSWER
  text_start=max(0,text.rfind('\n\n',0,start))
@@ -93,8 +106,17 @@ def dialogue_at(text,start):
  if role=='question' and re.search(r'[؟?]',text[position:start]):
   return {'dialogue_role':'answer','speaker':None,'speaker_basis':'implicit_answer_after_question_mark'}
  return {'dialogue_role':role,'speaker':'السائل' if role=='question' else None,'speaker_basis':'explicit_question_marker' if role=='question' else 'answer_marker_author_not_inferred'}
+# The honorific "عليه أفضل الصلاة والسلام" is a blessing formula, not a
+# statement about virtue (فضل) or prayer. It is blanked, offsets preserved,
+# for scoring only; displayed text is never changed.
+_HONORIFIC=re.compile(r'(?:أفضل|افضل|أزكى|ازكى|أتم|اتم)\s+(?:ال)?(?:صلاة|صلاه|صلوات)\s*(?:و\s*(?:أتم|اتم|أزكى)\s+)?(?:و\s*)?(?:ال)?(?:سلام|تسليم|تحية)?')
+def mask_honorifics(text):
+ return _HONORIFIC.sub(lambda m:' '*len(m.group()),text)
+
+
 def supporting_span(query,text,keep_terms=(),ap=None):
  ap=ap or anchor_plan(query,keep_terms)
+ text=mask_honorifics(text)
  terms=ap['anchors'];comparison=ap['comparison_subjects'];p=plan(query);events=[]
  for t in terms:
   # The comparison subjects are distinct words: broad morphology can collapse
@@ -214,6 +236,7 @@ def passage_candidates(query, ap, scope):
 @profiled('relation_check')
 def classify_row(row, query, ap, text, start, end, relation=False):
     """Labels describe observable evidence, never automated answer truth."""
+    text=mask_honorifics(text)
     window=text[max(0,start-120):min(len(text),max(end,start+200)+160)]
     subject=db._build_exact_variant_regex(ap['subject_phrase'],normalization_level='broad')
     phrase=bool(subject.search(window))
@@ -319,7 +342,12 @@ def search_questions(**kwargs):
                 support=supporting_span(query,window,keep,ap)
                 if not support:continue
                 value,start,end,matched,relation=support
-                if not relation and not ap['comparison_subjects'] and len(matched)<min(2,len(ap['anchors'])):continue
+                # Two question words should co-occur, but a passage that names
+                # the protected subject itself is kept as topic-only evidence:
+                # extra verbs (يضر، يخاف) must not discard the only statement.
+                if (not relation and not ap['comparison_subjects'] and len(matched)<min(2,len(ap['anchors']))
+                        and not (ap.get('protected_anchor') in matched
+                                 and all(relation_verb(t) for t in ap['anchors'] if t not in matched))):continue
                 start+=left;end+=left
                 score=.10+.70*value
                 q=candidate['question']

@@ -3,11 +3,11 @@ from functools import lru_cache
 import re
 from app.core.arabic_utils import safe_tokens,normalize_search_text
 # Ruling and stance words frame a question (Q-1); they are not its subject.
-RULING_WORDS=set('حرام حلال يجوز تجوز جائز جايز مكروه مباح واجب يمكن ممكن'.split())
+RULING_WORDS=set('حرام حلال يجوز تجوز جائز جايز مكروه مباح واجب يمكن ممكن ينبغي يجب'.split())
 FUNCTION_WORDS=set('ما ماذا هل كيف لماذا متى أين اين من في على إلى الى عن مع و أو أم ثم هذا هذه ذلك تلك هو هي هم هن نحن أنا انا أنت انت الذي التي الذين إن أن كان كانت يكون وهل وما وهو وهي به بها لهم له لها عليه عليها عليهم لكي حتى عند بين كل أي اي ولا إلا لا لم لن بس لو لما عشان إزاي ازاي إيه ايه ليه عايز عاوز أعمل اعمل بماذا'.split())
 FUNCTION_WORDS|=RULING_WORDS
 KEYS={normalize_search_text(t,level='broad') for t in FUNCTION_WORDS}
-FRAMES=sorted(['إيه رأي مولانا في','ما المراد بـ','ما المراد ب','ما المراد','ما ثواب','ما فضل','ما فائدة','ما أثر','ما هي','ما هو','ما حكم','ما معنى','ما الفرق بين','كيف يفرق الشيخ بين','كيف يفرق بين','كيف يجمع السالك بين','كيف يجمع بين','كيف يميز السالك بين','كيف يميز بين','كيف أميز بين','كيف يختلف','ما التوازن بين','لماذا تعد','لماذا يعتبر','إيه أعمل','ما','كيف','هل','لماذا','متى','ماذا','بماذا','إيه','ايه','عايز','عاوز','ليه','إزاي','ازاي'],key=len,reverse=True)
+FRAMES=sorted(['إيه رأي مولانا في','ما حقيقة','ما المراد بـ','ما المراد ب','ما المراد','ما المقصود بـ','ما المقصود ب','ما المقصود','ما ثواب','ما فضل','ما فائدة','ما أثر','ما هي','ما هو','ما حكم','ما معنى','ما الفرق بين','كيف يفرق الشيخ بين','كيف يفرق بين','كيف يجمع السالك بين','كيف يجمع بين','كيف يميز السالك بين','كيف يميز بين','كيف أميز بين','كيف يختلف','ما التوازن بين','لماذا تعد','لماذا يعتبر','إيه أعمل','ما','كيف','هل','لماذا','متى','ماذا','بماذا','إيه','ايه','عايز','عاوز','ليه','إزاي','ازاي'],key=len,reverse=True)
 _PAIR = re.compile(r'(?:الفرق|التوازن|يفرق|يجمع|يميز|أميز)\s+(?:(?:الشيخ|السالك)\s+)?بين\s+([ء-ي]+)\s+و\s*([ء-ي]+)')
 _VERSUS = re.compile(r'([ء-ي]+)\s+(?:عن|من)\s+([ء-ي]+)')
 _MEANING_VERSUS = re.compile(r'معنى\s+([ء-ي]+)\s+وكيف\s+يختلف\s+عن\s+([ء-ي]+)')
@@ -60,6 +60,30 @@ def corpus_documents(form):
   return int(row[0]) if row else 0
  except Exception:
   return 0
+
+
+@lru_cache(maxsize=2048)
+def phrase_pages(phrase):
+ try:
+  from app.services import library_db as db
+  return len(db.search(query=phrase,search_mode='exact_phrase',limit=20,diversify_books=False))
+ except Exception:
+  return 0
+
+
+def reduce_construct(part):
+ """خوف العقاب -> الخوف when the construct phrase itself is rare.
+
+ Established compounds (علم اليقين, شيخ الطريقة) occur as phrases and are
+ kept whole; a rare construct names its head concept with a qualifier.
+ """
+ words=part.split()
+ if len(words)!=2 or words[0].startswith('ال') or not words[1].startswith('ال'):return part
+ head='ال'+words[0]
+ # Established compounds occur as phrases on many pages (محبة الله 13,
+ # علم اليقين 57); a rare construct (خوف العقاب 2) is a qualified head.
+ if phrase_pages(part)<8 and corpus_documents(head)>=10:return head
+ return part
 
 
 def canonical_subject(part):
@@ -123,9 +147,25 @@ def comparison_subjects(query):
    if w in _PREPOSITIONS:part=' '.join(words[:i]);break
   cleaned.append(canonical_subject(part))
  if all(part.startswith('مقام ') for part in cleaned):cleaned=[part[5:] for part in cleaned]
+ # Rare construct subjects reduce to their head noun, unless that would
+ # merge the two sides into one concept.
+ reduced=[reduce_construct(part) for part in cleaned]
+ if normalize_search_text(reduced[0],level='broad')!=normalize_search_text(reduced[1],level='broad'):cleaned=reduced
  if any(not part or len(safe_tokens(part))>3 for part in cleaned):return []
  if normalize_search_text(cleaned[0],level='broad')==normalize_search_text(cleaned[1],level='broad'):return []
  return cleaned
+
+def strip_attached_preposition(token):
+ """بعين -> عين, بالسعي -> السعي, when the bare form is the attested word.
+
+ A word that genuinely begins with ب/ل/ك (بركة, كلام) is kept because its
+ own corpus frequency is not dwarfed by the stripped form's.
+ """
+ if len(token)<4 or token[0] not in 'بلك':return token
+ rest=token[1:]
+ if corpus_documents(rest)>=5 and corpus_documents(token)*5<corpus_documents(rest):return rest
+ return token
+
 
 def subject_phrase(query):
  query=query.strip(' ؟?')
@@ -144,7 +184,7 @@ def subject_phrase(query):
  query=re.sub(r'\s+في\s+عبادته$','',query)
  query=re.sub(r'\s+صلى\s+الله\s+عليه\s+وسلم\b','',query)
  query=re.sub(r'^ب(?=الأعيان|المعنى|المقصود)', '', query)
- return query
+ return ' '.join(strip_attached_preposition(t) for t in query.split())
 def language_plan(query,keep_terms=()):
  keep={normalize_search_text(t,level='broad') for t in keep_terms}
  tokens=list(dict.fromkeys(safe_tokens(subject_phrase(query))+[t for t in safe_tokens(query) if normalize_search_text(t,level='broad') in keep]))
@@ -194,6 +234,9 @@ def derived_nouns(word):
 @lru_cache(maxsize=4096)
 def morphological_forms(term):
  word=normalize_search_text(term,level='broad');bases={word}
+ # A word written with the article is a noun: التوكل must not become وكل
+ # ("and every") nor التسليم become سليم by stripping a verb prefix.
+ nominal=word.startswith(('ال','وال','بال','فال','لل'))
  # Broad normalisation writes ta marbuta as ه. That ه is part of the noun,
  # not a pronoun: الصدقة must not become صدق (truthfulness).
  marbuta=normalize_search_text(term,level='safe').endswith('ة')
@@ -210,7 +253,7 @@ def morphological_forms(term):
   # Imperfect-verb prefixes. A leading ا is not stripped from verbal nouns
   # of the إفعال/افتعال/انفعال/استفعال patterns: الإنفاق is not النفاق.
   verbal_noun=value[:1]=='ا' and ((len(value)==5 and value[3]=='ا') or (len(value)==6 and value[4]=='ا') or value.startswith('است'))
-  if value[:1] in ('ا','ت','ي','ن') and len(value)>=4 and not verbal_noun:bases.add(value[1:])
+  if value[:1] in ('ا','ت','ي','ن') and len(value)>=4 and not verbal_noun and not nominal:bases.add(value[1:])
  forms=set(bases)
  for value in tuple(bases):forms.update(DISCOVERY_VARIANTS.get(value,()))
  forms.update(derived_nouns(word))
