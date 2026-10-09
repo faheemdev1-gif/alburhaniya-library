@@ -1,9 +1,0 @@
-{
-  "method":"Local direct Python DB calls on the unmodified supplied ZIP; seven sequential runs; first call included; no HTTP or production load. Result counts and scope identical across measurements. Collected during this update before code edits.",
-  "cases":[
-    {"name":"lexeme","ms":[702.99,14.6,14.97,14.22,16.11,15.07,14.03],"median_ms":14.97,"result_ids":["b09-p92-c384","b25-p32-c851","b11-p132-c304","b07-p96-c294","b40-p95-c258"]},
-    {"name":"multi_lexeme","ms":[509.7,525.44,533.19,494.71,508.66,534.47,500.23],"median_ms":509.7,"result_ids":["b39-p157-c176","b29-p42-c206","b11-p118-c152","b07-p20-c329","b11-p100-c343"]},
-    {"name":"prayer_hybrid","ms":[2435.92,2240.99,2216.2,2188.25,2195.55,2225.74,2134.76],"median_ms":2216.2,"result_ids":["b44-p46-c1675"]},
-    {"name":"livelihood_hybrid","ms":[1116.88,1051.66,1081.16,1051.0,1067.45,1076.62,1098.27],"median_ms":1076.62,"result_ids":[]}
-  ]
-}

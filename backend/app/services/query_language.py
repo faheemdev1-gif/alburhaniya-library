@@ -98,7 +98,8 @@ def canonical_subject(part):
  for suffix in _PRONOUN_SUFFIXES:
   if part.endswith(suffix) and len(part)-len(suffix)>=3:
    stem=part[:-len(suffix)]
-   for base in dict.fromkeys((stem[:-1]+'ء' if stem.endswith('ئ') or stem.endswith('ؤ') else stem,stem)):
+   for base in dict.fromkeys((stem[:-1]+'ة' if stem.endswith('ت') else stem,
+                              stem[:-1]+'ء' if stem.endswith('ئ') or stem.endswith('ؤ') else stem,stem)):
     candidate='ال'+base
     if corpus_documents(candidate)>max(2,corpus_documents(part)):return candidate
    break
@@ -171,6 +172,10 @@ def subject_phrase(query):
  query=query.strip(' ؟?')
  subjects=comparison_subjects(query)
  if subjects:return ' و'.join(subjects)
+ # In "what should X do so that Y is valid", Y is the subject. The
+ # surrounding duty question is a frame, not a phrase to search verbatim.
+ action=re.match(r'^ما\s+الذي\s+يجب\s+على\s+.+?\s+فعله\s+حتى\s+تصح\s+([ء-ي]+)$',query)
+ if action:return 'شروط '+canonical_subject(action.group(1))
  query=re.sub(r'^(?:كيف\s+)?يتخلص\s+(?:'+_ROLE+r'\s+)?من\s+','',query)
  query=re.sub(r'^هل\s+يرى\s+(?:'+_ROLE+r'\s+)?','رؤية ',query)
  query=re.sub(r'^ما\s+(?:رأي|موقف)\s+(?:'+_ROLE+r')\s+في\s+','',query)

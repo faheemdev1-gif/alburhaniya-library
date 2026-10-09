@@ -110,8 +110,26 @@ def dialogue_at(text,start):
 # statement about virtue (فضل) or prayer. It is blanked, offsets preserved,
 # for scoring only; displayed text is never changed.
 _HONORIFIC=re.compile(r'(?:أفضل|افضل|أزكى|ازكى|أتم|اتم)\s+(?:ال)?(?:صلاة|صلاه|صلوات)\s*(?:و\s*(?:أتم|اتم|أزكى)\s+)?(?:و\s*)?(?:ال)?(?:سلام|تسليم|تحية)?')
+_PROCEDURAL_QUESTION=re.compile(r'^(?:كيف|ما\s+الذي\s+يجب|ماذا\s+(?:يفعل|أفعل)|بماذا|إزاي|ازاي|إيه\s+أعمل)\b')
+_PROCEDURAL_EVIDENCE=re.compile(
+ r'(?<![ء-ي])(?:شروط|خطوات|مراحل)(?![ء-ي])[^.!؟\n]{0,65}'
+ r'(?<![ء-ي])(?:ثلاث|أربع|خمسة|أولاً|أولا|ثانياً|ثانيا)(?![ء-ي])'
+)
 def mask_honorifics(text):
  return _HONORIFIC.sub(lambda m:' '*len(m.group()),text)
+
+
+def procedural_support(query, window, start, end, matched, ap, relation):
+ """Favor an actionable span over a passing mention in a how-to question.
+
+ The enumerated cue must occur beside the matched evidence, and the protected
+ subject must also be present. A passing mention of "conditions" alone does
+ not count. This is a ranking signal, never an answer label.
+ """
+ if not relation or not _PROCEDURAL_QUESTION.match(query.strip()):return 0.0
+ if not ap.get('protected_anchor') or ap['protected_anchor'] not in matched:return 0.0
+ local=window[max(0,start-80):min(len(window),end+100)]
+ return .16 if _PROCEDURAL_EVIDENCE.search(local) else 0.0
 
 
 def supporting_span(query,text,keep_terms=(),ap=None):
@@ -312,6 +330,9 @@ def search_questions(**kwargs):
             key=(row['book_id'],row['seq']);matched_ids.add(key)
             page=pages.setdefault(key,db.get_page(*key));span=row['evidence_span']
             row['score']=round(.70+.28*row['score'],6)
+            row['score']=round(min(.985,row['score']+procedural_support(
+                query,page['text'],span['start'],span['end'],
+                [ap['protected_anchor']],ap,True)),6)
             classify_row(row,query,ap,page['text'],span['start'],span['end'])
             records[key]=row
         state['candidate_counts']['phrase_candidates']=len(records)
@@ -350,6 +371,7 @@ def search_questions(**kwargs):
                                  and all(relation_verb(t) for t in ap['anchors'] if t not in matched))):continue
                 start+=left;end+=left
                 score=.10+.70*value
+                score+=procedural_support(query,window,start-left,end-left,matched,ap,relation)
                 q=candidate['question']
                 qa_match=bool(q) and all((comparison_pattern(t) if ap['comparison_subjects'] else pattern(t)).search(q) for t in ap['anchors'])
                 if qa_match:score+=.18

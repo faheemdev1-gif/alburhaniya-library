@@ -1,9 +1,0 @@
-{
-  "method":"Build current semantic chunk metadata on an in-memory backup of the rebuilt database, then compare it with the supplied vector manifest. No model was loaded or regenerated.",
-  "current_chunk_count":29128,
-  "current_corpus_sha256":"3a06d8d606c545726adba2c80652ca91d350faa9ab624ea748797c6d6849deb0",
-  "supplied_chunk_count":29124,
-  "supplied_corpus_sha256":"b26ed9bcfa2315f17e4c58d82bf57b3b2a774f3930758fa101953ce9fed2c84a",
-  "compatible":false,
-  "action":"Keep semantic disabled. Preserve original artifacts in the project archive, exclude them from the default Docker image, and regenerate vectors and metadata together before enabling semantic search. Runtime now rejects mismatched corpus hashes or chunk counts."
-}

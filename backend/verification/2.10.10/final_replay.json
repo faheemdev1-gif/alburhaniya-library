@@ -1,0 +1,1268 @@
+{
+  "server_version": "2.10.10",
+  "scope": "Local replay of disclosed development questions; reference inclusion only",
+  "public": [
+    {
+      "query": "من ضاقت عليه المعيشة كيف ينال سعة الرزق",
+      "hits": [
+        [
+          "b41",
+          131
+        ],
+        [
+          "b41",
+          130
+        ],
+        [
+          "b07",
+          180
+        ],
+        [
+          "b44",
+          40
+        ],
+        [
+          "b10",
+          20
+        ]
+      ],
+      "elapsed_ms": 1930.17,
+      "error": null,
+      "evidence_strength": "candidate",
+      "completion": "full",
+      "id": "L1",
+      "reference_in_top5": true
+    },
+    {
+      "query": "ماذا يفعل من ضاق رزقه واشتدت حاجته",
+      "hits": [
+        [
+          "b41",
+          131
+        ],
+        [
+          "b41",
+          130
+        ],
+        [
+          "b10",
+          20
+        ],
+        [
+          "b12",
+          112
+        ],
+        [
+          "b07",
+          180
+        ]
+      ],
+      "elapsed_ms": 285.81,
+      "error": null,
+      "evidence_strength": "candidate",
+      "completion": "full",
+      "id": "L2",
+      "reference_in_top5": true
+    },
+    {
+      "query": "كيف يتعامل المريد مع الفقر وقلة المال",
+      "hits": [
+        [
+          "b41",
+          131
+        ],
+        [
+          "b41",
+          130
+        ],
+        [
+          "b10",
+          20
+        ],
+        [
+          "b12",
+          112
+        ],
+        [
+          "b07",
+          180
+        ]
+      ],
+      "elapsed_ms": 299.49,
+      "error": null,
+      "evidence_strength": "candidate",
+      "completion": "full",
+      "id": "L3",
+      "reference_in_top5": true
+    },
+    {
+      "query": "ما توجيه الشيخ لمن يشكو ضيق المعيشة",
+      "hits": [
+        [
+          "b41",
+          131
+        ],
+        [
+          "b41",
+          130
+        ],
+        [
+          "b07",
+          180
+        ],
+        [
+          "b17",
+          66
+        ],
+        [
+          "b44",
+          40
+        ]
+      ],
+      "elapsed_ms": 264.53,
+      "error": null,
+      "evidence_strength": "candidate",
+      "completion": "full",
+      "id": "L4",
+      "reference_in_top5": true
+    },
+    {
+      "query": "عندما يقل دخلي وتكثر حاجتي بماذا تنصحني التعاليم",
+      "hits": [
+        [
+          "b41",
+          131
+        ],
+        [
+          "b41",
+          130
+        ],
+        [
+          "b10",
+          20
+        ],
+        [
+          "b12",
+          112
+        ],
+        [
+          "b07",
+          180
+        ]
+      ],
+      "elapsed_ms": 368.63,
+      "error": null,
+      "evidence_strength": "candidate",
+      "completion": "full",
+      "id": "L5",
+      "reference_in_top5": true
+    },
+    {
+      "query": "هل يكفي أن أقرأ الأوراد وأترك السعي للكسب",
+      "hits": [
+        [
+          "b41",
+          131
+        ],
+        [
+          "b15",
+          26
+        ]
+      ],
+      "elapsed_ms": 584.68,
+      "error": null,
+      "evidence_strength": "candidate",
+      "completion": "full",
+      "id": "W1",
+      "reference_in_top5": true
+    },
+    {
+      "query": "هل قراءة الأوراد تغني عن العمل لطلب الرزق",
+      "hits": [
+        [
+          "b41",
+          131
+        ],
+        [
+          "b15",
+          26
+        ]
+      ],
+      "elapsed_ms": 482.19,
+      "error": null,
+      "evidence_strength": "candidate",
+      "completion": "full",
+      "id": "W2",
+      "reference_in_top5": true
+    },
+    {
+      "query": "هل يجوز للمريد أن يترك العمل ويكتفي بالذكر",
+      "hits": [
+        [
+          "b15",
+          26
+        ],
+        [
+          "b41",
+          131
+        ]
+      ],
+      "elapsed_ms": 551.53,
+      "error": null,
+      "evidence_strength": "candidate",
+      "completion": "full",
+      "id": "W3",
+      "reference_in_top5": true
+    },
+    {
+      "query": "كيف نجمع بين الأوراد والسعي لكسب العيش",
+      "hits": [
+        [
+          "b41",
+          131
+        ],
+        [
+          "b15",
+          26
+        ]
+      ],
+      "elapsed_ms": 539.76,
+      "error": null,
+      "evidence_strength": "candidate",
+      "completion": "full",
+      "id": "W4",
+      "reference_in_top5": true
+    },
+    {
+      "query": "لو قعدت أقرأ الأوراد بس من غير شغل هل يجي الرزق",
+      "hits": [
+        [
+          "b41",
+          131
+        ],
+        [
+          "b15",
+          26
+        ]
+      ],
+      "elapsed_ms": 479.52,
+      "error": null,
+      "evidence_strength": "candidate",
+      "completion": "full",
+      "id": "W5",
+      "reference_in_top5": true
+    },
+    {
+      "query": "كيف أحافظ على الصلاة في وقتها",
+      "hits": [
+        [
+          "b44",
+          55
+        ],
+        [
+          "b07",
+          166
+        ],
+        [
+          "b44",
+          46
+        ],
+        [
+          "b28",
+          70
+        ],
+        [
+          "b09",
+          2
+        ]
+      ],
+      "elapsed_ms": 476.3,
+      "error": null,
+      "evidence_strength": "candidate",
+      "completion": "full",
+      "id": "P1",
+      "reference_in_top5": true
+    },
+    {
+      "query": "ما أهمية أداء الصلوات في أوقاتها",
+      "hits": [
+        [
+          "b07",
+          166
+        ],
+        [
+          "b44",
+          46
+        ],
+        [
+          "b44",
+          55
+        ],
+        [
+          "b28",
+          70
+        ],
+        [
+          "b09",
+          2
+        ]
+      ],
+      "elapsed_ms": 565.83,
+      "error": null,
+      "evidence_strength": "candidate",
+      "completion": "full",
+      "id": "P2",
+      "reference_in_top5": true
+    },
+    {
+      "query": "بماذا تنصحون من يؤخر الصلاة عن وقتها",
+      "hits": [
+        [
+          "b07",
+          166
+        ],
+        [
+          "b44",
+          46
+        ],
+        [
+          "b44",
+          55
+        ],
+        [
+          "b28",
+          70
+        ],
+        [
+          "b09",
+          2
+        ]
+      ],
+      "elapsed_ms": 558.68,
+      "error": null,
+      "evidence_strength": "candidate",
+      "completion": "full",
+      "id": "P3",
+      "reference_in_top5": true
+    },
+    {
+      "query": "ما توجيه الشيخ للمداومة على الفرائض في مواعيدها",
+      "hits": [
+        [
+          "b44",
+          55
+        ],
+        [
+          "b07",
+          166
+        ],
+        [
+          "b44",
+          46
+        ],
+        [
+          "b28",
+          70
+        ],
+        [
+          "b09",
+          2
+        ]
+      ],
+      "elapsed_ms": 630.28,
+      "error": null,
+      "evidence_strength": "candidate",
+      "completion": "full",
+      "id": "P4",
+      "reference_in_top5": true
+    },
+    {
+      "query": "إزاي أواظب على صلاتي وما أأخرهاش",
+      "hits": [
+        [
+          "b44",
+          47
+        ],
+        [
+          "b44",
+          55
+        ],
+        [
+          "b30",
+          82
+        ],
+        [
+          "b12",
+          175
+        ],
+        [
+          "b41",
+          113
+        ]
+      ],
+      "elapsed_ms": 628.64,
+      "error": null,
+      "evidence_strength": "candidate",
+      "completion": "full",
+      "id": "P5",
+      "reference_in_top5": true
+    },
+    {
+      "query": "ضبط اللسان عند الغضب",
+      "hits": [
+        [
+          "b44",
+          3
+        ],
+        [
+          "b07",
+          195
+        ],
+        [
+          "b07",
+          307
+        ],
+        [
+          "b19",
+          21
+        ],
+        [
+          "b42",
+          38
+        ]
+      ],
+      "elapsed_ms": 322.55,
+      "error": null,
+      "evidence_strength": "candidate",
+      "completion": "full",
+      "id": "A1",
+      "reference_in_top5": true
+    },
+    {
+      "query": "كيف أحفظ لساني إذا غضبت",
+      "hits": [
+        [
+          "b07",
+          195
+        ],
+        [
+          "b07",
+          307
+        ],
+        [
+          "b44",
+          3
+        ],
+        [
+          "b19",
+          21
+        ],
+        [
+          "b42",
+          38
+        ]
+      ],
+      "elapsed_ms": 350.25,
+      "error": null,
+      "evidence_strength": "candidate",
+      "completion": "full",
+      "id": "A2",
+      "reference_in_top5": true
+    },
+    {
+      "query": "ماذا أفعل حتى لا أؤذي الناس بكلامي وقت الغضب",
+      "hits": [
+        [
+          "b07",
+          195
+        ],
+        [
+          "b07",
+          307
+        ],
+        [
+          "b19",
+          21
+        ],
+        [
+          "b42",
+          38
+        ],
+        [
+          "b44",
+          3
+        ]
+      ],
+      "elapsed_ms": 434.12,
+      "error": null,
+      "evidence_strength": "candidate",
+      "completion": "full",
+      "id": "A3",
+      "reference_in_top5": true
+    },
+    {
+      "query": "ما نصيحة الشيخ في كظم الغيظ وترك الكلام الجارح",
+      "hits": [
+        [
+          "b07",
+          195
+        ],
+        [
+          "b44",
+          3
+        ],
+        [
+          "b07",
+          307
+        ],
+        [
+          "b19",
+          21
+        ],
+        [
+          "b42",
+          38
+        ]
+      ],
+      "elapsed_ms": 587.36,
+      "error": null,
+      "evidence_strength": "candidate",
+      "completion": "full",
+      "id": "A4",
+      "reference_in_top5": true
+    },
+    {
+      "query": "لما أتعصب إزاي أمسك لساني وما أجرحش حد",
+      "hits": [
+        [
+          "b07",
+          195
+        ],
+        [
+          "b44",
+          3
+        ],
+        [
+          "b07",
+          307
+        ],
+        [
+          "b19",
+          21
+        ],
+        [
+          "b42",
+          38
+        ]
+      ],
+      "elapsed_ms": 528.99,
+      "error": null,
+      "evidence_strength": "candidate",
+      "completion": "full",
+      "id": "A5",
+      "reference_in_top5": true
+    },
+    {
+      "query": "كيف أداوم على تلاوة القرآن كل يوم",
+      "hits": [
+        [
+          "b42",
+          64
+        ],
+        [
+          "b28",
+          73
+        ],
+        [
+          "b37",
+          102
+        ]
+      ],
+      "elapsed_ms": 389.05,
+      "error": null,
+      "evidence_strength": "candidate",
+      "completion": "full",
+      "id": "Q1",
+      "reference_in_top5": true
+    },
+    {
+      "query": "ما توجيه الشيخ للمحافظة على ورد يومي من القرآن",
+      "hits": [
+        [
+          "b42",
+          64
+        ],
+        [
+          "b28",
+          73
+        ],
+        [
+          "b37",
+          102
+        ]
+      ],
+      "elapsed_ms": 519.09,
+      "error": null,
+      "evidence_strength": "candidate",
+      "completion": "full",
+      "id": "Q2",
+      "reference_in_top5": true
+    },
+    {
+      "query": "كيف أنتظم في قراءة القرآن ولا أنقطع عنها",
+      "hits": [
+        [
+          "b42",
+          64
+        ],
+        [
+          "b28",
+          73
+        ],
+        [
+          "b37",
+          102
+        ]
+      ],
+      "elapsed_ms": 400.16,
+      "error": null,
+      "evidence_strength": "candidate",
+      "completion": "full",
+      "id": "Q3",
+      "reference_in_top5": true
+    },
+    {
+      "query": "ماذا يعين المريد على الاستمرار في تلاوة القرآن",
+      "hits": [
+        [
+          "b42",
+          64
+        ],
+        [
+          "b28",
+          73
+        ],
+        [
+          "b37",
+          102
+        ]
+      ],
+      "elapsed_ms": 401.08,
+      "error": null,
+      "evidence_strength": "candidate",
+      "completion": "full",
+      "id": "Q4",
+      "reference_in_top5": true
+    },
+    {
+      "query": "عايز أقرأ قرآن كل يوم وما أسيبش الورد أعمل إيه",
+      "hits": [
+        [
+          "b42",
+          64
+        ],
+        [
+          "b28",
+          73
+        ],
+        [
+          "b37",
+          102
+        ]
+      ],
+      "elapsed_ms": 421.13,
+      "error": null,
+      "evidence_strength": "candidate",
+      "completion": "full",
+      "id": "Q5",
+      "reference_in_top5": true
+    },
+    {
+      "query": "كيف يتعامل المريد مع الحزن وضيق الصدر",
+      "hits": [
+        [
+          "b44",
+          40
+        ],
+        [
+          "b44",
+          43
+        ],
+        [
+          "b22",
+          146
+        ],
+        [
+          "b07",
+          180
+        ],
+        [
+          "b20",
+          145
+        ]
+      ],
+      "elapsed_ms": 287.05,
+      "error": null,
+      "evidence_strength": "candidate",
+      "completion": "full",
+      "id": "S1",
+      "reference_in_top5": true
+    },
+    {
+      "query": "ما النصيحة لمن يشعر بالهم والحزن",
+      "hits": [
+        [
+          "b44",
+          43
+        ],
+        [
+          "b44",
+          50
+        ],
+        [
+          "b22",
+          146
+        ],
+        [
+          "b07",
+          180
+        ],
+        [
+          "b20",
+          145
+        ]
+      ],
+      "elapsed_ms": 283.04,
+      "error": null,
+      "evidence_strength": "candidate",
+      "completion": "full",
+      "id": "S2",
+      "reference_in_top5": false
+    },
+    {
+      "query": "كيف يجد الإنسان الطمأنينة عندما تضيق به الدنيا",
+      "hits": [
+        [
+          "b44",
+          43
+        ],
+        [
+          "b44",
+          50
+        ],
+        [
+          "b22",
+          146
+        ],
+        [
+          "b08",
+          14
+        ],
+        [
+          "b07",
+          180
+        ]
+      ],
+      "elapsed_ms": 251.15,
+      "error": null,
+      "evidence_strength": "candidate",
+      "completion": "full",
+      "id": "S3",
+      "reference_in_top5": false
+    },
+    {
+      "query": "بماذا يوصي الشيخ من فقد الأمل واشتد كربه",
+      "hits": [
+        [
+          "b44",
+          43
+        ],
+        [
+          "b44",
+          50
+        ],
+        [
+          "b22",
+          146
+        ],
+        [
+          "b07",
+          180
+        ],
+        [
+          "b20",
+          145
+        ]
+      ],
+      "elapsed_ms": 320.35,
+      "error": null,
+      "evidence_strength": "candidate",
+      "completion": "full",
+      "id": "S4",
+      "reference_in_top5": false
+    },
+    {
+      "query": "أنا مهموم وحاسس بضيق أعمل إيه عشان قلبي يطمئن",
+      "hits": [
+        [
+          "b44",
+          40
+        ],
+        [
+          "b44",
+          43
+        ],
+        [
+          "b22",
+          146
+        ],
+        [
+          "b20",
+          145
+        ],
+        [
+          "b07",
+          180
+        ]
+      ],
+      "elapsed_ms": 290.29,
+      "error": null,
+      "evidence_strength": "candidate",
+      "completion": "full",
+      "id": "S5",
+      "reference_in_top5": true
+    }
+  ],
+  "new_topics": [
+    {
+      "id": "adab",
+      "query": "ما آداب المريد مع شيخه",
+      "hits": [
+        [
+          "b37",
+          57
+        ],
+        [
+          "b16",
+          39
+        ],
+        [
+          "b07",
+          157
+        ],
+        [
+          "b07",
+          119
+        ],
+        [
+          "b24",
+          13
+        ]
+      ],
+      "elapsed_ms": 294.02,
+      "error": null,
+      "evidence_strength": "candidate",
+      "completion": "full"
+    },
+    {
+      "id": "blessing",
+      "query": "ما فضل الصلاة على النبي صلى الله عليه وسلم",
+      "hits": [
+        [
+          "b30",
+          90
+        ],
+        [
+          "b12",
+          174
+        ],
+        [
+          "b10",
+          48
+        ],
+        [
+          "b28",
+          4
+        ],
+        [
+          "b07",
+          162
+        ]
+      ],
+      "elapsed_ms": 305.22,
+      "error": null,
+      "evidence_strength": "candidate",
+      "completion": "full"
+    },
+    {
+      "id": "repentance",
+      "query": "كيف يتوب العبد من ذنوبه وهل يقبل الله توبته",
+      "hits": [
+        [
+          "b25",
+          137
+        ],
+        [
+          "b12",
+          60
+        ],
+        [
+          "b12",
+          59
+        ],
+        [
+          "b39",
+          152
+        ],
+        [
+          "b39",
+          24
+        ]
+      ],
+      "elapsed_ms": 424.56,
+      "error": null,
+      "evidence_strength": "candidate",
+      "completion": "full"
+    },
+    {
+      "id": "pride",
+      "query": "كيف يتخلص المريد من الكبر والعجب بالنفس",
+      "hits": [
+        [
+          "b07",
+          138
+        ],
+        [
+          "b07",
+          134
+        ],
+        [
+          "b16",
+          45
+        ],
+        [
+          "b23",
+          284
+        ]
+      ],
+      "elapsed_ms": 257.28,
+      "error": null,
+      "evidence_strength": "candidate",
+      "completion": "full"
+    },
+    {
+      "id": "tawassul",
+      "query": "ما حكم زيارة قبور الأولياء والتوسل بهم",
+      "hits": [
+        [
+          "b07",
+          256
+        ],
+        [
+          "b13",
+          12
+        ],
+        [
+          "b13",
+          158
+        ],
+        [
+          "b32",
+          126
+        ],
+        [
+          "b41",
+          19
+        ]
+      ],
+      "elapsed_ms": 315.58,
+      "error": null,
+      "evidence_strength": "candidate",
+      "completion": "full"
+    },
+    {
+      "id": "children",
+      "query": "إزاي أربي ولادي تربية صالحة",
+      "hits": [
+        [
+          "b44",
+          35
+        ],
+        [
+          "b44",
+          29
+        ]
+      ],
+      "elapsed_ms": 290.14,
+      "error": null,
+      "evidence_strength": "weak",
+      "completion": "full"
+    },
+    {
+      "id": "fana",
+      "query": "ما معنى الفناء والبقاء في طريق القوم",
+      "hits": [
+        [
+          "b21",
+          100
+        ],
+        [
+          "b23",
+          15
+        ],
+        [
+          "b37",
+          80
+        ]
+      ],
+      "elapsed_ms": 36.88,
+      "error": null,
+      "evidence_strength": "candidate",
+      "completion": "full"
+    },
+    {
+      "id": "haqiqa",
+      "query": "ما هي الحقيقة المحمدية",
+      "hits": [
+        [
+          "b10",
+          55
+        ],
+        [
+          "b10",
+          153
+        ],
+        [
+          "b40",
+          20
+        ],
+        [
+          "b41",
+          96
+        ],
+        [
+          "b31",
+          66
+        ]
+      ],
+      "elapsed_ms": 171.08,
+      "error": null,
+      "evidence_strength": "candidate",
+      "completion": "full"
+    },
+    {
+      "id": "laylat",
+      "query": "ما فضل ليلة القدر وكيف نحييها",
+      "hits": [
+        [
+          "b12",
+          61
+        ],
+        [
+          "b07",
+          115
+        ],
+        [
+          "b14",
+          162
+        ],
+        [
+          "b12",
+          237
+        ],
+        [
+          "b26",
+          6
+        ]
+      ],
+      "elapsed_ms": 131.1,
+      "error": null,
+      "evidence_strength": "candidate",
+      "completion": "full"
+    },
+    {
+      "id": "mawlid",
+      "query": "إيه رأي مولانا في الاحتفال بالمولد النبوي",
+      "hits": [
+        [
+          "b44",
+          2
+        ],
+        [
+          "b44",
+          18
+        ],
+        [
+          "b20",
+          47
+        ],
+        [
+          "b37",
+          56
+        ],
+        [
+          "b20",
+          165
+        ]
+      ],
+      "elapsed_ms": 302.58,
+      "error": null,
+      "evidence_strength": "candidate",
+      "completion": "full"
+    },
+    {
+      "id": "parents",
+      "query": "كيف يبر الإنسان والديه بعد موتهما",
+      "hits": [
+        [
+          "b07",
+          307
+        ],
+        [
+          "b31",
+          34
+        ],
+        [
+          "b42",
+          86
+        ],
+        [
+          "b07",
+          26
+        ],
+        [
+          "b01",
+          83
+        ]
+      ],
+      "elapsed_ms": 289.25,
+      "error": null,
+      "evidence_strength": "candidate",
+      "completion": "full"
+    }
+  ],
+  "paraphrases": [
+    {
+      "query": "كيف يتوب العبد من ذنوبه وهل يقبل الله توبته",
+      "hits": [
+        [
+          "b25",
+          137
+        ],
+        [
+          "b12",
+          60
+        ],
+        [
+          "b12",
+          59
+        ],
+        [
+          "b39",
+          152
+        ],
+        [
+          "b39",
+          24
+        ]
+      ],
+      "elapsed_ms": 490.45,
+      "error": null,
+      "evidence_strength": "candidate",
+      "completion": "full",
+      "target_in_top5": true
+    },
+    {
+      "query": "كيف يتوب الإنسان إذا أذنب وهل يغفر له",
+      "hits": [
+        [
+          "b25",
+          137
+        ],
+        [
+          "b39",
+          24
+        ],
+        [
+          "b44",
+          30
+        ],
+        [
+          "b39",
+          97
+        ],
+        [
+          "b44",
+          51
+        ]
+      ],
+      "elapsed_ms": 519.93,
+      "error": null,
+      "evidence_strength": "candidate",
+      "completion": "full",
+      "target_in_top5": true
+    },
+    {
+      "query": "ما الذي يجب على التائب فعله حتى تصح توبته",
+      "hits": [
+        [
+          "b25",
+          137
+        ],
+        [
+          "b25",
+          56
+        ],
+        [
+          "b01",
+          159
+        ]
+      ],
+      "elapsed_ms": 18.3,
+      "error": null,
+      "evidence_strength": "candidate",
+      "completion": "full",
+      "target_in_top5": true
+    },
+    {
+      "query": "كيف أرجع إلى الله بعد المعصية",
+      "hits": [
+        [
+          "b25",
+          137
+        ],
+        [
+          "b12",
+          60
+        ],
+        [
+          "b12",
+          59
+        ],
+        [
+          "b39",
+          152
+        ],
+        [
+          "b39",
+          24
+        ]
+      ],
+      "elapsed_ms": 359.13,
+      "error": null,
+      "evidence_strength": "candidate",
+      "completion": "full",
+      "target_in_top5": true
+    }
+  ],
+  "summary": {
+    "public_reference_top5": 27,
+    "public_total": 30,
+    "new_topics_nonempty": 11,
+    "new_topics_total": 11,
+    "paraphrases_target_top5": 4,
+    "paraphrases_total": 4,
+    "errors": 0,
+    "local_p95_ms": 628.64
+  }
+}

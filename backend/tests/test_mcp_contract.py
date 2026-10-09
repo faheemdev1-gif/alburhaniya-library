@@ -82,7 +82,7 @@ class MCPContractTests(unittest.TestCase):
         self.assertIn('ResponseMode = Literal["compact", "ultra_compact"]', self.source)
 
     def test_hard_versioned_instructions_explain_incomplete_discovery(self):
-        self.assertEqual(SERVER_VERSION, "2.10.9")
+        self.assertEqual(SERVER_VERSION, "2.10.10")
         self.assertEqual(TOOL_CONTRACT_ID, "alburhaniya-tools-v12")
         self.assertEqual(TOOL_CONTRACT_VERSION, "12.0")
         self.assertIn("mcp._mcp_server.version = SERVER_VERSION", self.source)

@@ -20,7 +20,7 @@ def digest(data):return hashlib.sha256(data).hexdigest()
 
 def main():
     parser=argparse.ArgumentParser();parser.add_argument('--original',required=True)
-    parser.add_argument('--output',required=True);args=parser.parse_args()
+    parser.add_argument('--output',required=True);parser.add_argument('--version',required=True);args=parser.parse_args()
     target=Path(args.output).resolve();target.parent.mkdir(parents=True,exist_ok=True)
     files=sorted(p for p in ROOT.rglob('*') if included(p))
     modified=[];missing=[];preserved=[]
@@ -46,7 +46,7 @@ def main():
         'files':[{'path':str(p.relative_to(ROOT)),'sha256':digest(p.read_bytes()),'bytes':p.stat().st_size}
                  for p in files if p!=manifest]},ensure_ascii=False,indent=2)+'\n')
     files=sorted(p for p in ROOT.rglob('*') if included(p))
-    prefix='Al_Burhaniya_Connector_2.9.0'
+    prefix=f'Al_Burhaniya_Connector_{args.version}'
     with zipfile.ZipFile(target,'w',compression=zipfile.ZIP_DEFLATED,compresslevel=6) as z:
         for path in files:z.write(path,f'{prefix}/{path.relative_to(ROOT).as_posix()}')
     with zipfile.ZipFile(target) as z:
