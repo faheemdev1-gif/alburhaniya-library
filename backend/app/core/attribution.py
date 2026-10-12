@@ -9,6 +9,31 @@ REPORTED = re.compile(r"قال\s+محمد\s+بن\s+عبد\s*الوهاب|قال\
 QUESTION = re.compile(r"(?:^|\n)\s*(?:سؤال|السؤال|س\s*[:：])", re.I)
 ANSWER = re.compile(r"(?:^|\n)\s*(?:الجواب|جواب|ج\s*[:：])", re.I)
 WARNING = "Reported position; read the surrounding response before attributing it to the author."
+SPEAKER_MARKER = re.compile(r"(?<![ء-ي])(?P<label>السائل(?:\s*\([^)]{1,30}\))?|مولانا\s+الشيخ|الشيخ|سؤال|الجواب|جواب)\s*[:：]")
+
+
+def speaker_span(text: str, start: int, end: int) -> dict:
+    """Assign roles to source offsets; expose boundaries crossed by a span."""
+    start=max(0,min(start,len(text)));end=max(start,min(end,len(text)))
+    markers=list(SPEAKER_MARKER.finditer(text[:end]))
+    if not markers:return {}
+    positions=[start]+[m.start() for m in markers if start<m.start()<end]+[end]
+    segments=[]
+    for a,b in zip(positions,positions[1:]):
+        prior=next((m for m in reversed(markers) if m.start()<=a),None)
+        if prior is None:continue
+        label=prior.group('label')
+        role='question' if label.startswith(('السائل','سؤال')) else 'answer'
+        speaker='السائل' if role=='question' else 'مولانا الشيخ' if 'الشيخ' in label else None
+        segments.append({'start':a,'end':b,'role':role,'speaker':speaker})
+    if not segments:return {}
+    if len({(s['role'],s['speaker']) for s in segments})>1:
+        return {'speaker':'mixed','dialogue_role':'mixed','speaker_segments':segments,
+                'speaker_basis':'explicit_markers_in_span'}
+    first=segments[0]
+    return {'speaker':first['speaker'],'dialogue_role':first['role'],
+            'speaker_segments':segments if len(segments)>1 else [],
+            'speaker_basis':'explicit_marker'}
 
 
 def attribution_at(text: str, start: int, end: int | None = None) -> dict:

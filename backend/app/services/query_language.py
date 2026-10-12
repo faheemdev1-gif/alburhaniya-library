@@ -37,7 +37,23 @@ DISCOVERY_VARIANTS = {
  'رؤية': ('رؤيا','يرى','رأى'),
  'رؤيا': ('رؤية','يرى','رأى'),
  'يرى': ('رؤية','رؤيا','رأى'),
+ 'خشية': ('خوف',), 'خوف': ('خشية',),
+ 'أمل': ('رجاء',), 'رجاء': ('أمل',),
+ 'درجات': ('مراتب',), 'مراتب': ('درجات',),
+ 'علاج': ('دواء','تخلص'), 'دواء': ('علاج',), 'تخلص': ('علاج',),
+ 'محمد': ('النبي','الرسول'), 'النبي': ('محمد','الرسول'),
+ 'الرسول': ('محمد','النبي'),
+ 'صادق': ('صدق',), 'صدق': ('صادق',),
+ 'محبة': ('حب',), 'حب': ('محبة',),
 }
+
+def synonym_variants(term):
+ """Source-attested discovery aliases for a noun with or without ال."""
+ word=normalize_search_text(term,level='broad')
+ base=word[2:] if word.startswith('ال') and len(word)>4 else word
+ variants=DISCOVERY_VARIANTS.get(word,()) or DISCOVERY_VARIANTS.get(base,())
+ return tuple(dict.fromkeys(v for synonym in variants for v in
+                            (synonym,'ال'+synonym if not synonym.startswith('ال') else synonym)))
 DISCOVERY_VARIANTS = {
  normalize_search_text(key,level='broad'): tuple(normalize_search_text(value,level='broad') for value in values)
  for key,values in DISCOVERY_VARIANTS.items()
@@ -172,6 +188,9 @@ def subject_phrase(query):
  query=query.strip(' ؟?')
  subjects=comparison_subjects(query)
  if subjects:return ' و'.join(subjects)
+ # صفات asks for the relation; the following attested noun phrase is the
+ # subject. Retaining صفات in the literal phrase loses المريد الصادق.
+ query=re.sub(r'^ما\s+صفات\s+(?=\S+\s+\S+)', '', query)
  # In questions about observing a named night, the inflected verb is the
  # requested action, not a word that the source passage must contain.
  observance=re.match(r'^كيف\s+(?:أحيي|نحيي|يحيي|تحيي)\s+(ليلة\s+القدر)$',query)
@@ -267,7 +286,7 @@ def morphological_forms(term):
   verbal_noun=value[:1]=='ا' and ((len(value)==5 and value[3]=='ا') or (len(value)==6 and value[4]=='ا') or value.startswith('است'))
   if value[:1] in ('ا','ت','ي','ن') and len(value)>=4 and not verbal_noun and not nominal:bases.add(value[1:])
  forms=set(bases)
- for value in tuple(bases):forms.update(DISCOVERY_VARIANTS.get(value,()))
+ for value in tuple(bases):forms.update(synonym_variants(value))
  forms.update(derived_nouns(word))
  for value in bases:forms.update((value,'ال'+value,'ي'+value,'ت'+value))
  return tuple(sorted(forms,key=lambda x:(-len(x),x)))

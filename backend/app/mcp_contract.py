@@ -7,9 +7,9 @@ import json
 from typing import Any
 
 
-SERVER_VERSION = "2.10.11"
-TOOL_CONTRACT_VERSION = "12.0"
-TOOL_CONTRACT_ID = "alburhaniya-tools-v12"
+SERVER_VERSION = "2.10.12"
+TOOL_CONTRACT_VERSION = "13.0"
+TOOL_CONTRACT_ID = "alburhaniya-tools-v13"
 
 REQUIRED_TOOLS = frozenset({
     "search_library",
@@ -40,6 +40,7 @@ SCHEMA_CAPABILITIES = {
         "default_max_chars": 12000,
         "cross_page_context": True,
         "max_context_pages": 3,
+        "numbered_heading_section": True,
     },
     "get_page": {"default_max_chars": 20000, "declares_truncation": True, "effective_cap_disclosed": True, "ultra_compact": "omits_book_metadata"},
     "list_books": {"supported_parameters": ["include_legend", "projection", "book_ids"],
@@ -94,8 +95,8 @@ def contract_metadata(tools: Iterable[str] | None = None) -> dict[str, Any]:
     """Versioned metadata for health checks and deployment diagnostics."""
     actual = validate_tool_names(tools or REQUIRED_TOOLS)
     return {
-        "changes_since_previous":["Nouns written with the article never lose a verb prefix (التوكل is not وكل, التسليم is not سليم); removes false relation candidates for such subjects","Blessing formula عليه أفضل الصلاة والسلام is masked during scoring, so it no longer counts as virtue (فضل) or prayer evidence","Rare construct comparison subjects reduce to their head noun (خوف العقاب -> الخوف); established compounds such as علم اليقين are kept","Attached ب/ل/ك is stripped from subject words when the bare word is the attested one (بعين اليقين -> عين اليقين); ما المقصود and ما حقيقة are question frames","A passage naming the protected subject is kept as topic-only evidence when the only missing question words are verbs (يضر، يخاف)","ينبغي and يجب are frame words; path words (سلوك، طريق) are generic context like المريد"],
-        "known_issues":["Independent source and documentary review remains open","Retrieval still depends on wording: about half of unseen paraphrases find the reviewed evidence; synonym gaps (درجات/مراتب، خشية/خوف، سيدنا محمد/النبي), remedy questions and adjective-to-noun forms remain","Automated relation labels are candidates, not verified answers","Private held-out and deployed acceptance are pending","Seven-day monitoring and client latency acceptance pending","Client schema refresh must be verified in each client"],
+        "changes_since_previous":["Attested subject phrases keep role nouns: ما صفات المريد الصادق now retrieves b07 p138 and b16 p37","Source-attested synonyms bridge خشية/خوف, أمل/رجاء and محبة/حب with Prophet names, restoring b37 p156 and b12 p174 for new wordings","Paragraph reads on explicit numbered headings include the following section through the next heading; the prior after_heading pointer is superseded","Weak or empty evidence reports reformulation_status ok when all planned stages completed; fewer_than_limit_reason and normalized_pages clarify diagnostics","Lexeme expansion keeps the initial waw in وسواس and the taa marbuta in الصدقة","Local relation labels guard narrative companionship, formulaic رياء, and anger without remedy cues; speaker boundaries are exposed for mixed dialogue","b37 source_author is derived consistently from visible front matter and compiler; documentary review remains pending"],
+        "known_issues":["Independent source and documentary review remains open; no reviewer or review date was invented","Labels remain automated candidates until 200 hits receive independent grades","Private held-out Direct@5 and 7-day deployed acceptance remain pending","Scheduled monitoring needs a persistent mounted path to survive deploy container replacement","Some source topics have only passing mentions; no unsupported answer is inferred","Clients must refresh tools/list for contract 13"],
         "reformulation_status_policy":{"ok":"All planned discovery stages completed; not an answer-quality judgement","degraded":"A stage was skipped or stopped; inspect partial results","not_needed":"Literal/terms/lexeme path, no question rewrite"},
         "coverage_register":[{"topic":"raising children","status":"weak_coverage","basis":"Supplied audit: two passing mentions, no substantive guidance","grading_policy":"exclude from direct-answer denominator; do not invent filler"}],
         "result_defaults_policy":"Search hits inherit result_defaults; explicit hit fields override defaults. Contract 12 clients must expand defaults.",

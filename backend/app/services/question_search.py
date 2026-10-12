@@ -6,7 +6,7 @@ from app.core.budget import DEADLINE, BudgetExceeded
 from contextvars import ContextVar
 SEARCH_STATE=ContextVar("question_search_state",default=None)
 from app.services import library_db as db
-from app.services.query_language import language_plan,morphological_forms
+from app.services.query_language import language_plan,morphological_forms,phrase_pages,synonym_variants
 from app.services.question_intent import plan,concept_regex
 from app.core.arabic_utils import normalize_search_text,safe_tokens,safe_term_variants
 from app.core.budget import expired
@@ -19,7 +19,7 @@ def pattern(term):
 @lru_cache(maxsize=4096)
 def comparison_forms(term):
  """Distinct source tokens, including attached conjunctions, for comparisons."""
- bases=safe_term_variants(term)
+ bases=tuple(dict.fromkeys((*safe_term_variants(term),*synonym_variants(term))))
  return tuple(dict.fromkeys((*bases,*(prefix+form for form in bases for prefix in ('و','ف','ب')),
                              *('ل'+form[1:] for form in bases if form.startswith('ال')))))
 @lru_cache(maxsize=4096)
@@ -37,6 +37,8 @@ def anchor_plan(query,keep_terms=()):
  result=language_plan(query,keep_terms);conn=db._connection();total=int(conn.execute("SELECT value FROM discovery_meta WHERE key='pages'").fetchone()[0]);common=[];anchors=[]
  # A comparison needs both named subjects, not the generic word "difference".
  terms=result['comparison_subjects'] or result['terms']
+ protected_phrase=(len(safe_tokens(result['subject_phrase']))>=2
+                   and phrase_pages(result['subject_phrase'])>=2)
  for t in terms:
   # Corpus frequency estimates must refer to the query word. Loose morphology
   # turns بالهم into the ubiquitous pronoun هم and discards a crucial anchor.
@@ -45,7 +47,7 @@ def anchor_plan(query,keep_terms=()):
   # A named entity can be common in a religious corpus and still be essential
   # to the requested subject (e.g. a dream of the Prophet).
   named_subject=normalize_search_text(t,level='broad') in {'النبي','الرسول','محمد'}
-  if (row[0] or 0)>total*.15 and t not in keep_terms and not named_subject:common.append(t)
+  if (row[0] or 0)>total*.15 and t not in keep_terms and not named_subject and not protected_phrase:common.append(t)
   else:anchors.append(t)
  # A generic role noun (المريد، للمريد، السالك...) names the asker, and
  # "ربه/ربك" names God generically. When the question has another content
@@ -58,7 +60,7 @@ def anchor_plan(query,keep_terms=()):
   return bool(bases&role_bases)
  if not result['comparison_subjects']:
   roles=[t for t in anchors if _generic(t)]
-  if roles and len(anchors)>len(roles):
+  if roles and len(anchors)>len(roles) and not protected_phrase:
    anchors=[t for t in anchors if t not in roles];common.extend(roles)
  # Preserve the rarest subject when a generic question has no recognized
  # relation. A page about a generic companion word is not evidence about it.
@@ -74,10 +76,10 @@ def anchor_plan(query,keep_terms=()):
  # Generic role nouns (المريد، السالك...) are the asker, not the subject,
  # and a possessed noun (منامه) is a noun even without the article.
  from app.services.query_language import canonical_subject
- nouns=[t for t in subject_anchors if not _generic(t) and not any(f=='شيخ' for f in _forms(t)) and (
+ nouns=[t for t in subject_anchors if (protected_phrase or not _generic(t)) and not any(f=='شيخ' for f in _forms(t)) and (
         normalize_search_text(t,level='broad').startswith(('ال','وال','بال','فال','لل')) or canonical_subject(t)!=t)]
  if nouns:subject_anchors=nouns
- result.update(anchors=anchors,common_nonanchors=common,protected_anchor=min(subject_anchors,key=lambda t:frequencies[t]) if subject_anchors else None,frequency_basis='precomputed_corpus_document_frequency');return result
+ result.update(anchors=anchors,common_nonanchors=common,protected_anchor=min(subject_anchors,key=lambda t:frequencies[t]) if subject_anchors else None,frequency_basis='precomputed_corpus_document_frequency',attested_subject_phrase=protected_phrase);return result
 @lru_cache(maxsize=4096)
 def relation_verb(term):
  """An imperfect verb (يضر، يخاف، يتعامل) that names the asked relation.
@@ -253,6 +255,16 @@ def passage_candidates(query, ap, scope):
     anchors=ap['anchors'][:8]
     if anchors:
         forms=comparison_forms if ap['comparison_subjects'] else morphological_forms
+        # Try attested adjacent subject aliases before broad single-term BM25
+        # pools fill the candidate cap (محبة محمد -> حب الرسول).
+        if len(anchors)>=2 and not ap['comparison_subjects']:
+            head=(*synonym_variants(anchors[0]),normalize_search_text(anchors[0],level='broad'))
+            tail=(*synonym_variants(anchors[1]),normalize_search_text(anchors[1],level='broad'))
+            for left in head[:4]:
+                for right in tail[:4]:
+                    if phrase_pages(left+' '+right):
+                        expressions.append(_fts([left+' '+right]))
+                        expressions.append(_fts(['و'+left+' '+right]))
         expressions.append(' AND '.join(_fts(forms(t)) for t in anchors))
         # Preserve each subject independently before the broad OR pool;
         # this also allows an explicitly weak one-sided comparison result.
@@ -277,8 +289,27 @@ def classify_row(row, query, ap, text, start, end, relation=False):
     # Guidance or definition cues only. Bare "هو"/"هي" occur in nearly every
     # passage and "نعم" is also the verb of praise; as cues they marked
     # incidental mentions (a duʿāʾ "ولا رياء") as likely answers (LB-1).
-    directive=bool(re.search(r'عليك|ينبغي|يجب|حافظ|لا تغضب|أربع خصال|أربعة|معنى|عبارة عن|يعني|\b(?:هو|هي)\s+أن\b|المراد\s+ب|(?:^|[:؟?\n])\s*نعم\b',window))
+    directive=bool(re.search(r'عليك|ينبغي|يجب|حافظ|لا تغضب|أربع خصال|أربعة|معنى|عبارة عن|يعني|علامة|إنما\s+الاستعداد|\b(?:هو|هي)\s+أن\b|المراد\s+ب|(?:^|[:؟?\n])\s*نعم\b',window))
     row['question_relevance']='relation_candidate' if relation or (phrase and directive) or row.get('matched_source_question') else 'phrase_candidate' if phrase else 'topic_only'
+    # Co-occurrence inside a story or prayer formula does not answer a
+    # practice question. These guards describe the local evidence only.
+    local=text[max(0,start-85):min(len(text),end+125)]
+    if (re.search(r'\b(?:إنما|علامة|معنى)\s+الاستعداد\s+للموت',local)
+            and re.search(r'(?:للموت|الموت)',query) and re.search(r'يستعد|استعداد',query)):
+        row['question_relevance']='relation_candidate'
+    if ('companionship' in plan(query)['required'] and
+            re.search(r'بينه\s+وبين(?:ه|\s+الشيخ)\s+صحبة|كان\s+بينه\s+وبين',local)):
+        row['question_relevance']='topic_only'
+    if ('anger' in plan(query)['required'] and 'علاج' in query and not re.search(
+            r'علاج|دواء|كظم|تجنب|اترك|ترك\s+الخصومة|اصمت|الاستعاذة|إذا\s+غضبت|لا\s+تغضب',local)):
+        row['question_relevance']='topic_only'
+    if re.search(r'لم\s+أخرج\s+(?:أشرا|بطرا)[^.!؟]{0,55}رياء',local):
+        row['question_relevance']='topic_only'
+    if re.search(r'في\s+وسواس\s+وفي\s+ملطية|في\s+دمشق\s+وفي\s+وسواس',local):
+        row['question_relevance']='topic_only'
+    if ap.get('focus_word') and _HONORIFIC.search(row.get('snippet','')) and not re.search(
+            r'أفضل\s+من|ثواب|أجر|عشرا|مائة\s+حاجة',row['snippet']):
+        row['question_relevance']='topic_only'
     facets=ap.get('requested_facets',())
     if 'observance' in facets:
         row['observance_support']=explicit_observance(text,start,end)
@@ -310,6 +341,7 @@ def classify_row(row, query, ap, text, start, end, relation=False):
                                                  for m in subject.finditer(text))
         if direct or comparison_reward:
             row['focus_match_strength']=2
+            if comparison_reward:row['score']=round(min(.985,row['score']+.08),6)
         elif pattern(focus).search(window):
             row['focus_match_strength']=1
     # A discussion *about* the literature on etiquette is not itself advice
@@ -322,8 +354,22 @@ def classify_row(row, query, ap, text, start, end, relation=False):
     if re.search(r'نظم حضرات|النهوض بالتصوف|إرساء دعائم',window):row['question_relevance']='topic_only'
     row['answer_verified']=False
     row['subject_phrase_match']=phrase
+    synonym_hits=[]
+    for term in ap['comparison_subjects'] or ap['terms']:
+        if not synonym_variants(term):continue
+        direct=db._build_highlight_regex(term,whole_word=True,normalization_level='broad')
+        if direct.search(text[start:end]):continue
+        for form in synonym_variants(term):
+            if db._build_highlight_regex(form,whole_word=True,normalization_level='broad').search(text[start:end]):
+                synonym_hits.append({'query_term':term,'matched_form':form,'scope':'discovery_only'})
+                break
+    if synonym_hits:row['synonym_variant']=synonym_hits
     row.update(db.citation_metadata(row['book_id'],row['seq'],row.get('printed_page')))
     row.update(attribution_at(text,start,end))
+    from app.core.attribution import speaker_span
+    speaker_evidence=speaker_span(text,start,end)
+    if not (row.get('dialogue_role')=='answer' and speaker_evidence.get('dialogue_role')=='question'):
+        row.update(speaker_evidence)
     if 'الأورام' in window and re.search(r'قراءة|لقراءة',window):
         row['text_errata']=[{'surface':'الأورام','proposed_reading':'الأوراد','status':'unverified_editorial_proposal','source_text_preserved':True}]
     return row

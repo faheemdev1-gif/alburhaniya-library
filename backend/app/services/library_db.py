@@ -532,6 +532,10 @@ def _broad_index_variants(token: str) -> tuple[str, ...]:
 
 
 def _bare_lexeme(token: str) -> str:
+    # A reduplicated initial waw is part of the lexical root, not a clitic.
+    # Without this guard وسواس expands to سواس and matches سواسية (س-و-ي).
+    if token in {"وسواس", "وسوسة", "وسوسه"}:
+        return token
     for prefix in _PROCLITICS:
         if token.startswith(prefix) and len(token) - len(prefix) >= 3:
             return token[len(prefix):]
@@ -585,6 +589,10 @@ def _lexeme_index_forms(query: str) -> list[str]:
             for suffix in _LEXEME_SUFFIXES:
                 key = normalize_search_text(prefix + stem + suffix, level="broad")
                 forms.update(vocabulary.get(key, ()))
+    # A written taa marbuta is not a possessive haa. The broad index unifies
+    # them for candidate discovery, but citation-capable lexemes must not.
+    if normalize_search_text(words[0], level="safe").endswith("ة"):
+        forms={form for form in forms if not form.endswith("ه")}
     return sorted(forms)
 
 
@@ -643,9 +651,11 @@ def _pattern_for_query(
     if len(words) != 1:
         raise ValueError("lexeme search supports one Arabic word per query")
     stems = _lexeme_stems(words[0])
+    if normalize_search_text(words[0], level="safe").endswith("ة"):
+        stems=[stem[:-1]+"ة" if stem.endswith("ه") else stem for stem in stems]
     stem_patterns = []
     for stem in stems:
-        chars = [_tolerant_char_pattern(c, normalization_level="broad") for c in stem]
+        chars = [_tolerant_char_pattern(c, normalization_level="safe" if stem.endswith("ة") else "broad") for c in stem]
         stem_patterns.append(_DIACRITIC_CLASS.join(chars) + _DIACRITIC_CLASS)
     def word_pattern(word: str) -> str:
         return _DIACRITIC_CLASS.join(
@@ -742,7 +752,7 @@ def literal_inclusion_report(queries, candidate_ids, *, operator="OR", whole_wor
     literal = _matching_page_ids(queries, operator, whole_word=whole_word, **scope)
     missing = literal - set(candidate_ids)
     return {
-        "literal_pages": len(literal), "candidate_pages": len(candidate_ids),
+        "normalized_pages": len(literal), "candidate_pages": len(candidate_ids),
         "missing_literal_pages": len(missing),
         "missing_literal_page_sample": [f"{book}-p{seq}" for book, seq in sorted(missing)[:20]],
         "status": "warning" if missing else "ok",
@@ -2104,23 +2114,56 @@ def get_passage(
         original_start = match.start() if match else int(match_start or 0)
         original_end = match.end() if match else original_start + 1
         result.update(_cross_page_paragraph(page, original_start, original_end, max_chars))
-        # A heading can be its own source paragraph. Keep that boundary, but
-        # expose the following prose as a continuation so a citation reader
-        # does not mistake the heading alone for the explanation.
-        if (len(result["passage"].strip()) < 100
-                and result["passage"].strip().endswith((":", ":-"))):
-            next_start = len(text[:end]) + len(text[end:]) - len(text[end:].lstrip())
-            if next_start < len(text):
-                result.setdefault("continuation", []).append({
-                    "direction": "after_heading",
-                    "match_id": f"{book_id}-p{seq}-c{next_start}",
-                    "context_mode": "paragraph",
-                    "note": "Following prose, not part of the heading paragraph.",
-                })
+        # A short, explicit heading starts a section. Return the following
+        # source paragraphs together, ending at the next numbered heading.
+        # Source offsets remain usable as citations even when capped.
+        heading_start, heading_end = _complete_paragraph_window(text, original_start, original_end)
+        heading = text[heading_start:heading_end].strip()
+        if (len(heading) < 100 and heading.endswith((":", ":-"))
+                and (re.match(r"^\(\d+\)", heading) or heading.endswith(":-"))):
+            next_heading = re.search(r"\n\n\s*\(\d+\)\s+[^\n]{1,100}:[-]?", text[heading_end:])
+            section_end = heading_end + next_heading.start() if next_heading else len(text)
+            if section_end > heading_end:
+                section_end = min(section_end, heading_start + max_chars)
+                result.update(passage=text[heading_start:section_end].rstrip(),
+                              context_segments=[{"book_id":book_id,"seq":seq,
+                                  "printed_page":page.get("printed_page"),
+                                  "citation_label":page["citation_label"],
+                                  "source_start":heading_start,"source_end":section_end,
+                                  "passage_start":0,"passage_end":section_end-heading_start}],
+                              complete_paragraph=not (section_end==heading_start+max_chars),
+                              context_scope="section_from_heading",
+                              context_boundary_policy="explicit_numbered_heading_or_character_cap",
+                              context_cap_applied=section_end==heading_start+max_chars,
+                              truncated=section_end==heading_start+max_chars,
+                              continuation=[])
+                if section_end==heading_start+max_chars and section_end<len(text):
+                    result["continuation"].append({"direction":"after_heading",
+                        "match_id":f"{book_id}-p{seq}-c{section_end}","context_mode":"paragraph",
+                        "note":"Remaining section text after the character cap."})
         result["context_offsets_basis"] = "unhighlighted_passage"
         result["original_match_scope"] = "query_span" if match else "start_anchor"
         if pattern:
             result["passage"], result["occurrences"] = _highlight(result["passage"], pattern)
+    from app.core.attribution import speaker_span
+    if result.get("cross_page"):
+        roles=[]
+        for segment in result.get("context_segments",[]):
+            source=get_page(segment["book_id"],segment["seq"])
+            if source is None:continue
+            role=speaker_span(source["text"],segment["source_start"],segment["source_end"])
+            for item in role.get("speaker_segments") or ([role] if role.get("dialogue_role")!="mixed" else []):
+                if not item.get("role") and not item.get("dialogue_role"):continue
+                roles.append({**item,"role":item.get("role",item.get("dialogue_role")),
+                              "book_id":segment["book_id"],"seq":segment["seq"]})
+        if len({(r.get('role',r.get('dialogue_role')),r.get('speaker')) for r in roles})>1:
+            result.update(speaker="mixed",dialogue_role="mixed",speaker_segments=roles,
+                          speaker_basis="explicit_markers_in_source_segments")
+    else:
+        segments=result.get("context_segments") or []
+        span_start=segments[0]["source_start"] if segments else start
+        span_end=segments[-1]["source_end"] if segments else end
+        result.update(speaker_span(text,span_start,span_end))
     return result
 
 
@@ -2295,8 +2338,15 @@ def zero_result_diagnostics(
         stage='score_filter';retry={'offset':0,'min_score':0,'match_mode':'auto' if mode=='reformulated' else mode}
     if retry is None:
         from itertools import combinations
-        for pair in list(combinations(terms,2))[:12]:
-            phrase=' '.join(pair);candidates=search(query=phrase,search_mode='all_words',limit=4,ranking='primary_first',**scope)
+        from app.services.query_language import subject_phrase
+        preferred=[subject_phrase(q) for q in queries]
+        preferred=[phrase for phrase in preferred if len(safe_tokens(phrase))>=2]
+        frequency={item['term']:item['matching_pages'] for item in per_term}
+        rare=sorted(terms,key=lambda term:(frequency.get(term,0) or 10**9,terms.index(term)))
+        pairs=list(combinations(rare,2))[:12]
+        phrases=list(dict.fromkeys(preferred+[' '.join(pair) for pair in pairs]))
+        for phrase in phrases:
+            candidates=search(query=phrase,search_mode='all_words',limit=4,ranking='primary_first',**scope)
             if candidates:
                 retry={'query':phrase,'match_mode':'terms','offset':0,'min_score':0}
                 if any(r['source_tier']<=3 for r in candidates):break

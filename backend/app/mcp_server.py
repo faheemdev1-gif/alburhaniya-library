@@ -815,13 +815,11 @@ def search_library(
         if include_counts and min_score > 0.0:
             payload["census_count_scope"] = "lexical_matches_before_score_filter"
         payload["navigation_scope"] = "body_and_toc" if include_toc else "body_only"
-        payload["reformulation_status"] = (
-            ("ok" if any(r.get("question_relevance")=="relation_candidate" for r in results) else "degraded")
-            if effective_match_mode == "reformulated" and results else ("failed" if effective_match_mode == "reformulated" else "not_needed"))
+        payload["reformulation_status"] = "not_needed"
         if effective_match_mode=="reformulated":
             from app.services.question_search import SEARCH_STATE
             payload.update(SEARCH_STATE.get() or {})
-            payload['reformulation_status']='degraded' if (payload.get('completion')=='partial' or payload.get('evidence_strength') in ('weak','partial')) else 'ok'
+            payload['reformulation_status']='degraded' if (payload.get('completion')=='partial' or payload.get('stages_skipped')) else 'ok'
             from app.services.question_search import anchor_plan
             payload["query_plan"] = [{"original_query":q, **anchor_plan(q,keep_terms or ())} for q in raw_queries]
             payload["dropped_function_words"] = list(dict.fromkeys(t for p in payload["query_plan"] for t in p["dropped_function_words"]))
@@ -829,6 +827,8 @@ def search_library(
         payload["ranking_policy"] = db.ranking_policy(ranking)
         payload["effective_match_mode"] = effective_match_mode
         payload["whole_word"] = bool(whole_word)
+        if len(results)<limit and not has_more:
+            payload["fewer_than_limit_reason"] = "only_n_passages_met_threshold"
         payload["normalization_level"] = (
             "broad_discovery" if effective_match_mode in {"hybrid", "lexeme", "reformulated", "semantic_auto"}
             else "safe"

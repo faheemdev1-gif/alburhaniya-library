@@ -404,6 +404,14 @@ def build():
         if grade not in grades:
             raise SystemExit(f"{slug}: unknown grade '{grade}' — not in sources.json grades")
 
+        # The source note and visible front matter identify both the speaker
+        # and compiler of b37. The legacy author string said مجهول despite
+        # carrying that identification. Keep the supplied source file intact.
+        source_author = ("من دروس سيدي الإمام فخر الدين — جمع عبد الحميد بابكر"
+                         if slug == "b37" else src.get("author"))
+        if src.get("compiler") and source_author and "مجهول" in source_author:
+            raise SystemExit(f"{slug}: compiler identified but source_author still says مجهول")
+
         conn.execute(
             "INSERT INTO books "
             "(book_id, title, page_count, source_grade, source_code, source_tier, "
@@ -417,7 +425,7 @@ def build():
                 grade,
                 grades[grade]["code"],
                 tier,
-                src.get("author"),
+                source_author,
                 src.get("compiler"),
                 src.get("authorship_mode", "unresolved"),
                 src.get("attribution_confidence", "unverified"),

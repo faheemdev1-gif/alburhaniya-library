@@ -1,0 +1,1063 @@
+{
+  "server_version": "2.10.12",
+  "scope": "31 disclosed public wordings, local first attempt after cache clear; no answer grading",
+  "summary": {
+    "queries": 31,
+    "errors": 0,
+    "full": 29,
+    "weak": 9,
+    "partial_evidence": 1,
+    "local_p95_ms": 399.06
+  },
+  "cases": [
+    {
+      "id": "A01",
+      "query": "ما معنى الفناء والبقاء في طريق القوم",
+      "local_ms": 1534.39,
+      "completion": "full",
+      "evidence_strength": "candidate",
+      "unresolved_facets": [],
+      "reformulation_status": "ok",
+      "error": null,
+      "hits": [
+        {
+          "book_id": "b21",
+          "seq": 100,
+          "relevance": "phrase_candidate",
+          "match_id": "b21-p100-c588"
+        },
+        {
+          "book_id": "b23",
+          "seq": 15,
+          "relevance": "phrase_candidate",
+          "match_id": "b23-p15-c1213"
+        },
+        {
+          "book_id": "b37",
+          "seq": 80,
+          "relevance": "phrase_candidate",
+          "match_id": "b37-p80-c1314"
+        }
+      ]
+    },
+    {
+      "id": "A02",
+      "query": "كيف يفرق الشيخ بين الفناء والبقاء",
+      "local_ms": 11.16,
+      "completion": "full",
+      "evidence_strength": "candidate",
+      "unresolved_facets": [],
+      "reformulation_status": "ok",
+      "error": null,
+      "hits": [
+        {
+          "book_id": "b21",
+          "seq": 100,
+          "relevance": "phrase_candidate",
+          "match_id": "b21-p100-c588"
+        },
+        {
+          "book_id": "b23",
+          "seq": 15,
+          "relevance": "phrase_candidate",
+          "match_id": "b23-p15-c1213"
+        },
+        {
+          "book_id": "b37",
+          "seq": 80,
+          "relevance": "phrase_candidate",
+          "match_id": "b37-p80-c1314"
+        }
+      ]
+    },
+    {
+      "id": "A03",
+      "query": "ما الفرق بين الفناء والبقاء عند الصوفية",
+      "local_ms": 9.97,
+      "completion": "full",
+      "evidence_strength": "candidate",
+      "unresolved_facets": [],
+      "reformulation_status": "ok",
+      "error": null,
+      "hits": [
+        {
+          "book_id": "b21",
+          "seq": 100,
+          "relevance": "phrase_candidate",
+          "match_id": "b21-p100-c588"
+        },
+        {
+          "book_id": "b23",
+          "seq": 15,
+          "relevance": "phrase_candidate",
+          "match_id": "b23-p15-c1213"
+        },
+        {
+          "book_id": "b37",
+          "seq": 80,
+          "relevance": "phrase_candidate",
+          "match_id": "b37-p80-c1314"
+        }
+      ]
+    },
+    {
+      "id": "A04",
+      "query": "متى يصل السالك إلى البقاء بعد الفناء",
+      "local_ms": 6.54,
+      "completion": "full",
+      "evidence_strength": "candidate",
+      "unresolved_facets": [],
+      "reformulation_status": "ok",
+      "error": null,
+      "hits": [
+        {
+          "book_id": "b21",
+          "seq": 100,
+          "relevance": "phrase_candidate",
+          "match_id": "b21-p100-c588"
+        },
+        {
+          "book_id": "b23",
+          "seq": 15,
+          "relevance": "phrase_candidate",
+          "match_id": "b23-p15-c1213"
+        },
+        {
+          "book_id": "b37",
+          "seq": 80,
+          "relevance": "phrase_candidate",
+          "match_id": "b37-p80-c1314"
+        }
+      ]
+    },
+    {
+      "id": "A05",
+      "query": "لماذا تعد صحبة الصالحين مهمة للمريد",
+      "local_ms": 300.01,
+      "completion": "full",
+      "evidence_strength": "candidate",
+      "unresolved_facets": [],
+      "reformulation_status": "ok",
+      "error": null,
+      "hits": [
+        {
+          "book_id": "b25",
+          "seq": 73,
+          "relevance": "relation_candidate",
+          "match_id": "b25-p73-c1382"
+        },
+        {
+          "book_id": "b44",
+          "seq": 43,
+          "relevance": "relation_candidate",
+          "match_id": "b44-p43-c2504"
+        },
+        {
+          "book_id": "b16",
+          "seq": 6,
+          "relevance": "relation_candidate",
+          "match_id": "b16-p6-c818"
+        },
+        {
+          "book_id": "b16",
+          "seq": 40,
+          "relevance": "relation_candidate",
+          "match_id": "b16-p40-c683"
+        },
+        {
+          "book_id": "b01",
+          "seq": 152,
+          "relevance": "relation_candidate",
+          "match_id": "b01-p152-c1240"
+        }
+      ]
+    },
+    {
+      "id": "A06",
+      "query": "ما فائدة صحبة الصالحين",
+      "local_ms": 268.91,
+      "completion": "full",
+      "evidence_strength": "candidate",
+      "unresolved_facets": [],
+      "reformulation_status": "ok",
+      "error": null,
+      "hits": [
+        {
+          "book_id": "b25",
+          "seq": 73,
+          "relevance": "relation_candidate",
+          "match_id": "b25-p73-c1382"
+        },
+        {
+          "book_id": "b44",
+          "seq": 43,
+          "relevance": "relation_candidate",
+          "match_id": "b44-p43-c2504"
+        },
+        {
+          "book_id": "b16",
+          "seq": 6,
+          "relevance": "relation_candidate",
+          "match_id": "b16-p6-c818"
+        },
+        {
+          "book_id": "b16",
+          "seq": 40,
+          "relevance": "relation_candidate",
+          "match_id": "b16-p40-c683"
+        },
+        {
+          "book_id": "b01",
+          "seq": 152,
+          "relevance": "relation_candidate",
+          "match_id": "b01-p152-c1240"
+        }
+      ]
+    },
+    {
+      "id": "A07",
+      "query": "ما أثر مصاحبة الصالحين على قلب المريد",
+      "local_ms": 293.54,
+      "completion": "full",
+      "evidence_strength": "candidate",
+      "unresolved_facets": [],
+      "reformulation_status": "ok",
+      "error": null,
+      "hits": [
+        {
+          "book_id": "b25",
+          "seq": 73,
+          "relevance": "relation_candidate",
+          "match_id": "b25-p73-c1382"
+        },
+        {
+          "book_id": "b44",
+          "seq": 43,
+          "relevance": "relation_candidate",
+          "match_id": "b44-p43-c2504"
+        },
+        {
+          "book_id": "b16",
+          "seq": 6,
+          "relevance": "relation_candidate",
+          "match_id": "b16-p6-c818"
+        },
+        {
+          "book_id": "b16",
+          "seq": 40,
+          "relevance": "relation_candidate",
+          "match_id": "b16-p40-c683"
+        },
+        {
+          "book_id": "b01",
+          "seq": 152,
+          "relevance": "relation_candidate",
+          "match_id": "b01-p152-c1240"
+        }
+      ]
+    },
+    {
+      "id": "A08",
+      "query": "هل يحتاج السالك إلى صحبة الشيخ والإخوان",
+      "local_ms": 318.99,
+      "completion": "full",
+      "evidence_strength": "candidate",
+      "unresolved_facets": [],
+      "reformulation_status": "ok",
+      "error": null,
+      "hits": [
+        {
+          "book_id": "b25",
+          "seq": 73,
+          "relevance": "relation_candidate",
+          "match_id": "b25-p73-c1216"
+        },
+        {
+          "book_id": "b44",
+          "seq": 39,
+          "relevance": "relation_candidate",
+          "match_id": "b44-p39-c5686"
+        },
+        {
+          "book_id": "b37",
+          "seq": 44,
+          "relevance": "relation_candidate",
+          "match_id": "b37-p44-c584"
+        },
+        {
+          "book_id": "b44",
+          "seq": 43,
+          "relevance": "relation_candidate",
+          "match_id": "b44-p43-c2504"
+        },
+        {
+          "book_id": "b16",
+          "seq": 6,
+          "relevance": "relation_candidate",
+          "match_id": "b16-p6-c818"
+        }
+      ]
+    },
+    {
+      "id": "A09",
+      "query": "ما معنى الإخلاص وكيف يختلف عن الرياء",
+      "local_ms": 286.8,
+      "completion": "full",
+      "evidence_strength": "candidate",
+      "unresolved_facets": [],
+      "reformulation_status": "ok",
+      "error": null,
+      "hits": [
+        {
+          "book_id": "b07",
+          "seq": 134,
+          "relevance": "relation_candidate",
+          "match_id": "b07-p134-c1163"
+        },
+        {
+          "book_id": "b02",
+          "seq": 4,
+          "relevance": "relation_candidate",
+          "match_id": "b02-p4-c7102"
+        }
+      ]
+    },
+    {
+      "id": "A10",
+      "query": "ما الفرق بين الإخلاص والرياء",
+      "local_ms": 191.16,
+      "completion": "full",
+      "evidence_strength": "candidate",
+      "unresolved_facets": [],
+      "reformulation_status": "ok",
+      "error": null,
+      "hits": [
+        {
+          "book_id": "b07",
+          "seq": 134,
+          "relevance": "relation_candidate",
+          "match_id": "b07-p134-c1163"
+        },
+        {
+          "book_id": "b02",
+          "seq": 4,
+          "relevance": "relation_candidate",
+          "match_id": "b02-p4-c7102"
+        }
+      ]
+    },
+    {
+      "id": "A11",
+      "query": "كيف يتخلص المريد من الرياء في عبادته",
+      "local_ms": 106.85,
+      "completion": "full",
+      "evidence_strength": "candidate",
+      "unresolved_facets": [],
+      "reformulation_status": "ok",
+      "error": null,
+      "hits": [
+        {
+          "book_id": "b28",
+          "seq": 20,
+          "relevance": "phrase_candidate",
+          "match_id": "b28-p20-c975"
+        },
+        {
+          "book_id": "b14",
+          "seq": 53,
+          "relevance": "phrase_candidate",
+          "match_id": "b14-p53-c773"
+        },
+        {
+          "book_id": "b14",
+          "seq": 135,
+          "relevance": "phrase_candidate",
+          "match_id": "b14-p135-c807"
+        },
+        {
+          "book_id": "b07",
+          "seq": 134,
+          "relevance": "phrase_candidate",
+          "match_id": "b07-p134-c1222"
+        },
+        {
+          "book_id": "b39",
+          "seq": 1,
+          "relevance": "phrase_candidate",
+          "match_id": "b39-p1-c719"
+        }
+      ]
+    },
+    {
+      "id": "A12",
+      "query": "متى يكون العمل خالصا لله",
+      "local_ms": 137.68,
+      "completion": "full",
+      "evidence_strength": "weak",
+      "unresolved_facets": [],
+      "reformulation_status": "ok",
+      "error": null,
+      "hits": [
+        {
+          "book_id": "b44",
+          "seq": 26,
+          "relevance": "topic_only",
+          "match_id": "b44-p26-c2112"
+        },
+        {
+          "book_id": "b10",
+          "seq": 262,
+          "relevance": "topic_only",
+          "match_id": "b10-p262-c422"
+        },
+        {
+          "book_id": "b32",
+          "seq": 185,
+          "relevance": "topic_only",
+          "match_id": "b32-p185-c1321"
+        },
+        {
+          "book_id": "b26",
+          "seq": 9,
+          "relevance": "topic_only",
+          "match_id": "b26-p9-c988"
+        },
+        {
+          "book_id": "b27",
+          "seq": 66,
+          "relevance": "topic_only",
+          "match_id": "b27-p66-c761"
+        }
+      ]
+    },
+    {
+      "id": "A13",
+      "query": "كيف يجمع السالك بين الخوف والرجاء",
+      "local_ms": 126.13,
+      "completion": "full",
+      "evidence_strength": "candidate",
+      "unresolved_facets": [],
+      "reformulation_status": "ok",
+      "error": null,
+      "hits": [
+        {
+          "book_id": "b09",
+          "seq": 88,
+          "relevance": "phrase_candidate",
+          "match_id": "b09-p88-c1276"
+        },
+        {
+          "book_id": "b37",
+          "seq": 156,
+          "relevance": "relation_candidate",
+          "match_id": "b37-p156-c494"
+        }
+      ]
+    },
+    {
+      "id": "A14",
+      "query": "ما التوازن بين الخوف والرجاء",
+      "local_ms": 399.06,
+      "completion": "full",
+      "evidence_strength": "candidate",
+      "unresolved_facets": [],
+      "reformulation_status": "ok",
+      "error": null,
+      "hits": [
+        {
+          "book_id": "b09",
+          "seq": 88,
+          "relevance": "relation_candidate",
+          "match_id": "b09-p88-c1523"
+        },
+        {
+          "book_id": "b37",
+          "seq": 156,
+          "relevance": "relation_candidate",
+          "match_id": "b37-p156-c494"
+        },
+        {
+          "book_id": "b07",
+          "seq": 150,
+          "relevance": "relation_candidate",
+          "match_id": "b07-p150-c486"
+        },
+        {
+          "book_id": "b16",
+          "seq": 28,
+          "relevance": "relation_candidate",
+          "match_id": "b16-p28-c668"
+        },
+        {
+          "book_id": "b16",
+          "seq": 27,
+          "relevance": "relation_candidate",
+          "match_id": "b16-p27-c1188"
+        }
+      ]
+    },
+    {
+      "id": "A15",
+      "query": "هل يغلب المريد الخوف أم الرجاء",
+      "local_ms": 226.74,
+      "completion": "full",
+      "evidence_strength": "weak",
+      "unresolved_facets": [
+        "preference"
+      ],
+      "reformulation_status": "ok",
+      "error": null,
+      "hits": [
+        {
+          "book_id": "b09",
+          "seq": 88,
+          "relevance": "topic_only",
+          "match_id": "b09-p88-c1523"
+        },
+        {
+          "book_id": "b37",
+          "seq": 156,
+          "relevance": "topic_only",
+          "match_id": "b37-p156-c494"
+        },
+        {
+          "book_id": "b07",
+          "seq": 150,
+          "relevance": "topic_only",
+          "match_id": "b07-p150-c486"
+        },
+        {
+          "book_id": "b16",
+          "seq": 28,
+          "relevance": "topic_only",
+          "match_id": "b16-p28-c668"
+        },
+        {
+          "book_id": "b16",
+          "seq": 27,
+          "relevance": "topic_only",
+          "match_id": "b16-p27-c1188"
+        }
+      ]
+    },
+    {
+      "id": "A16",
+      "query": "الناس بين الخوف والرجاء",
+      "local_ms": 108.77,
+      "completion": null,
+      "evidence_strength": null,
+      "unresolved_facets": [],
+      "reformulation_status": "not_needed",
+      "error": null,
+      "hits": [
+        {
+          "book_id": "b37",
+          "seq": 156,
+          "relevance": null,
+          "match_id": "b37-p156-c484"
+        }
+      ]
+    },
+    {
+      "id": "A17",
+      "query": "ما حكم التدخين عند الشيخ",
+      "local_ms": 77.06,
+      "completion": "full",
+      "evidence_strength": "weak",
+      "unresolved_facets": [],
+      "reformulation_status": "ok",
+      "error": null,
+      "hits": [
+        {
+          "book_id": "b40",
+          "seq": 50,
+          "relevance": "topic_only",
+          "match_id": "b40-p50-c1220"
+        },
+        {
+          "book_id": "b39",
+          "seq": 321,
+          "relevance": "topic_only",
+          "match_id": "b39-p321-c953"
+        },
+        {
+          "book_id": "b39",
+          "seq": 323,
+          "relevance": "topic_only",
+          "match_id": "b39-p323-c609"
+        },
+        {
+          "book_id": "b28",
+          "seq": 39,
+          "relevance": "topic_only",
+          "match_id": "b28-p39-c905"
+        },
+        {
+          "book_id": "b15",
+          "seq": 16,
+          "relevance": "topic_only",
+          "match_id": "b15-p16-c122"
+        }
+      ]
+    },
+    {
+      "id": "A18",
+      "query": "هل شرب السجاير يضر المريد",
+      "local_ms": 139.58,
+      "completion": "full",
+      "evidence_strength": "weak",
+      "unresolved_facets": [],
+      "reformulation_status": "ok",
+      "error": null,
+      "hits": [
+        {
+          "book_id": "b40",
+          "seq": 50,
+          "relevance": "topic_only",
+          "match_id": "b40-p50-c1214"
+        },
+        {
+          "book_id": "b39",
+          "seq": 210,
+          "relevance": "topic_only",
+          "match_id": "b39-p210-c345"
+        },
+        {
+          "book_id": "b36",
+          "seq": 9,
+          "relevance": "topic_only",
+          "match_id": "b36-p9-c1002"
+        }
+      ]
+    },
+    {
+      "id": "A19",
+      "query": "إيه رأي مولانا في السجاير والشيشة",
+      "local_ms": 88.35,
+      "completion": "full",
+      "evidence_strength": "weak",
+      "unresolved_facets": [],
+      "reformulation_status": "ok",
+      "error": null,
+      "hits": [
+        {
+          "book_id": "b40",
+          "seq": 50,
+          "relevance": "topic_only",
+          "match_id": "b40-p50-c1220"
+        },
+        {
+          "book_id": "b39",
+          "seq": 321,
+          "relevance": "topic_only",
+          "match_id": "b39-p321-c953"
+        },
+        {
+          "book_id": "b39",
+          "seq": 323,
+          "relevance": "topic_only",
+          "match_id": "b39-p323-c609"
+        },
+        {
+          "book_id": "b28",
+          "seq": 39,
+          "relevance": "topic_only",
+          "match_id": "b28-p39-c905"
+        },
+        {
+          "book_id": "b15",
+          "seq": 16,
+          "relevance": "topic_only",
+          "match_id": "b15-p16-c122"
+        }
+      ]
+    },
+    {
+      "id": "A20",
+      "query": "كيف يميز السالك بين الإلهام والوسواس",
+      "local_ms": 209.04,
+      "completion": "full",
+      "evidence_strength": "weak",
+      "unresolved_facets": [],
+      "reformulation_status": "ok",
+      "error": null,
+      "hits": [
+        {
+          "book_id": "b13",
+          "seq": 57,
+          "relevance": "topic_only",
+          "match_id": "b13-p57-c455"
+        },
+        {
+          "book_id": "b07",
+          "seq": 150,
+          "relevance": "topic_only",
+          "match_id": "b07-p150-c761"
+        },
+        {
+          "book_id": "b10",
+          "seq": 230,
+          "relevance": "topic_only",
+          "match_id": "b10-p230-c1300"
+        },
+        {
+          "book_id": "b07",
+          "seq": 222,
+          "relevance": "topic_only",
+          "match_id": "b07-p222-c503"
+        },
+        {
+          "book_id": "b14",
+          "seq": 201,
+          "relevance": "topic_only",
+          "match_id": "b14-p201-c441"
+        }
+      ]
+    },
+    {
+      "id": "A21",
+      "query": "ما الفرق بين الخاطر الرحماني والخاطر الشيطاني",
+      "local_ms": 46.32,
+      "completion": "full",
+      "evidence_strength": "candidate",
+      "unresolved_facets": [],
+      "reformulation_status": "ok",
+      "error": null,
+      "hits": [
+        {
+          "book_id": "b37",
+          "seq": 72,
+          "relevance": "phrase_candidate",
+          "match_id": "b37-p72-c478"
+        }
+      ]
+    },
+    {
+      "id": "A22",
+      "query": "ما المراد بالأعيان الثابتة",
+      "local_ms": 107.39,
+      "completion": "full",
+      "evidence_strength": "candidate",
+      "unresolved_facets": [],
+      "reformulation_status": "ok",
+      "error": null,
+      "hits": [
+        {
+          "book_id": "b17",
+          "seq": 62,
+          "relevance": "phrase_candidate",
+          "match_id": "b17-p62-c1716"
+        }
+      ]
+    },
+    {
+      "id": "A23",
+      "query": "الهم والحزن",
+      "local_ms": 23.33,
+      "completion": null,
+      "evidence_strength": null,
+      "unresolved_facets": [],
+      "reformulation_status": "not_needed",
+      "error": null,
+      "hits": [
+        {
+          "book_id": "b01",
+          "seq": 193,
+          "relevance": null,
+          "match_id": "b01-p193-c867"
+        }
+      ]
+    },
+    {
+      "id": "A24",
+      "query": "ما فضل الصلاة على النبي صلى الله عليه وسلم",
+      "local_ms": 308.61,
+      "completion": "full",
+      "evidence_strength": "candidate",
+      "unresolved_facets": [],
+      "reformulation_status": "ok",
+      "error": null,
+      "hits": [
+        {
+          "book_id": "b30",
+          "seq": 90,
+          "relevance": "relation_candidate",
+          "match_id": "b30-p90-c717"
+        },
+        {
+          "book_id": "b12",
+          "seq": 174,
+          "relevance": "relation_candidate",
+          "match_id": "b12-p174-c792"
+        },
+        {
+          "book_id": "b28",
+          "seq": 4,
+          "relevance": "phrase_candidate",
+          "match_id": "b28-p4-c821"
+        },
+        {
+          "book_id": "b07",
+          "seq": 162,
+          "relevance": "relation_candidate",
+          "match_id": "b07-p162-c606"
+        },
+        {
+          "book_id": "b11",
+          "seq": 27,
+          "relevance": "relation_candidate",
+          "match_id": "b11-p27-c177"
+        }
+      ]
+    },
+    {
+      "id": "A25",
+      "query": "ما ثواب الصلاة على النبي",
+      "local_ms": 229.8,
+      "completion": "full",
+      "evidence_strength": "candidate",
+      "unresolved_facets": [],
+      "reformulation_status": "ok",
+      "error": null,
+      "hits": [
+        {
+          "book_id": "b12",
+          "seq": 174,
+          "relevance": "relation_candidate",
+          "match_id": "b12-p174-c792"
+        },
+        {
+          "book_id": "b30",
+          "seq": 90,
+          "relevance": "relation_candidate",
+          "match_id": "b30-p90-c717"
+        },
+        {
+          "book_id": "b11",
+          "seq": 97,
+          "relevance": "relation_candidate",
+          "match_id": "b11-p97-c945"
+        },
+        {
+          "book_id": "b11",
+          "seq": 27,
+          "relevance": "relation_candidate",
+          "match_id": "b11-p27-c177"
+        },
+        {
+          "book_id": "b12",
+          "seq": 216,
+          "relevance": "relation_candidate",
+          "match_id": "b12-p216-c1077"
+        }
+      ]
+    },
+    {
+      "id": "A26",
+      "query": "ما النصيحة لمن يشعر بالهم والحزن",
+      "local_ms": 258.67,
+      "completion": "full",
+      "evidence_strength": "candidate",
+      "unresolved_facets": [],
+      "reformulation_status": "ok",
+      "error": null,
+      "hits": [
+        {
+          "book_id": "b44",
+          "seq": 43,
+          "relevance": "relation_candidate",
+          "match_id": "b44-p43-c7646"
+        },
+        {
+          "book_id": "b44",
+          "seq": 50,
+          "relevance": "relation_candidate",
+          "match_id": "b44-p50-c2934"
+        },
+        {
+          "book_id": "b22",
+          "seq": 146,
+          "relevance": "relation_candidate",
+          "match_id": "b22-p146-c59"
+        },
+        {
+          "book_id": "b07",
+          "seq": 180,
+          "relevance": "relation_candidate",
+          "match_id": "b07-p180-c740"
+        },
+        {
+          "book_id": "b20",
+          "seq": 145,
+          "relevance": "relation_candidate",
+          "match_id": "b20-p145-c1381"
+        }
+      ]
+    },
+    {
+      "id": "A27",
+      "query": "ما فضل ليلة القدر وكيف نحييها",
+      "local_ms": 148.04,
+      "completion": "full",
+      "evidence_strength": "partial",
+      "unresolved_facets": [
+        "observance"
+      ],
+      "reformulation_status": "ok",
+      "error": null,
+      "hits": [
+        {
+          "book_id": "b12",
+          "seq": 61,
+          "relevance": "phrase_candidate",
+          "match_id": "b12-p61-c25"
+        },
+        {
+          "book_id": "b07",
+          "seq": 115,
+          "relevance": "relation_candidate",
+          "match_id": "b07-p115-c456"
+        },
+        {
+          "book_id": "b14",
+          "seq": 162,
+          "relevance": "phrase_candidate",
+          "match_id": "b14-p162-c133"
+        },
+        {
+          "book_id": "b12",
+          "seq": 237,
+          "relevance": "phrase_candidate",
+          "match_id": "b12-p237-c297"
+        },
+        {
+          "book_id": "b26",
+          "seq": 6,
+          "relevance": "phrase_candidate",
+          "match_id": "b26-p6-c571"
+        }
+      ]
+    },
+    {
+      "id": "A28",
+      "query": "كيف نحيي ليلة القدر",
+      "local_ms": 24.26,
+      "completion": "full",
+      "evidence_strength": "weak",
+      "unresolved_facets": [
+        "observance"
+      ],
+      "reformulation_status": "ok",
+      "error": null,
+      "hits": [
+        {
+          "book_id": "b12",
+          "seq": 61,
+          "relevance": "topic_only",
+          "match_id": "b12-p61-c25"
+        },
+        {
+          "book_id": "b07",
+          "seq": 115,
+          "relevance": "topic_only",
+          "match_id": "b07-p115-c456"
+        },
+        {
+          "book_id": "b14",
+          "seq": 162,
+          "relevance": "topic_only",
+          "match_id": "b14-p162-c133"
+        },
+        {
+          "book_id": "b12",
+          "seq": 237,
+          "relevance": "topic_only",
+          "match_id": "b12-p237-c297"
+        },
+        {
+          "book_id": "b26",
+          "seq": 6,
+          "relevance": "topic_only",
+          "match_id": "b26-p6-c571"
+        }
+      ]
+    },
+    {
+      "id": "A29",
+      "query": "ما فضل ليلة القدر",
+      "local_ms": 109.5,
+      "completion": "full",
+      "evidence_strength": "candidate",
+      "unresolved_facets": [],
+      "reformulation_status": "ok",
+      "error": null,
+      "hits": [
+        {
+          "book_id": "b12",
+          "seq": 61,
+          "relevance": "phrase_candidate",
+          "match_id": "b12-p61-c25"
+        },
+        {
+          "book_id": "b07",
+          "seq": 115,
+          "relevance": "relation_candidate",
+          "match_id": "b07-p115-c456"
+        },
+        {
+          "book_id": "b14",
+          "seq": 162,
+          "relevance": "phrase_candidate",
+          "match_id": "b14-p162-c133"
+        },
+        {
+          "book_id": "b12",
+          "seq": 237,
+          "relevance": "phrase_candidate",
+          "match_id": "b12-p237-c297"
+        },
+        {
+          "book_id": "b26",
+          "seq": 6,
+          "relevance": "phrase_candidate",
+          "match_id": "b26-p6-c571"
+        }
+      ]
+    },
+    {
+      "id": "A30",
+      "query": "إزاي أربي ولادي تربية صالحة",
+      "local_ms": 264.26,
+      "completion": "full",
+      "evidence_strength": "weak",
+      "unresolved_facets": [],
+      "reformulation_status": "ok",
+      "error": null,
+      "hits": [
+        {
+          "book_id": "b44",
+          "seq": 35,
+          "relevance": "topic_only",
+          "match_id": "b44-p35-c4616"
+        },
+        {
+          "book_id": "b44",
+          "seq": 29,
+          "relevance": "topic_only",
+          "match_id": "b44-p29-c200"
+        }
+      ]
+    },
+    {
+      "id": "A31",
+      "query": "كيف أربي أبنائي تربية صالحة",
+      "local_ms": 148.28,
+      "completion": "full",
+      "evidence_strength": "weak",
+      "unresolved_facets": [],
+      "reformulation_status": "ok",
+      "error": null,
+      "hits": []
+    }
+  ]
+}
