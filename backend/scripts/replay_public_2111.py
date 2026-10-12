@@ -44,7 +44,7 @@ def main():
                        'partial_evidence':sum(r['evidence_strength']=='partial' for r in rows),
                        'local_p95_ms':timings[math.ceil(.95*len(rows))-1]},
             'cases':rows}
-    path=ROOT/'verification/2.10.11/public_replay.json'
+    path=ROOT/'verification'/SERVER_VERSION/'public_replay.json'
     path.parent.mkdir(parents=True,exist_ok=True)
     path.write_text(json.dumps(output,ensure_ascii=False,indent=2)+'\n')
     print(json.dumps(output['summary'],ensure_ascii=False))

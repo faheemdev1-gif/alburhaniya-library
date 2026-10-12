@@ -121,6 +121,27 @@ def mask_honorifics(text):
  return _HONORIFIC.sub(lambda m:' '*len(m.group()),text)
 
 
+def sense_conflict(query, text, start, end):
+    """Reject an attested wrong reading of a polysemous noun locally.
+
+    An explicit vowel sequence is stronger evidence than a stripped index
+    token. Unvocalised nominal uses need local topic context; a bare verb
+    describing physical growth cannot stand in for the noun الكِبْر.
+    """
+    normalized_query=normalize_search_text(query,level='broad')
+    if not re.search(r'(?<![ء-ي])(?:ال|بال|من\s+ال)كبر(?![ء-ي])',normalized_query):
+        return False
+    local=text[max(0,start-90):min(len(text),end+130)]
+    matched=text[start:end]
+    if re.search(r'كُبَر|كِبَر|كَبُر|كْبَر',matched):
+        return True
+    if not re.search(r'(?<![ء-ي])(?:ال|وال|بال|لل)\s*[ًٌٍَُِّْ]*ك[ًٌٍَُِّْ]*ب[ًٌٍَُِّْ]*ر',matched) and not re.search(r'(?<![ء-ي])(?:ال|وال|بال|لل)كبر',normalize_search_text(matched,level='broad')):
+        return True
+    pride=re.search(r'تواضع|ع[ُ]?جب|رياء|غرور|تكبر|متكبر|نفاق|نفساني|الأخلاق|القلب|القلوب|التواضع',local)
+    physical=re.search(r'جسم|حجم|سن[ّه]?|حمل|زاد|يكبر|كبر\s+(?:جسم|الحمل|الولد)',local)
+    return bool(physical and not pride)
+
+
 def procedural_support(query, window, start, end, matched, ap, relation):
  """Favor an actionable span over a passing mention in a how-to question.
 
@@ -401,6 +422,7 @@ def search_questions(**kwargs):
         for row in literal:
             key=(row['book_id'],row['seq']);matched_ids.add(key)
             page=pages.setdefault(key,db.get_page(*key));span=row['evidence_span']
+            if sense_conflict(query,page['text'],span['start'],span['end']):continue
             row['score']=round(.70+.28*row['score'],6)
             row['score']=round(min(.985,row['score']+procedural_support(
                 query,page['text'],span['start'],span['end'],
@@ -442,6 +464,7 @@ def search_questions(**kwargs):
                         and not (ap.get('protected_anchor') in matched
                                  and all(relation_verb(t) for t in ap['anchors'] if t not in matched))):continue
                 start+=left;end+=left
+                if sense_conflict(query,page['text'],start,end):continue
                 score=.10+.70*value
                 score+=procedural_support(query,window,start-left,end-left,matched,ap,relation)
                 q=candidate['question']
@@ -488,9 +511,23 @@ def search_questions(**kwargs):
         if not any(row['question_relevance']=='relation_candidate' for row in rows):
             state['unresolved_facets']=list(dict.fromkeys(state.get('unresolved_facets',[])+['preference']))
     # Coverage is evidence based and scoped: retain explicit mentions only.
-    if any(set(plan(q)['required'])=={'children','upbringing'} for q in queries):
+    if any((set(plan(q)['required'])=={'children','upbringing'} or
+            (re.search(r'تربي|اربي|ربي',normalize_search_text(q,level='broad')) and
+             re.search(r'ابنا|اطفال|اولاد',normalize_search_text(q,level='broad')))) for q in queries):
+        # The full how-to wording need not occur in an incidental source
+        # mention. Discover attested topic phrases within the caller's scope,
+        # while keeping them explicitly weak rather than inventing guidance.
         child_phrase=db._build_highlight_regex('تربية',whole_word=True).pattern+r'\s+(?:'+ '|'.join(db._build_highlight_regex(w,whole_word=False).pattern for w in ('الأطفال','الأولاد','الأبناء'))+')'
         rows=[r for r in rows if re.search(child_phrase,html.unescape(re.sub('<[^>]+>','',r['snippet'])))]
+        if not rows:
+            for phrase in ('تربية الأبناء','تربية الأطفال','تربية الأولاد'):
+                for row in db.search(query=phrase,search_mode='exact_phrase',limit=8,
+                                     diversify_books=False,ranking=kwargs.get('ranking','primary_first'),
+                                     context_chars=kwargs.get('context_chars',180),**scope):
+                    key=(row['book_id'],row['seq'])
+                    if any((existing['book_id'],existing['seq'])==key for existing in rows):continue
+                    records[key]=row
+                    rows.append(row)
         for row in rows:row['question_relevance']='topic_only'
         state['coverage_gap']={'topic':'raising children','basis':'Only passing mentions established in supplied corpus audit'}
 
