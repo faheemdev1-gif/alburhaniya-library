@@ -821,7 +821,7 @@ def search_library(
         if effective_match_mode=="reformulated":
             from app.services.question_search import SEARCH_STATE
             payload.update(SEARCH_STATE.get() or {})
-            payload['reformulation_status']='degraded' if payload.get('completion')=='partial' else 'ok'
+            payload['reformulation_status']='degraded' if (payload.get('completion')=='partial' or payload.get('evidence_strength') in ('weak','partial')) else 'ok'
             from app.services.question_search import anchor_plan
             payload["query_plan"] = [{"original_query":q, **anchor_plan(q,keep_terms or ())} for q in raw_queries]
             payload["dropped_function_words"] = list(dict.fromkeys(t for p in payload["query_plan"] for t in p["dropped_function_words"]))

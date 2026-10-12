@@ -2104,6 +2104,19 @@ def get_passage(
         original_start = match.start() if match else int(match_start or 0)
         original_end = match.end() if match else original_start + 1
         result.update(_cross_page_paragraph(page, original_start, original_end, max_chars))
+        # A heading can be its own source paragraph. Keep that boundary, but
+        # expose the following prose as a continuation so a citation reader
+        # does not mistake the heading alone for the explanation.
+        if (len(result["passage"].strip()) < 100
+                and result["passage"].strip().endswith((":", ":-"))):
+            next_start = len(text[:end]) + len(text[end:]) - len(text[end:].lstrip())
+            if next_start < len(text):
+                result.setdefault("continuation", []).append({
+                    "direction": "after_heading",
+                    "match_id": f"{book_id}-p{seq}-c{next_start}",
+                    "context_mode": "paragraph",
+                    "note": "Following prose, not part of the heading paragraph.",
+                })
         result["context_offsets_basis"] = "unhighlighted_passage"
         result["original_match_scope"] = "query_span" if match else "start_anchor"
         if pattern:

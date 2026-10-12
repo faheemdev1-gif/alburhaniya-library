@@ -132,6 +132,22 @@ def procedural_support(query, window, start, end, matched, ap, relation):
  return .16 if _PROCEDURAL_EVIDENCE.search(local) else 0.0
 
 
+def explicit_observance(text, start, end):
+    """Evidence of a practice for the named night in the same local passage.
+
+    This is a candidate cue, not verification of a full religious answer.
+    Incidental prayer and merit elsewhere on a page cannot satisfy it.
+    """
+    left=max(0,text.rfind('\n\n',0,start)+2,start-160)
+    boundary=text.find('\n\n',end)
+    right=min(len(text),end+220,boundary if boundary>=0 else len(text))
+    local=text[left:right]
+    night=re.search(r'ليلة\s+القدر',local)
+    action=re.search(r'قيام|قام\s+ليلة|صلاة|الصلاة|دعاء|الذكر|قراءة\s+القرآن|عبادة',local)
+    guidance=re.search(r'أحيوا|إحياء|يستحب|ينبغي|عليكم|من\s+قام\s+ليلة\s+القدر',local)
+    return bool(night and action and guidance and abs(night.start()-action.start())<150)
+
+
 def supporting_span(query,text,keep_terms=(),ap=None):
  ap=ap or anchor_plan(query,keep_terms)
  text=mask_honorifics(text)
@@ -263,6 +279,16 @@ def classify_row(row, query, ap, text, start, end, relation=False):
     # incidental mentions (a duʿāʾ "ولا رياء") as likely answers (LB-1).
     directive=bool(re.search(r'عليك|ينبغي|يجب|حافظ|لا تغضب|أربع خصال|أربعة|معنى|عبارة عن|يعني|\b(?:هو|هي)\s+أن\b|المراد\s+ب|(?:^|[:؟?\n])\s*نعم\b',window))
     row['question_relevance']='relation_candidate' if relation or (phrase and directive) or row.get('matched_source_question') else 'phrase_candidate' if phrase else 'topic_only'
+    facets=ap.get('requested_facets',())
+    if 'observance' in facets:
+        row['observance_support']=explicit_observance(text,start,end)
+        if not row['observance_support'] and facets==['observance']:
+            row['question_relevance']='topic_only'
+    if 'preference' in facets:
+        # Two sides in a heading or a balanced description do not answer
+        # which side, if either, the author says to prefer.
+        direction=bool(re.search(r'يغلب|يرجح|يقدم|يفضل|أولى|الراجح',window))
+        if not direction:row['question_relevance']='topic_only'
     focus=ap.get('focus_word')
     row['focus_match_strength']=0
     subject_words=len(safe_tokens(ap['subject_phrase']))
@@ -409,6 +435,12 @@ def search_questions(**kwargs):
         if not plan(query)['required'] and not ap['comparison_subjects'] and len(ap['anchors'])>=2:
             row['_missing_protected_subject']=ap['protected_anchor'] not in row.get('_matched_anchors',()) and not row.get('subject_phrase_match')
     rows=[row for row in rows if not row.get('_missing_protected_subject')]
+    if any('observance' in ap.get('requested_facets',()) for ap in plans.values()):
+        if not any(row.get('observance_support') for row in rows):
+            state['unresolved_facets']=['observance']
+    if any('preference' in ap.get('requested_facets',()) for ap in plans.values()):
+        if not any(row['question_relevance']=='relation_candidate' for row in rows):
+            state['unresolved_facets']=list(dict.fromkeys(state.get('unresolved_facets',[])+['preference']))
     # Coverage is evidence based and scoped: retain explicit mentions only.
     if any(set(plan(q)['required'])=={'children','upbringing'} for q in queries):
         child_phrase=db._build_highlight_regex('تربية',whole_word=True).pattern+r'\s+(?:'+ '|'.join(db._build_highlight_regex(w,whole_word=False).pattern for w in ('الأطفال','الأولاد','الأبناء'))+')'
@@ -442,7 +474,7 @@ def search_questions(**kwargs):
             if counts.get(b,0)<kwargs.get('max_per_book',2):selected.append(r);counts[b]=counts.get(b,0)+1
         rows=selected
     state['stages_completed']=list(dict.fromkeys(state['stages_completed']+['relation_check','deduplication']))
-    state['evidence_strength']='weak' if state.get('coverage_gap') else 'candidate' if any(r['question_relevance']!='topic_only' for r in rows) else 'weak'
+    state['evidence_strength']='weak' if state.get('coverage_gap') else 'partial' if state.get('unresolved_facets') and any(r['question_relevance']!='topic_only' for r in rows) else 'weak' if state.get('unresolved_facets') else 'candidate' if any(r['question_relevance']!='topic_only' for r in rows) else 'weak'
     state['path']='partial' if state['completion']=='partial' else state['path']
     offset=kwargs.get('offset',0);rows=rows[offset:offset+kwargs.get('limit',8)]
     for i,r in enumerate(rows,offset+1):

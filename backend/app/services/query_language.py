@@ -172,6 +172,10 @@ def subject_phrase(query):
  query=query.strip(' ؟?')
  subjects=comparison_subjects(query)
  if subjects:return ' و'.join(subjects)
+ # In questions about observing a named night, the inflected verb is the
+ # requested action, not a word that the source passage must contain.
+ observance=re.match(r'^كيف\s+(?:أحيي|نحيي|يحيي|تحيي)\s+(ليلة\s+القدر)$',query)
+ if observance:return observance.group(1)
  # In "what should X do so that Y is valid", Y is the subject. The
  # surrounding duty question is a frame, not a phrase to search verbatim.
  action=re.match(r'^ما\s+الذي\s+يجب\s+على\s+.+?\s+فعله\s+حتى\s+تصح\s+([ء-ي]+)$',query)
@@ -203,7 +207,10 @@ def language_plan(query,keep_terms=()):
  subjects=comparison_subjects(query)
  subject=subject_phrase(query)
  if subjects:terms=subjects
- return {'subject_phrase':subject,'terms':terms,'focus_word':focus_word,'dropped_function_words':[t for t in safe_tokens(query) if normalize_search_text(t,level='broad') in KEYS and normalize_search_text(t,level='broad') not in keep],'negation_present':negation,'comparison_subjects':subjects}
+ observance=bool(re.search(r'(?:أحيي|نحيي|يحيي|تحيي)(?:ها)?\b',query) and re.search(r'ليلة\s+القدر',query))
+ preference=bool(subjects and re.search(r'\b(?:يغلب|يرجح|يقدم|يفضل)\b',normalize_search_text(query,level='safe')))
+ facets=(['merit'] if re.match(r'^ما\s+(?:فضل|ثواب|أجر)\b',query) else [])+(['observance'] if observance else [])+(['preference'] if preference else [])
+ return {'subject_phrase':subject,'terms':terms,'focus_word':focus_word,'dropped_function_words':[t for t in safe_tokens(query) if normalize_search_text(t,level='broad') in KEYS and normalize_search_text(t,level='broad') not in keep],'negation_present':negation,'comparison_subjects':subjects,'requested_facets':facets}
 def derived_nouns(word):
  """Verbal nouns of common derived verb patterns, kept only when attested.
 

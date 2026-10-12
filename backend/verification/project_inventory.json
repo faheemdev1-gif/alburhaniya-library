@@ -1,18 +1,20 @@
 {
   "modified_original_files": [
     "app/mcp_contract.py",
+    "app/mcp_server.py",
+    "app/services/library_db.py",
     "app/services/question_search.py",
     "app/services/query_language.py",
     "app/services/question_intent.py",
     "tests/test_mcp_contract.py",
     "tests/test_deployment_startup.py",
     "tests/test_release_270.py",
+    "scripts/evaluate_private_set.py",
     "scripts/package_release.py"
   ],
   "unchanged_original_files": [
     "app/__init__.py",
     "app/main.py",
-    "app/mcp_server.py",
     "app/core/result_cache.py",
     "app/core/text_format.py",
     "app/core/config.py",
@@ -33,7 +35,6 @@
     "app/api/__init__.py",
     "app/api/search.py",
     "app/api/books_legacy_registry.py",
-    "app/services/library_db.py",
     "app/services/ingestion.py",
     "app/services/hybrid_search.py",
     "app/services/compact_response.py",
@@ -155,7 +156,6 @@
     "scripts/migrate_diwan_v5.py",
     "scripts/prove_audit_failure.py",
     "scripts/load_2100.py",
-    "scripts/evaluate_private_set.py",
     "scripts/measure_payload_2100.py",
     "scripts/monitor_service.py",
     "scripts/verify_assessment_release.py",
@@ -179,6 +179,11 @@
       "path": "RELEASE_NOTES_2.10.10.md",
       "sha256": "d63acc2bb4031e54d5295e1ce52566f8d6bdd26d34835acb14fd19ecd707a05f",
       "bytes": 3861
+    },
+    {
+      "path": "RELEASE_NOTES_2.10.11.md",
+      "sha256": "dbc58a2562c606d14dc49afd6e84981153c4b8849a6f21634bbfbb68b7a46568",
+      "bytes": 2959
     },
     {
       "path": "SEMANTIC_RETRIEVAL_IMPLEMENTATION.md",
@@ -297,13 +302,13 @@
     },
     {
       "path": "app/mcp_contract.py",
-      "sha256": "523575f26df63caa0e50932af744bb2a0b9d2bdb42895e24f1dfb2b60b6c719f",
+      "sha256": "34dff25b4e6d0f82bdf00046012efbe1c2133048258a4a0f23757db98aeccdff",
       "bytes": 8574
     },
     {
       "path": "app/mcp_server.py",
-      "sha256": "6d489d1aaaa4052cb178f70042e4cff473c8e3be64b25df445757dde68c49011",
-      "bytes": 42868
+      "sha256": "48f28f24032c76dc1bcdcfac8f9e2ec2c8112f0efcc193d5b7a14605a7bfd65d",
+      "bytes": 42928
     },
     {
       "path": "app/services/__init__.py",
@@ -347,8 +352,8 @@
     },
     {
       "path": "app/services/library_db.py",
-      "sha256": "0eadd4826a5a7f914fcf869c5852e74b850fddd243b6674e698117d0b7f083cd",
-      "bytes": 107216
+      "sha256": "aaf9ade8e175cbe21296240697245a285345ba884c991b1b2d905839143bd533",
+      "bytes": 108010
     },
     {
       "path": "app/services/monitoring.py",
@@ -357,8 +362,8 @@
     },
     {
       "path": "app/services/query_language.py",
-      "sha256": "248d64532228e7bcfb081613cb72414fea30a6bea4c75a1e5a9ef76bf97d8056",
-      "bytes": 16275
+      "sha256": "72b39e79477bd2645f8b9173093e0c73723c6f4a3b6dc495056f9b0b9901c4a6",
+      "bytes": 17025
     },
     {
       "path": "app/services/question_intent.py",
@@ -367,8 +372,8 @@
     },
     {
       "path": "app/services/question_search.py",
-      "sha256": "b23661556734839c02f95c90127106993a5af625cc393a74ce83aa709c4ac41d",
-      "bytes": 31997
+      "sha256": "d8bb7ed81d84e30d97c53e355e85b1f3b3fd470c16329f89f8a76a55d36d9afc",
+      "bytes": 34098
     },
     {
       "path": "app/services/semantic_chunks.py",
@@ -677,8 +682,8 @@
     },
     {
       "path": "scripts/evaluate_private_set.py",
-      "sha256": "f2a231db6be80dd6ea294251df3b5ba6ae328f810def1cfa4ad7f5e43bb49bd7",
-      "bytes": 1728
+      "sha256": "28801021082e7f4f697df5ff731365b95c0beb876988b219913fd3e10b1c72fb",
+      "bytes": 1849
     },
     {
       "path": "scripts/evaluate_questions.py",
@@ -781,6 +786,11 @@
       "bytes": 1677
     },
     {
+      "path": "scripts/replay_public_2111.py",
+      "sha256": "42af0f7039758fca0dacabeea10cb71e23a638dc2e26cc7de06da55932f2e233",
+      "bytes": 2421
+    },
+    {
       "path": "scripts/research_indexes.py",
       "sha256": "9e1a45bb82af688498ec3a81fea1823637e67a4514a5744e530e4e0acc8384d1",
       "bytes": 9952
@@ -804,6 +814,11 @@
       "path": "scripts/safe_read.py",
       "sha256": "63290660485701eb95f22dd5d78932377b86938d2228141498c3c6970190188f",
       "bytes": 3391
+    },
+    {
+      "path": "scripts/score_private_gate.py",
+      "sha256": "c626ae6fa9e79e2deaec3014a6d84df57aed1ff885b9bf9c1a7663ce5c6d7b68",
+      "bytes": 4988
     },
     {
       "path": "scripts/serve_stdio.py",
@@ -901,6 +916,11 @@
       "bytes": 66410
     },
     {
+      "path": "tests/data/public_wordings_2111.json",
+      "sha256": "410bb7e281df735c409abe2cb5c090d822e65379ea799f7de8bed0e53def4497",
+      "bytes": 3025
+    },
+    {
       "path": "tests/test_assessment_fixes.py",
       "sha256": "df98d61574f319b1bbd35a5d7abbd103027d2be9ef598070a9535d8d7963f22d",
       "bytes": 7230
@@ -917,7 +937,7 @@
     },
     {
       "path": "tests/test_deployment_startup.py",
-      "sha256": "1766f7eec05a4e021fef5b0f91844aaf9be5499ee8634e001ef3ff9c723b3bb5",
+      "sha256": "fb1aadb11f7c7c07be4503c76d6413a51d0cc31e6bd4d1c816ee209bb4261551",
       "bytes": 3224
     },
     {
@@ -932,7 +952,7 @@
     },
     {
       "path": "tests/test_mcp_contract.py",
-      "sha256": "553d90349963be3af70df9f1ef0b1759ebb1f6542e6f749fd65b024739c0f41c",
+      "sha256": "bdeb38c2e892c6c50ded0818567ad5a65e1f263c229cd12ee1d9621728fd05e0",
       "bytes": 5914
     },
     {
@@ -957,7 +977,7 @@
     },
     {
       "path": "tests/test_release_270.py",
-      "sha256": "72eb3b13772308aa29bb88db5dae6b5fe68849383630c5b03fcf26fb0e53740c",
+      "sha256": "c5ccec910da3655f2f18b6ba2b621472a7c11bc8d7345b4f51d2b938589d20e8",
       "bytes": 9574
     },
     {
@@ -1006,6 +1026,11 @@
       "bytes": 6827
     },
     {
+      "path": "tests/test_unanswered_facets_2111.py",
+      "sha256": "c0dcc7dfb67b88de58a46c9554a952b2c38f18908420cd642e55df5d4bede7ab",
+      "bytes": 2321
+    },
+    {
       "path": "verification/2.10.10/corpus_audit.json",
       "sha256": "3bb5748f3db14b5c6432bc652a8a6c32952314683cbf9c17ecfe9aaf2e8eec35",
       "bytes": 912
@@ -1024,6 +1049,11 @@
       "path": "verification/2.10.10/replay.log",
       "sha256": "2ba4c6188fb487ec4a7023230a64b68838be0c4fdfe41cf1b1ef5105512657b4",
       "bytes": 232
+    },
+    {
+      "path": "verification/2.10.11/public_replay.json",
+      "sha256": "e8cf2ced62bdcc3f1655444c93fd10c54c6c9af365ffac6d9c84ea2a0ef3dca1",
+      "bytes": 26789
     }
   ]
 }
