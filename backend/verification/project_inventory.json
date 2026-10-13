@@ -196,6 +196,11 @@
       "bytes": 2221
     },
     {
+      "path": "RELEASE_NOTES_2.10.14.md",
+      "sha256": "92d03d46286bde32c268eb77a6bf52f91fa627ff4f5d67e18b350c36831f8171",
+      "bytes": 2590
+    },
+    {
       "path": "SEMANTIC_RETRIEVAL_IMPLEMENTATION.md",
       "sha256": "29a505654fb0253539b26f8f5fd4629bf217efb940b6f5bd3a2db617d5246e50",
       "bytes": 1764
@@ -312,7 +317,7 @@
     },
     {
       "path": "app/mcp_contract.py",
-      "sha256": "e84d2f4ae4670e3d5097185b42e812d60cca47d77206355fb501c49b63aeec71",
+      "sha256": "a49b4271d79d24cb354492207ab2776590f191cd33938b04ca206e831c346fce",
       "bytes": 8574
     },
     {
@@ -372,8 +377,8 @@
     },
     {
       "path": "app/services/query_language.py",
-      "sha256": "82a45dbd0402d73c68348322f87011f2ef2a57ff58be1bd989d975adc749fbff",
-      "bytes": 18188
+      "sha256": "68c07969087c1b6601a1a3456ddf087d2419b0f27f244cebd249afa79733f83d",
+      "bytes": 20777
     },
     {
       "path": "app/services/question_intent.py",
@@ -382,8 +387,8 @@
     },
     {
       "path": "app/services/question_search.py",
-      "sha256": "6b21c3a7cb19ed600ff5c17826a6e574c650cde8f316872a3a4080830bc95417",
-      "bytes": 40104
+      "sha256": "c11733feca517674ce9521814e16e7cd45fb3b8871737e1950fa99b0e1c1d937",
+      "bytes": 41821
     },
     {
       "path": "app/services/semantic_chunks.py",
@@ -957,7 +962,7 @@
     },
     {
       "path": "tests/test_deployment_startup.py",
-      "sha256": "328e083095fd07779ed9492d8aa6d4edcba30a4bc5d22f4f3b11f253bee26b9f",
+      "sha256": "bc8f65b0991dc640b570345d80acb400c6ce78eda915bd8a480461248a0615f4",
       "bytes": 3224
     },
     {
@@ -972,7 +977,7 @@
     },
     {
       "path": "tests/test_mcp_contract.py",
-      "sha256": "60ed1e573d9bb6f5ed014a8baefe15fb8048efc9c1204b936cde5cd3a3941bc7",
+      "sha256": "96f8fa9d057299185d330407d099c46f304d085133260ca6c7438306627a936d",
       "bytes": 5914
     },
     {
@@ -986,6 +991,11 @@
       "bytes": 1712
     },
     {
+      "path": "tests/test_question_frames_2114.py",
+      "sha256": "57747e90b3e2bb53049faf7014a90075295dd59f0dc3546d4aa51afb0e5d761c",
+      "bytes": 2081
+    },
+    {
       "path": "tests/test_regression_gates.py",
       "sha256": "217c6e35fa18547b9624b0e490c9a77256a8293901ae0fafbaf499d8ba542168",
       "bytes": 19628
@@ -997,7 +1007,7 @@
     },
     {
       "path": "tests/test_release_270.py",
-      "sha256": "c41c50d08a4d1c733e26d1aed5dba80743e3885ec7be060f90af544335e9ecbf",
+      "sha256": "3b3e03c1fd4ad1b8881540ccd2f3b5a814379aa0d72cadad18fca7fed376fe33",
       "bytes": 9574
     },
     {
@@ -1094,6 +1104,16 @@
       "path": "verification/2.10.13/public_replay.json",
       "sha256": "e8777fed0aaeb5e70d8c7d08b2d947ec4865266f9e965c38b216900b74db29bb",
       "bytes": 27014
+    },
+    {
+      "path": "verification/2.10.14/public_replay.json",
+      "sha256": "c3ac9c67a264a18dd3a4a9e774782e702f9b0a47a434462aec875e1f74b4b6e6",
+      "bytes": 27014
+    },
+    {
+      "path": "verification/2.10.14/reference_replay.json",
+      "sha256": "2c397d26cc60699ff49968db5a2da76fa6f6e896b591979219ec050e9a547084",
+      "bytes": 9888
     }
   ]
 }

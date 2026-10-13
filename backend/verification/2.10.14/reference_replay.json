@@ -1,0 +1,436 @@
+{
+  "scope": "30 disclosed reference questions, local; reference presence is not graded directness",
+  "summary": {
+    "questions": 30,
+    "reference_at5": 27,
+    "errors": 0,
+    "full": 30
+  },
+  "cases": [
+    {
+      "id": "L1",
+      "query": "من ضاقت عليه المعيشة كيف ينال سعة الرزق",
+      "reference_in_top5": true,
+      "hits": [
+        "b41:131",
+        "b41:130",
+        "b07:180",
+        "b44:40",
+        "b10:20"
+      ],
+      "completion": "full",
+      "ms": 1727.35,
+      "error": null
+    },
+    {
+      "id": "L2",
+      "query": "ماذا يفعل من ضاق رزقه واشتدت حاجته",
+      "reference_in_top5": true,
+      "hits": [
+        "b41:131",
+        "b41:130",
+        "b10:20",
+        "b12:112",
+        "b07:180"
+      ],
+      "completion": "full",
+      "ms": 277.83,
+      "error": null
+    },
+    {
+      "id": "L3",
+      "query": "كيف يتعامل المريد مع الفقر وقلة المال",
+      "reference_in_top5": true,
+      "hits": [
+        "b41:131",
+        "b41:130",
+        "b10:20",
+        "b12:112",
+        "b07:180"
+      ],
+      "completion": "full",
+      "ms": 262.58,
+      "error": null
+    },
+    {
+      "id": "L4",
+      "query": "ما توجيه الشيخ لمن يشكو ضيق المعيشة",
+      "reference_in_top5": true,
+      "hits": [
+        "b41:131",
+        "b41:130",
+        "b07:180",
+        "b17:66",
+        "b44:40"
+      ],
+      "completion": "full",
+      "ms": 224.54,
+      "error": null
+    },
+    {
+      "id": "L5",
+      "query": "عندما يقل دخلي وتكثر حاجتي بماذا تنصحني التعاليم",
+      "reference_in_top5": true,
+      "hits": [
+        "b41:131",
+        "b41:130",
+        "b10:20",
+        "b12:112",
+        "b07:180"
+      ],
+      "completion": "full",
+      "ms": 292.31,
+      "error": null
+    },
+    {
+      "id": "W1",
+      "query": "هل يكفي أن أقرأ الأوراد وأترك السعي للكسب",
+      "reference_in_top5": true,
+      "hits": [
+        "b41:131",
+        "b15:26"
+      ],
+      "completion": "full",
+      "ms": 452.24,
+      "error": null
+    },
+    {
+      "id": "W2",
+      "query": "هل قراءة الأوراد تغني عن العمل لطلب الرزق",
+      "reference_in_top5": true,
+      "hits": [
+        "b41:131",
+        "b15:26"
+      ],
+      "completion": "full",
+      "ms": 378.25,
+      "error": null
+    },
+    {
+      "id": "W3",
+      "query": "هل يجوز للمريد أن يترك العمل ويكتفي بالذكر",
+      "reference_in_top5": true,
+      "hits": [
+        "b15:26",
+        "b41:131"
+      ],
+      "completion": "full",
+      "ms": 419.98,
+      "error": null
+    },
+    {
+      "id": "W4",
+      "query": "كيف نجمع بين الأوراد والسعي لكسب العيش",
+      "reference_in_top5": true,
+      "hits": [
+        "b41:131",
+        "b15:26"
+      ],
+      "completion": "full",
+      "ms": 481.11,
+      "error": null
+    },
+    {
+      "id": "W5",
+      "query": "لو قعدت أقرأ الأوراد بس من غير شغل هل يجي الرزق",
+      "reference_in_top5": true,
+      "hits": [
+        "b41:131",
+        "b15:26"
+      ],
+      "completion": "full",
+      "ms": 401.57,
+      "error": null
+    },
+    {
+      "id": "P1",
+      "query": "كيف أحافظ على الصلاة في وقتها",
+      "reference_in_top5": true,
+      "hits": [
+        "b44:55",
+        "b07:166",
+        "b44:46",
+        "b28:70",
+        "b09:2"
+      ],
+      "completion": "full",
+      "ms": 432.98,
+      "error": null
+    },
+    {
+      "id": "P2",
+      "query": "ما أهمية أداء الصلوات في أوقاتها",
+      "reference_in_top5": true,
+      "hits": [
+        "b07:166",
+        "b44:46",
+        "b44:55",
+        "b28:70",
+        "b09:2"
+      ],
+      "completion": "full",
+      "ms": 432.0,
+      "error": null
+    },
+    {
+      "id": "P3",
+      "query": "بماذا تنصحون من يؤخر الصلاة عن وقتها",
+      "reference_in_top5": true,
+      "hits": [
+        "b07:166",
+        "b44:46",
+        "b44:55",
+        "b28:70",
+        "b09:2"
+      ],
+      "completion": "full",
+      "ms": 486.95,
+      "error": null
+    },
+    {
+      "id": "P4",
+      "query": "ما توجيه الشيخ للمداومة على الفرائض في مواعيدها",
+      "reference_in_top5": true,
+      "hits": [
+        "b44:55",
+        "b07:166",
+        "b44:46",
+        "b28:70",
+        "b09:2"
+      ],
+      "completion": "full",
+      "ms": 538.28,
+      "error": null
+    },
+    {
+      "id": "P5",
+      "query": "إزاي أواظب على صلاتي وما أأخرهاش",
+      "reference_in_top5": true,
+      "hits": [
+        "b44:47",
+        "b44:55",
+        "b30:82",
+        "b12:175",
+        "b41:113"
+      ],
+      "completion": "full",
+      "ms": 494.46,
+      "error": null
+    },
+    {
+      "id": "A1",
+      "query": "ضبط اللسان عند الغضب",
+      "reference_in_top5": true,
+      "hits": [
+        "b44:3",
+        "b07:195",
+        "b07:307",
+        "b19:21",
+        "b42:38"
+      ],
+      "completion": "full",
+      "ms": 296.25,
+      "error": null
+    },
+    {
+      "id": "A2",
+      "query": "كيف أحفظ لساني إذا غضبت",
+      "reference_in_top5": true,
+      "hits": [
+        "b07:195",
+        "b07:307",
+        "b44:3",
+        "b19:21",
+        "b42:38"
+      ],
+      "completion": "full",
+      "ms": 288.51,
+      "error": null
+    },
+    {
+      "id": "A3",
+      "query": "ماذا أفعل حتى لا أؤذي الناس بكلامي وقت الغضب",
+      "reference_in_top5": true,
+      "hits": [
+        "b07:195",
+        "b07:307",
+        "b19:21",
+        "b42:38",
+        "b44:3"
+      ],
+      "completion": "full",
+      "ms": 350.78,
+      "error": null
+    },
+    {
+      "id": "A4",
+      "query": "ما نصيحة الشيخ في كظم الغيظ وترك الكلام الجارح",
+      "reference_in_top5": true,
+      "hits": [
+        "b07:195",
+        "b44:3",
+        "b07:307",
+        "b19:21",
+        "b42:38"
+      ],
+      "completion": "full",
+      "ms": 458.47,
+      "error": null
+    },
+    {
+      "id": "A5",
+      "query": "لما أتعصب إزاي أمسك لساني وما أجرحش حد",
+      "reference_in_top5": true,
+      "hits": [
+        "b07:195",
+        "b44:3",
+        "b07:307",
+        "b19:21",
+        "b42:38"
+      ],
+      "completion": "full",
+      "ms": 344.95,
+      "error": null
+    },
+    {
+      "id": "Q1",
+      "query": "كيف أداوم على تلاوة القرآن كل يوم",
+      "reference_in_top5": true,
+      "hits": [
+        "b42:64",
+        "b28:73",
+        "b37:102"
+      ],
+      "completion": "full",
+      "ms": 342.43,
+      "error": null
+    },
+    {
+      "id": "Q2",
+      "query": "ما توجيه الشيخ للمحافظة على ورد يومي من القرآن",
+      "reference_in_top5": true,
+      "hits": [
+        "b42:64",
+        "b28:73",
+        "b37:102"
+      ],
+      "completion": "full",
+      "ms": 456.26,
+      "error": null
+    },
+    {
+      "id": "Q3",
+      "query": "كيف أنتظم في قراءة القرآن ولا أنقطع عنها",
+      "reference_in_top5": true,
+      "hits": [
+        "b42:64",
+        "b28:73",
+        "b37:102"
+      ],
+      "completion": "full",
+      "ms": 328.61,
+      "error": null
+    },
+    {
+      "id": "Q4",
+      "query": "ماذا يعين المريد على الاستمرار في تلاوة القرآن",
+      "reference_in_top5": true,
+      "hits": [
+        "b42:64",
+        "b28:73",
+        "b37:102"
+      ],
+      "completion": "full",
+      "ms": 341.2,
+      "error": null
+    },
+    {
+      "id": "Q5",
+      "query": "عايز أقرأ قرآن كل يوم وما أسيبش الورد أعمل إيه",
+      "reference_in_top5": true,
+      "hits": [
+        "b42:64",
+        "b28:73",
+        "b37:102"
+      ],
+      "completion": "full",
+      "ms": 344.46,
+      "error": null
+    },
+    {
+      "id": "S1",
+      "query": "كيف يتعامل المريد مع الحزن وضيق الصدر",
+      "reference_in_top5": true,
+      "hits": [
+        "b44:40",
+        "b44:43",
+        "b22:146",
+        "b07:180",
+        "b20:145"
+      ],
+      "completion": "full",
+      "ms": 231.76,
+      "error": null
+    },
+    {
+      "id": "S2",
+      "query": "ما النصيحة لمن يشعر بالهم والحزن",
+      "reference_in_top5": false,
+      "hits": [
+        "b44:43",
+        "b44:50",
+        "b22:146",
+        "b07:180",
+        "b20:145"
+      ],
+      "completion": "full",
+      "ms": 0.53,
+      "error": null
+    },
+    {
+      "id": "S3",
+      "query": "كيف يجد الإنسان الطمأنينة عندما تضيق به الدنيا",
+      "reference_in_top5": false,
+      "hits": [
+        "b44:43",
+        "b44:50",
+        "b22:146",
+        "b08:14",
+        "b07:180"
+      ],
+      "completion": "full",
+      "ms": 204.1,
+      "error": null
+    },
+    {
+      "id": "S4",
+      "query": "بماذا يوصي الشيخ من فقد الأمل واشتد كربه",
+      "reference_in_top5": false,
+      "hits": [
+        "b44:43",
+        "b44:50",
+        "b22:146",
+        "b07:180",
+        "b20:145"
+      ],
+      "completion": "full",
+      "ms": 255.74,
+      "error": null
+    },
+    {
+      "id": "S5",
+      "query": "أنا مهموم وحاسس بضيق أعمل إيه عشان قلبي يطمئن",
+      "reference_in_top5": true,
+      "hits": [
+        "b44:40",
+        "b44:43",
+        "b22:146",
+        "b20:145",
+        "b07:180"
+      ],
+      "completion": "full",
+      "ms": 255.84,
+      "error": null
+    }
+  ]
+}

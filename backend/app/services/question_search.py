@@ -312,6 +312,16 @@ def classify_row(row, query, ap, text, start, end, relation=False):
     # incidental mentions (a duʿāʾ "ولا رياء") as likely answers (LB-1).
     directive=bool(re.search(r'عليك|ينبغي|يجب|حافظ|لا تغضب|أربع خصال|أربعة|معنى|عبارة عن|يعني|علامة|إنما\s+الاستعداد|\b(?:هو|هي)\s+أن\b|المراد\s+ب|(?:^|[:؟?\n])\s*نعم\b',window))
     row['question_relevance']='relation_candidate' if relation or (phrase and directive) or row.get('matched_source_question') else 'phrase_candidate' if phrase else 'topic_only'
+    frame=ap.get('question_frame') or {}
+    if frame.get('intent')=='signs' and phrase:
+        # A singular or plural sign cue attached to the subject is stronger
+        # than the subject appearing incidentally elsewhere on a page.
+        if re.search(r'(?:علامة|علامات|من\s+علامات|دليل)\s+'+subject.pattern,window):
+            row['score']=round(min(.985,row['score']+.20),6)
+            row['question_relevance']='relation_candidate'
+    if frame.get('presupposition') and phrase and re.search(r'مافيش|لا\s+توجد|أغنت\s+عن|لغى|ألغى|بدل(?:ا)?\s+من',window):
+        row['corrects_premise']=True
+        row['question_relevance']='relation_candidate'
     # Co-occurrence inside a story or prayer formula does not answer a
     # practice question. These guards describe the local evidence only.
     local=text[max(0,start-85):min(len(text),end+125)]
@@ -530,6 +540,23 @@ def search_questions(**kwargs):
                     rows.append(row)
         for row in rows:row['question_relevance']='topic_only'
         state['coverage_gap']={'topic':'raising children','basis':'Only passing mentions established in supplied corpus audit'}
+
+    if not rows and len(queries)==1:
+        ap=plans[queries[0]];frame=ap.get('question_frame') or {}
+        # A recognized question may lack a supported relation even though its
+        # subject occurs. Keep such mentions visibly weak and scope-correct.
+        if frame and not ap['comparison_subjects']:
+            for term in dict.fromkeys((ap['subject_phrase'],ap.get('protected_anchor'))):
+                if not term:continue
+                found=db.search(query=term,search_mode='exact_phrase',limit=8,
+                                diversify_books=False,ranking=kwargs.get('ranking','primary_first'),
+                                context_chars=kwargs.get('context_chars',180),**scope)
+                if found:rows=found;break
+            for row in rows:
+                row['question_relevance']='topic_only';row['answer_verified']=False
+            if rows:
+                state['fallback_level']='subject_only'
+                state['candidate_counts']['subject_fallback']=len(rows)
 
     if kwargs.get('operator')=='AND' and query_ids:rows=[r for r in rows if (r['book_id'],r['seq']) in set.intersection(*query_ids)]
     # Phrase protection is only applicable when a complete subject was found.

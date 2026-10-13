@@ -184,10 +184,54 @@ def strip_attached_preposition(token):
  return token
 
 
+def question_frame(query):
+ """Separate the asked relation from source subjects before term extraction.
+
+ These are grammatical frames, not query-to-page shortcuts. Unknown questions
+ retain the older parser. Source-attested aliases remain discovery-only.
+ """
+ q=query.strip(' ؟?')
+ patterns=(
+  ('importance',r'^ما\s+أهمية\s+(.+?)(?:\s+ل(?:لسالك|لمريد))?$'),
+  ('stance',r'^ما\s+(?:موقف|رأي)\s+(?:الشيخ|مولانا)\s+من\s+(.+)$'),
+  ('signs',r'^ما\s+(?:علامات|صفات|دلائل)\s+(.+)$'),
+ )
+ for intent,regex in patterns:
+  match=re.match(regex,q)
+  if match:
+   subject=match.group(1)
+   return {'intent':intent,'slots':[subject], 'subject_phrase':subject,
+           'frame_words':safe_tokens(q[:match.start(1)]),'cues':[],
+           'presupposition':intent=='importance'}
+ preference=re.match(r'^هل\s+(?:الأفضل|أولى)\s+(?:للمريد|للسالك|للإنسان)\s+أن\s+(.+?)\s+أو\s+(.+)$',q)
+ if preference:
+  slots=list(preference.groups())
+  # These verb-to-noun bridges are attested discovery readings; they do not
+  # claim that fear and hope are interchangeable or that a passage prefers one.
+  predicates={'يخشى':'الخشية','يخاف':'الخوف','يطمع':'الرجاء','يرجو':'الرجاء'}
+  concepts=[predicates.get(s.split()[0]) for s in slots]
+  return {'intent':'preference','slots':slots,'subject_phrase':' و'.join(slots),
+          'concept_subjects':concepts if all(concepts) and concepts[0]!=concepts[1] else [],
+          'frame_words':['هل','الأفضل'],'cues':['أو'],'presupposition':False}
+ coexist=re.match(r'^كيف\s+يكون\s+(.+?)\s+مع\s+(.+)$',q)
+ if coexist:
+  slots=list(coexist.groups())
+  return {'intent':'coexistence','slots':slots,'subject_phrase':slots[0],
+          'frame_words':['كيف','يكون'],'cues':['مع'],'presupposition':False}
+ permission=re.match(r'^هل\s+يجوز\s+.+?\s+أن\s+(.+)$',q)
+ if permission:
+  return {'intent':'permission','slots':[permission.group(1)],'subject_phrase':permission.group(1),
+          'frame_words':['هل','يجوز'],'cues':[],'presupposition':False}
+ return None
+
+
 def subject_phrase(query):
  query=query.strip(' ؟?')
  subjects=comparison_subjects(query)
  if subjects:return ' و'.join(subjects)
+ frame=question_frame(query)
+ if frame and frame.get('concept_subjects'):return ' و'.join(frame['concept_subjects'])
+ if frame:return frame['subject_phrase']
  # صفات asks for the relation; the following attested noun phrase is the
  # subject. Retaining صفات in the literal phrase loses المريد الصادق.
  query=re.sub(r'^ما\s+صفات\s+(?=\S+\s+\S+)', '', query)
@@ -215,7 +259,9 @@ def subject_phrase(query):
  return ' '.join(strip_attached_preposition(t) for t in query.split())
 def language_plan(query,keep_terms=()):
  keep={normalize_search_text(t,level='broad') for t in keep_terms}
- tokens=list(dict.fromkeys(safe_tokens(subject_phrase(query))+[t for t in safe_tokens(query) if normalize_search_text(t,level='broad') in keep]))
+ frame=question_frame(query)
+ source=' '.join(frame['slots']) if frame else subject_phrase(query)
+ tokens=list(dict.fromkeys(safe_tokens(source)+[t for t in safe_tokens(query) if normalize_search_text(t,level='broad') in keep]))
  terms=[t for t in tokens if normalize_search_text(t,level='broad') not in KEYS or normalize_search_text(t,level='broad') in keep]
  focus=re.match(r'^ما\s+(ثواب|فضل|أجر)\b',query)
  focus_word=focus.group(1) if focus else None
@@ -224,12 +270,15 @@ def language_plan(query,keep_terms=()):
  # Initial ما is an interrogative in these frames. Only a later ما can negate.
  negation=negation or bool(re.search(r'\S+\s+ما\s+',query))
  subjects=comparison_subjects(query)
+ if frame and frame.get('concept_subjects'):
+  subjects=frame['concept_subjects'];terms=subjects
  subject=subject_phrase(query)
  if subjects:terms=subjects
  observance=bool(re.search(r'(?:أحيي|نحيي|يحيي|تحيي)(?:ها)?\b',query) and re.search(r'ليلة\s+القدر',query))
  preference=bool(subjects and re.search(r'\b(?:يغلب|يرجح|يقدم|يفضل)\b',normalize_search_text(query,level='safe')))
  facets=(['merit'] if re.match(r'^ما\s+(?:فضل|ثواب|أجر)\b',query) else [])+(['observance'] if observance else [])+(['preference'] if preference else [])
- return {'subject_phrase':subject,'terms':terms,'focus_word':focus_word,'dropped_function_words':[t for t in safe_tokens(query) if normalize_search_text(t,level='broad') in KEYS and normalize_search_text(t,level='broad') not in keep],'negation_present':negation,'comparison_subjects':subjects,'requested_facets':facets}
+ if frame and frame['intent'] not in facets:facets.append(frame['intent'])
+ return {'subject_phrase':subject,'terms':terms,'focus_word':focus_word,'dropped_function_words':[t for t in safe_tokens(query) if normalize_search_text(t,level='broad') in KEYS and normalize_search_text(t,level='broad') not in keep],'negation_present':negation,'comparison_subjects':subjects,'requested_facets':facets,'question_frame':frame}
 def derived_nouns(word):
  """Verbal nouns of common derived verb patterns, kept only when attested.
 
