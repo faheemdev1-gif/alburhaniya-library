@@ -1028,11 +1028,9 @@ def _evidence_excerpt(
     patterns: list[re.Pattern] | None = None,
 ) -> str:
     """Return a bounded excerpt centred on the actual retrieval evidence."""
-    radius = max(60, min(radius, 300))
-    evidence_end = min(max(end, start + 1), start + radius)
-    centre = (start + evidence_end) // 2
-    left = max(0, centre - radius)
-    right = min(len(text), centre + radius)
+    radius = max(0, min(radius, 300))
+    left = max(0, start - radius)
+    right = min(len(text), max(end, start + 1) + radius)
     excerpt = _esc(text[left:right])
     if patterns:
         union = re.compile("(?:" + "|".join(p.pattern for p in patterns) + ")", re.IGNORECASE)

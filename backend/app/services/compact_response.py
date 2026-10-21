@@ -167,6 +167,8 @@ ULTRA_FIELDS={
  'match_attribution_scope':'mas','synonym_variant':'sv','reported_view':'rv',
  'attribution_warning':'aw','attribution_basis':'ab','attribution_marker_span':'ams',
  'citation_basis':'cb','text_errata':'errata',
+ 'normalization_level':'nl','footnotes_excluded':'fe','whole_word':'ww',
+ 'selected_queries':'sq','speaker':'sn',
 }
 BASE_FIELDS={'b':'book_id','s':'seq','m':'match_id','x':'excerpt','p':'printed_page',
  'c':'citation_label','sk':'score_kind','r':'rank','rs':'rank_score','type':'match_type',
@@ -177,7 +179,10 @@ BASE_FIELDS={'b':'book_id','s':'seq','m':'match_id','x':'excerpt','p':'printed_p
 
 def decode_search_response(payload):
     from copy import deepcopy
-    p=deepcopy(payload);reverse={v:k for k,v in ULTRA_FIELDS.items()};reverse.update(BASE_FIELDS)
+    p=deepcopy(payload)
+    if p.get('encoding') == 'lossless-15':
+        p = decode_minimal(p)
+    reverse={v:k for k,v in ULTRA_FIELDS.items()};reverse.update(BASE_FIELDS)
     ultra='n' in p
     defaults=p.get('result_defaults',{})
     results=[]
@@ -187,3 +192,191 @@ def decode_search_response(payload):
     return {'results':results,'books':p.get('books',{}),
             'completion':p.get('completion'),'status':p.get('status'),
             'evidence_strength':p.get('evidence_strength'),'answer_verified':p.get('answer_verified')}
+
+
+def project_search_response(canonical, *, mode, detail, expand_top, expand_chars):
+    """Render one cached canonical evidence set without another retrieval call."""
+    from copy import deepcopy
+    from app.services import library_db as db
+    payload = deepcopy(canonical)
+    rows = payload['results']
+    defaults = payload.pop('result_defaults', {})
+    payload['results'] = rows = [{**defaults, **r} for r in rows]
+    attach_expanded_passages(rows, expand_top=0 if payload.get('completion')=='partial' else expand_top, expand_chars=expand_chars,
+                             passage_loader=db.get_passage_by_match_id)
+    slim_response(payload, detail=detail, ultra=False)
+    if mode == 'ultra_compact':
+        aliases = {value:key for key,value in BASE_FIELDS.items()}
+        aliases.update(ULTRA_FIELDS)
+        payload['results'] = [{aliases.get(k,k):v for k,v in r.items()} for r in payload['results']]
+        if payload.get('result_defaults'):
+            payload['result_defaults'] = {aliases.get(k,k):v for k,v in payload['result_defaults'].items()}
+        payload['n'] = payload.pop('returned_count')
+        if 'next_offset' in payload:payload['next'] = payload.pop('next_offset')
+        if detail != 'full':payload = encode_minimal(payload)
+    return payload
+
+
+# Contract 15's lossless minimal representation. Codes replace only fixed
+# vocabulary, never remove uncertainty. Full detail retains ordinary objects.
+VALUE_CODES = (
+    'unreviewed','unknown','structural','explicit_marker','none','answer','question','mixed',
+    'source_local_rules_v1','candidate','topical','relation_candidate','topic_only',
+    'phrase_candidate','start_anchor','structural_heuristic','unverified',
+    'Candidate discovery only; inspect the Arabic passage before using it as an answer.',
+    'phrase_and_passage_union_v1','local_span_discovery','reformulated','safe','broad_discovery',
+    'body_only','only_n_passages_met_threshold','repeated_printed_label_unresolved',
+    'Printed page label is repeated in the supplied source; cite sequence until reviewed.',
+    'explicit_question_marker','answer_marker_author_not_inferred',
+    'implicit_answer_after_question_mark','explicit_marker_author_not_inferred',
+    'lexical','exact_phrase','terms','verified','primary','confirmed','pending_documentary_review',
+)
+NESTED_KEYS = {
+    'anchor_role':'a','passage_role':'p','basis':'b','review_status':'r','name':'n','segments':'s',
+    'estimate':'e','method':'m','calibrated':'c','start':'s0','end':'e0','role':'r0',
+    'speaker':'sp0','marker':'mk','scope':'sc','confidence':'cf',
+    'corpus_form':'f','relation':'l',
+}
+CODE_SYMBOLS='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
+ENVELOPE_KEYS={'result_defaults':'defaults','effective_match_mode':'mm',
+ 'navigation_scope':'nav','reformulation_status':'rst','fewer_than_limit_reason':'why',
+ 'evidence_strength':'strength','answer_verified':'av','book_defaults':'bd',
+ 'objects':'o','qasidas':'qs'}
+BOOK_KEYS={'title':'t','source':'s','tier':'i','attribution_confidence':'a','provenance_status':'p'}
+
+def _code(value, decode=False):
+    if isinstance(value, dict):return {k:_code(v,decode) for k,v in value.items()}
+    if isinstance(value, list):return [_code(v,decode) for v in value]
+    if not isinstance(value,str):return value
+    if decode:
+        if value.startswith('~'):return value[1:]
+        if len(value)==1 and value in CODE_SYMBOLS[:len(VALUE_CODES)]:return VALUE_CODES[CODE_SYMBOLS.index(value)]
+        return value
+    if value in VALUE_CODES:return CODE_SYMBOLS[VALUE_CODES.index(value)]
+    return '~'+value if value.startswith('~') or len(value)==1 and value in CODE_SYMBOLS[:len(VALUE_CODES)] else value
+
+def _nested(value, decode=False):
+    keys = {v:k for k,v in NESTED_KEYS.items()} if decode else NESTED_KEYS
+    if isinstance(value,dict):return {keys.get(k,k):_nested(v,decode) for k,v in value.items()}
+    if isinstance(value,list):return [_nested(v,decode) for v in value]
+    return value
+
+def encode_minimal(payload):
+    """Factor repeated evidence metadata; preserve a mechanically exact inverse."""
+    import re
+    rows=payload['results'];defaults=payload.setdefault('result_defaults',{})
+    for index,row in enumerate(rows,1):
+        title=payload.get('books',{}).get(row.get('b'),{}).get('title')
+        if title and row.get('p') is not None and row.get('c')==f"{title}، الصفحة {row['p']}":
+            row['c']='@printed'
+        m=re.fullmatch(r'(b\d+)-p(\d+)-c\d+',row.get('m',''))
+        if m and row.get('b')==m[1] and row.get('s')==int(m[2]):
+            row.pop('b');row.pop('s')
+        if row.get('r')==index:row.pop('r')
+        if row.get('ss') is not None and row.get('sp',{}).get('segments')==row['ss']:
+            row['ss']='@sp'
+    # Several page hits can belong to one qasida. Keep its identity/length once
+    # while each page retains its own printed label, bayt range and source span.
+    qasidas={}
+    for row in rows:
+        if 'q' not in row:continue
+        fields={k:row[k] for k in ('q','qt','qbc','cid') if k in row}
+        key=str(row['q'])
+        if key in qasidas and qasidas[key]!=fields:continue
+        qasidas[key]=fields;row['qref']=key
+        for k in fields:row.pop(k)
+    if qasidas:payload['qasidas']=qasidas
+    # Expanded passages can inherit only identical values from their own hit;
+    # source text and context boundaries remain in the expansion itself.
+    for row in rows:
+        expansion=row.get('ep')
+        if not isinstance(expansion,dict):continue
+        inherited=[]
+        for alias,field in BASE_FIELDS.items():
+            if field in expansion and alias in row and expansion[field]==row[alias]:
+                inherited.append(field);expansion.pop(field)
+        if inherited:expansion['from_hit']=inherited
+    # Shared unknown/false/review values stay explicit through inheritance.
+    excluded={'m','x','s','b','r','es','tv','uid','p','c','id','ep','qref','ss'}
+    for key in set.intersection(*(set(r) for r in rows)) if rows else ():
+        if key not in excluded and all(r[key]==rows[0][key] for r in rows):
+            defaults[key]=rows[0][key]
+            for row in rows:row.pop(key)
+    for row in [defaults,*rows]:
+        for key in ('sup','sp','ss','cb','ams','sv','matched_terms'):
+            if key in row:row[key]=_nested(row[key])
+        if isinstance(row.get('es'),dict):
+            span=row['es'];row['es']=[span['start'],span['end']]+([span['source_quote']] if 'source_quote' in span else [])
+    payload['encoding']='lossless-15'
+    books=list(payload.get('books',{}).values())
+    common={k:books[0][k] for k in set.intersection(*(set(b) for b in books))
+            if all(b[k]==books[0][k] for b in books)} if books else {}
+    if common:
+        payload['book_defaults']=common
+        for book in books:
+            for key in common:book.pop(key)
+    # Exact object interning removes repeated speaker and morphology records.
+    # Integers in these object-valued fields are references into this response.
+    import json
+    pool=[];targets=('sp','matched_terms','sup')
+    for key in targets:
+        occurrences={}
+        for row in rows:
+            if isinstance(row.get(key),dict):
+                serial=json.dumps(row[key],ensure_ascii=False,sort_keys=True,separators=(',',':'))
+                occurrences.setdefault(serial,[]).append(row)
+        for serial,group in occurrences.items():
+            if len(group)>1 and len(serial)>35:
+                ref=len(pool);pool.append(group[0][key])
+                for row in group:row[key]=ref
+    if pool:payload['objects']=pool
+    payload['books']={k:{BOOK_KEYS.get(f,f):v for f,v in b.items()} for k,b in payload.get('books',{}).items()}
+    if 'book_defaults' in payload:payload['book_defaults']={BOOK_KEYS.get(f,f):v for f,v in payload['book_defaults'].items()}
+    payload={ENVELOPE_KEYS.get(k,k):v for k,v in payload.items()}
+    return _code(payload)
+
+def decode_minimal(payload):
+    import re
+    payload=_code(payload,True)
+    if 'versions' in payload:
+        names={'i':'index','l':'lexicon','c':'cues','r':'ranker'}
+        payload['versions']={names.get(k,k):v for k,v in payload['versions'].items()}
+    reverse={v:k for k,v in ENVELOPE_KEYS.items()}
+    payload={reverse.get(k,k):v for k,v in payload.items()}
+    reverse_books={v:k for k,v in BOOK_KEYS.items()}
+    payload['books']={k:{reverse_books.get(f,f):v for f,v in b.items()} for k,b in payload.get('books',{}).items()}
+    if 'book_defaults' in payload:payload['book_defaults']={reverse_books.get(f,f):v for f,v in payload['book_defaults'].items()}
+    pool=payload.pop('objects',[])
+    from copy import deepcopy
+    for row in payload.get('results',[]):
+        for key in ('sp','matched_terms','sup'):
+            if isinstance(row.get(key),int):row[key]=deepcopy(pool[row[key]])
+    for row in [payload.get('result_defaults',{}),*payload.get('results',[])]:
+        for key in ('sup','sp','ss','cb','ams','sv','matched_terms'):
+            if key in row:row[key]=_nested(row[key],True)
+        if isinstance(row.get('es'),list):
+            s=row['es'];row['es']={'start':s[0],'end':s[1],**({'source_quote':s[2]} if len(s)>2 else {})}
+    defaults=payload.pop('result_defaults',{})
+    payload['results']=[{**deepcopy(defaults),**row} for row in payload.get('results',[])]
+    for index,row in enumerate(payload.get('results',[]),1):
+        m=re.fullmatch(r'(b\d+)-p(\d+)-c\d+',row.get('m',''))
+        if m:row.setdefault('b',m[1]);row.setdefault('s',int(m[2]))
+        row.setdefault('r',index)
+        if row.get('ss')=='@sp':row['ss']=row.get('sp',{}).get('segments',[])
+        if 'qref' in row:row.update(payload.get('qasidas',{})[row.pop('qref')])
+        if isinstance(row.get('ep'),dict):
+            expansion=row['ep'];aliases={v:k for k,v in BASE_FIELDS.items()}
+            for field in expansion.pop('from_hit',[]):expansion[field]=row[aliases[field]]
+    common=payload.pop('book_defaults',{})
+    payload['books']={key:{**common,**value} for key,value in payload.get('books',{}).items()}
+    for row in payload.get('results',[]):
+        if row.get('c')=='@printed':row['c']=f"{payload['books'][row['b']]['title']}، الصفحة {row['p']}"
+    return payload
+
+
+def encoding_guide():
+    """Complete decoder legend in tools/list; no extra metadata call needed."""
+    return {'id':'lossless-15','hit_aliases':{**BASE_FIELDS,**{v:k for k,v in ULTRA_FIELDS.items()}},
+      'envelope_keys':ENVELOPE_KEYS,'book_keys':BOOK_KEYS,'nested_keys':NESTED_KEYS,
+      'codes':dict(zip(CODE_SYMBOLS,VALUE_CODES)),
+      'rules':'Decode codes in string values only; prefix ~ escapes a literal. Expand defaults, bd book defaults, o object references (sp/matched_terms/sup), qs qasidas by qref, then aliases. es=[start,end,optional quote]. Absent b/s derive from m=bNN-pSEQ-cOFFSET; absent r is 1-based array order. c=@printed expands as book title + ، الصفحة + p. ss=@sp copies sp.segments; ep.from_hit names exactly inherited hit fields. contract v/d/t=version/capability digest/schema digest (8-char prefixes); timing.ms=total ms; versions i/l/c/r=index/lexicon/cues/ranker. Unknown and unreviewed stay explicit; never infer a verified answer.'}

@@ -1,19 +1,20 @@
 {
   "contract": {
     "changes_since_previous": [
-      "Require the query subject before showing unrecognized relation candidates",
-      "Discover companionship through source-attested guide language",
-      "Retain attached conjunctions in distinct comparison subjects",
-      "Label one-sided comparisons weak",
-      "Bound and accelerate question candidate scoring",
-      "Report shared-cache scope accurately"
+      "Persistent source evidence units, bounded route-family fusion and explicit caps",
+      "Subject-preserving question frames and typed unreviewed discovery links",
+      "Canonical get_page text with source-resolving code-point spans on every search path",
+      "Unreliable printed labels omitted; speaker and support metadata validated before projection",
+      "Supervisor-visible validated lexical checkpoints and cooperative cancellation",
+      "Reversible compact/ultra evidence projections and separate full diagnostics",
+      "Configurable all-traffic attempt metrics separate from scheduled samples"
     ],
     "known_issues": [
-      "Independent source and documentary review remains open",
-      "Automated relation labels are candidates, not verified answers",
-      "Private held-out and deployed acceptance are pending",
-      "Seven-day monitoring and client latency acceptance pending",
-      "Client schema refresh must be verified in each client"
+      "No independent held-out Direct@5 or 10/10 rating established",
+      "Domain lexicon and automated support labels remain unreviewed and uncalibrated",
+      "Documentary provenance and unresolved printed labels need original scans and review",
+      "Production latency, client schema refresh and durable seven-day monitoring need deployment verification",
+      "No cross-encoder or contextual morphology model has been independently benchmarked"
     ],
     "reformulation_status_policy": {
       "ok": "All planned discovery stages completed; not an answer-quality judgement",
@@ -29,9 +30,199 @@
       }
     ],
     "result_defaults_policy": "Search hits inherit result_defaults; explicit hit fields override defaults. Contract 12 clients must expand defaults.",
+    "ultra_aliases": {
+      "b": "book_id",
+      "s": "seq",
+      "m": "match_id",
+      "x": "excerpt",
+      "p": "printed_page",
+      "c": "citation_label",
+      "sk": "score_kind",
+      "r": "rank",
+      "rs": "rank_score",
+      "type": "match_type",
+      "blk": "block_type",
+      "et": "evidence_type",
+      "canon": "canonical_book_id",
+      "er": "edition_relation",
+      "q": "qasida_number",
+      "qt": "qasida_title",
+      "bf": "bayt_from",
+      "bt": "bayt_to",
+      "qbc": "qasida_bayt_count",
+      "brs": "bayt_range_scope",
+      "bn": "bayt_number",
+      "id": "stable_id",
+      "id_kind": "stable_id_kind",
+      "hid": "heading_id",
+      "ids": "stable_ids",
+      "cid": "container_id",
+      "ep": "expanded_passage",
+      "qr": "question_relevance",
+      "av": "answer_verified",
+      "sup": "support",
+      "sp": "speaker_evidence",
+      "ss": "speaker_segments",
+      "sb": "speaker_basis",
+      "dr": "dialogue_role",
+      "sr": "source_role",
+      "ar": "attribution_review_status",
+      "es": "evidence_span",
+      "tv": "text_version",
+      "uid": "evidence_unit_id",
+      "cp": "corrects_premise",
+      "cc": "concept_coverage",
+      "sm": "subject_match",
+      "routes": "candidate_routes",
+      "ps": "pagination_status",
+      "pw": "pagination_warning",
+      "em": "evidence_type_method",
+      "ec": "evidence_type_confidence",
+      "esc": "evidence_type_scope",
+      "rw": "reformulation_warning",
+      "oq": "original_queries",
+      "rm": "reformulation_method",
+      "pm": "subject_phrase_match",
+      "mq": "matched_source_question",
+      "rst": "reformulation_status",
+      "cov": "intent_term_coverage",
+      "mas": "match_attribution_scope",
+      "sv": "synonym_variant",
+      "rv": "reported_view",
+      "aw": "attribution_warning",
+      "ab": "attribution_basis",
+      "ams": "attribution_marker_span",
+      "cb": "citation_basis",
+      "errata": "text_errata",
+      "nl": "normalization_level",
+      "fe": "footnotes_excluded",
+      "ww": "whole_word",
+      "sq": "selected_queries",
+      "sn": "speaker"
+    },
+    "minimal_encoding": {
+      "id": "lossless-15",
+      "timing": "ms=total milliseconds",
+      "versions": "i=index,l=lexicon,c=cues,r=ranker",
+      "value_codes": {
+        "A": "unreviewed",
+        "B": "unknown",
+        "C": "structural",
+        "D": "explicit_marker",
+        "E": "none",
+        "F": "answer",
+        "G": "question",
+        "H": "mixed",
+        "I": "source_local_rules_v1",
+        "J": "candidate",
+        "K": "topical",
+        "L": "relation_candidate",
+        "M": "topic_only",
+        "N": "phrase_candidate",
+        "O": "start_anchor",
+        "P": "structural_heuristic",
+        "Q": "unverified",
+        "R": "Candidate discovery only; inspect the Arabic passage before using it as an answer.",
+        "S": "phrase_and_passage_union_v1",
+        "T": "local_span_discovery",
+        "U": "reformulated",
+        "V": "safe",
+        "W": "broad_discovery",
+        "X": "body_only",
+        "Y": "only_n_passages_met_threshold",
+        "Z": "repeated_printed_label_unresolved",
+        "a": "Printed page label is repeated in the supplied source; cite sequence until reviewed.",
+        "b": "explicit_question_marker",
+        "c": "answer_marker_author_not_inferred",
+        "d": "implicit_answer_after_question_mark",
+        "e": "explicit_marker_author_not_inferred",
+        "f": "lexical",
+        "g": "exact_phrase",
+        "h": "terms",
+        "i": "verified",
+        "j": "primary",
+        "k": "confirmed",
+        "l": "pending_documentary_review"
+      },
+      "literal_escape": "prefix ~",
+      "envelope_keys": {
+        "result_defaults": "defaults",
+        "effective_match_mode": "mm",
+        "navigation_scope": "nav",
+        "reformulation_status": "rst",
+        "fewer_than_limit_reason": "why",
+        "evidence_strength": "strength",
+        "answer_verified": "av",
+        "book_defaults": "bd",
+        "objects": "o",
+        "qasidas": "qs"
+      },
+      "book_keys": {
+        "title": "t",
+        "source": "s",
+        "tier": "i",
+        "attribution_confidence": "a",
+        "provenance_status": "p"
+      },
+      "nested_keys": {
+        "anchor_role": "a",
+        "passage_role": "p",
+        "basis": "b",
+        "review_status": "r",
+        "name": "n",
+        "segments": "s",
+        "estimate": "e",
+        "method": "m",
+        "calibrated": "c",
+        "start": "s0",
+        "end": "e0",
+        "role": "r0",
+        "speaker": "sp0",
+        "marker": "mk",
+        "scope": "sc",
+        "confidence": "cf",
+        "corpus_form": "f",
+        "relation": "l"
+      },
+      "derived_fields": "book_id/seq from match_id, absent rank from 1-based array order; @printed citation from book title + ، الصفحة + printed label",
+      "objects": "integer references for object-valued sp/matched_terms/sup",
+      "qasidas": "qref inherits exact metadata from qasidas table",
+      "expanded_passages": "from_hit lists exactly inherited fields",
+      "span": "[start,end,optional_source_quote]",
+      "decoder": "app.services.compact_response.decode_search_response"
+    },
+    "coordinate_policy": "Unicode code points in canonical unformatted get_page.text; half-open spans",
+    "traffic_monitoring": {
+      "scope": "all_tool_attempts_for_current_build",
+      "build": "2.10.16",
+      "persistence_scope": "ephemeral_container_path",
+      "attempts_7d": 809,
+      "failed": 68,
+      "partial": 7,
+      "p95_ms": 1390.931,
+      "observed_days": 0.019,
+      "production_acceptance": "pending_independent_deployed_observation"
+    },
     "monitoring": {
-      "status": "awaiting_samples",
+      "status": "stale",
+      "samples_24h": 0,
       "success_rate_24h": null,
+      "p50_ms": null,
+      "p95_ms": null,
+      "error_codes": {},
+      "observed_days": 0.0,
+      "restarts": [
+        {
+          "timestamp": 1792613877.5531778,
+          "server_version": "2.10.16"
+        },
+        {
+          "timestamp": 1792614273.9181879,
+          "server_version": "2.10.16"
+        }
+      ],
+      "persistence_scope": "ephemeral_container_path",
+      "seven_day_acceptance": "pending_external_continuity_review",
       "scope": "scheduled_samples_not_all_traffic"
     },
     "rate_limit": {
@@ -39,9 +230,9 @@
       "scope": "authenticated_client_or_peer_ip",
       "retry_policy": "HTTP 429 JSON-RPC with Retry-After and retry_after_ms"
     },
-    "server_version": "2.10.3",
-    "tool_contract_version": "12.0",
-    "tool_contract": "alburhaniya-tools-v12",
+    "server_version": "2.10.16",
+    "tool_contract_version": "15.0",
+    "tool_contract": "alburhaniya-tools-v15",
     "tool_count": 5,
     "tools": [
       "get_book",
@@ -50,7 +241,7 @@
       "list_books",
       "search_library"
     ],
-    "schema_digest": "fee384d0f3dcb34925d9de40aab93e8aaece0e2866200ec03ec37b200ed93a2f",
+    "schema_digest": "0bb286448bb1697649f0eef89613308a2804edbd4668ac68a7e857d3b01c22b2",
     "tool_schema_digest": "67eb72e89ab25cad317b45f6aca20cd00bdd83b639024b2ed4900ae6ca9fcf4c",
     "schema_digest_kind": "capability_manifest",
     "schema_capabilities": {
@@ -66,51 +257,54 @@
           "compact",
           "ultra_compact"
         ],
+        "ultra_summary_encoding": "lossless-15",
+        "ultra_contract_digests": "keys v=server_version,d=schema_digest,t=tool_schema_digest; 8-character digest prefixes; full values in get_book/list_books or detail=full",
         "supported_parameters": [
-          "query",
-          "queries",
           "book_ids",
           "book_scope",
-          "qasida_number",
-          "include_counts",
           "check_completeness",
+          "context_chars",
+          "count_basis",
+          "detail",
+          "diversify_books",
+          "expand_chars",
+          "expand_top",
+          "include_counts",
           "include_toc",
           "include_topic_only",
-          "count_basis",
-          "whole_word",
-          "min_tier",
-          "expand_top",
-          "expand_chars",
-          "min_score",
-          "match_mode",
-          "mode",
-          "operator",
+          "keep_terms",
           "limit",
+          "match_mode",
+          "max_per_book",
+          "min_score",
+          "min_tier",
+          "mode",
           "offset",
-          "source_code",
+          "operator",
           "page_from",
           "page_to",
-          "detail",
-          "keep_terms",
-          "context_chars",
-          "search_mode",
+          "qasida_number",
+          "queries",
+          "query",
           "ranking",
-          "diversify_books",
-          "max_per_book"
-        ]
+          "search_mode",
+          "source_code",
+          "whole_word"
+        ],
+        "decoder_digest": "8368d23d8255b1988117fd380162e3cd658e033d09975108a9d4cabe0fd5601e"
       },
       "get_passage": {
         "supported_parameters": [
+          "context_chars",
+          "context_mode",
+          "include_parallels",
           "match_id",
           "match_ids",
-          "stable_id",
-          "qasida_number",
-          "context_mode",
           "max_chars",
-          "context_chars",
+          "parallel_limit",
+          "qasida_number",
           "query",
-          "include_parallels",
-          "parallel_limit"
+          "stable_id"
         ],
         "selector_policy": "exactly_one; qasida_number_returns_full_structure",
         "selectors": [
@@ -126,24 +320,36 @@
         ],
         "default_max_chars": 12000,
         "cross_page_context": true,
-        "max_context_pages": 3
+        "max_context_pages": 3,
+        "numbered_heading_section": true
       },
       "get_page": {
         "default_max_chars": 20000,
         "declares_truncation": true,
         "effective_cap_disclosed": true,
-        "ultra_compact": "omits_book_metadata"
+        "ultra_compact": "omits_book_metadata",
+        "supported_parameters": [
+          "book_id",
+          "max_chars",
+          "mode",
+          "seq"
+        ]
       },
       "list_books": {
         "supported_parameters": [
+          "book_ids",
           "include_legend",
-          "projection",
-          "book_ids"
+          "projection"
         ],
         "projections": [
           "compact",
           "ids",
           "full"
+        ]
+      },
+      "get_book": {
+        "supported_parameters": [
+          "book_id"
         ]
       }
     },
@@ -152,6 +358,7 @@
   "tools": [
     {
       "name": "list_books",
+      "description": "List books in a compact catalogue, ordered by source authority.\n\n    This is one of the five required Al Burhania research tools. The response\n    also reports the live connector and corpus contracts so an MCP-only client\n    can verify the release, five-tool manifest, corpus totals, Dīwān sweep,\n    and stable-ID integrity without access to the HTTP health endpoint.\n    Non-canonical editions remain listed with canonical_book_id and\n    searchable_by_default metadata.\n\n    Args:\n        include_legend: Include full source-grade definitions. Leave false\n            unless the detailed definitions are specifically required.\n        projection: compact catalogue, ids only, or full provenance metadata.\n        book_ids: Optional IDs to filter or batch-load full metadata (maximum 43).\n    ",
       "inputSchema": {
         "properties": {
           "include_legend": {
@@ -191,6 +398,7 @@
     },
     {
       "name": "get_book",
+      "description": "Get the metadata and provenance of one book.\n\n    This is one of the five required Al Burhania research tools. The response\n    includes the live connector contract for MCP-only version verification.\n\n    Args:\n        book_id: Book ID returned by list_books, such as \"b33\".\n    ",
       "inputSchema": {
         "properties": {
           "book_id": {
@@ -207,6 +415,7 @@
     },
     {
       "name": "get_page",
+      "description": "Read one specific full page.\n\n    Use this only after search_library identifies a relevant result. Use\n    get_passage instead when a precise structural passage is sufficient.\n\n    Args:\n        book_id: Book ID returned by search_library or list_books.\n        seq: Page sequence number, starting at 1.\n        mode: Response shape. Supported values are \"compact\" and\n            \"ultra_compact\" only.\n        max_chars: Explicit safety cap. Defaults to 20,000, which currently\n            returns every indexed page in full. Any truncation is declared.\n    ",
       "inputSchema": {
         "properties": {
           "book_id": {
@@ -242,6 +451,7 @@
     },
     {
       "name": "get_passage",
+      "description": "Read one or several bounded passages returned by search_library.\n\n    This is the preferred second step after search_library when a result\n    identifies a precise passage and a full page is unnecessary. It also\n    provides full qaṣīda context without adding a sixth tool: pass\n    qasida_number, or pass a canonical bayt stable_id. Parallel candidates are\n    explicitly labelled unverified and never presented as citation-safe.\n\n    Set context_mode=\"paragraph\" to request the complete source paragraph\n    containing the match. If it exceeds max_chars, the response declares the\n    safety cap and returns a bounded excerpt containing the evidence. Passing\n    qasida_number always requests the complete structured qaṣīda.\n    ",
       "inputSchema": {
         "properties": {
           "match_id": {
@@ -343,6 +553,7 @@
     },
     {
       "name": "search_library",
+      "description": "Search the Al Burhania Library.\n\n    include_toc opts into navigation text; default results and counts exclude it.\n    include_topic_only includes weak question candidates for exploration.\n    Question relations are local anchor checks, never verified answers.\n\n    Typical workflow:\n    1. search_library\n    2. get_passage for the precise passage identified by a result\n    3. get_page only when broader page context is required\n\n    The complete toolset is exactly: search_library, get_passage, get_page,\n    get_book, and list_books.\n\n    Citation metadata is explicit: citation_label is universal; Dīwān\n    bayt_from/bayt_to are page-scoped and qasida_bayt_count is the complete\n    qaṣīda length. A heading hit has a stable qasida-heading identifier rather\n    than being misrepresented as bayt 1. TOC/fihris pages declare block_type=toc.\n\n    Args:\n        query: One Arabic word or phrase.\n        queries: Optional alternatives in one request. When supplied, this\n            takes precedence over query.\n        operator: Combine alternatives with OR (default) or AND.\n        limit: Number of results. Defaults to 8 and is capped at 20.\n        offset: Zero-based pagination offset.\n        book_ids: Optional book IDs to search, such as [\"b33\"]. Ordinary\n            whole-library search excludes editions marked\n            searchable_by_default=false so repeated editions do not duplicate\n            results or counts. Passing that edition's ID explicitly searches\n            it and preserves its own printed-page citations.\n        book_scope: Optional title/series fragment, such as \"شرح شراب الوصل\".\n        source_code: Optional \"primary\" or \"secondary\" filter.\n        min_tier: Minimum accepted authority expressed as the largest numeric\n            tier allowed. For example, min_tier=2 restricts results to tiers\n            1–2. Values are 1–5.\n        page_from: Optional first page sequence, inclusive.\n        page_to: Optional last page sequence, inclusive.\n        context_chars: Context on each side of the match. Defaults to 60 and\n            is restricted to 40–300.\n        mode: compact or ultra_compact. When expand_top is requested,\n            compact returns expanded_passage and ultra_compact returns the\n            same bounded passage object under the abbreviated key ep.\n            Contract 15 aliases and minimal codes are reversible using the published decoder.\n            Ultra summary uses lossless-15: match IDs encode book/sequence,\n            rank follows array order, object references and qasida tables inherit\n            exact metadata; false/unreviewed/unknown values remain explicit.\n            Use detail=full for ordinary objects and full contract digests.\n            in contract metadata. Source spans address canonical get_page.text.\n            Candidate support is uncalibrated and never verifies an answer.\n            Ultra-compact search hits expose citation_label as c and\n            block_type as blk (body or toc). The key bt remains bayt_to.\n        match_mode: auto, exact, terms, hybrid, or lexeme. When a local\n            semantic index is present, auto unions exact, terms, lexeme and\n            semantic candidates and reranks them. Otherwise it falls back to\n            exact, terms, then lexical hybrid. Every hit declares match_type. Lexeme\n            accepts one Arabic word per query and expands common proclitics,\n            suffixes, and weak-final ي/ا forms for recall-oriented census work.\n            Every hit includes rank, score, and score_kind. Scores are stable\n            evidence measures rather than reciprocal rank: bounded BM25 for\n            exact/lexeme, proximity plus BM25 for terms, fixed evidence fusion\n            for hybrid, and cosine/fusion scores for semantic auto retrieval.\n            Higher means stronger evidence under the declared score_kind.\n        search_mode: Legacy alias. With match_mode=auto it selects the explicit\n            legacy mode. Contradictory explicit selectors are rejected.\n        whole_word: Defaults true. Exact/terms/count evidence is token-anchored;\n            short words such as سر and لا never match inside longer tokens.\n        count_basis: phrase (default) or term_bag. This determines counts\n            independently of match_mode, and is always returned with the census.\n            Count responses distinguish retrieval_hit_count from\n            literal_matching_pages and literal_occurrences.\n        check_completeness: Audit actual eligible lexical candidates before\n            ranking/score filtering/pagination, independently of counts.\n            include_counts also enables this audit. Other retrieval modes\n            explicitly report not_checked or not_supported, never implied success.\n        min_score: Filter by the declared evidence score before pagination.\n            Exact textual presence is independent of BM25 magnitude: a common\n            literal hit can legitimately have score 0.0. Leave this at 0.0 for\n            exact occurrence censuses and decide literal presence from the\n            returned evidence, match_type, and matched_terms.\n            It never acts as a disguised result-rank cutoff.\n        ranking: relevance, primary_first, chronological, or book_order.\n            primary_first uses a bounded authority adjustment: a primary\n            source and a stronger source tier win when relevance is comparable,\n            but they do not override a substantial relevance gap. The lexical\n            evidence score remains separate from the authority-adjusted\n            rank_score.\n    \nMinimal response decoding contract: {\"id\":\"lossless-15\",\"hit_aliases\":{\"b\":\"book_id\",\"s\":\"seq\",\"m\":\"match_id\",\"x\":\"excerpt\",\"p\":\"printed_page\",\"c\":\"citation_label\",\"sk\":\"score_kind\",\"r\":\"rank\",\"rs\":\"rank_score\",\"type\":\"match_type\",\"blk\":\"block_type\",\"et\":\"evidence_type\",\"canon\":\"canonical_book_id\",\"er\":\"edition_relation\",\"q\":\"qasida_number\",\"qt\":\"qasida_title\",\"bf\":\"bayt_from\",\"bt\":\"bayt_to\",\"qbc\":\"qasida_bayt_count\",\"brs\":\"bayt_range_scope\",\"bn\":\"bayt_number\",\"id\":\"stable_id\",\"id_kind\":\"stable_id_kind\",\"hid\":\"heading_id\",\"ids\":\"stable_ids\",\"cid\":\"container_id\",\"ep\":\"expanded_passage\",\"qr\":\"question_relevance\",\"av\":\"answer_verified\",\"sup\":\"support\",\"sp\":\"speaker_evidence\",\"ss\":\"speaker_segments\",\"sb\":\"speaker_basis\",\"dr\":\"dialogue_role\",\"sr\":\"source_role\",\"ar\":\"attribution_review_status\",\"es\":\"evidence_span\",\"tv\":\"text_version\",\"uid\":\"evidence_unit_id\",\"cp\":\"corrects_premise\",\"cc\":\"concept_coverage\",\"sm\":\"subject_match\",\"routes\":\"candidate_routes\",\"ps\":\"pagination_status\",\"pw\":\"pagination_warning\",\"em\":\"evidence_type_method\",\"ec\":\"evidence_type_confidence\",\"esc\":\"evidence_type_scope\",\"rw\":\"reformulation_warning\",\"oq\":\"original_queries\",\"rm\":\"reformulation_method\",\"pm\":\"subject_phrase_match\",\"mq\":\"matched_source_question\",\"rst\":\"reformulation_status\",\"cov\":\"intent_term_coverage\",\"mas\":\"match_attribution_scope\",\"sv\":\"synonym_variant\",\"rv\":\"reported_view\",\"aw\":\"attribution_warning\",\"ab\":\"attribution_basis\",\"ams\":\"attribution_marker_span\",\"cb\":\"citation_basis\",\"errata\":\"text_errata\",\"nl\":\"normalization_level\",\"fe\":\"footnotes_excluded\",\"ww\":\"whole_word\",\"sq\":\"selected_queries\",\"sn\":\"speaker\"},\"envelope_keys\":{\"result_defaults\":\"defaults\",\"effective_match_mode\":\"mm\",\"navigation_scope\":\"nav\",\"reformulation_status\":\"rst\",\"fewer_than_limit_reason\":\"why\",\"evidence_strength\":\"strength\",\"answer_verified\":\"av\",\"book_defaults\":\"bd\",\"objects\":\"o\",\"qasidas\":\"qs\"},\"book_keys\":{\"title\":\"t\",\"source\":\"s\",\"tier\":\"i\",\"attribution_confidence\":\"a\",\"provenance_status\":\"p\"},\"nested_keys\":{\"anchor_role\":\"a\",\"passage_role\":\"p\",\"basis\":\"b\",\"review_status\":\"r\",\"name\":\"n\",\"segments\":\"s\",\"estimate\":\"e\",\"method\":\"m\",\"calibrated\":\"c\",\"start\":\"s0\",\"end\":\"e0\",\"role\":\"r0\",\"speaker\":\"sp0\",\"marker\":\"mk\",\"scope\":\"sc\",\"confidence\":\"cf\",\"corpus_form\":\"f\",\"relation\":\"l\"},\"codes\":{\"A\":\"unreviewed\",\"B\":\"unknown\",\"C\":\"structural\",\"D\":\"explicit_marker\",\"E\":\"none\",\"F\":\"answer\",\"G\":\"question\",\"H\":\"mixed\",\"I\":\"source_local_rules_v1\",\"J\":\"candidate\",\"K\":\"topical\",\"L\":\"relation_candidate\",\"M\":\"topic_only\",\"N\":\"phrase_candidate\",\"O\":\"start_anchor\",\"P\":\"structural_heuristic\",\"Q\":\"unverified\",\"R\":\"Candidate discovery only; inspect the Arabic passage before using it as an answer.\",\"S\":\"phrase_and_passage_union_v1\",\"T\":\"local_span_discovery\",\"U\":\"reformulated\",\"V\":\"safe\",\"W\":\"broad_discovery\",\"X\":\"body_only\",\"Y\":\"only_n_passages_met_threshold\",\"Z\":\"repeated_printed_label_unresolved\",\"a\":\"Printed page label is repeated in the supplied source; cite sequence until reviewed.\",\"b\":\"explicit_question_marker\",\"c\":\"answer_marker_author_not_inferred\",\"d\":\"implicit_answer_after_question_mark\",\"e\":\"explicit_marker_author_not_inferred\",\"f\":\"lexical\",\"g\":\"exact_phrase\",\"h\":\"terms\",\"i\":\"verified\",\"j\":\"primary\",\"k\":\"confirmed\",\"l\":\"pending_documentary_review\"},\"rules\":\"Decode codes in string values only; prefix ~ escapes a literal. Expand defaults, bd book defaults, o object references (sp/matched_terms/sup), qs qasidas by qref, then aliases. es=[start,end,optional quote]. Absent b/s derive from m=bNN-pSEQ-cOFFSET; absent r is 1-based array order. c=@printed expands as book title + ، الصفحة + p. ss=@sp copies sp.segments; ep.from_hit names exactly inherited hit fields. contract v/d/t=version/capability digest/schema digest (8-char prefixes); timing.ms=total ms; versions i/l/c/r=index/lexicon/cues/ranker. Unknown and unreviewed stay explicit; never infer a verified answer.\"}",
       "inputSchema": {
         "properties": {
           "query": {

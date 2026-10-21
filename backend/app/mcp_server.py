@@ -551,7 +551,11 @@ def search_library(
         mode: compact or ultra_compact. When expand_top is requested,
             compact returns expanded_passage and ultra_compact returns the
             same bounded passage object under the abbreviated key ep.
-            Contract 14 aliases are reversible using the published decoder map
+            Contract 15 aliases and minimal codes are reversible using the published decoder.
+            Ultra summary uses lossless-15: match IDs encode book/sequence,
+            rank follows array order, object references and qasida tables inherit
+            exact metadata; false/unreviewed/unknown values remain explicit.
+            Use detail=full for ordinary objects and full contract digests.
             in contract metadata. Source spans address canonical get_page.text.
             Candidate support is uncalibrated and never verifies an answer.
             Ultra-compact search hits expose citation_label as c and
@@ -835,7 +839,7 @@ def search_library(
         from app.services.evidence_units import INDEX_VERSION
         from app.services.concept_links import VERSION as LEXICON_VERSION
         from app.services.intent_frames import VERSION as FRAME_VERSION
-        payload['versions']={'index':INDEX_VERSION,'lexicon':LEXICON_VERSION,'cues':FRAME_VERSION,'ranker':'source-rules-fusion-1'}
+        payload['versions']={'index':INDEX_VERSION,'lexicon':LEXICON_VERSION,'cues':FRAME_VERSION,'ranker':__import__('app.services.question_search',fromlist=['ranker_config']).ranker_config()['version']}
         payload["ranking_policy"] = db.ranking_policy(ranking)
         payload["effective_match_mode"] = effective_match_mode
         payload["whole_word"] = bool(whole_word)
@@ -920,6 +924,10 @@ def search_library(
 # This examines the same FastMCP registry used to answer protocol tools/list.
 # A missing decorator, unexpected tool, or stale conditional registration now
 # prevents the application from starting instead of silently shipping drift.
+from app.services.compact_response import encoding_guide
+import json as _encoding_json
+next(t for t in mcp._tool_manager.list_tools() if t.name=='search_library').description += (
+    '\nMinimal response decoding contract: '+_encoding_json.dumps(encoding_guide(),ensure_ascii=False,separators=(',',':')))
 DISCOVERABLE_TOOLS = validate_registered_tools(mcp)
 bind_callable_schema(mcp)
 from app.core.machine_http import enable_threaded_tools

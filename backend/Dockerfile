@@ -1,5 +1,5 @@
 # SQLite FTS5 plus citation-safe research indexes. Semantic vectors remain optional.
-FROM python:3.11-slim
+FROM python:3.12-slim
 
 WORKDIR /app
 ENV PYTHONUNBUFFERED=1
@@ -25,9 +25,11 @@ RUN test -s data/raw_htm/book_14.htm \
     && python scripts/build_index.py
 
 # Deployment gate: hard citation/structure failures and retrieval-quality
-# regressions fail the image build; efficiency issues are reported separately.
+# regressions and measured token-budget growth fail the image build.
 RUN python -m pytest -q \
-    && python scripts/independent_corpus_audit.py library.db
+    && python scripts/independent_corpus_audit.py library.db \
+    && python scripts/measure_workflow_2115.py \
+    && python scripts/check_token_budgets.py
 
 EXPOSE 8000
 

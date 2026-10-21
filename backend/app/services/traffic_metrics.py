@@ -20,15 +20,16 @@ def record_attempt(request_id,tool,payload,ms):
     log.info('tool_attempt %s',json.dumps(event,separators=(',',':')))
 
 def traffic_summary():
+    from app.mcp_contract import SERVER_VERSION
     path=get_settings().traffic_metrics_path
     persistence='ephemeral_container_path' if path.startswith('/tmp/') else 'configured_path_verify_mounted_storage'
     try:
         with sqlite3.connect('file:'+path+'?mode=ro',uri=True,timeout=.05) as c:
-            rows=c.execute('SELECT execution,ms,timestamp FROM attempts WHERE timestamp>=?',(time.time()-7*86400,)).fetchall()
+            rows=c.execute('SELECT execution,ms,timestamp FROM attempts WHERE timestamp>=? AND build=?',(time.time()-7*86400,SERVER_VERSION)).fetchall()
         times=sorted(x[1] for x in rows);n=len(rows)
-        return {'scope':'all_tool_attempts_in_this_store','persistence_scope':persistence,'attempts_7d':n,
+        return {'scope':'all_tool_attempts_for_current_build','build':SERVER_VERSION,'persistence_scope':persistence,'attempts_7d':n,
                 'failed':sum(x[0]=='failed' for x in rows),'partial':sum(x[0]=='partial' for x in rows),
                 'p95_ms':times[math.ceil(.95*n)-1] if n else None,
-                'observed_days':round((time.time()-min(x[2] for x in rows))/86400,3) if n else 0,
+                'observed_days':round((max(x[2] for x in rows)-min(x[2] for x in rows))/86400,3) if n else 0,
                 'production_acceptance':'pending_independent_deployed_observation'}
-    except sqlite3.Error:return {'scope':'all_tool_attempts_in_this_store','status':'awaiting_attempts','persistence_scope':persistence}
+    except sqlite3.Error:return {'scope':'all_tool_attempts_for_current_build','build':SERVER_VERSION,'status':'awaiting_attempts','persistence_scope':persistence}

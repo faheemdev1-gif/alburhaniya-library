@@ -82,9 +82,9 @@ class MCPContractTests(unittest.TestCase):
         self.assertIn('ResponseMode = Literal["compact", "ultra_compact"]', self.source)
 
     def test_hard_versioned_instructions_explain_incomplete_discovery(self):
-        self.assertEqual(SERVER_VERSION, "2.10.15")
-        self.assertEqual(TOOL_CONTRACT_ID, "alburhaniya-tools-v14")
-        self.assertEqual(TOOL_CONTRACT_VERSION, "14.0")
+        self.assertEqual(SERVER_VERSION, "2.10.16")
+        self.assertEqual(TOOL_CONTRACT_ID, "alburhaniya-tools-v15")
+        self.assertEqual(TOOL_CONTRACT_VERSION, "15.0")
         self.assertIn("mcp._mcp_server.version = SERVER_VERSION", self.source)
         self.assertIn("connector discovery is incomplete", self.source)
         self.assertIn("get_passage for the precise passage", self.source)

@@ -333,7 +333,7 @@ def validate_diwan_structure(conn: sqlite3.Connection) -> None:
         )
 
 
-def build():
+def _build_database():
     if os.path.exists(DB_PATH):
         os.remove(DB_PATH)
 
@@ -526,6 +526,34 @@ def build():
         f"{research_stats['parallel_candidates']} Dīwān parallel candidates"
     )
 
+
+def build():
+    """Publish only a committed, integrity-checked index at the target path.
+
+    A failed/interrupted rebuild leaves the last complete database intact.
+    SQLite rollback files must belong to the same generated file, so every
+    build gets a fresh filename rather than reusing an interrupted target.
+    """
+    import tempfile
+    from pathlib import Path
+    global DB_PATH
+    target=Path(DB_PATH).resolve();target.parent.mkdir(parents=True,exist_ok=True)
+    fd,staging=tempfile.mkstemp(prefix='.index-build-',suffix='.sqlite3',dir=target.parent)
+    os.close(fd)
+    DB_PATH=staging
+    try:
+        _build_database()
+        with sqlite3.connect(staging) as check:
+            if check.execute('PRAGMA quick_check').fetchone()[0]!='ok':
+                raise RuntimeError('New index failed integrity check; previous index retained')
+        # Refuse to attach an old transaction journal to the new index. An
+        # operator must finish/recover that transaction before replacing it.
+        if any(Path(str(target)+suffix).exists() for suffix in ('-journal','-wal','-shm')):
+            raise RuntimeError('Target database has active/recovery sidecars; stop its users and recover it before rebuilding. Validated new index: '+staging)
+        os.replace(staging,target)
+        print('Published validated index:',target)
+    finally:
+        DB_PATH=str(target)
 
 if __name__ == "__main__":
     build()

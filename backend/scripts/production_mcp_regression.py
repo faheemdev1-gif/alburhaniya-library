@@ -278,9 +278,10 @@ async def run(endpoint: str, discovery_only: bool = False) -> dict[str, Any]:
                         "ranking": "relevance",
                     },
                 ))
-                edition_rows = explicit_edition.get("results") or []
+                from app.services.compact_response import decode_search_response
+                edition_rows = decode_search_response(explicit_edition)["results"]
                 if not edition_rows or any(
-                    row.get("canon") != "b37" or row.get("er") != "duplicate_excerpt"
+                    row.get("canonical_book_id") != "b37" or row.get("edition_relation") != "duplicate_excerpt"
                     for row in edition_rows
                 ):
                     raise AssertionError("explicit b38 search lost canonical-edition metadata")
@@ -457,13 +458,13 @@ async def run(endpoint: str, discovery_only: bool = False) -> dict[str, Any]:
                         "mode": "ultra_compact", "context_chars": 60,
                     },
                 ))
-                ultra_rows = ultra_expansion.get("results") or []
-                if sum("ep" in row for row in ultra_rows) != 2:
+                ultra_rows = decode_search_response(ultra_expansion)["results"]
+                if sum("expanded_passage" in row for row in ultra_rows) != 2:
                     raise AssertionError(
                         "ultra_compact silently dropped requested expansions"
                     )
                 if not ultra_rows or any(
-                    row.get("blk",ultra_expansion.get("result_defaults",{}).get("blk")) not in {"body", "toc"} for row in ultra_rows
+                    row.get("block_type") not in {"body", "toc"} for row in ultra_rows
                 ):
                     raise AssertionError(
                         "ultra_compact did not expose block_type under blk"
@@ -481,11 +482,11 @@ async def run(endpoint: str, discovery_only: bool = False) -> dict[str, Any]:
                     },
                 ))
                 toc_by_seq = {
-                    row.get("s"): {**ultra_toc.get("result_defaults",{}),**row} for row in ultra_toc.get("results") or []
+                    row["seq"]: row for row in decode_search_response(ultra_toc)["results"]
                 }
                 if not (
-                    toc_by_seq.get(255, {}).get("blk") == "body"
-                    and toc_by_seq.get(271, {}).get("blk") == "toc"
+                    toc_by_seq.get(255, {}).get("block_type") == "body"
+                    and toc_by_seq.get(271, {}).get("block_type") == "toc"
                 ):
                     raise AssertionError(
                         "ultra_compact blk failed the live body/TOC control"

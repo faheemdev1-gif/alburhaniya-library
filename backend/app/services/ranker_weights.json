@@ -1,0 +1,14 @@
+{
+  "version": "indexed-features-1",
+  "review_status": "development_weights_unreviewed",
+  "weights": {
+    "slot_coverage": 0.48,
+    "required_concept_coverage": 0.24,
+    "co_location": 0.18,
+    "compactness": 0.18,
+    "answer_shape": 0.06,
+    "comparison_base": 0.70,
+    "comparison_compactness": 0.25,
+    "comparison_unpaired": 0.22
+  }
+}

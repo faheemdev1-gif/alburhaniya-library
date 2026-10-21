@@ -9,3 +9,8 @@ library.db-*
 *.sqlite3
 *.log
 .library.db*
+
+# Generated index staging and verification databases
+*.sqlite3*
+library16.db*
+.index-build-*

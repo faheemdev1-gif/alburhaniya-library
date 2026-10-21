@@ -1,0 +1,76 @@
+{
+  "version": "2.10.16",
+  "maximum_growth_pct": 5,
+  "controls": [
+    {
+      "fixture": "one_hit_question",
+      "profile": "cl100k_base",
+      "returned_count": 1,
+      "compact_payload_tokens": 789,
+      "ultra_payload_tokens": 504
+    },
+    {
+      "fixture": "one_hit_question",
+      "profile": "o200k_base",
+      "returned_count": 1,
+      "compact_payload_tokens": 723,
+      "ultra_payload_tokens": 454
+    },
+    {
+      "fixture": "five_hit_conjunction",
+      "profile": "cl100k_base",
+      "returned_count": 5,
+      "compact_payload_tokens": 2631,
+      "ultra_payload_tokens": 1899
+    },
+    {
+      "fixture": "five_hit_conjunction",
+      "profile": "o200k_base",
+      "returned_count": 5,
+      "compact_payload_tokens": 2176,
+      "ultra_payload_tokens": 1516
+    },
+    {
+      "fixture": "six_hit_lexical",
+      "profile": "cl100k_base",
+      "returned_count": 6,
+      "compact_payload_tokens": 2443,
+      "ultra_payload_tokens": 1592
+    },
+    {
+      "fixture": "six_hit_lexical",
+      "profile": "o200k_base",
+      "returned_count": 6,
+      "compact_payload_tokens": 2010,
+      "ultra_payload_tokens": 1267
+    },
+    {
+      "fixture": "census",
+      "profile": "cl100k_base",
+      "returned_count": 5,
+      "compact_payload_tokens": 2264,
+      "ultra_payload_tokens": 1604
+    },
+    {
+      "fixture": "census",
+      "profile": "o200k_base",
+      "returned_count": 5,
+      "compact_payload_tokens": 1916,
+      "ultra_payload_tokens": 1348
+    },
+    {
+      "fixture": "weak_negative",
+      "profile": "cl100k_base",
+      "returned_count": 0,
+      "compact_payload_tokens": 648,
+      "ultra_payload_tokens": 479
+    },
+    {
+      "fixture": "weak_negative",
+      "profile": "o200k_base",
+      "returned_count": 0,
+      "compact_payload_tokens": 632,
+      "ultra_payload_tokens": 464
+    }
+  ]
+}

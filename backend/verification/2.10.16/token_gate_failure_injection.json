@@ -1,0 +1,14 @@
+[
+  {
+    "injection": "duplicate",
+    "rejected": true
+  },
+  {
+    "injection": "growth",
+    "rejected": true
+  },
+  {
+    "injection": "loss_of_evidence",
+    "rejected": true
+  }
+]

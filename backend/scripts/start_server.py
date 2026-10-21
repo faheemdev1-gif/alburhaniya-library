@@ -18,7 +18,10 @@ def main():
    with sqlite3.connect(f'file:{path.resolve()}?mode=ro',uri=True) as conn:
     if conn.execute('PRAGMA quick_check').fetchone()[0]!='ok':raise SystemExit('library.db failed integrity check; rebuild before deploying.')
     required={'discovery_passages','discovery_fts','discovery_meta','term_document_frequency','discovery_topics','evidence_units','evidence_concepts'};actual={r[0] for r in conn.execute("SELECT name FROM sqlite_master WHERE type='table'")}
-    if required-actual:raise SystemExit('library.db is missing the 2.10.15 evidence-unit index; run python scripts/build_index.py.')
+    if required-actual:raise SystemExit('library.db is missing the 2.10.16 evidence-unit index; run python scripts/build_index.py.')
+    from app.services.evidence_units import INDEX_VERSION
+    row=conn.execute("SELECT value FROM discovery_meta WHERE key='index_version'").fetchone()
+    if not row or row[0]!=INDEX_VERSION:raise SystemExit('library.db feature version differs from this build; run python scripts/build_index.py.')
   except sqlite3.Error as exc:raise SystemExit('library.db could not be read; rebuild before deploying.') from exc
  try:
   workers=int(os.environ.get('WEB_CONCURRENCY','2'))

@@ -4,6 +4,11 @@ import re,html,os,json,time,math,bisect
 from app.core.observability import profiled,record_phase
 from app.core.budget import DEADLINE, BudgetExceeded
 from contextvars import ContextVar
+@lru_cache(maxsize=1)
+def ranker_config():
+ from pathlib import Path
+ return json.loads(Path(__file__).with_name('ranker_weights.json').read_text())
+
 SEARCH_STATE=ContextVar("question_search_state",default=None)
 from app.services import library_db as db
 from app.services.query_language import language_plan,morphological_forms,phrase_pages,synonym_variants
@@ -174,17 +179,25 @@ def explicit_observance(text, start, end):
     return bool(night and action and guidance and abs(night.start()-action.start())<150)
 
 
-def supporting_span(query,text,keep_terms=(),ap=None):
+def supporting_span(query,text,keep_terms=(),ap=None,features=None):
  ap=ap or anchor_plan(query,keep_terms)
  text=mask_honorifics(text)
- terms=ap['anchors'];comparison=ap['comparison_subjects'];p=plan(query);events=[]
+ terms=ap['anchors'];comparison=ap['comparison_subjects'];p=plan(query);events=[];weights=ranker_config()['weights']
  for t in terms:
   # The comparison subjects are distinct words: broad morphology can collapse
   # توكل and تواكل or accidentally score الفرق against فرج.
   matcher=comparison_pattern(t) if comparison else pattern(t)
-  events.extend((m.start(),m.end(),'term:'+t,m.group()) for m in matcher.finditer(text))
+  if features and 'lexical_spans' in features and len(safe_tokens(t))==1:
+   for surface,spans in features['lexical_spans'].items():
+    if matcher.fullmatch(surface):
+     events.extend((a,b,'term:'+t,surface) for a,b in spans if b<=len(text))
+  else:
+   events.extend((m.start(),m.end(),'term:'+t,m.group()) for m in matcher.finditer(text))
  if not comparison:
-  for group in p['groups']:events.extend((m.start(),m.end(),'concept:'+group,m.group()) for m in concept_regex(group).finditer(text))
+  for group in p['groups']:
+   if features and 'concept_spans' in features:
+    events.extend((a,b,'concept:'+group,surface) for a,b,surface in features['concept_spans'].get(group,[]) if b<=len(text))
+   else:events.extend((m.start(),m.end(),'concept:'+group,m.group()) for m in concept_regex(group).finditer(text))
  if not events:return None
  events.sort();starts=[event[0] for event in events];best=None
  for i,(start,end,tag,form) in enumerate(events):
@@ -195,7 +208,7 @@ def supporting_span(query,text,keep_terms=(),ap=None):
   if comparison:
    relation=set(comparison)<=matched
    width=max(e[1] for e in local)-min(e[0] for e in local)
-   value=(.70+.25*(1-min(width,180)/180)) if relation else .22
+   value=(weights['comparison_base']+weights['comparison_compactness']*(1-min(width,180)/180)) if relation else weights['comparison_unpaired']
    candidate=(value,start,max(e[1] for e in local),sorted(matched),relation)
    if best is None or value>best[0]:best=candidate
    continue
@@ -217,7 +230,7 @@ def supporting_span(query,text,keep_terms=(),ap=None):
   if relation and p['required']:
    required_events=[e for e in local if e[2] in {'concept:'+g for g in p['required']}];width=max(e[1] for e in required_events)-min(e[0] for e in required_events)
   else:width=180
-  coverage=len(matched)/max(1,len(terms));required=len(groups.intersection(p['required']))/max(1,len(p['required']));value=.48*coverage+.24*required+.18*relation+(.18*(1-width/180) if relation else 0)
+  coverage=len(matched)/max(1,len(terms));required=len(groups.intersection(p['required']))/max(1,len(p['required']));value=weights['slot_coverage']*coverage+weights['required_concept_coverage']*required+weights['co_location']*relation+(weights['compactness']*(1-width/180) if relation else 0)
   if provision_remedy and relation:value+=.32
   if 'quran' in p['required']:
    window=text[max(0,start-50):stop+50];reading=bool(re.search(r'تلاوة|قراءة|يقرأ|تقرأ|بتقرأ|قراء|ورد',window))
@@ -226,7 +239,7 @@ def supporting_span(query,text,keep_terms=(),ap=None):
   window=text[start:min(len(text),start+250)]
   if 'prayer' in p['required'] and re.search(r'الصلاة\s+(?:والسلام|على\s+النبي)',window) and 'timing' not in groups:value-=.25
   if re.search(r'قال الراوي|حكى|يحكى|حكاية',text[max(0,start-60):start]):value-=.06
-  if re.search(r'ينبغي|عليك|يجب|المحافظة|الاجتهاد|احفظ|حفظ|لا تغضب',window):value+=.06
+  if re.search(r'ينبغي|عليك|يجب|المحافظة|الاجتهاد|احفظ|حفظ|لا تغضب',window):value+=weights['answer_shape']
   candidate=(value,start,max(e[1] for e in local),sorted(matched),relation)
   if best is None or value>best[0]:best=candidate
  return best
@@ -286,6 +299,15 @@ def passage_candidates(query, ap, scope):
     linked=query_groups(query)
     if linked:
         add('typed_concepts',' AND '.join(_fts(normalized_forms(g)) for g in linked))
+        # Preserve the requested relation in a separate bounded family so a
+        # common subject cannot fill every slot before reward/condition cues.
+        intent=(ap.get('question_frame') or {}).get('intent')
+        from app.services.evidence_units import CUE_FORMS
+        if intent in CUE_FORMS:
+            add('subject_relation',' AND '.join([*(_fts(normalized_forms(g)) for g in linked),_fts(CUE_FORMS[intent])]))
+            surface_cues=[f for f in CUE_FORMS[intent] if pattern(f).search(query)]
+            if surface_cues:
+                add('predicate_surface',' AND '.join([*(_fts(normalized_forms(g)) for g in linked),_fts(surface_cues)]))
     if len(anchors)>=2 and not ap['comparison_subjects']:
         for left in (*synonym_variants(anchors[0]),anchors[0])[:4]:
             for right in (*synonym_variants(anchors[1]),anchors[1])[:4]:
@@ -309,6 +331,12 @@ def passage_candidates(query, ap, scope):
         d['route_ranks']=family_ranks[uid]
         d['fusion_score']=sum(1/(60+rank) for rank in family_ranks[uid].values())
     ordered=sorted(output.values(),key=lambda d:(-d['fusion_score'],d['relevance'],d['id']))
+    # Reserve a small floor per family before filling by RRF. Otherwise an
+    # exclusive relation route can lose all its candidates to multi-route
+    # generic mentions despite being run successfully.
+    reserved={d['id'] for family in routes for d in sorted(output.values(),key=lambda x:x['route_ranks'].get(family,10**9))[:8]
+              if family in d['route_ranks']}
+    ordered=[d for d in ordered if d['id'] in reserved]+[d for d in ordered if d['id'] not in reserved]
     # Precomputed source-unit features; no per-request corpus scan.
     ids=[d['id'] for d in ordered[:160]]
     if ids:
@@ -500,7 +528,7 @@ def search_questions(**kwargs):
                 from app.services.concept_links import linked_support
                 linked=linked_support(query,window) if not ap.get('focus_word') else None
                 if linked and ap['comparison_subjects'] and linked[3]==['sincerity','praise_desire']:linked=None
-                support=supporting_span(query,window,keep,ap) if not linked else None
+                support=supporting_span(query,window,keep,ap,candidate.get('features')) if not linked else None
                 if linked:
                     value,start,end,linked_groups=linked
                     matched=[t for t in ap['anchors'] if pattern(t).search(window)]
@@ -551,6 +579,12 @@ def search_questions(**kwargs):
                 if linked:
                     row['concept_coverage']=linked_groups
                     row['subject_match']='typed_discovery'
+                    from app.services.evidence_units import CUE_FORMS
+                    intent=(ap.get('question_frame') or {}).get('intent')
+                    cues=[f for f in CUE_FORMS.get(intent,()) if pattern(f).search(query)]
+                    local=page['text'][max(left,start-80):min(right,end+120)]
+                    if intent=='merit' and cues and any(pattern(cue).search(local) for cue in cues):
+                        row['requested_relation_match']=True
                 if qa_match:row['matched_source_question']=q
                 classify_row(row,query,ap,page['text'],start,end,relation)
                 if linked and 'preference' not in ap.get('requested_facets',[]):
@@ -561,8 +595,8 @@ def search_questions(**kwargs):
                     canonical_hit(row,page)
                     records[key]=row
                     checkpoint(list(records.values()),'validated_ranked_candidates')
-            record_phase('window_scoring',scored)
-            if state['completion']=='full':state['stages_completed'].append('window_scoring')
+            record_phase('indexed_feature_ranking_and_span_validation',scored)
+            if state['completion']=='full':state['stages_completed'].append('indexed_feature_ranking_and_span_validation')
         except (BudgetExceeded,__import__('sqlite3').OperationalError):
             if not expired():raise
             state['completion']='partial';state['stages_skipped'].append('passage_union_or_scoring')
@@ -627,7 +661,7 @@ def search_questions(**kwargs):
     if kwargs.get('ranking') in ('book_order','chronological'):rows.sort(key=lambda r:(r['book_id'],r['seq']))
     else:
         for row in rows:db._set_rank_score(row)
-        rows.sort(key=lambda r:(-bool(r.get('procedure_list_support')),-bool(r.get('corrects_premise')),-r.get('focus_match_strength',0),
+        rows.sort(key=lambda r:(-bool(r.get('procedure_list_support')),-bool(r.get('corrects_premise')),-bool(r.get('requested_relation_match')),-r.get('focus_match_strength',0),
                                 -(r.get('question_relevance')=='relation_candidate' if r.get('focus_match_strength') else 0),
                                 -(bool(r.get('subject_phrase_match')) if protected else 0),
                                 -(r['rank_score'] if kwargs.get('ranking')=='primary_first' else r['score']),

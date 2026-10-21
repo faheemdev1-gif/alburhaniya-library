@@ -9,6 +9,7 @@ import sqlite3
 import time
 import uuid
 import json
+import inspect
 from app.core.budget import DEADLINE,expired,BudgetExceeded,QUEUE_WAIT,AUTH_TIME
 from app.core.config import get_settings
 from app.core.observability import start_phases, phase_snapshot
@@ -56,6 +57,17 @@ def safe_tool_call(function):
     """Retry transient SQLite reads and never expose raw infrastructure data."""
     @wraps(function)
     def wrapped(*args, **kwargs):
+        # Cache validated evidence before choosing a client projection. Bind
+        # defaults so omitted and explicit defaults share the same cache key.
+        search_call = function.__name__ == 'search_library'
+        call_kwargs = kwargs
+        if search_call:
+            bound = inspect.signature(function).bind(*args, **kwargs)
+            bound.apply_defaults()
+            kwargs = dict(bound.arguments)
+            call_kwargs = {**kwargs, 'mode': 'compact', 'detail': 'full', 'expand_top': 0}
+            call_kwargs.pop('expand_chars', None)
+            args = ()
         from app.core.search_trace import CURRENT_TRACE
         trace=CURRENT_TRACE.get()
         request_id = new_request_id(trace.request_id if trace else None)
@@ -66,6 +78,10 @@ def safe_tool_call(function):
         from app.mcp_contract import TOOL_META
         def finish(payload, attempts):
             if isinstance(payload, dict):
+                if search_call and 'books' in payload and 'results' in payload:
+                    from app.services.compact_response import project_search_response
+                    payload = project_search_response(payload, **{k: kwargs[k] for k in
+                        ('mode', 'detail', 'expand_top', 'expand_chars')})
                 if isinstance(payload.get("error"), str):
                     payload["error"] = {"code":"invalid_selector", "message":payload["error"],
                                         "retryable":False,"request_id":request_id}
@@ -102,6 +118,14 @@ def safe_tool_call(function):
                     payload['timing']={'total_ms':payload['timing']['total_ms'],'scope':payload['timing']['scope']}
                 from app.services.traffic_metrics import record_attempt
                 record_attempt(request_id,function.__name__,payload,(time.perf_counter()-started)*1000)
+                if search_call and kwargs.get('mode')=='ultra_compact' and kwargs.get('detail')!='full':
+                    payload['contract']={'v':TOOL_META['server_version'],
+                        'd':TOOL_META['schema_digest'][:8],
+                        't':TOOL_META.get('tool_schema_digest','')[:8]}
+                    payload['timing']={'ms':payload['timing']['total_ms']}
+                    payload['versions']={k[0]:v for k,v in payload.get('versions',{}).items()}
+                    for key in ('ranking_policy','normalization_level','cache','book_metadata_tool'):
+                        payload.pop(key,None)
             return payload
         for attempt, delay in enumerate((0.0, 0.05, 0.15), start=1):
             if delay:
@@ -113,7 +137,7 @@ def safe_tool_call(function):
                 from app.core import result_cache
                 k=None;cache_started=time.perf_counter()
                 if function.__name__=='search_library' and not (kwargs.get('include_counts') or kwargs.get('check_completeness')):
-                    k=result_cache.key(function.__name__,args,kwargs)
+                    k=result_cache.key(function.__name__,args,call_kwargs)
                     cached=result_cache.get(k)
                     if cached is not None:
                         cached['cache']={'status':'hit','scope':'shared_sqlite_with_process_fallback','corpus_bound':True}
@@ -121,7 +145,7 @@ def safe_tool_call(function):
                         return finish(cached,attempt)
                 record_phase('cache_lookup',cache_started)
                 execution=time.perf_counter()
-                try:payload=function(*args, **kwargs)
+                try:payload=function(*args, **call_kwargs)
                 finally:record_phase('response_building',execution)
                 if k is not None and isinstance(payload,dict):
                     result_cache.put(k,payload)
@@ -130,7 +154,7 @@ def safe_tool_call(function):
             except BudgetExceeded:
                 if trace:
                     from app.core.search_trace import partial_response
-                    return finish(partial_response(trace,kwargs),attempt)
+                    return finish(partial_response(trace,call_kwargs),attempt)
                 result=safe_error_payload('time_budget_exceeded','Request budget exhausted; retry the supplied subject phrase without counts.',retryable=True);result['truncated_by_budget']=True
                 return finish(result,attempt)
             except ValueError as exc:

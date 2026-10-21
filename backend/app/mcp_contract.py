@@ -7,9 +7,9 @@ import json
 from typing import Any
 
 
-SERVER_VERSION = "2.10.15"
-TOOL_CONTRACT_VERSION = "14.0"
-TOOL_CONTRACT_ID = "alburhaniya-tools-v14"
+SERVER_VERSION = "2.10.16"
+TOOL_CONTRACT_VERSION = "15.0"
+TOOL_CONTRACT_ID = "alburhaniya-tools-v15"
 
 REQUIRED_TOOLS = frozenset({
     "search_library",
@@ -23,6 +23,8 @@ SCHEMA_CAPABILITIES = {
     "search_library": {
         "match_modes": ["auto", "exact", "terms", "hybrid", "lexeme"],
         "response_modes": ["compact", "ultra_compact"],
+        "ultra_summary_encoding": "lossless-15",
+        "ultra_contract_digests": "keys v=server_version,d=schema_digest,t=tool_schema_digest; 8-character digest prefixes; full values in get_book/list_books or detail=full",
         "supported_parameters": [
             "query", "queries", "book_ids", "book_scope", "qasida_number",
             "include_counts", "check_completeness", "include_toc", "include_topic_only", "count_basis", "whole_word", "min_tier",
@@ -94,7 +96,7 @@ def validate_registered_tools(server: Any) -> tuple[str, ...]:
 def contract_metadata(tools: Iterable[str] | None = None) -> dict[str, Any]:
     """Versioned metadata for health checks and deployment diagnostics."""
     actual = validate_tool_names(tools or REQUIRED_TOOLS)
-    from app.services.compact_response import ULTRA_FIELDS,BASE_FIELDS
+    from app.services.compact_response import ULTRA_FIELDS,BASE_FIELDS,VALUE_CODES,NESTED_KEYS,CODE_SYMBOLS,ENVELOPE_KEYS,BOOK_KEYS
     from app.services.traffic_metrics import traffic_summary
     return {
         "changes_since_previous":[
@@ -115,6 +117,7 @@ def contract_metadata(tools: Iterable[str] | None = None) -> dict[str, Any]:
         "coverage_register":[{"topic":"raising children","status":"weak_coverage","basis":"Supplied audit: two passing mentions, no substantive guidance","grading_policy":"exclude from direct-answer denominator; do not invent filler"}],
         "result_defaults_policy":"Search hits inherit result_defaults; explicit hit fields override defaults. Contract 12 clients must expand defaults.",
         "ultra_aliases":{**BASE_FIELDS,**{v:k for k,v in ULTRA_FIELDS.items()}},
+        "minimal_encoding":{"id":"lossless-15","timing":"ms=total milliseconds","versions":"i=index,l=lexicon,c=cues,r=ranker","value_codes":dict(zip(CODE_SYMBOLS,VALUE_CODES)),"literal_escape":"prefix ~","envelope_keys":ENVELOPE_KEYS,"book_keys":BOOK_KEYS,"nested_keys":NESTED_KEYS,"derived_fields":"book_id/seq from match_id, absent rank from 1-based array order; @printed citation from book title + ، الصفحة + printed label", "objects":"integer references for object-valued sp/matched_terms/sup", "qasidas":"qref inherits exact metadata from qasidas table", "expanded_passages":"from_hit lists exactly inherited fields","span":"[start,end,optional_source_quote]","decoder":"app.services.compact_response.decode_search_response"},
         "coordinate_policy":"Unicode code points in canonical unformatted get_page.text; half-open spans",
         "traffic_monitoring":traffic_summary(),
         "monitoring":__import__("app.services.monitoring",fromlist=["monitoring_summary"]).monitoring_summary(),
@@ -138,6 +141,8 @@ def bind_callable_schema(server: Any) -> None:
     # The callable declarations are authoritative for every advertised argument.
     for tool in tools:
         SCHEMA_CAPABILITIES.setdefault(tool.name,{})["supported_parameters"]=sorted(tool.parameters.get("properties",{}))
+    from app.services.compact_response import encoding_guide
+    SCHEMA_CAPABILITIES['search_library']['decoder_digest']=hashlib.sha256(json.dumps(encoding_guide(),sort_keys=True,ensure_ascii=False).encode()).hexdigest()
     global SCHEMA_DIGEST
     SCHEMA_DIGEST=hashlib.sha256(json.dumps(SCHEMA_CAPABILITIES,ensure_ascii=False,sort_keys=True,separators=(',',':')).encode()).hexdigest()
     TOOL_META['schema_digest']=SCHEMA_DIGEST

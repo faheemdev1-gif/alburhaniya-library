@@ -1,0 +1,230 @@
+[
+  {
+    "fixture": "R13_T10_F_WASWAS_FALSE_HIT_SCOPED",
+    "same_literal_counts_and_source_locators": true,
+    "baseline": {
+      "census_matching_pages": 0,
+      "census_occurrences": 0,
+      "count_basis": "phrase",
+      "locators": []
+    },
+    "current": {
+      "census_matching_pages": 0,
+      "census_occurrences": 0,
+      "count_basis": "phrase",
+      "locators": []
+    }
+  },
+  {
+    "fixture": "R13_T10_F_SADAQA_FALSE_HIT_SCOPED",
+    "same_literal_counts_and_source_locators": true,
+    "baseline": {
+      "census_matching_pages": 0,
+      "census_occurrences": 0,
+      "count_basis": "phrase",
+      "locators": []
+    },
+    "current": {
+      "census_matching_pages": 0,
+      "census_occurrences": 0,
+      "count_basis": "phrase",
+      "locators": []
+    }
+  },
+  {
+    "fixture": "LEX13_WASWAS_POS",
+    "same_literal_counts_and_source_locators": true,
+    "baseline": {
+      "census_matching_pages": null,
+      "census_occurrences": null,
+      "count_basis": null,
+      "locators": [
+        [
+          "b28",
+          31,
+          "b28-p31-c899"
+        ],
+        [
+          "b29",
+          75,
+          "b29-p75-c546"
+        ],
+        [
+          "b07",
+          222,
+          "b07-p222-c503"
+        ],
+        [
+          "b10",
+          230,
+          "b10-p230-c1300"
+        ],
+        [
+          "b16",
+          65,
+          "b16-p65-c85"
+        ]
+      ]
+    },
+    "current": {
+      "census_matching_pages": null,
+      "census_occurrences": null,
+      "count_basis": null,
+      "locators": [
+        [
+          "b28",
+          31,
+          "b28-p31-c899"
+        ],
+        [
+          "b29",
+          75,
+          "b29-p75-c546"
+        ],
+        [
+          "b07",
+          222,
+          "b07-p222-c503"
+        ],
+        [
+          "b10",
+          230,
+          "b10-p230-c1300"
+        ],
+        [
+          "b16",
+          65,
+          "b16-p65-c85"
+        ]
+      ]
+    }
+  },
+  {
+    "fixture": "LEX13_SADAQA_POS",
+    "same_literal_counts_and_source_locators": true,
+    "baseline": {
+      "census_matching_pages": null,
+      "census_occurrences": null,
+      "count_basis": null,
+      "locators": [
+        [
+          "b12",
+          117,
+          "b12-p117-c21"
+        ],
+        [
+          "b12",
+          116,
+          "b12-p116-c120"
+        ],
+        [
+          "b07",
+          13,
+          "b07-p13-c12"
+        ],
+        [
+          "b11",
+          32,
+          "b11-p32-c341"
+        ],
+        [
+          "b42",
+          33,
+          "b42-p33-c58"
+        ]
+      ]
+    },
+    "current": {
+      "census_matching_pages": null,
+      "census_occurrences": null,
+      "count_basis": null,
+      "locators": [
+        [
+          "b12",
+          117,
+          "b12-p117-c21"
+        ],
+        [
+          "b12",
+          116,
+          "b12-p116-c120"
+        ],
+        [
+          "b07",
+          13,
+          "b07-p13-c12"
+        ],
+        [
+          "b11",
+          32,
+          "b11-p32-c341"
+        ],
+        [
+          "b42",
+          33,
+          "b42-p33-c58"
+        ]
+      ]
+    }
+  },
+  {
+    "fixture": "R13_T10_A_C4_counts",
+    "same_literal_counts_and_source_locators": true,
+    "baseline": {
+      "census_matching_pages": 1,
+      "census_occurrences": 5,
+      "count_basis": "phrase",
+      "locators": [
+        [
+          "b14",
+          246,
+          "b14-p246-c739"
+        ]
+      ]
+    },
+    "current": {
+      "census_matching_pages": 1,
+      "census_occurrences": 5,
+      "count_basis": "phrase",
+      "locators": [
+        [
+          "b14",
+          246,
+          "b14-p246-c739"
+        ]
+      ]
+    }
+  },
+  {
+    "fixture": "R13_T10_A_C5_toc",
+    "same_literal_counts_and_source_locators": true,
+    "baseline": {
+      "census_matching_pages": 0,
+      "census_occurrences": 0,
+      "count_basis": "phrase",
+      "locators": []
+    },
+    "current": {
+      "census_matching_pages": 0,
+      "census_occurrences": 0,
+      "count_basis": "phrase",
+      "locators": []
+    }
+  },
+  {
+    "fixture": "R13_T10_A_G_FOOTNOTE_SEARCH",
+    "same_literal_counts_and_source_locators": true,
+    "baseline": {
+      "census_matching_pages": 0,
+      "census_occurrences": 0,
+      "count_basis": "phrase",
+      "locators": []
+    },
+    "current": {
+      "census_matching_pages": 0,
+      "census_occurrences": 0,
+      "count_basis": "phrase",
+      "locators": []
+    }
+  }
+]

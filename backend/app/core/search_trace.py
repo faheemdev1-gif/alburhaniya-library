@@ -44,7 +44,7 @@ def checkpoint(rows,name):
     if trace:trace.publish(rows,name)
 
 def partial_response(trace,kwargs):
-    from app.services.compact_response import compact_search_response,slim_response
+    from app.services.compact_response import compact_search_response,project_search_response
     from app.mcp_contract import TOOL_META
     rows=trace.evidence();rows.sort(key=lambda r:(-r.get('score',0),r['book_id'],r['seq']))
     if kwargs.get('operator')=='AND' and len(kwargs.get('queries') or [])>1:
@@ -55,7 +55,7 @@ def partial_response(trace,kwargs):
     selected=rows[offset:offset+limit]
     if kwargs.get('min_score'):selected=[r for r in selected if r['score']>=kwargs['min_score']]
     payload=compact_search_response(selected,limit=limit,offset=offset,has_more=len(rows)>offset+limit,
-                                    ultra=kwargs.get('mode')=='ultra_compact')
+                                    ultra=False)
     payload.update(completion='partial',status={'execution':'partial','evidence_status':'candidates' if selected else 'unknown_due_to_budget'},
        evidence_strength='candidate' if selected else 'weak',answer_verified=False,
        request_id=trace.request_id,contract=dict(TOOL_META),truncated_by_budget=True,
@@ -63,4 +63,5 @@ def partial_response(trace,kwargs):
        stage=trace.active,partial_results_available=bool(selected),
        reformulation_status='degraded',timing={'total_ms':round((time.monotonic()-trace.started)*1000,3),'scope':'queue_and_worker_wall'})
     if not selected:payload['error']={'code':'time_budget_exceeded','message':'No validated evidence before deadline','retryable':True,'request_id':trace.request_id}
-    return slim_response(payload,detail=kwargs.get('detail','summary'),ultra=kwargs.get('mode')=='ultra_compact')
+    return project_search_response(payload,detail=kwargs.get('detail','summary'),
+       mode=kwargs.get('mode','compact'),expand_top=0,expand_chars=600)

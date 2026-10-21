@@ -1,0 +1,228 @@
+{
+  "tokenizer_library": "tiktoken",
+  "version": "0.12.0",
+  "profiles": [
+    "cl100k_base",
+    "o200k_base"
+  ],
+  "scope": "Identical current-release evidence. tools/list includes the complete decoding legend; no extra contract/metadata hydration. One tool-discovery schema + one search + one bounded passage follow-up (context_chars=300); no metadata hydration needed. Excludes unavailable client/system wrapper and network serialization. Not a before/after retrieval-quality score.",
+  "claude_usage": "Not measured; no Anthropic token-counting account supplied",
+  "results": [
+    {
+      "fixture": "one_hit_question",
+      "profile": "cl100k_base",
+      "arguments": {
+        "query": "\u0645\u0627 \u0639\u0644\u0627\u0645\u0627\u062a \u0627\u0644\u0645\u0631\u064a\u062f \u0627\u0644\u0635\u0627\u062f\u0642",
+        "limit": 1,
+        "context_chars": 40
+      },
+      "same_evidence_and_provenance": true,
+      "returned_count": 1,
+      "compact_payload_tokens": 784,
+      "ultra_payload_tokens": 505,
+      "payload_reduction_pct": 35.59,
+      "compact_bytes": 2851,
+      "ultra_bytes": 1459,
+      "schema_and_followup_tokens": 4941,
+      "compact_workflow_tokens": 5725,
+      "ultra_workflow_tokens": 5446,
+      "metadata_hydration_calls": 0
+    },
+    {
+      "fixture": "one_hit_question",
+      "profile": "o200k_base",
+      "arguments": {
+        "query": "\u0645\u0627 \u0639\u0644\u0627\u0645\u0627\u062a \u0627\u0644\u0645\u0631\u064a\u062f \u0627\u0644\u0635\u0627\u062f\u0642",
+        "limit": 1,
+        "context_chars": 40
+      },
+      "same_evidence_and_provenance": true,
+      "returned_count": 1,
+      "compact_payload_tokens": 718,
+      "ultra_payload_tokens": 456,
+      "payload_reduction_pct": 36.49,
+      "compact_bytes": 2851,
+      "ultra_bytes": 1459,
+      "schema_and_followup_tokens": 4731,
+      "compact_workflow_tokens": 5449,
+      "ultra_workflow_tokens": 5187,
+      "metadata_hydration_calls": 0
+    },
+    {
+      "fixture": "five_hit_conjunction",
+      "profile": "cl100k_base",
+      "arguments": {
+        "queries": [
+          "\u0627\u0644\u062e\u0644\u0648\u0629",
+          "\u0627\u0644\u0645\u0631\u0627\u0642\u0628\u0629"
+        ],
+        "match_mode": "terms",
+        "operator": "AND",
+        "limit": 6
+      },
+      "same_evidence_and_provenance": true,
+      "returned_count": 5,
+      "compact_payload_tokens": 2633,
+      "ultra_payload_tokens": 1897,
+      "payload_reduction_pct": 27.95,
+      "compact_bytes": 8417,
+      "ultra_bytes": 4838,
+      "schema_and_followup_tokens": 5368,
+      "compact_workflow_tokens": 8001,
+      "ultra_workflow_tokens": 7265,
+      "metadata_hydration_calls": 0
+    },
+    {
+      "fixture": "five_hit_conjunction",
+      "profile": "o200k_base",
+      "arguments": {
+        "queries": [
+          "\u0627\u0644\u062e\u0644\u0648\u0629",
+          "\u0627\u0644\u0645\u0631\u0627\u0642\u0628\u0629"
+        ],
+        "match_mode": "terms",
+        "operator": "AND",
+        "limit": 6
+      },
+      "same_evidence_and_provenance": true,
+      "returned_count": 5,
+      "compact_payload_tokens": 2179,
+      "ultra_payload_tokens": 1514,
+      "payload_reduction_pct": 30.52,
+      "compact_bytes": 8417,
+      "ultra_bytes": 4838,
+      "schema_and_followup_tokens": 5016,
+      "compact_workflow_tokens": 7195,
+      "ultra_workflow_tokens": 6530,
+      "metadata_hydration_calls": 0
+    },
+    {
+      "fixture": "six_hit_lexical",
+      "profile": "cl100k_base",
+      "arguments": {
+        "queries": [
+          "\u0627\u0644\u062e\u0644\u0648\u0629",
+          "\u0627\u0644\u0645\u0631\u0627\u0642\u0628\u0629"
+        ],
+        "match_mode": "terms",
+        "operator": "OR",
+        "limit": 6
+      },
+      "same_evidence_and_provenance": true,
+      "returned_count": 6,
+      "compact_payload_tokens": 2448,
+      "ultra_payload_tokens": 1594,
+      "payload_reduction_pct": 34.89,
+      "compact_bytes": 7914,
+      "ultra_bytes": 3990,
+      "schema_and_followup_tokens": 5139,
+      "compact_workflow_tokens": 7587,
+      "ultra_workflow_tokens": 6733,
+      "metadata_hydration_calls": 0
+    },
+    {
+      "fixture": "six_hit_lexical",
+      "profile": "o200k_base",
+      "arguments": {
+        "queries": [
+          "\u0627\u0644\u062e\u0644\u0648\u0629",
+          "\u0627\u0644\u0645\u0631\u0627\u0642\u0628\u0629"
+        ],
+        "match_mode": "terms",
+        "operator": "OR",
+        "limit": 6
+      },
+      "same_evidence_and_provenance": true,
+      "returned_count": 6,
+      "compact_payload_tokens": 2016,
+      "ultra_payload_tokens": 1268,
+      "payload_reduction_pct": 37.1,
+      "compact_bytes": 7914,
+      "ultra_bytes": 3990,
+      "schema_and_followup_tokens": 4872,
+      "compact_workflow_tokens": 6888,
+      "ultra_workflow_tokens": 6140,
+      "metadata_hydration_calls": 0
+    },
+    {
+      "fixture": "census",
+      "profile": "cl100k_base",
+      "arguments": {
+        "query": "\u0627\u0644\u062a\u0648\u0628\u0629",
+        "match_mode": "exact",
+        "include_counts": true,
+        "limit": 5
+      },
+      "same_evidence_and_provenance": true,
+      "returned_count": 5,
+      "compact_payload_tokens": 2268,
+      "ultra_payload_tokens": 1608,
+      "payload_reduction_pct": 29.1,
+      "compact_bytes": 7681,
+      "ultra_bytes": 4638,
+      "schema_and_followup_tokens": 5089,
+      "compact_workflow_tokens": 7357,
+      "ultra_workflow_tokens": 6697,
+      "metadata_hydration_calls": 0
+    },
+    {
+      "fixture": "census",
+      "profile": "o200k_base",
+      "arguments": {
+        "query": "\u0627\u0644\u062a\u0648\u0628\u0629",
+        "match_mode": "exact",
+        "include_counts": true,
+        "limit": 5
+      },
+      "same_evidence_and_provenance": true,
+      "returned_count": 5,
+      "compact_payload_tokens": 1919,
+      "ultra_payload_tokens": 1352,
+      "payload_reduction_pct": 29.55,
+      "compact_bytes": 7681,
+      "ultra_bytes": 4638,
+      "schema_and_followup_tokens": 4898,
+      "compact_workflow_tokens": 6817,
+      "ultra_workflow_tokens": 6250,
+      "metadata_hydration_calls": 0
+    },
+    {
+      "fixture": "weak_negative",
+      "profile": "cl100k_base",
+      "arguments": {
+        "query": "\u0645\u0627 \u062d\u0643\u0645 \u0627\u0633\u062a\u0639\u0645\u0627\u0644 \u0627\u0644\u0647\u0627\u062a\u0641 \u0641\u064a \u0627\u0644\u0635\u0644\u0627\u0629",
+        "limit": 5
+      },
+      "same_evidence_and_provenance": true,
+      "returned_count": 0,
+      "compact_payload_tokens": 654,
+      "ultra_payload_tokens": 476,
+      "payload_reduction_pct": 27.22,
+      "compact_bytes": 2491,
+      "ultra_bytes": 1783,
+      "schema_and_followup_tokens": 3872,
+      "compact_workflow_tokens": 4526,
+      "ultra_workflow_tokens": 4348,
+      "metadata_hydration_calls": 0
+    },
+    {
+      "fixture": "weak_negative",
+      "profile": "o200k_base",
+      "arguments": {
+        "query": "\u0645\u0627 \u062d\u0643\u0645 \u0627\u0633\u062a\u0639\u0645\u0627\u0644 \u0627\u0644\u0647\u0627\u062a\u0641 \u0641\u064a \u0627\u0644\u0635\u0644\u0627\u0629",
+        "limit": 5
+      },
+      "same_evidence_and_provenance": true,
+      "returned_count": 0,
+      "compact_payload_tokens": 638,
+      "ultra_payload_tokens": 461,
+      "payload_reduction_pct": 27.74,
+      "compact_bytes": 2491,
+      "ultra_bytes": 1783,
+      "schema_and_followup_tokens": 3930,
+      "compact_workflow_tokens": 4568,
+      "ultra_workflow_tokens": 4391,
+      "metadata_hydration_calls": 0
+    }
+  ]
+}

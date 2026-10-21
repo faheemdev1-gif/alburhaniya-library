@@ -1,71 +1,76 @@
-# Al Burhaniya 2.10.15: local verification and acceptance status
+# Al Burhaniya 2.10.16 / contract 15: verified engineering status
 
-**Verdict: tested engineering update; no certified 10/10 rating.** This build has not been deployed to the user's Render service. All performance observations below are local.
+This release continues work that was left unfinished in the 2.10.15 handoff. It does not certify a 10/10 rating.
 
-## Measured checks
+## Verified now
 
-- 332 automated tests passed; one third-party deprecation warning.
-- Corpus audit passed: 43 indexed books / 6,935 pages, 95 qasidas / 2,682 bayts.
-- 44 original raw source files compared byte-for-byte with the uploaded archive; none changed.
-- 28 disclosed PDF calls: 0 errors. Source-page hints present in top five: 17/18, versus 7/18 in the uploaded baseline. This is not Direct@5.
-- Local sequential replay p50 377 ms / p95 1319 ms, measured by the bundled replay script.
-- 7 explicit literal/lexeme controls retain their original counts and source locators.
-- Full HTTP/MCP validation passed 18 smoke checks. Eight simultaneous local requests returned 0 errors; cache reuse was allowed.
-- Canonical page text, source-slice validation, compact/ultra evidence equivalence and supervisor checkpoint cancellation have executable tests.
+- 349 tests passed; one third-party deprecation warning.
+- 18 actual HTTP/MCP smoke checks passed; eight concurrent requests had zero errors. SDK compact/minimal equivalence passed. Local client maximum: 4119 ms; cache reuse allowed.
+- All 28 disclosed PDF calls returned without errors. Source-page hints appear in the top five for 18/18 checks, versus 7/18 in the uploaded baseline. This is not an independently graded Direct@5 score.
+- Replay local p50 429 ms / p95 1393 ms.
+- Corpus audit passed: 43 books / 6,935 pages; 95 qasidas / 2,682 bayts.
+- All 44 original raw files are byte-for-byte unchanged. Seven explicit literal/lexeme controls retain their original counts and source locators.
+- Token-budget gate passed, including >=25% reduction on an actual six-result lexical control with both public encodings. The one-hit question response is <=1,500 bytes.
 
-## Fixes and limits
+## Additional engineering
 
-| Ticket family | Code in this release | Acceptance still open |
-|---|---|---|
-| R-01 | 42,976 source-coordinate paragraph / Q&A units, stable unit hashes, heading/section links. | Independent evidence-unit boundary review, especially cross-page structures. |
-| R-02 | Question frames, protected subjects, alternatives, negation and conditional/coexistence metadata. | Reviewer-labelled intent/slot accuracy and independently written dialectal variants. |
-| R-03 | Small typed discovery lexicon, source-attested candidate vocabulary, no literal-count expansion. | 600 reviewed concepts, large inflection/POS evaluation and domain link review; no contextual morphology model was added. |
-| R-04 | Bounded route-family RRF, no phrase-only early return, source routes/caps/manifests in audit detail. | Candidate AnswerSpanRecall on private families; current final cap is 160 units. |
-| R-05 | Source-local relation, premise correction, explicit procedural-list and comparison features. | A trained/calibrated reranker and independent direct/indirect/topical judgments; local span scoring remains. |
-| R-06 | Visible source excerpts and exact source quotes; answer_verified remains false. | Independently approved answering spans and support-label calibration. |
-| R-07 | Supervisor-visible validated checkpoints; global bounds and cooperative SQLite/stage cancellation. | Broad production failure injection/load; canonical candidate-cache redesign is not claimed (existing safe projection-bound cache remains). |
-| D-01 | Separate execution/evidence status; empty budget endings remain unknown/unrecovered. | Independent outcome/trace audit under representative production conditions. |
-| D-02 | Retries retain the original question and scope; no subject-dropping retry asserted as an answer. | Independent usability and recovery grading. |
-| D-03 | Stage-start/checkpoint events, exclusive timings, build-tagged all-tool metrics. | Durable mount/external log retention and seven days of observed traffic. |
-| D-04 | Existing faithful literal postings/counts preserved; locator/count controls checked. | Private scoped recall comparisons beyond the disclosed controls. |
-| T-01 | One canonical compact projection, reversible ultra mapping and typed source validation. | Cached real clients must refresh and exercise contract 14. |
-| T-02 | Existing result defaults preserved; routine successful tracing removed from summary; duplicate quote text kept only in full detail. | Full qasida-table normalization and the requested size-reduction target are not claimed. |
-| T-03 | cl100k_base and o200k_base measurements, equivalent evidence and discovery + follow-up costs. | 25% reduction not demonstrated; actual Claude/client wrapper usage unavailable. |
-| M-01 | Shared Pydantic source/span/speaker/support types plus exported JSON Schema. | Independent mixed-hit metadata review. |
-| M-02 | Explicit/structural speaker evidence, separate anchor/passage scope and preserved opponent warnings. | Sensitive-speaker and source-role editorial validation. |
-| M-03 | Canonical get_page text; code-point/half-open source spans, SHA/version and slice checks. | Original scan verification where documentary uncertainty remains. |
-| M-04 | Existing paragraph/section/cross-page reads retained; heading slice trimming inconsistency removed. | Broader private section/cap/continuation acceptance. |
-| M-05 | Callable declarations drive advertised parameter lists; live tool schema digests and local SDK checks. | Every real client must refresh tools/list after deployment. |
+### Canonical evidence cache
 
-## Token/workflow measurements
+Validated full evidence is cached before compact/ultra formatting. Changing detail or expansions reuses retrieval; source quotes and provenance remain available.
 
-Tokenizer: tiktoken 0.12.0. Mandatory evidence, provenance and follow-up context are equivalent. These are public encoding profiles, not billed-model or Claude usage.
+### Indexed ranking inputs
 
-| Control | Encoding | Compact | Ultra | Payload reduction |
+42,976 units now store source-word/concept positions. Versioned rule weights use these inputs; relation routes retain a reserved candidate floor and requested predicates. This is a rule baseline, not a trained or calibrated model.
+
+### Lossless minimal responses
+
+Contract 15 publishes its complete decoder legend in tools/list. Shared qasida records, speaker/morphology objects and expansion inheritance remove repetition while retaining uncertainty and citation identity.
+
+### Evidence excerpts
+
+Visible excerpts include the complete cited span and honor the requested context. Original source text and all 44 raw files are unchanged.
+
+### Build and monitoring reliability
+
+Index builds publish only after commit and integrity checking. Failed builds retain the previous index. Traffic summaries isolate the current build and measure the interval actually observed.
+
+## Measurements
+
+Tiktoken 0.12.0; cl100k_base and o200k_base. Equivalent decoded evidence/provenance and identical returned counts are asserted. The complete decoder legend is included in measured tools/list costs; no extra metadata hydration call is needed. Payload reduction is not the reduction of an entire client conversation. The JSON includes schema discovery and a bounded follow-up (context_chars=300); proprietary client/system wrappers and Claude token counts are unavailable.
+
+| Control | Encoding | Compact tokens | Ultra tokens | Payload reduction |
 |---|---|---:|---:|---:|
-| one_hit_question | cl100k_base | 809 | 762 | 5.81% |
-| one_hit_question | o200k_base | 735 | 688 | 6.39% |
-| six_hit_lexical | cl100k_base | 2421 | 2301 | 4.96% |
-| six_hit_lexical | o200k_base | 2063 | 1943 | 5.82% |
-| census | cl100k_base | 2273 | 2159 | 5.02% |
-| census | o200k_base | 1924 | 1811 | 5.87% |
-| weak_negative | cl100k_base | 656 | 647 | 1.37% |
-| weak_negative | o200k_base | 641 | 633 | 1.25% |
+| one_hit_question (1 hits) | cl100k_base | 784 | 505 | 35.59% |
+| one_hit_question (1 hits) | o200k_base | 718 | 456 | 36.49% |
+| five_hit_conjunction (5 hits) | cl100k_base | 2633 | 1897 | 27.95% |
+| five_hit_conjunction (5 hits) | o200k_base | 2179 | 1514 | 30.52% |
+| six_hit_lexical (6 hits) | cl100k_base | 2448 | 1594 | 34.89% |
+| six_hit_lexical (6 hits) | o200k_base | 2016 | 1268 | 37.10% |
+| census (5 hits) | cl100k_base | 2268 | 1608 | 29.10% |
+| census (5 hits) | o200k_base | 1919 | 1352 | 29.55% |
+| weak_negative (0 hits) | cl100k_base | 654 | 476 | 27.22% |
+| weak_negative (0 hits) | o200k_base | 638 | 461 | 27.74% |
 
-**The requested 25% token reduction has not been established.** The JSON report includes full discovery + follow-up costs and zero metadata-hydration calls.
+The old harness called a five-result conjunction a six-hit control. That control remains as five_hit_conjunction; a separate OR control asserts exactly six results. The one-hit control explicitly uses context_chars=40, matching the PDF example. Correct full-span excerpts explain the historical conjunction's larger compact size. The current baseline and a 5% future-growth gate ship in tests/data/token_budgets_2116.json and scripts/check_token_budgets.py; Docker builds run the measurement and gate.
 
-## What is needed to close acceptance
+## What still needs outside evidence
 
-1. Deploy and pin this exact build; refresh real client schemas. The local Python hosting entry point and HTTP/MCP boundary were tested; a Docker daemon and Render account access were unavailable.
-2. Have an independent owner run and grade private families. The stricter included 10-tier gate requires 1,002 wordings / 334 intent families, Direct@5 >=99%, Direct@1 >=95%, strata/families >=97%, explicit negatives and reviewed support labels. Public cases are development data.
-3. Provide Arabic/domain editorial review, original scans/provenance decisions and at least 1,000 reviewed mixed hits. No human review identity, calibration probability or scan verification was fabricated.
-4. Retain durable all-traffic production metrics for >=7 days / 10,000 representative attempts, and verify the latency/failure thresholds. /tmp and scheduled probes alone do not prove continuity.
-5. Review the hinted-page misses (F13_LOVE). Other source candidates may be sufficient; the developer has not self-awarded answer grades.
+### Arabic/domain review
 
-## Client compatibility
+The development lexicon and weights are unreviewed. A large reviewed concept/lemma/POS set, sensitive speaker decisions, support calibration and documentary provenance require qualified reviewers and source evidence. A contextual morphology model is not claimed.
 
-Contract 14 deliberately changes the public coordinate and ultra-projection rules. get_page returns unformatted canonical source text; unreliable printed labels are omitted; ultra fields are decoded using the published alias map and result_defaults. Routine successful trace/census-not-checked detail requires detail=full. Existing tests were updated only where these intentional contract rules changed; retrieval/source controls were retained.
+### Independent quality evaluation
+
+Run an independently owned and graded private set. The supplied 10-tier gate requires 1,002 wordings / 334 intent families, Direct@5 >=99%, Direct@1 >=95%, per-stratum/family checks and reviewed mixed-hit labels. Public page hints are development checks.
+
+### Deployment and observation
+
+Render access was unavailable and this release is not deployed. Refresh real clients after deployment. Retain >=7 days / 10,000 representative attempts on durable storage and verify production latency/failure limits. No Docker daemon was available for an image-build test.
+
+## Deployment
+
+Follow START_HERE.md. Rebuild the database for evidence-units-1.1 and confirm server 2.10.16 / contract 15.0. Ultra summary uses lossless-15 codes/defaults/tables and short digest prefixes; use the bundled decoder or the complete tools/list guide. detail=full retains ordinary metadata and complete digests.
 
 ## Boss-ready statement
 
-> The connector has a tested engineering update with preserved sources and improved disclosed-case retrieval. It is ready for deployment verification. A 10/10 quality claim remains unproven pending independent grading, editorial/source review and production evidence.
+The connector has a locally verified engineering update that closes the deferred cache, encoding, retrieval-route, excerpt, build and monitoring changes. Its disclosed source-page checks and token targets pass. A 10/10 quality claim remains unproven pending independently graded Arabic/source review and production acceptance. The broader reviewed morphology/lexicon and trained calibration are not supplied by these automated tests.
