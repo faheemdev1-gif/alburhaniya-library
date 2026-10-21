@@ -441,6 +441,8 @@ def get_page(book_id: str, seq: int) -> dict | None:
     d = dict(row)
     d["searchable_by_default"] = bool(d["searchable_by_default"])
     d["qasida_title"] = _concise_qasida_title(d.get("qasida_title"))
+    from app.core.coordinates import coordinate_contract
+    d["coordinate_contract"] = coordinate_contract(d["text"])
     d["content_types"] = content_types(d["text"])
     from app.core.evidence_blocks import blocks
     d["evidence_blocks"] = blocks(d["text"], d["block_type"])
@@ -2125,7 +2127,7 @@ def get_passage(
             section_end = heading_end + next_heading.start() if next_heading else len(text)
             if section_end > heading_end:
                 section_end = min(section_end, heading_start + max_chars)
-                result.update(passage=text[heading_start:section_end].rstrip(),
+                result.update(passage=text[heading_start:section_end],
                               context_segments=[{"book_id":book_id,"seq":seq,
                                   "printed_page":page.get("printed_page"),
                                   "citation_label":page["citation_label"],
@@ -2164,6 +2166,11 @@ def get_passage(
         span_start=segments[0]["source_start"] if segments else start
         span_end=segments[-1]["source_end"] if segments else end
         result.update(speaker_span(text,span_start,span_end))
+    from app.core.coordinates import coordinate_contract,source_span
+    result['coordinate_contract']=coordinate_contract(text)
+    if result.get('pagination_status')=='repeated_printed_label_unresolved':result.pop('printed_page',None)
+    if not result.get('cross_page'):
+        result['source_span']=source_span(text,span_start,span_end)
     return result
 
 
@@ -2325,6 +2332,16 @@ def zero_result_diagnostics(
         for term in terms[:16]:
             row=_connection().execute("SELECT documents FROM term_document_frequency WHERE term=?",(normalize_search_text(term,level='broad'),)).fetchone()
             per_term.append({'term':term,'matching_pages':row[0] if row else 0,'frequency_scope':'whole_corpus_precomputed_not_scoped_census'})
+    if 'reformulated' in attempted_modes:
+        from app.services.question_search import SEARCH_STATE,anchor_plan
+        state=SEARCH_STATE.get() or {};frames=[anchor_plan(q) for q in queries]
+        reason='deadline' if state.get('completion')=='partial' else 'client_filter' if min_score or offset else 'all_rejected' if state.get('candidate_counts',{}).get('passage_union') else 'no_scoped_candidates'
+        return {'zero_result_is_not_absence_proof':True,'empty_stage':reason,
+                'zero_reason':reason,'attempted_modes':attempted_modes,'per_term':per_term,
+                'protected_concepts':[f['protected_concepts'] for f in frames],
+                'route_funnels':state.get('route_funnels',[]),'rejections':state.get('rejections',{}),
+                'retry_scope':'exploration_not_verified_answer',
+                'message':'No displayed evidence; no corpus-absence claim. No subject-dropping retry is proposed.'}
     retry=None;stage='matching_or_scope'
     base=dict(queries=queries,operator=operator,whole_word=whole_word,limit=1,
               diversify_books=False,**scope)

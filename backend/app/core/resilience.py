@@ -56,7 +56,9 @@ def safe_tool_call(function):
     """Retry transient SQLite reads and never expose raw infrastructure data."""
     @wraps(function)
     def wrapped(*args, **kwargs):
-        request_id = new_request_id()
+        from app.core.search_trace import CURRENT_TRACE
+        trace=CURRENT_TRACE.get()
+        request_id = new_request_id(trace.request_id if trace else None)
         started = time.perf_counter()
         start_phases()
         from app.services.question_search import SEARCH_STATE
@@ -76,13 +78,30 @@ def safe_tool_call(function):
                     payload['partial_results_available']=bool(state.get('candidate_counts',{}).get('phrase_candidates'))
                     query=kwargs.get('query') or (kwargs.get('queries') or [''])[0]
                     from app.services.query_language import subject_phrase
-                    payload['retry']={'query':subject_phrase(query),'match_mode':'exact','include_counts':False}
+                    payload['retry']={'query':query,'match_mode':'auto','include_counts':False}
+                    payload['retry_scope']='original_intent_unreviewed'
+                    for key in ('book_ids','source_code','page_from','page_to','qasida_number','min_tier','operator','include_toc'):
+                        if key in kwargs:payload['retry'][key]=kwargs[key]
                 payload["request_id"] = request_id
+                if function.__name__=='search_library':
+                    has_evidence=bool(payload.get('results'))
+                    partial=payload.get('completion')=='partial' or bool(payload.get('truncated_by_budget')) or expired()
+                    execution='partial' if partial else 'failed' if payload.get('error') else 'full'
+                    payload['status']={'execution':execution,'evidence_status':
+                        'unknown_due_to_budget' if partial and not has_evidence else
+                        'candidates' if has_evidence else 'unknown_due_to_error' if payload.get('error') else 'no_relevant_evidence'}
+                    payload['completion']=execution
+                    if partial:payload['reformulation_status']='degraded'
+                    if trace and (kwargs.get('detail')=='full' or partial or payload.get('error')):payload['trace']=trace.snapshot()
                 from app.core.observability import record_phase
                 serialized=time.perf_counter();json.dumps(payload,ensure_ascii=False,default=str);record_phase('serialization_probe',serialized)
                 phases=phase_snapshot();phases['queue_wait']=round(QUEUE_WAIT.get(),3);phases['authentication']=round(AUTH_TIME.get(),3)
                 payload['timing']={'total_ms':round(sum(phases.values()),3),'attempts':attempts,'phases_ms':phases,'phase_semantics':'exclusive','scope':'tool_execution_plus_measured_queue_and_auth; excludes network and final transport serialization'}
                 if expired():payload['truncated_by_budget']=True
+                if function.__name__=='search_library' and kwargs.get('detail','summary')!='full':
+                    payload['timing']={'total_ms':payload['timing']['total_ms'],'scope':payload['timing']['scope']}
+                from app.services.traffic_metrics import record_attempt
+                record_attempt(request_id,function.__name__,payload,(time.perf_counter()-started)*1000)
             return payload
         for attempt, delay in enumerate((0.0, 0.05, 0.15), start=1):
             if delay:
@@ -109,6 +128,9 @@ def safe_tool_call(function):
                     payload['cache']={'status':'miss','scope':'shared_sqlite_with_process_fallback','corpus_bound':True}
                 return finish(payload, attempt)
             except BudgetExceeded:
+                if trace:
+                    from app.core.search_trace import partial_response
+                    return finish(partial_response(trace,kwargs),attempt)
                 result=safe_error_payload('time_budget_exceeded','Request budget exhausted; retry the supplied subject phrase without counts.',retryable=True);result['truncated_by_budget']=True
                 return finish(result,attempt)
             except ValueError as exc:
@@ -158,7 +180,12 @@ def safe_tool_call(function):
 
     @wraps(function)
     def scoped(*args,**kwargs):
+        from app.core.search_trace import CURRENT_TRACE,SearchTrace
+        own_trace=CURRENT_TRACE.get() is None
+        trace_token=CURRENT_TRACE.set(SearchTrace()) if own_trace else None
         inherited=DEADLINE.get();deadline=time.monotonic()+min(19.0,max(.01,get_settings().request_budget_seconds));token=DEADLINE.set(min(inherited,deadline) if inherited is not None else deadline)
         try:return wrapped(*args,**kwargs)
-        finally:DEADLINE.reset(token)
+        finally:
+            DEADLINE.reset(token)
+            if trace_token is not None:CURRENT_TRACE.reset(trace_token)
     return scoped

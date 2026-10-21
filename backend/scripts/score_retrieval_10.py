@@ -14,7 +14,7 @@ from pathlib import Path
 
 
 def _rate(n, d):
-    return round(n / d, 4) if d else None
+    return n / d if d else None
 
 
 def score(source, previous=None):
@@ -49,8 +49,8 @@ def score(source, previous=None):
             weak.append(q)
         if q.get('homograph_case'):
             homographs.append(q)
-    if len(groups) < 300 or any(len(group) != 3 or len({q['query'] for q in group}) != 3 for group in groups.values()):
-        raise ValueError('At least 300 answerable intents, exactly three distinct wordings each, are required')
+    if len(groups) < 334 or any(len(group) != 3 or len({q['query'] for q in group}) != 3 for group in groups.values()):
+        raise ValueError('At least 334 answerable intents (1002 wordings), exactly three distinct wordings each, are required')
     if len({q['intent_id'] for q in negatives}) < 50 or len({q['intent_id'] for q in weak}) < 50:
         raise ValueError('At least 50 independent negative and 50 weak-coverage intents are required')
     if len(homographs) < 100 or any('wrong_sense_ranks' not in q for q in homographs):
@@ -86,8 +86,8 @@ def score(source, previous=None):
     label_precision = _rate(sum(claims), len(claims))
     external = source.get('external_gates', {})
     gates = {
-        'direct_at5': direct5 >= .95, 'direct_at1': direct1 >= .75,
-        'wording_stability': stable >= .90, 'ndcg_at5': ndcg5 >= .88,
+        'direct_at5': direct5 >= .99, 'direct_at1': direct1 >= .95,
+        'wording_stability': stable >= .97, 'ndcg_at5': ndcg5 >= .88,
         'precision_at5': precision is not None and precision >= .90,
         'negative_controls': negative_rate == 1, 'homograph_errors': homograph_rate <= .02,
         'weak_coverage': weak_rate == 1,
@@ -95,15 +95,35 @@ def score(source, previous=None):
         'familiar_suite': external.get('familiar_suite_pass') is True,
         'zero_regressions': external.get('zero_regressions') is True,
     }
+    # The 2026-10-13 specification's stronger 10-tier direction takes
+    # precedence over the former 95%/75% retrieval-only thresholds.
+    strata=defaultdict(list)
+    for q in answerable:strata[q['answer_type']].append(q)
+    gates['each_stratum_at5']=all(sum(2 in q['rank_grades'] for q in rows)/len(rows)>=.97 for rows in strata.values())
+    meta=source.get('metadata_review',{})
+    ops=source.get('production_observation',{})
+    labelled=[(q,{**q['response'].get('result_defaults',{}),**hit},g) for q in answerable+controls for hit,g in zip(q['response'].get('results',[])[:5],q['rank_grades'])]
+    direct_labels=[(q,h,g) for q,h,g in labelled if g==2]
+    unsupported_labels=[(q,h,g) for q,h,g in labelled if g==0]
+    false_weak=_rate(sum(h.get('question_relevance')=='topic_only' or q['response'].get('evidence_strength')=='weak' for q,h,g in direct_labels),len(direct_labels))
+    false_support=_rate(sum(h.get('question_relevance')=='relation_candidate' for q,h,g in unsupported_labels),len(unsupported_labels))
+    gates['metadata_review']=bool(len(labelled)>=1000 and false_weak is not None and false_support is not None and
+        false_weak<=.005 and false_support<=.002 and meta.get('independent_sensitive_case_review') is True)
+    gates['production_observation']=bool(ops.get('days',0)>=7 and ops.get('representative_attempts',0)>=10000 and
+        ops.get('hard_failure_rate',1)<.005 and ops.get('budget_partial_rate',1)<.02 and
+        ops.get('client_p95_ms',float('inf'))<6000 and ops.get('client_p99_ms',float('inf'))<10000 and
+        ops.get('server_p95_ms',float('inf'))<3000 and ops.get('durable_all_traffic') is True)
+    gates['private_protocol']=all(source.get(k) for k in ('corpus_digest','build_digest','protocol_id','family_split_id'))
+    gates['citation_and_provenance']=external.get('zero_critical_citation_defects') is True and external.get('independent_provenance_review') is True
     current_pass = all(gates.values())
-    previous_pass = bool(previous and previous.get('single_release_gate') is True and previous.get('release') != source['release'])
-    return {'release': source['release'], 'owner': source['owner'], 'answerable_intents': len(groups),
+    previous_pass = bool(previous and previous.get('single_release_gate') is True and previous.get('gate_policy')=='engineering-2115-10' and previous.get('protocol_id')==source.get('protocol_id') and previous.get('release') != source['release'])
+    return {'gate_policy':'engineering-2115-10','protocol_id':source.get('protocol_id'),'corpus_digest':source.get('corpus_digest'),'release': source['release'], 'owner': source['owner'], 'answerable_intents': len(groups),
             'answerable_wordings': len(answerable), 'negative_intents': len({q['intent_id'] for q in negatives}),
             'weak_intents': len({q['intent_id'] for q in weak}), 'homograph_cases': len(homographs),
             'direct_at1': direct1, 'direct_at5': direct5, 'wording_stability': stable,
             'ndcg_at5': ndcg5, 'precision_at5': precision, 'negative_pass_rate': negative_rate,
             'weak_coverage_rate': weak_rate, 'homograph_error_rate': homograph_rate,
-            'candidate_label_precision': label_precision, 'reviewed_candidate_labels': len(claims),
+            'candidate_label_precision': label_precision, 'reviewed_candidate_labels': len(claims),'reviewed_metadata_hits':len(labelled),'false_weak_rate':false_weak,'false_weak_denominator':len(direct_labels),'false_support_rate':false_support,'false_support_denominator':len(unsupported_labels),
             'gates': gates, 'single_release_gate': current_pass,
             'two_consecutive_release_gate': current_pass and previous_pass}
 

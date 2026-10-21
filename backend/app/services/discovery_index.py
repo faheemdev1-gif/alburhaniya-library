@@ -28,11 +28,20 @@ def build_discovery_indexes(conn):
    for a,b in zip(tokens,tokens[1:]):
     if a!=b:pairs[(a,b)]+=1;examples.setdefault((a,b),(page_id,block['start']))
    windows=[(s,min(s+900,block['end']),'','paragraph') for s in range(block['start'],block['end'],650)]
+   # Persist true source paragraphs alongside bounded legacy windows. A
+   # paragraph over the cap is split with overlap; exact page coordinates and
+   # legacy match IDs remain authoritative.
+   paragraphs=list(re.finditer(r'[^\n]+(?:\n(?!\n)[^\n]+)*',body))
+   for paragraph in paragraphs:
+    a,b=block['start']+paragraph.start(),block['start']+paragraph.end()
+    for pos in range(a,b,650):windows.append((pos,min(pos+900,b),'','source_paragraph'))
    questions=list(QUESTION.finditer(body))
    for i,m in enumerate(questions):
     stop=questions[i+1].start() if i+1<len(questions) else len(body);ans=ANSWER.search(body,m.end(),stop)
     if ans:windows.append((block['start']+ans.end(),block['start']+stop,body[m.end():ans.start()].strip()[:600],'answer'));qa+=1
-   for start,end,q,k in windows:
+   unique_windows={}
+   for start,end,q,k in windows:unique_windows.setdefault((start,end,q),(start,end,q,k))
+   for start,end,q,k in unique_windows.values():
     if end<=start:continue
     count+=1;conn.execute('INSERT INTO discovery_passages VALUES(?,?,?,?,?,?)',(count,page_id,start,end,q,k))
     conn.execute('INSERT INTO discovery_fts(rowid,body,question) VALUES(?,?,?)',(count,normalize_search_text(text[start:end],level='broad'),normalize_search_text(q,level='broad')))

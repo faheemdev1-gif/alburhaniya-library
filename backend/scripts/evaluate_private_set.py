@@ -21,7 +21,7 @@ async def run(endpoint,source):
     elapsed=round((time.perf_counter()-started)*1000,2)
     payload=r.structuredContent or json.loads(r.content[0].text)
     out.append({**q,'response':payload,'client_ms':elapsed,'review_status':'pending','rank_grades':None})
- return {'scope':'private externally owned set; requires evidence-based grading','owner':source['independent_owner'],'questions':out}
+ return {'scope':'private externally owned set; requires evidence-based grading','owner':source['independent_owner'],'release':getattr(init.serverInfo,'version',None),**{k:source.get(k) for k in ('corpus_digest','build_digest','protocol_id','family_split_id')},'questions':out}
 def main():
  p=argparse.ArgumentParser();p.add_argument('endpoint');p.add_argument('input');p.add_argument('output');a=p.parse_args();Path(a.output).write_text(json.dumps(asyncio.run(run(a.endpoint,json.loads(Path(a.input).read_text()))),ensure_ascii=False,indent=2))
 if __name__=='__main__':main()

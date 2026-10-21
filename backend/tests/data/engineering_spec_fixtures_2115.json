@@ -1,0 +1,1053 @@
+{
+  "metadata": {
+    "source_archive_sha256": "a52b7737e4a7bfd26fae0b6670b7773c1e0831356eecb7be6b00f9cae79410ff",
+    "source_version": "2.10.13",
+    "contract": "13.0",
+    "scope": "Proposed integration specification; no source repository was inspected or changed."
+  },
+  "fixtures": [
+    {
+      "fixture_id": "F13_ROLE",
+      "ticket_ids": [
+        "R-02",
+        "R-03",
+        "R-04",
+        "R-05"
+      ],
+      "recorded_tool": "search_library",
+      "recorded_arguments": {
+        "query": "ما العلامات التي تدل على صدق المريد في الطريق",
+        "match_mode": "auto",
+        "limit": 5,
+        "context_chars": 180,
+        "include_counts": false
+      },
+      "recorded_version": "2.10.13",
+      "source_request_id": "39a48d66277d4f3eac79842ff92cf9bc",
+      "observed": {
+        "error_code": null,
+        "completion": "full",
+        "returned_count": 1,
+        "top_match_ids": [
+          "b12-p249-c168"
+        ],
+        "evidence_strength": "weak"
+      },
+      "proposed_expected_outcome": {
+        "protected_concepts": [
+          "sincerity",
+          "disciple"
+        ],
+        "source_pages_any": [
+          "b07-p138",
+          "b16-p37"
+        ],
+        "goal": "recover_sufficient_answer_in_top5; reject prophetic-truthfulness-only negative"
+      },
+      "grading_note": "Source-page hints are not exhaustive; validate sufficient text, attribution and requested relation. This is a future acceptance fixture, not a passed implementation test."
+    },
+    {
+      "fixture_id": "F13_HOPE",
+      "ticket_ids": [
+        "R-02",
+        "R-03",
+        "R-04",
+        "R-05"
+      ],
+      "recorded_tool": "search_library",
+      "recorded_arguments": {
+        "query": "كيف يجمع السالك بين خشية الله والأمل في عفوه",
+        "match_mode": "auto",
+        "limit": 5,
+        "context_chars": 180,
+        "include_counts": false
+      },
+      "recorded_version": "2.10.13",
+      "source_request_id": "8bcbc8ee2caa4afe955597f52a6c9f70",
+      "observed": {
+        "error_code": null,
+        "completion": "full",
+        "returned_count": 0,
+        "top_match_ids": [],
+        "evidence_strength": "weak"
+      },
+      "proposed_expected_outcome": {
+        "protected_concepts": [
+          "fear_of_God",
+          "hope"
+        ],
+        "source_pages_any": [
+          "b37-p156",
+          "b07-p150"
+        ],
+        "goal": "recover candidates preserving both concepts; reviewer grades balance/pardon relation sufficiency"
+      },
+      "grading_note": "Source-page hints are not exhaustive; validate sufficient text, attribution and requested relation. This is a future acceptance fixture, not a passed implementation test."
+    },
+    {
+      "fixture_id": "F13_LOVE",
+      "ticket_ids": [
+        "R-05",
+        "R-06",
+        "M-02"
+      ],
+      "recorded_tool": "search_library",
+      "recorded_arguments": {
+        "query": "ماذا ينال من يحب سيدنا محمد",
+        "match_mode": "auto",
+        "limit": 5,
+        "context_chars": 180,
+        "include_counts": false
+      },
+      "recorded_version": "2.10.13",
+      "source_request_id": "1a9af9482abc4a63b517d1c1a59c2a30",
+      "observed": {
+        "error_code": null,
+        "completion": "full",
+        "returned_count": 5,
+        "top_match_ids": [
+          "b01-p62-c1148",
+          "b12-p224-c710",
+          "b11-p90-c1083",
+          "b37-p101-c729",
+          "b02-p8-c6673"
+        ],
+        "evidence_strength": "weak"
+      },
+      "proposed_expected_outcome": {
+        "source_pages_any": [
+          "b01-p62"
+        ],
+        "goal": "preserve direct answering text; no false topical/weak label; retain provisional source classification"
+      },
+      "grading_note": "Source-page hints are not exhaustive; validate sufficient text, attribution and requested relation. This is a future acceptance fixture, not a passed implementation test."
+    },
+    {
+      "fixture_id": "F13_REPENTANCE",
+      "ticket_ids": [
+        "R-02",
+        "R-04",
+        "R-05"
+      ],
+      "recorded_tool": "search_library",
+      "recorded_arguments": {
+        "query": "ما شروط التوبة حتى لا تكون مجرد كلام باللسان",
+        "match_mode": "auto",
+        "limit": 5,
+        "context_chars": 180,
+        "include_counts": false
+      },
+      "recorded_version": "2.10.13",
+      "source_request_id": "c24189070bde4951bbf021873cac7d72",
+      "observed": {
+        "error_code": null,
+        "completion": "full",
+        "returned_count": 3,
+        "top_match_ids": [
+          "b44-p10-c4489",
+          "b07-p235-c143",
+          "b09-p2-c168"
+        ],
+        "evidence_strength": "weak"
+      },
+      "proposed_expected_outcome": {
+        "protected_concepts": [
+          "repentance",
+          "conditions"
+        ],
+        "source_pages_any": [
+          "b39-p94",
+          "b44-p43"
+        ],
+        "goal": "conditions answering span in top5; merely-only passages are hard negatives"
+      },
+      "grading_note": "Source-page hints are not exhaustive; validate sufficient text, attribution and requested relation. This is a future acceptance fixture, not a passed implementation test."
+    },
+    {
+      "fixture_id": "F13_HEART",
+      "ticket_ids": [
+        "R-02",
+        "R-03",
+        "R-04",
+        "R-05"
+      ],
+      "recorded_tool": "search_library",
+      "recorded_arguments": {
+        "query": "هل البيع والشراء يمنعان العبد من ذكر الله بقلبه",
+        "match_mode": "auto",
+        "limit": 5,
+        "context_chars": 180,
+        "include_counts": false
+      },
+      "recorded_version": "2.10.13",
+      "source_request_id": "da354732c2f049dab0da1078e3113c45",
+      "observed": {
+        "error_code": null,
+        "completion": "full",
+        "returned_count": 5,
+        "top_match_ids": [
+          "b14-p154-c1126",
+          "b39-p174-c378",
+          "b32-p7-c919",
+          "b21-p273-c1401",
+          "b24-p181-c728"
+        ],
+        "evidence_strength": "weak"
+      },
+      "proposed_expected_outcome": {
+        "protected_concepts": [
+          "dhikr_heart",
+          "commercial_work"
+        ],
+        "source_pages_any": [
+          "b28-p39",
+          "b27-p4",
+          "b41-p134"
+        ],
+        "goal": "answer coexistence/negation; not metaphorical trade or livelihood-only material"
+      },
+      "grading_note": "Source-page hints are not exhaustive; validate sufficient text, attribution and requested relation. This is a future acceptance fixture, not a passed implementation test."
+    },
+    {
+      "fixture_id": "F13_HARM",
+      "ticket_ids": [
+        "R-02",
+        "R-04",
+        "R-05",
+        "R-07",
+        "D-01",
+        "D-03"
+      ],
+      "recorded_tool": "search_library",
+      "recorded_arguments": {
+        "query": "إذا آذاني أخ في الطريقة فكيف أجيبه من غير خصومة",
+        "match_mode": "auto",
+        "limit": 5,
+        "context_chars": 180,
+        "include_counts": false
+      },
+      "recorded_version": "2.10.13",
+      "source_request_id": "6cd9937f88f94fbe93d5636ff5087e2c",
+      "observed": {
+        "error_code": "time_budget_exceeded",
+        "completion": null,
+        "returned_count": 0,
+        "top_match_ids": [],
+        "evidence_strength": null
+      },
+      "proposed_expected_outcome": {
+        "source_pages_any": [
+          "b19-p21",
+          "b44-p3"
+        ],
+        "goal": "no hard deadline; sufficient response-to-harm/dispute guidance"
+      },
+      "grading_note": "Source-page hints are not exhaustive; validate sufficient text, attribution and requested relation. This is a future acceptance fixture, not a passed implementation test."
+    },
+    {
+      "fixture_id": "F13_KHALWA",
+      "ticket_ids": [
+        "R-02",
+        "R-04",
+        "R-05"
+      ],
+      "recorded_tool": "search_library",
+      "recorded_arguments": {
+        "query": "لماذا لا يلزم البرهاني بدخول الخلوة",
+        "match_mode": "auto",
+        "limit": 5,
+        "context_chars": 180,
+        "include_counts": false
+      },
+      "recorded_version": "2.10.13",
+      "source_request_id": "6956156e8b674d409c2846d768b90ece",
+      "observed": {
+        "error_code": null,
+        "completion": "full",
+        "returned_count": 0,
+        "top_match_ids": [],
+        "evidence_strength": "weak"
+      },
+      "proposed_expected_outcome": {
+        "source_pages_any": [
+          "b31-p90",
+          "b28-p69"
+        ],
+        "goal": "recover corrective muraqaba answer; preserve requested relation"
+      },
+      "grading_note": "Source-page hints are not exhaustive; validate sufficient text, attribution and requested relation. This is a future acceptance fixture, not a passed implementation test."
+    },
+    {
+      "fixture_id": "F13_SINCERITY",
+      "ticket_ids": [
+        "R-02",
+        "R-03",
+        "R-04",
+        "R-05",
+        "R-07"
+      ],
+      "recorded_tool": "search_library",
+      "recorded_arguments": {
+        "query": "كيف أتخلص من حب الثناء وأخلص في عبادتي",
+        "match_mode": "auto",
+        "limit": 5,
+        "context_chars": 180,
+        "include_counts": false
+      },
+      "recorded_version": "2.10.13",
+      "source_request_id": "da5db7d8ec124912acb38b7ee7d76fc1",
+      "observed": {
+        "error_code": null,
+        "completion": "partial",
+        "returned_count": 0,
+        "top_match_ids": [],
+        "evidence_strength": "weak"
+      },
+      "proposed_expected_outcome": {
+        "source_pages_any": [
+          "b07-p134"
+        ],
+        "goal": "recover sincere-worship/remedy candidates; reviewer grades sufficiency"
+      },
+      "grading_note": "Source-page hints are not exhaustive; validate sufficient text, attribution and requested relation. This is a future acceptance fixture, not a passed implementation test."
+    },
+    {
+      "fixture_id": "F13_FATIHA",
+      "ticket_ids": [
+        "R-05",
+        "R-06",
+        "M-02"
+      ],
+      "recorded_tool": "search_library",
+      "recorded_arguments": {
+        "query": "ما علاقة المواظبة على الفواتح بالاتصال بالمشايخ",
+        "match_mode": "auto",
+        "limit": 5,
+        "context_chars": 180,
+        "include_counts": false
+      },
+      "recorded_version": "2.10.13",
+      "source_request_id": "ea1a8d7fd1f84f2f8ad0fb4c176c5c99",
+      "observed": {
+        "error_code": null,
+        "completion": "full",
+        "returned_count": 1,
+        "top_match_ids": [
+          "b37-p67-c1062"
+        ],
+        "evidence_strength": "weak"
+      },
+      "proposed_expected_outcome": {
+        "source_pages_any": [
+          "b37-p67",
+          "b15-p31"
+        ],
+        "goal": "retain direct connection passage; no false weak label"
+      },
+      "grading_note": "Source-page hints are not exhaustive; validate sufficient text, attribution and requested relation. This is a future acceptance fixture, not a passed implementation test."
+    },
+    {
+      "fixture_id": "F13_RESTART",
+      "ticket_ids": [
+        "R-02",
+        "R-04",
+        "R-05",
+        "R-07",
+        "D-01",
+        "D-03"
+      ],
+      "recorded_tool": "search_library",
+      "recorded_arguments": {
+        "query": "إذا تركت وردي مدة فهل أعود للاسم الذي كنت فيه",
+        "match_mode": "auto",
+        "limit": 5,
+        "context_chars": 180,
+        "include_counts": false
+      },
+      "recorded_version": "2.10.13",
+      "source_request_id": "7c0868ed6a54441191fd03bf01dc130c",
+      "observed": {
+        "error_code": "time_budget_exceeded",
+        "completion": null,
+        "returned_count": 0,
+        "top_match_ids": [],
+        "evidence_strength": null
+      },
+      "proposed_expected_outcome": {
+        "source_pages_any": [
+          "b15-p26"
+        ],
+        "goal": "no hard deadline; recover specific return-to-wird instruction"
+      },
+      "grading_note": "Source-page hints are not exhaustive; validate sufficient text, attribution and requested relation. This is a future acceptance fixture, not a passed implementation test."
+    },
+    {
+      "fixture_id": "R13_T10_U1_repentance",
+      "ticket_ids": [
+        "R-02",
+        "R-04",
+        "R-05",
+        "D-02"
+      ],
+      "recorded_tool": "search_library",
+      "recorded_arguments": {
+        "query": "ما الذي يميز التوبة النصوح عن مجرد الاستغفار",
+        "match_mode": "auto",
+        "limit": 5,
+        "context_chars": 180,
+        "include_counts": false
+      },
+      "recorded_version": "2.10.13",
+      "source_request_id": "7aa29ff3c6a0400dbaa0a4a2bd0dba5c",
+      "observed": {
+        "error_code": null,
+        "completion": "full",
+        "returned_count": 5,
+        "top_match_ids": [
+          "b07-p18-c339",
+          "b10-p262-c650",
+          "b26-p60-c771",
+          "b30-p96-c668",
+          "b15-p31-c128"
+        ],
+        "evidence_strength": "weak"
+      },
+      "proposed_expected_outcome": {
+        "source_pages_any": [
+          "b39-p94",
+          "b44-p43"
+        ],
+        "goal": "recover repentance/istighfar comparison; protected subjects in any suggested retry"
+      },
+      "grading_note": "Source-page hints are not exhaustive; validate sufficient text, attribution and requested relation. This is a future acceptance fixture, not a passed implementation test."
+    },
+    {
+      "fixture_id": "R13_T10_U5_disagreement",
+      "ticket_ids": [
+        "R-02",
+        "R-04",
+        "R-05",
+        "D-02"
+      ],
+      "recorded_tool": "search_library",
+      "recorded_arguments": {
+        "query": "كيف يحافظ المريد على أدب اللسان عند اختلافه مع إخوانه",
+        "match_mode": "auto",
+        "limit": 5,
+        "context_chars": 180,
+        "include_counts": false
+      },
+      "recorded_version": "2.10.13",
+      "source_request_id": "aee084440f3c40bda39c2c8c2d5f5b6a",
+      "observed": {
+        "error_code": null,
+        "completion": "full",
+        "returned_count": 0,
+        "top_match_ids": [],
+        "evidence_strength": "weak"
+      },
+      "proposed_expected_outcome": {
+        "source_pages_any": [
+          "b19-p21",
+          "b44-p3"
+        ],
+        "goal": "recover conduct during disagreement; retry retains speech/dispute"
+      },
+      "grading_note": "Source-page hints are not exhaustive; validate sufficient text, attribution and requested relation. This is a future acceptance fixture, not a passed implementation test."
+    },
+    {
+      "fixture_id": "R13_T10_U2_heart_dhikr",
+      "ticket_ids": [
+        "R-02",
+        "R-04",
+        "R-05"
+      ],
+      "recorded_tool": "search_library",
+      "recorded_arguments": {
+        "query": "كيف يكون ذكر القلب مع انشغال الجوارح بالعمل",
+        "match_mode": "auto",
+        "limit": 5,
+        "context_chars": 180,
+        "include_counts": false
+      },
+      "recorded_version": "2.10.13",
+      "source_request_id": "ec9631c5c293487c9383cdb1d0a4c68d",
+      "observed": {
+        "error_code": null,
+        "completion": "partial",
+        "returned_count": 2,
+        "top_match_ids": [
+          "b41-p131-c327",
+          "b15-p26-c42"
+        ],
+        "evidence_strength": "candidate"
+      },
+      "proposed_expected_outcome": {
+        "source_pages_any": [
+          "b28-p39",
+          "b27-p4",
+          "b41-p134"
+        ],
+        "goal": "heart-remembrance/work relation, not livelihood-only fallback"
+      },
+      "grading_note": "Source-page hints are not exhaustive; validate sufficient text, attribution and requested relation. This is a future acceptance fixture, not a passed implementation test."
+    },
+    {
+      "fixture_id": "R13_C10_KHALWA",
+      "ticket_ids": [
+        "R-02",
+        "R-04",
+        "R-05"
+      ],
+      "recorded_tool": "search_library",
+      "recorded_arguments": {
+        "query": "ما أهمية الخلوة للسالك",
+        "match_mode": "auto",
+        "limit": 5,
+        "context_chars": 180,
+        "include_counts": false
+      },
+      "recorded_version": "2.10.13",
+      "source_request_id": "da0b495db5c34c5391c8f731fbedac9a",
+      "observed": {
+        "error_code": null,
+        "completion": "full",
+        "returned_count": 0,
+        "top_match_ids": [],
+        "evidence_strength": "weak"
+      },
+      "proposed_expected_outcome": {
+        "source_pages_any": [
+          "b31-p90",
+          "b28-p69"
+        ],
+        "goal": "corrective premise answer remains eligible"
+      },
+      "grading_note": "Source-page hints are not exhaustive; validate sufficient text, attribution and requested relation. This is a future acceptance fixture, not a passed implementation test."
+    },
+    {
+      "fixture_id": "R13_N10_FATIHA_CONTACT",
+      "ticket_ids": [
+        "R-02",
+        "R-03",
+        "R-04",
+        "R-05"
+      ],
+      "recorded_tool": "search_library",
+      "recorded_arguments": {
+        "query": "كيف يكون اتصال المريد بالمشايخ بالفواتح",
+        "match_mode": "auto",
+        "limit": 5,
+        "context_chars": 180,
+        "include_counts": false
+      },
+      "recorded_version": "2.10.13",
+      "source_request_id": "be5c911d8a434b31bf514ab4a4390e8f",
+      "observed": {
+        "error_code": null,
+        "completion": "full",
+        "returned_count": 0,
+        "top_match_ids": [],
+        "evidence_strength": "weak"
+      },
+      "proposed_expected_outcome": {
+        "source_pages_any": [
+          "b37-p67",
+          "b15-p31"
+        ],
+        "goal": "recover relationship without a sentence-specific route"
+      },
+      "grading_note": "Source-page hints are not exhaustive; validate sufficient text, attribution and requested relation. This is a future acceptance fixture, not a passed implementation test."
+    },
+    {
+      "fixture_id": "R13_T10_F_WASWAS_FALSE_HIT_SCOPED",
+      "ticket_ids": [
+        "R-03"
+      ],
+      "recorded_tool": "search_library",
+      "recorded_arguments": {
+        "query": "وسواس",
+        "match_mode": "lexeme",
+        "include_counts": true,
+        "book_ids": [
+          "b13"
+        ],
+        "page_from": 147,
+        "page_to": 147,
+        "limit": 5
+      },
+      "recorded_version": "2.10.13",
+      "source_request_id": "ef0097c62b7a4b06aee269907a37f1e7",
+      "observed": {
+        "error_code": null,
+        "completion": null,
+        "returned_count": 0,
+        "top_match_ids": [],
+        "evidence_strength": null
+      },
+      "proposed_expected_outcome": {
+        "returned_count": 0,
+        "forbidden_inflection_form": "سواسية",
+        "goal": "retain fixed negative; strict literal census stays zero"
+      },
+      "grading_note": "Source-page hints are not exhaustive; validate sufficient text, attribution and requested relation. This is a future acceptance fixture, not a passed implementation test."
+    },
+    {
+      "fixture_id": "R13_T10_F_SADAQA_FALSE_HIT_SCOPED",
+      "ticket_ids": [
+        "R-03"
+      ],
+      "recorded_tool": "search_library",
+      "recorded_arguments": {
+        "query": "الصدقة",
+        "match_mode": "lexeme",
+        "include_counts": true,
+        "book_ids": [
+          "b14"
+        ],
+        "page_from": 197,
+        "page_to": 197,
+        "limit": 5
+      },
+      "recorded_version": "2.10.13",
+      "source_request_id": "132fdd2cd8204148a83b48f0d53d58d9",
+      "observed": {
+        "error_code": null,
+        "completion": null,
+        "returned_count": 0,
+        "top_match_ids": [],
+        "evidence_strength": null
+      },
+      "proposed_expected_outcome": {
+        "returned_count": 0,
+        "forbidden_inflection_form": "بِصِدْقِهِ",
+        "goal": "retain fixed negative; strict literal census stays zero"
+      },
+      "grading_note": "Source-page hints are not exhaustive; validate sufficient text, attribution and requested relation. This is a future acceptance fixture, not a passed implementation test."
+    },
+    {
+      "fixture_id": "LEX13_WASWAS_POS",
+      "ticket_ids": [
+        "R-03"
+      ],
+      "recorded_tool": "search_library",
+      "recorded_arguments": {
+        "query": "وسواس",
+        "match_mode": "lexeme",
+        "limit": 5,
+        "context_chars": 100,
+        "include_counts": false
+      },
+      "recorded_version": "2.10.13",
+      "source_request_id": "6a002c8506d4406ca5a9f272fbb2cdd3",
+      "observed": {
+        "error_code": null,
+        "completion": null,
+        "returned_count": 5,
+        "top_match_ids": [
+          "b28-p31-c899",
+          "b29-p75-c546",
+          "b07-p222-c503",
+          "b10-p230-c1300",
+          "b16-p65-c85"
+        ],
+        "evidence_strength": null
+      },
+      "proposed_expected_outcome": {
+        "must_retain_forms_any": [
+          "وسواس",
+          "الوسواس"
+        ],
+        "goal": "positive recall remains; place-name sense distinguished for mental-subject question ranking"
+      },
+      "grading_note": "Source-page hints are not exhaustive; validate sufficient text, attribution and requested relation. This is a future acceptance fixture, not a passed implementation test."
+    },
+    {
+      "fixture_id": "LEX13_SADAQA_POS",
+      "ticket_ids": [
+        "R-03"
+      ],
+      "recorded_tool": "search_library",
+      "recorded_arguments": {
+        "query": "الصدقة",
+        "match_mode": "lexeme",
+        "limit": 5,
+        "context_chars": 100,
+        "include_counts": false
+      },
+      "recorded_version": "2.10.13",
+      "source_request_id": "093df5ce5ad94a7da655e67e85b0cf9c",
+      "observed": {
+        "error_code": null,
+        "completion": null,
+        "returned_count": 5,
+        "top_match_ids": [
+          "b12-p117-c21",
+          "b12-p116-c120",
+          "b07-p13-c12",
+          "b11-p32-c341",
+          "b42-p33-c58"
+        ],
+        "evidence_strength": null
+      },
+      "proposed_expected_outcome": {
+        "must_retain_forms_any": [
+          "الصدقة",
+          "صدقة",
+          "بصدقة"
+        ],
+        "goal": "genuine charity forms remain retrievable"
+      },
+      "grading_note": "Source-page hints are not exhaustive; validate sufficient text, attribution and requested relation. This is a future acceptance fixture, not a passed implementation test."
+    },
+    {
+      "fixture_id": "R13_N10_MURAQABA_KHALWA",
+      "ticket_ids": [
+        "R-06",
+        "M-02"
+      ],
+      "recorded_tool": "search_library",
+      "recorded_arguments": {
+        "query": "هل يمكن أن تكون المراقبة بديلا عن الخلوة",
+        "match_mode": "auto",
+        "limit": 5,
+        "context_chars": 180,
+        "include_counts": false
+      },
+      "recorded_version": "2.10.13",
+      "source_request_id": "fe1dfa474210458cbc002e5cba3c4cbe",
+      "observed": {
+        "error_code": null,
+        "completion": "full",
+        "returned_count": 3,
+        "top_match_ids": [
+          "b28-p69-c1086",
+          "b31-p90-c242",
+          "b31-p115-c408"
+        ],
+        "evidence_strength": "weak"
+      },
+      "proposed_expected_outcome": {
+        "source_pages_any": [
+          "b28-p69",
+          "b31-p90"
+        ],
+        "goal": "direct corrective answering text is not falsely weak/topical"
+      },
+      "grading_note": "Source-page hints are not exhaustive; validate sufficient text, attribution and requested relation. This is a future acceptance fixture, not a passed implementation test."
+    },
+    {
+      "fixture_id": "R13_N10_RESTART_WIRD",
+      "ticket_ids": [
+        "R-06",
+        "M-02"
+      ],
+      "recorded_tool": "search_library",
+      "recorded_arguments": {
+        "query": "هل يبدأ المريد من الاستغفار كلما انقطع عن أوراده",
+        "match_mode": "auto",
+        "limit": 5,
+        "context_chars": 180,
+        "include_counts": false
+      },
+      "recorded_version": "2.10.13",
+      "source_request_id": "50000bf8c7a5435a973ac2743fdf5165",
+      "observed": {
+        "error_code": null,
+        "completion": "full",
+        "returned_count": 1,
+        "top_match_ids": [
+          "b15-p26-c686"
+        ],
+        "evidence_strength": "weak"
+      },
+      "proposed_expected_outcome": {
+        "source_pages_any": [
+          "b15-p26"
+        ],
+        "goal": "specific restarting instruction is not falsely weak/topical"
+      },
+      "grading_note": "Source-page hints are not exhaustive; validate sufficient text, attribution and requested relation. This is a future acceptance fixture, not a passed implementation test."
+    },
+    {
+      "fixture_id": "R13_M10_T9_A_W1",
+      "ticket_ids": [
+        "R-01",
+        "R-06",
+        "M-01",
+        "M-02",
+        "M-03"
+      ],
+      "recorded_tool": "search_library",
+      "recorded_arguments": {
+        "query": "هل يكفي أن أقرأ الأوراد وأترك السعي للكسب",
+        "match_mode": "auto",
+        "limit": 5,
+        "context_chars": 180,
+        "include_counts": false
+      },
+      "recorded_version": "2.10.13",
+      "source_request_id": "0098de14afc74072a0276e57e1629c8b",
+      "observed": {
+        "error_code": null,
+        "completion": "full",
+        "returned_count": 2,
+        "top_match_ids": [
+          "b41-p131-c327",
+          "b15-p26-c37"
+        ],
+        "evidence_strength": "candidate"
+      },
+      "proposed_expected_outcome": {
+        "source_pages_any": [
+          "b41-p131"
+        ],
+        "goal": "mixed passage role; canonical source slices and answer marker entirely in answer segment"
+      },
+      "grading_note": "Source-page hints are not exhaustive; validate sufficient text, attribution and requested relation. This is a future acceptance fixture, not a passed implementation test."
+    },
+    {
+      "fixture_id": "R13_T10_A_H4_known_support",
+      "ticket_ids": [
+        "R-01",
+        "M-04",
+        "M-05"
+      ],
+      "recorded_tool": "get_passage",
+      "recorded_arguments": {
+        "match_id": "b37-p156-c494",
+        "context_chars": 500
+      },
+      "recorded_version": "2.10.13",
+      "source_request_id": "45750242a7f24bbca24312cf9781e2ed",
+      "observed": {
+        "error_code": null,
+        "completion": null,
+        "returned_count": null,
+        "top_match_ids": [],
+        "evidence_strength": null
+      },
+      "proposed_expected_outcome": {
+        "proposed_request_overrides": {
+          "context_mode": "paragraph",
+          "max_chars": 3000
+        },
+        "goal": "following four-category section body through before next same-level heading; current bounded request does not prove paragraph behavior"
+      },
+      "grading_note": "Source-page hints are not exhaustive; validate sufficient text, attribution and requested relation. This is a future acceptance fixture, not a passed implementation test."
+    },
+    {
+      "fixture_id": "R13_T10_A_C2_q91",
+      "ticket_ids": [
+        "R-01",
+        "M-01",
+        "M-03"
+      ],
+      "recorded_tool": "get_passage",
+      "recorded_arguments": {
+        "qasida_number": 91
+      },
+      "recorded_version": "2.10.13",
+      "source_request_id": "8c28311b77c845ce8252652f78036fb2",
+      "observed": {
+        "error_code": null,
+        "completion": null,
+        "returned_count": null,
+        "top_match_ids": [],
+        "evidence_strength": null
+      },
+      "proposed_expected_outcome": {
+        "complete": true,
+        "returned_bayts": 22,
+        "bayt_numbers": [
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12,
+          13,
+          14,
+          15,
+          16,
+          17,
+          18,
+          19,
+          20,
+          21,
+          22
+        ],
+        "printed_pages": [
+          "242",
+          "243"
+        ],
+        "seqs": [
+          246,
+          247
+        ],
+        "goal": "retain stable IDs and page-scoped ranges"
+      },
+      "grading_note": "Source-page hints are not exhaustive; validate sufficient text, attribution and requested relation. This is a future acceptance fixture, not a passed implementation test."
+    },
+    {
+      "fixture_id": "R13_T10_A_C4_counts",
+      "ticket_ids": [
+        "D-04",
+        "M-01"
+      ],
+      "recorded_tool": "search_library",
+      "recorded_arguments": {
+        "book_ids": [
+          "b14"
+        ],
+        "page_from": 246,
+        "page_to": 246,
+        "queries": [
+          "لا",
+          "إلا",
+          "ربك",
+          "أشرقت",
+          "اشرقت"
+        ],
+        "match_mode": "exact",
+        "include_counts": true,
+        "limit": 5
+      },
+      "recorded_version": "2.10.13",
+      "source_request_id": "051b664e0fed4bab9051a2b3109822e5",
+      "observed": {
+        "error_code": null,
+        "completion": null,
+        "returned_count": 1,
+        "top_match_ids": [
+          "b14-p246-c739"
+        ],
+        "evidence_strength": null
+      },
+      "proposed_expected_outcome": {
+        "queries": [
+          "لا",
+          "إلا",
+          "ربك",
+          "أشرقت",
+          "اشرقت"
+        ],
+        "occurrences": [
+          1,
+          2,
+          1,
+          1,
+          0
+        ],
+        "goal": "strict-token anchored safe-normalization counts unchanged"
+      },
+      "grading_note": "Source-page hints are not exhaustive; validate sufficient text, attribution and requested relation. This is a future acceptance fixture, not a passed implementation test."
+    },
+    {
+      "fixture_id": "R13_C10_QUTB_FRAME",
+      "ticket_ids": [
+        "R-07",
+        "D-01",
+        "D-03"
+      ],
+      "recorded_tool": "search_library",
+      "recorded_arguments": {
+        "query": "من هو القطب وما دوره",
+        "match_mode": "auto",
+        "limit": 5,
+        "context_chars": 180,
+        "include_counts": false
+      },
+      "recorded_version": "2.10.13",
+      "source_request_id": "792d49013e3f4f4188d79d6b271257a3",
+      "observed": {
+        "error_code": "time_budget_exceeded",
+        "completion": null,
+        "returned_count": 0,
+        "top_match_ids": [],
+        "evidence_strength": null
+      },
+      "proposed_expected_outcome": {
+        "goal": "no hard deadline; preserve honest evidence status and checkpoint before optional stages"
+      },
+      "grading_note": "Source-page hints are not exhaustive; validate sufficient text, attribution and requested relation. This is a future acceptance fixture, not a passed implementation test."
+    },
+    {
+      "fixture_id": "R13_T10_A_C5_toc",
+      "ticket_ids": [
+        "R-01",
+        "D-04"
+      ],
+      "recorded_tool": "search_library",
+      "recorded_arguments": {
+        "book_ids": [
+          "b41"
+        ],
+        "page_from": 154,
+        "page_to": 154,
+        "query": "الحواريون",
+        "match_mode": "exact",
+        "include_counts": true,
+        "limit": 5
+      },
+      "recorded_version": "2.10.13",
+      "source_request_id": "8caf8b34c58e49fc99026375de08dcea",
+      "observed": {
+        "error_code": null,
+        "completion": null,
+        "returned_count": 0,
+        "top_match_ids": [],
+        "evidence_strength": null
+      },
+      "proposed_expected_outcome": {
+        "returned_count": 0,
+        "goal": "known TOC control remains excluded by default"
+      },
+      "grading_note": "Source-page hints are not exhaustive; validate sufficient text, attribution and requested relation. This is a future acceptance fixture, not a passed implementation test."
+    },
+    {
+      "fixture_id": "R13_T10_A_G_FOOTNOTE_SEARCH",
+      "ticket_ids": [
+        "R-01",
+        "D-04"
+      ],
+      "recorded_tool": "search_library",
+      "recorded_arguments": {
+        "book_ids": [
+          "b13"
+        ],
+        "page_from": 158,
+        "page_to": 158,
+        "queries": [
+          "قول المصنف",
+          "المستدرك"
+        ],
+        "operator": "OR",
+        "match_mode": "exact",
+        "include_counts": true,
+        "context_chars": 180,
+        "limit": 5
+      },
+      "recorded_version": "2.10.13",
+      "source_request_id": "de2f5b9c55cc477e960d1f3d424048e0",
+      "observed": {
+        "error_code": null,
+        "completion": null,
+        "returned_count": 0,
+        "top_match_ids": [],
+        "evidence_strength": null
+      },
+      "proposed_expected_outcome": {
+        "returned_count": 0,
+        "goal": "known footnote-only control remains excluded by default"
+      },
+      "grading_note": "Source-page hints are not exhaustive; validate sufficient text, attribution and requested relation. This is a future acceptance fixture, not a passed implementation test."
+    }
+  ]
+}

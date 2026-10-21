@@ -1,0 +1,30 @@
+[
+  {
+    "fixture": "R13_T10_F_WASWAS_FALSE_HIT_SCOPED",
+    "same_literal_counts_and_source_locators": true
+  },
+  {
+    "fixture": "R13_T10_F_SADAQA_FALSE_HIT_SCOPED",
+    "same_literal_counts_and_source_locators": true
+  },
+  {
+    "fixture": "LEX13_WASWAS_POS",
+    "same_literal_counts_and_source_locators": true
+  },
+  {
+    "fixture": "LEX13_SADAQA_POS",
+    "same_literal_counts_and_source_locators": true
+  },
+  {
+    "fixture": "R13_T10_A_C4_counts",
+    "same_literal_counts_and_source_locators": true
+  },
+  {
+    "fixture": "R13_T10_A_C5_toc",
+    "same_literal_counts_and_source_locators": true
+  },
+  {
+    "fixture": "R13_T10_A_G_FOOTNOTE_SEARCH",
+    "same_literal_counts_and_source_locators": true
+  }
+]

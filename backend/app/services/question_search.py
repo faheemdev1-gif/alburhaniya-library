@@ -60,7 +60,7 @@ def anchor_plan(query,keep_terms=()):
   return bool(bases&role_bases)
  if not result['comparison_subjects']:
   roles=[t for t in anchors if _generic(t)]
-  if roles and len(anchors)>len(roles) and not protected_phrase:
+  if roles and len(anchors)>len(roles) and not protected_phrase and (result.get('question_frame') or {}).get('intent')!='signs':
    anchors=[t for t in anchors if t not in roles];common.extend(roles)
  # Preserve the rarest subject when a generic question has no recognized
  # relation. A page about a generic companion word is not evidence about it.
@@ -79,6 +79,9 @@ def anchor_plan(query,keep_terms=()):
  nouns=[t for t in subject_anchors if (protected_phrase or not _generic(t)) and not any(f=='شيخ' for f in _forms(t)) and (
         normalize_search_text(t,level='broad').startswith(('ال','وال','بال','فال','لل')) or canonical_subject(t)!=t)]
  if nouns:subject_anchors=nouns
+ from app.services.concept_links import query_groups
+ result['protected_concepts']=query_groups(query) or list(terms)
+ result['original_query']=query
  result.update(anchors=anchors,common_nonanchors=common,protected_anchor=min(subject_anchors,key=lambda t:frequencies[t]) if subject_anchors else None,frequency_basis='precomputed_corpus_document_frequency',attested_subject_phrase=protected_phrase);return result
 @lru_cache(maxsize=4096)
 def relation_verb(term):
@@ -228,8 +231,8 @@ def supporting_span(query,text,keep_terms=(),ap=None):
   if best is None or value>best[0]:best=candidate
  return best
 @profiled("excerpt_selection")
-def make_row(page,query,start,end,score,matched,relation):
- text=page['text'];row={k:v for k,v in page.items() if k not in ('text','has_next','has_prev','content_types','evidence_blocks')};snippet=db._evidence_excerpt(text,start,end,180,[])
+def make_row(page,query,start,end,score,matched,relation,context_chars=180):
+ text=page['text'];row={k:v for k,v in page.items() if k not in ('text','has_next','has_prev','content_types','evidence_blocks')};snippet=db._evidence_excerpt(text,start,end,context_chars,[])
  query_plan=language_plan(query)
  row.update(score=round(max(0,min(.99,score)),6),match_type='reformulated',score_kind='local_span_discovery',match_id=f"{page['book_id']}-p{page['seq']}-c{start}",snippet=snippet,evidence_span={'start':start,'end':end,'excerpt':snippet},original_queries=[query],reformulation_method='phrase_and_passage_union_v1',reformulation_warning='Candidate discovery only; inspect the Arabic passage before using it as an answer.',answer_verified=False,question_relevance='relation_candidate' if relation else 'topic_only',intent_term_coverage=round(len(matched)/max(1,len(query_plan['comparison_subjects'] or query_plan['terms'])),4),evidence_type=db.evidence_type(text,start,start+1),evidence_type_method='structural_heuristic',evidence_type_confidence='unverified',evidence_type_scope='start_anchor');row.update(dialogue_at(text,start))
  row['_matched_anchors']=matched
@@ -253,51 +256,70 @@ def _fts(forms):
 
 @profiled('candidate_union')
 def passage_candidates(query, ap, scope):
-    """Bounded BM25 union of source windows; never rescan the whole corpus."""
+    """Fair route-family fusion; every route runs before the final cap.
+
+    Multiple aliases in one family receive one vote. Exact routes and narrow
+    conjunctions cannot be starved by an earlier broad concept route.
+    """
     from app.services.question_intent import CONCEPTS
+    from app.services.concept_links import query_groups, normalized_forms
     filters, params = db._search_filters(**scope)
-    # Livelihood and distress vocabulary expand to particularly broad unions.
-    # Bound their scoring work more tightly; other subjects need the wider
-    # pool for attribution-sensitive passages such as b07 p256.
-    broad_intent = plan(query)['required'] in (['provision'], ['distress', 'relief'])
-    per_expression = 20 if broad_intent else 60
-    candidate_limit = 40 if broad_intent else 120
-    sql = '''SELECT d.*,p.book_id,p.seq,bm25(discovery_fts,1,3) AS relevance
+    sql = """SELECT d.*,p.book_id,p.seq,bm25(discovery_fts,1,3) AS relevance
              FROM discovery_fts JOIN discovery_passages d ON d.id=discovery_fts.rowid
              JOIN pages p ON p.id=d.page_id JOIN books b ON b.book_id=p.book_id
-             WHERE discovery_fts MATCH ?''' + filters + f' ORDER BY relevance LIMIT {per_expression}'
-    groups = [] if ap['comparison_subjects'] else plan(query)['required']
-    expressions=[]
-    if groups:
-        expressions.append(' AND '.join(_fts(CONCEPTS[g]) for g in groups))
-        if len(groups)==1:
-            expressions.insert(0, _fts(CONCEPTS[groups[0]])+' AND '+_fts(CONCEPTS['relief']+CONCEPTS['distress']))
-    # A conjunction of content anchors is selective; OR is a bounded fallback.
+             WHERE discovery_fts MATCH ?""" + filters + ' ORDER BY relevance,d.id LIMIT 61'
+    routes={}
+    def add(family,expression):
+        if expression and expression!='()':routes.setdefault(family,[]).append(expression)
     anchors=ap['anchors'][:8]
+    forms=comparison_forms if ap['comparison_subjects'] else morphological_forms
+    add('original_phrase',_fts([ap['subject_phrase']]))
     if anchors:
-        forms=comparison_forms if ap['comparison_subjects'] else morphological_forms
-        # Try attested adjacent subject aliases before broad single-term BM25
-        # pools fill the candidate cap (محبة محمد -> حب الرسول).
-        if len(anchors)>=2 and not ap['comparison_subjects']:
-            head=(*synonym_variants(anchors[0]),normalize_search_text(anchors[0],level='broad'))
-            tail=(*synonym_variants(anchors[1]),normalize_search_text(anchors[1],level='broad'))
-            for left in head[:4]:
-                for right in tail[:4]:
-                    if phrase_pages(left+' '+right):
-                        expressions.append(_fts([left+' '+right]))
-                        expressions.append(_fts(['و'+left+' '+right]))
-        expressions.append(' AND '.join(_fts(forms(t)) for t in anchors))
-        # Preserve each subject independently before the broad OR pool;
-        # this also allows an explicitly weak one-sided comparison result.
-        expressions.extend(_fts(forms(t)) for t in anchors[:3])
-        if not ap['comparison_subjects']:
-            expressions.append(_fts([f for t in anchors for f in forms(t)]))
-    output={}
-    for expression in expressions:
-        if expired() or len(output)>=candidate_limit:break
-        for row in db._connection().execute(sql,[expression,*params]).fetchall():
-            output.setdefault(row['id'],dict(row))
-    return list(output.values())[:candidate_limit]
+        add('content_conjunction',' AND '.join(_fts(forms(t)) for t in anchors))
+        add('content_terms',_fts([f for t in anchors for f in forms(t)]))
+        for term in dict.fromkeys([ap.get('protected_anchor'),*anchors[:3]]):
+            if term:add('subject_terms',_fts(forms(term)))
+    groups=[] if ap['comparison_subjects'] else plan(query)['required']
+    if groups:
+        add('intent_concepts',' AND '.join(_fts(CONCEPTS[g]) for g in groups))
+        if len(groups)==1:add('intent_concepts',_fts(CONCEPTS[groups[0]])+' AND '+_fts(CONCEPTS['relief']+CONCEPTS['distress']))
+    linked=query_groups(query)
+    if linked:
+        add('typed_concepts',' AND '.join(_fts(normalized_forms(g)) for g in linked))
+    if len(anchors)>=2 and not ap['comparison_subjects']:
+        for left in (*synonym_variants(anchors[0]),anchors[0])[:4]:
+            for right in (*synonym_variants(anchors[1]),anchors[1])[:4]:
+                if phrase_pages(left+' '+right):add('attested_phrase',_fts([left+' '+right,'و'+left+' '+right]))
+    output={};family_ranks={};counts={};caps={}
+    # No early stop at 120: finish every bounded route, then fuse once.
+    for family,expressions in routes.items():
+        family_rows={};capped=False
+        for expression in dict.fromkeys(expressions):
+            if expired():break
+            found=db._connection().execute(sql,[expression,*params]).fetchall()
+            capped=capped or len(found)>60
+            for rank,row in enumerate(found[:60],1):
+                d=dict(row);d['_family_rank']=rank;old=family_rows.get(d['id'])
+                if old is None or rank<old['_family_rank']:family_rows[d['id']]=d
+        ordered=sorted(family_rows.values(),key=lambda x:(x['_family_rank'],x['id']))[:60]
+        counts[family]=len(ordered);caps[family]=capped or len(family_rows)>60
+        for rank,d in enumerate(ordered,1):
+            output.setdefault(d['id'],d);family_ranks.setdefault(d['id'],{})[family]=rank
+    for uid,d in output.items():
+        d['route_ranks']=family_ranks[uid]
+        d['fusion_score']=sum(1/(60+rank) for rank in family_ranks[uid].values())
+    ordered=sorted(output.values(),key=lambda d:(-d['fusion_score'],d['relevance'],d['id']))
+    # Precomputed source-unit features; no per-request corpus scan.
+    ids=[d['id'] for d in ordered[:160]]
+    if ids:
+        placeholders=','.join('?' for _ in ids)
+        for row in db._connection().execute('SELECT id,unit_id,features FROM evidence_units WHERE id IN ('+placeholders+')',ids):
+            output[row['id']]['unit_id']=row['unit_id'];output[row['id']]['features']=json.loads(row['features'])
+    state=SEARCH_STATE.get()
+    if state is not None:
+        state.setdefault('candidate_manifest',[]).append({'query':query,'units':[{'id':d['id'],'book_id':d['book_id'],'seq':d['seq'],'start':d['start_char'],'end':d['end_char'],'routes':d['route_ranks']} for d in ordered[:160]]})
+        state.setdefault('route_funnels',[]).append({'query':query,'routes':counts,'route_cap_reached':caps,'union_units':len(output),'final_cap':160,'cap_reached':len(output)>160,'selected_units':len(ids)})
+    return ordered[:160]
 
 
 @profiled('relation_check')
@@ -319,7 +341,7 @@ def classify_row(row, query, ap, text, start, end, relation=False):
         if re.search(r'(?:علامة|علامات|من\s+علامات|دليل)\s+'+subject.pattern,window):
             row['score']=round(min(.985,row['score']+.20),6)
             row['question_relevance']='relation_candidate'
-    if frame.get('presupposition') and phrase and re.search(r'مافيش|لا\s+توجد|أغنت\s+عن|لغى|ألغى|بدل(?:ا)?\s+من',window):
+    if (frame.get('presupposition') or re.search(r'بديل|بديلا',query)) and (phrase or any(pattern(t).search(window) for t in ap['anchors'])) and re.search(r'مافيش|لا\s+توجد|أغنت\s+عن|لغى|ألغى|بدل(?:ا)?\s+من',window):
         row['corrects_premise']=True
         row['question_relevance']='relation_candidate'
     # Co-occurrence inside a story or prayer formula does not answer a
@@ -344,12 +366,16 @@ def classify_row(row, query, ap, text, start, end, relation=False):
     facets=ap.get('requested_facets',())
     if 'observance' in facets:
         row['observance_support']=explicit_observance(text,start,end)
-        if not row['observance_support'] and facets==['observance']:
+        if not row['observance_support'] and 'merit' not in facets:
             row['question_relevance']='topic_only'
     if 'preference' in facets:
         # Two sides in a heading or a balanced description do not answer
         # which side, if either, the author says to prefer.
-        direction=bool(re.search(r'يغلب|يرجح|يقدم|يفضل|أولى|الراجح',window))
+        subjects=ap['comparison_subjects']
+        direction=False
+        if len(subjects)==2:
+            first,second=(comparison_pattern(t).pattern for t in subjects)
+            direction=bool(re.search('(?:'+first+r')[^.!؟\n]{0,80}(?:أفضل\s+من|أعلى\s+من|أولى\s+من)[^.!؟\n]{0,50}(?:'+second+')',window))
         if not direction:row['question_relevance']='topic_only'
     focus=ap.get('focus_word')
     row['focus_match_strength']=0
@@ -414,8 +440,9 @@ def search_questions(**kwargs):
     state={'completion':'full','stages_completed':[],'stages_skipped':[],
            'candidate_counts':{},'path':'full','phrase_search_counts':{}}
     SEARCH_STATE.set(state)
+    from app.core.search_trace import checkpoint, stage
     records={};pages={};query_ids=[];plans={}
-    overall=DEADLINE.get() or time.monotonic()+10
+    overall=min(DEADLINE.get() or time.monotonic()+5,time.monotonic()+5)
     for query in queries:
         ap=anchor_plan(query,keep);plans[query]=ap;matched_ids=set()
         # Reserve time for serialisation after each independently bounded stage.
@@ -431,14 +458,19 @@ def search_questions(**kwargs):
         state['phrase_search_counts'][query]=len(literal)
         for row in literal:
             key=(row['book_id'],row['seq']);matched_ids.add(key)
-            page=pages.setdefault(key,db.get_page(*key));span=row['evidence_span']
+            page=pages.get(key)
+            if page is None:page=pages.setdefault(key,db.get_page(*key))
+            span=row['evidence_span']
             if sense_conflict(query,page['text'],span['start'],span['end']):continue
             row['score']=round(.70+.28*row['score'],6)
             row['score']=round(min(.985,row['score']+procedural_support(
                 query,page['text'],span['start'],span['end'],
                 [ap['protected_anchor']],ap,True)),6)
             classify_row(row,query,ap,page['text'],span['start'],span['end'])
+            from app.services.hit_contract import canonical_hit
+            canonical_hit(row,page)
             records[key]=row
+        checkpoint(list(records.values()),'phrase_candidates')
         state['candidate_counts']['phrase_candidates']=len(records)
         state['stages_completed'].append('phrase_candidates')
         # A literal phrase answers a definition or a named multi-word subject.
@@ -447,10 +479,11 @@ def search_questions(**kwargs):
         definitional=bool(re.match(r'^(?:ما|وما)\s+(?:معنى|هو|هي|المراد|المقصود|الفرق|حقيقة|مراتب|درجات)\b',query.strip()))
         named_phrase=len(safe_tokens(ap['subject_phrase']))>=2
         if not ap.get('focus_word') and len(ap['terms'])<=3 and len(literal)>=3 and (named_phrase or definitional):
-            state['path']='fast';query_ids.append(matched_ids);continue
+            state['path']='phrase_and_union'
         # Do not discard phrase matches, even if the later passage stage stops.
         token=DEADLINE.set(min(overall-.08,time.monotonic()+4.5))
         try:
+            stage('candidate_union')
             candidates=passage_candidates(query,ap,scope)
             state['candidate_counts']['passage_union']=len(candidates)
             state['stages_completed'].append('candidate_union')
@@ -464,9 +497,20 @@ def search_questions(**kwargs):
                 window=db._indexable_text(page['text'])[left:right]
                 # Filter fixed-expression homographs, never rewrite the source.
                 if re.search(r'العجب كل العجب|كتب على نفسه البقاء وعلى الدنيا الفناء',window):continue
-                support=supporting_span(query,window,keep,ap)
-                if not support:continue
-                value,start,end,matched,relation=support
+                from app.services.concept_links import linked_support
+                linked=linked_support(query,window) if not ap.get('focus_word') else None
+                if linked and ap['comparison_subjects'] and linked[3]==['sincerity','praise_desire']:linked=None
+                support=supporting_span(query,window,keep,ap) if not linked else None
+                if linked:
+                    value,start,end,linked_groups=linked
+                    matched=[t for t in ap['anchors'] if pattern(t).search(window)]
+                    relation=True
+                elif support:
+                    value,start,end,matched,relation=support
+                else:
+                    state.setdefault('rejections',{}).setdefault('no_local_subject',0)
+                    state['rejections']['no_local_subject']+=1
+                    continue
                 # Two question words should co-occur, but a passage that names
                 # the protected subject itself is kept as topic-only evidence:
                 # extra verbs (يضر، يخاف) must not discard the only statement.
@@ -475,7 +519,7 @@ def search_questions(**kwargs):
                                  and all(relation_verb(t) for t in ap['anchors'] if t not in matched))):continue
                 start+=left;end+=left
                 if sense_conflict(query,page['text'],start,end):continue
-                score=.10+.70*value
+                score=value if linked else .10+.70*value
                 score+=procedural_support(query,window,start-left,end-left,matched,ap,relation)
                 q=candidate['question']
                 qa_match=bool(q) and all((comparison_pattern(t) if ap['comparison_subjects'] else pattern(t)).search(q) for t in ap['anchors'])
@@ -493,13 +537,30 @@ def search_questions(**kwargs):
                     if literal_distress and re.search(r'لا تياس|اجعلها شعارك|توكل عليه|اترك له|تذكرها|اصبر|استغفر',normalized_window):score+=.14
                     if re.search(r'فقتله|سيف الزبير|رثته|بغض آل',window):score-=.2
                 # Keep phrases in top results when the question has a clear subject.
-                if db._build_exact_variant_regex(ap['subject_phrase'],normalization_level='broad').search(window):score+=.20
+                if not linked and db._build_exact_variant_regex(ap['subject_phrase'],normalization_level='broad').search(window):score+=.20
                 score+=.025/(1+abs(float(candidate['relevance'])))
-                row=make_row(page,query,start,end,min(.985,score),matched,relation)
+                procedure=bool(_PROCEDURAL_QUESTION.match(query) and _PROCEDURAL_EVIDENCE.search(window) and (linked or relation))
+                if procedure:
+                    cue=_PROCEDURAL_EVIDENCE.search(window)
+                    start=left+cue.start();end=min(right,left+cue.end()+220)
+                row=make_row(page,query,start,end,min(.985,score),matched,relation,kwargs.get('context_chars',180))
+                if procedure:row['procedure_list_support']=True
+                row['candidate_routes']=candidate.get('route_ranks',{})
+                row['fusion_score']=round(candidate.get('fusion_score',0),6)
+                if candidate.get('unit_id'):row['evidence_unit_id']=candidate['unit_id']
+                if linked:
+                    row['concept_coverage']=linked_groups
+                    row['subject_match']='typed_discovery'
                 if qa_match:row['matched_source_question']=q
                 classify_row(row,query,ap,page['text'],start,end,relation)
+                if linked and 'preference' not in ap.get('requested_facets',[]):
+                    row['question_relevance']='relation_candidate'
                 matched_ids.add(key)
-                if key not in records or row['score']>records[key]['score']:records[key]=row
+                if key not in records or row['score']>records[key]['score']:
+                    from app.services.hit_contract import canonical_hit
+                    canonical_hit(row,page)
+                    records[key]=row
+                    checkpoint(list(records.values()),'validated_ranked_candidates')
             record_phase('window_scoring',scored)
             if state['completion']=='full':state['stages_completed'].append('window_scoring')
         except (BudgetExceeded,__import__('sqlite3').OperationalError):
@@ -512,8 +573,10 @@ def search_questions(**kwargs):
         query=row['original_queries'][0] if row.get('original_queries') else queries[0]
         ap=plans[query]
         if not plan(query)['required'] and not ap['comparison_subjects'] and len(ap['anchors'])>=2:
-            row['_missing_protected_subject']=ap['protected_anchor'] not in row.get('_matched_anchors',()) and not row.get('subject_phrase_match')
+            row['_missing_protected_subject']=ap['protected_anchor'] not in row.get('_matched_anchors',()) and not row.get('subject_phrase_match') and not row.get('concept_coverage')
+    before=len(rows)
     rows=[row for row in rows if not row.get('_missing_protected_subject')]
+    state.setdefault('page_funnel',[]).append({'stage':'protected_subject_filter','in_pages':before,'out_pages':len(rows)})
     if any('observance' in ap.get('requested_facets',()) for ap in plans.values()):
         if not any(row.get('observance_support') for row in rows):
             state['unresolved_facets']=['observance']
@@ -545,7 +608,7 @@ def search_questions(**kwargs):
         ap=plans[queries[0]];frame=ap.get('question_frame') or {}
         # A recognized question may lack a supported relation even though its
         # subject occurs. Keep such mentions visibly weak and scope-correct.
-        if frame and not ap['comparison_subjects']:
+        if frame and frame['intent'] in {'importance','stance','signs','preference','coexistence','permission'} and not ap['comparison_subjects'] and not state.get('coverage_gap'):
             for term in dict.fromkeys((ap['subject_phrase'],ap.get('protected_anchor'))):
                 if not term:continue
                 found=db.search(query=term,search_mode='exact_phrase',limit=8,
@@ -564,12 +627,15 @@ def search_questions(**kwargs):
     if kwargs.get('ranking') in ('book_order','chronological'):rows.sort(key=lambda r:(r['book_id'],r['seq']))
     else:
         for row in rows:db._set_rank_score(row)
-        rows.sort(key=lambda r:(-r.get('focus_match_strength',0),
+        rows.sort(key=lambda r:(-bool(r.get('procedure_list_support')),-bool(r.get('corrects_premise')),-r.get('focus_match_strength',0),
                                 -(r.get('question_relevance')=='relation_candidate' if r.get('focus_match_strength') else 0),
                                 -(bool(r.get('subject_phrase_match')) if protected else 0),
                                 -(r['rank_score'] if kwargs.get('ranking')=='primary_first' else r['score']),
                                 r['source_tier'],r['book_id'],r['seq']))
-    t=time.perf_counter();rows=deduplicate([r for r in rows if r['score']>=float(kwargs.get('min_score') or 0)]);record_phase('deduplication',t)
+    before=len(rows);rows=[r for r in rows if r['score']>=float(kwargs.get('min_score') or 0)]
+    state['page_funnel'].append({'stage':'score_filter','in_pages':before,'out_pages':len(rows)})
+    before=len(rows);t=time.perf_counter();rows=deduplicate(rows);record_phase('deduplication',t)
+    state['page_funnel'].append({'stage':'deduplication','in_pages':before,'out_pages':len(rows)})
     if not kwargs.get('include_topic_only',True) and not state.get('coverage_gap'):
         # A parallel copy in another edition (also_in) is not evidence that the
         # passage answers the question; it must not displace the other hits.
@@ -577,16 +643,19 @@ def search_questions(**kwargs):
         # A weak source mention is safer than an unexplained empty result when
         # the subject is present; never promote it to an answer candidate.
         if supported:rows=supported
+    before=len(rows)
     if kwargs.get('diversify_books',True) and len(kwargs.get('book_ids') or [])!=1:
         counts={};selected=[]
         for r in rows:
             b=r['book_id']
             if counts.get(b,0)<kwargs.get('max_per_book',2):selected.append(r);counts[b]=counts.get(b,0)+1
         rows=selected
+    state['page_funnel'].append({'stage':'diversification','in_pages':before,'out_pages':len(rows)})
     state['stages_completed']=list(dict.fromkeys(state['stages_completed']+['relation_check','deduplication']))
     state['evidence_strength']='weak' if state.get('coverage_gap') else 'partial' if state.get('unresolved_facets') and any(r['question_relevance']!='topic_only' for r in rows) else 'weak' if state.get('unresolved_facets') else 'candidate' if any(r['question_relevance']!='topic_only' for r in rows) else 'weak'
     state['path']='partial' if state['completion']=='partial' else state['path']
-    offset=kwargs.get('offset',0);rows=rows[offset:offset+kwargs.get('limit',8)]
+    before=len(rows);offset=kwargs.get('offset',0);rows=rows[offset:offset+kwargs.get('limit',8)]
+    state['page_funnel'].append({'stage':'pagination','in_pages':before,'out_pages':len(rows)})
     for i,r in enumerate(rows,offset+1):
         r['rank']=i
         r.pop('_matched_anchors',None);r.pop('_missing_protected_subject',None)

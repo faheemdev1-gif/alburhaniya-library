@@ -507,6 +507,8 @@ def build():
     research_stats = build_research_indexes(conn)
     from app.services.discovery_index import build_discovery_indexes
     print("Discovery index:", build_discovery_indexes(conn))
+    from app.services.evidence_units import build_evidence_units
+    print("Evidence units:", build_evidence_units(conn))
 
     # NOTE: only `pages` feeds the FTS index. Grades / notes / authors
     # deliberately stay out of it.

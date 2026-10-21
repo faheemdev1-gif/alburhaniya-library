@@ -8,7 +8,7 @@ from app.services.query_language import language_plan,morphological_forms
 from app.core.budget import DEADLINE
 
 def test_question_prefix_preserves_literal_witnesses():
- bare=search_library(query='الحقيقة المحمدية',limit=5);framed=search_library(query='ما هي الحقيقة المحمدية',limit=5)
+ bare=search_library(query='الحقيقة المحمدية',limit=5);framed=search_library(query='ما هي الحقيقة المحمدية',limit=5,detail='full')
  assert {(h['book_id'],h['seq']) for h in bare['results']} <= {(h['book_id'],h['seq']) for h in framed['results']}
 def test_reported_tawassul_and_prayer_span():
  r=search_library(query='ما حكم زيارة قبور الأولياء والتوسل بهم',limit=5);assert ('b07',256) in {(h['book_id'],h['seq']) for h in r['results']}
@@ -29,7 +29,7 @@ def test_final_score_sort():
 def test_mawlid_status_consistent():
  r=search_library(query='إيه رأي مولانا في الاحتفال بالمولد النبوي',limit=5);assert r['results'] and r['reformulation_status']!='not_needed'
 def test_exclusive_timing_and_inherited_fields():
- r=search_library(query='ما هي الحقيقة المحمدية',limit=5);t=r['timing'];assert abs(sum(t['phases_ms'].values())-t['total_ms'])<.01
+ r=search_library(query='ما هي الحقيقة المحمدية',limit=5,detail='full');t=r['timing'];assert abs(sum(t['phases_ms'].values())-t['total_ms'])<.01
  assert all('citation_label' in h and 'answer_verified' in h for h in [{**r.get('result_defaults',{}),**x} for x in r['results']])
 def test_discovery_source_offsets():
  c=db._connection();assert c.execute('SELECT COUNT(*) FROM discovery_topics').fetchone()[0]>=150

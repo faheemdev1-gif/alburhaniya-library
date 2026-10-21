@@ -31,107 +31,13 @@ def compact_search_response(
 ) -> dict:
     """Deduplicate book metadata and retain only citation/search fields."""
     if ultra:
-        books: dict[str, str] = {}
-        hits = []
-        for row in rows:
-            books.setdefault(row["book_id"], {
-                "title": row["book_title"], "tier": row["source_tier"],
-                "am": row.get("authorship_mode"),
-                "ac": row.get("attribution_confidence"),
-                "source": row.get("source_code"),
-                "source_author": row.get("source_author"),
-                "compiler": row.get("compiler"),
-                "provenance_status": row.get("provenance_status"),
-            })
-            hit = {
-                "b": row["book_id"], "s": row["seq"],
-                "m": row["match_id"], "x": row["snippet"], "score": row["score"],
-                "type": row["match_type"], "sk": row.get("score_kind"),
-                "r": row.get("rank"),
-            }
-            if row.get("rank_score") is not None:
-                hit["rs"] = row["rank_score"]
-            if row["printed_page"] is not None:
-                hit["p"] = row["printed_page"]
-            if row.get("citation_label"):
-                hit["c"] = row["citation_label"]
-            # ``bt`` is already the public abbreviation for ``bayt_to``.
-            # Keep structural classification unambiguous under ``blk``.
-            if row.get("block_type"):
-                hit["blk"] = row["block_type"]
-            if row.get("evidence_type"):
-                hit["et"] = row["evidence_type"]
-            if row.get("canonical_book_id") and row["canonical_book_id"] != row["book_id"]:
-                hit["canon"] = row["canonical_book_id"]
-                hit["er"] = row.get("edition_relation")
-            if row.get("qasida_number") is not None:
-                hit["q"] = row["qasida_number"]
-            if row.get("qasida_title"):
-                hit["qt"] = row["qasida_title"]
-            if row.get("bayt_from") is not None:
-                hit["bf"] = row["bayt_from"]
-            if row.get("bayt_to") is not None:
-                hit["bt"] = row["bayt_to"]
-            if row.get("qasida_bayt_count") is not None:
-                hit["qbc"] = row["qasida_bayt_count"]
-            if row.get("bayt_range_scope"):
-                hit["brs"] = row["bayt_range_scope"]
-            if row.get("bayt_number") is not None:
-                hit["bn"] = row["bayt_number"]
-            if row.get("stable_id"):
-                hit["id"] = row["stable_id"]
-            if row.get("stable_id_kind"):
-                hit["id_kind"] = row["stable_id_kind"]
-            if row.get("heading_id"):
-                hit["hid"] = row["heading_id"]
-            if row.get("stable_ids"):
-                hit["ids"] = row["stable_ids"]
-            if row.get("container_id"):
-                hit["cid"] = row["container_id"]
-            if row.get("semantic_score") is not None:
-                hit["semantic_score"] = row["semantic_score"]
-                hit["citation_verified"] = bool(row.get("citation_verified"))
-                hit["verification_required"] = bool(row.get("verification_required"))
-            if "matched_terms" in row:
-                hit["matched_terms"] = {
-                    query: {key: value for key, value in evidence.items()
-                            if key not in {"surface_form", "normalized_form"}}
-                    for query, evidence in row["matched_terms"].items()
-                }
-            for field in ("selected_queries", "match_attribution_scope", "evidence_type_method", "evidence_type_confidence", "original_queries",
-                      "intent_term_coverage", "reformulation_warning", "question_relevance",
-                      "reformulation_status", "page_id", "pagination_status", "pagination_warning", "evidence_type_scope",
-                      "intent_method", "answer_verified", "intent_evidence", "lexical_score", "also_in", "comparison_side", "synonym_variant", "reported_view", "attribution_warning", "source_role", "attribution_basis", "attribution_marker_span", "attribution_review_status", "text_errata", "subject_phrase_match", "dialogue_role", "speaker", "speaker_segments", "speaker_basis", "citation_basis", "matched_source_question"):
-                if field in row:
-                    hit[field] = row[field]
-            if row.get("reformulated_query"):
-                hit["reformulated_query"] = row["reformulated_query"]
-                hit["reformulation_method"] = row.get("reformulation_method")
-            if row.get("evidence_span"):
-                hit["evidence_span"] = {
-                    "start": row["evidence_span"]["start"],
-                    "end": row["evidence_span"]["end"],
-                }
-            # Preserve an explicitly requested expansion in every supported
-            # mode. ``ep`` keeps the ultra-compact envelope concise.
-            if row.get("expanded_passage"):
-                hit["ep"] = row["expanded_passage"]
-            hits.append(hit)
-        response = {"n": len(hits), "books": books, "results": hits}
-        if total_hits is not None:
-            response["census_matching_pages"] = total_hits
-        if stats:
-            response["census_occurrences"] = stats["matching_occurrences"]
-            response["count_basis"] = stats["count_basis"]
-            response["count_semantics"] = {
-                "whole_word": stats["whole_word"],
-                "normalization_level": stats["normalization_level"],
-                "footnotes_excluded": stats["footnotes_excluded"],
-            }
-            response["per_query"] = stats["per_query"]
-        if has_more:
-            response["next"] = offset + limit
-        return response
+        canonical=compact_search_response(rows,limit=limit,offset=offset,has_more=has_more,
+                                           total_hits=total_hits,stats=stats,ultra=False)
+        aliases={value:key for key,value in BASE_FIELDS.items()}
+        canonical['results']=[{aliases.get(k,k):v for k,v in hit.items()} for hit in canonical['results']]
+        canonical['n']=canonical.pop('returned_count')
+        if 'next_offset' in canonical:canonical['next']=canonical.pop('next_offset')
+        return canonical
 
     books: dict[str, dict] = {}
     hits = []
@@ -169,7 +75,7 @@ def compact_search_response(
                       "match_attribution_scope", "evidence_type_method", "evidence_type_confidence", "original_queries",
                       "intent_term_coverage", "reformulation_warning", "question_relevance",
                       "reformulation_status", "page_id", "pagination_status", "pagination_warning", "evidence_type_scope",
-                      "intent_method", "answer_verified", "intent_evidence", "lexical_score", "also_in", "comparison_side", "synonym_variant", "reported_view", "attribution_warning", "source_role", "attribution_basis", "attribution_marker_span", "attribution_review_status", "text_errata", "subject_phrase_match", "dialogue_role", "speaker", "speaker_segments", "speaker_basis", "citation_basis", "matched_source_question"):
+                      "intent_method", "answer_verified", "intent_evidence", "lexical_score", "also_in", "comparison_side", "synonym_variant", "reported_view", "attribution_warning", "source_role", "attribution_basis", "attribution_marker_span", "attribution_review_status", "text_errata", "subject_phrase_match", "dialogue_role", "speaker", "speaker_segments", "speaker_basis", "citation_basis", "matched_source_question", "corrects_premise", "support", "speaker_evidence", "text_version", "evidence_unit_id", "candidate_routes", "concept_coverage", "subject_match"):
             if row.get(field) is not None:
                 hit[field] = row[field]
         if row.get("canonical_book_id") and row["canonical_book_id"] != row["book_id"]:
@@ -180,6 +86,7 @@ def compact_search_response(
             hit["evidence_span"] = {
                 "start": row["evidence_span"]["start"],
                 "end": row["evidence_span"]["end"],
+                    **({"source_quote":row["evidence_span"]["source_quote"]} if "source_quote" in row["evidence_span"] else {}),
             }
         if row.get("semantic_score") is not None:
             hit["semantic_score"] = row["semantic_score"]
@@ -220,11 +127,63 @@ def slim_response(payload,*,detail='summary',ultra=False):
         for r in rows:
             for evidence in r.get('matched_terms',{}).values():
                 for key in ('surface_form','normalized_form','safe_normalized_form','query_normalized'):evidence.pop(key,None)
+            if r.get('evidence_span'):r['evidence_span'].pop('source_quote',None)
             for key in ('intent_evidence','lexical_score','reformulated_query','page_id','intent_term_coverage','matched_source_question'):r.pop(key,None)
     if detail!='full' and not ultra:
         for meta in payload.get('books',{}).values():
             for key in ('source_author','compiler','authorship_mode'):meta.pop(key,None)
         payload['book_metadata_tool']='get_book'
+    if detail!='full':
+        for key in ('path','phrase_search_counts','dropped_function_words','candidate_counts','route_funnels','rejections','funnel','candidate_manifest','page_funnel'):
+            payload.pop(key,None)
+        if payload.get('retrieval_completeness',{}).get('status')=='not_checked':
+            payload.pop('retrieval_completeness',None)
     if ultra:
-        payload['books']={bid:{'tier':meta['tier']} for bid,meta in payload.get('books',{}).items()};payload['book_metadata_tool']='get_book'
+        # Same provenance floor as compact. An ultra response must not require
+        # get_book to discover uncertainty or whether a work is primary.
+        for meta in payload.get('books',{}).values():
+            if 'am' in meta:meta['authorship_mode']=meta.pop('am')
+            if 'ac' in meta:meta['attribution_confidence']=meta.pop('ac')
+            if detail!='full':
+                for key in ('source_author','compiler','authorship_mode'):meta.pop(key,None)
+        payload['results']=[{ULTRA_FIELDS.get(k,k):v for k,v in row.items()} for row in rows]
+        if payload.get('result_defaults'):
+            payload['result_defaults']={ULTRA_FIELDS.get(k,k):v for k,v in payload['result_defaults'].items()}
     return payload
+
+# Published in contract v14. Every alias is reversible; unknown values, warnings
+# and verification state survive projection. Compact is the canonical view.
+ULTRA_FIELDS={
+ 'question_relevance':'qr','answer_verified':'av','support':'sup',
+ 'speaker_evidence':'sp','speaker_segments':'ss','speaker_basis':'sb',
+ 'dialogue_role':'dr','source_role':'sr','attribution_review_status':'ar',
+ 'evidence_span':'es','text_version':'tv','evidence_unit_id':'uid',
+ 'corrects_premise':'cp','concept_coverage':'cc','subject_match':'sm',
+ 'candidate_routes':'routes','pagination_status':'ps','pagination_warning':'pw',
+ 'evidence_type_method':'em','evidence_type_confidence':'ec','evidence_type_scope':'esc',
+ 'reformulation_warning':'rw','original_queries':'oq','reformulation_method':'rm',
+ 'subject_phrase_match':'pm','matched_source_question':'mq',
+ 'reformulation_status':'rst','intent_term_coverage':'cov',
+ 'match_attribution_scope':'mas','synonym_variant':'sv','reported_view':'rv',
+ 'attribution_warning':'aw','attribution_basis':'ab','attribution_marker_span':'ams',
+ 'citation_basis':'cb','text_errata':'errata',
+}
+BASE_FIELDS={'b':'book_id','s':'seq','m':'match_id','x':'excerpt','p':'printed_page',
+ 'c':'citation_label','sk':'score_kind','r':'rank','rs':'rank_score','type':'match_type',
+ 'blk':'block_type','et':'evidence_type','canon':'canonical_book_id','er':'edition_relation',
+ 'q':'qasida_number','qt':'qasida_title','bf':'bayt_from','bt':'bayt_to','qbc':'qasida_bayt_count',
+ 'brs':'bayt_range_scope','bn':'bayt_number','id':'stable_id','id_kind':'stable_id_kind',
+ 'hid':'heading_id','ids':'stable_ids','cid':'container_id','ep':'expanded_passage'}
+
+def decode_search_response(payload):
+    from copy import deepcopy
+    p=deepcopy(payload);reverse={v:k for k,v in ULTRA_FIELDS.items()};reverse.update(BASE_FIELDS)
+    ultra='n' in p
+    defaults=p.get('result_defaults',{})
+    results=[]
+    for row in p.get('results',[]):
+        values={**defaults,**row}
+        results.append({reverse.get(k,k) if ultra else k:v for k,v in values.items()})
+    return {'results':results,'books':p.get('books',{}),
+            'completion':p.get('completion'),'status':p.get('status'),
+            'evidence_strength':p.get('evidence_strength'),'answer_verified':p.get('answer_verified')}

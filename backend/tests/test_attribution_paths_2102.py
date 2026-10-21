@@ -10,6 +10,8 @@ def test_reported_view_survives_search_and_expansion(mode):
     result = search_library(query="التوسل", book_ids=["b07"],
                             page_from=256, page_to=256,
                             match_mode="exact", mode=mode)
+    from app.services.compact_response import decode_search_response
+    result["results"]=decode_search_response(result)["results"]
     hit = next(h for h in result["results"] if h.get("match_id", h.get("m")) == "b07-p256-c1421")
     assert hit["reported_view"] and hit["attribution_warning"]
     expanded = get_passage(match_id=hit.get("match_id", hit.get("m")), context_mode="paragraph")

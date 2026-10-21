@@ -9,31 +9,36 @@ REPORTED = re.compile(r"قال\s+محمد\s+بن\s+عبد\s*الوهاب|قال\
 QUESTION = re.compile(r"(?:^|\n)\s*(?:سؤال|السؤال|س\s*[:：])", re.I)
 ANSWER = re.compile(r"(?:^|\n)\s*(?:الجواب|جواب|ج\s*[:：])", re.I)
 WARNING = "Reported position; read the surrounding response before attributing it to the author."
-SPEAKER_MARKER = re.compile(r"(?<![ء-ي])(?P<label>السائل(?:\s*\([^)]{1,30}\))?|مولانا\s+الشيخ|الشيخ|سؤال|الجواب|جواب)\s*[:：]")
+SPEAKER_MARKER = re.compile(r"(?<![ء-ي])(?P<label>السائل(?:\s*\([^)]{1,30}\))?|مولانا\s+الشيخ|سيدي\s+فخر\s+الدين|الشيخ|سؤال|الجواب|جواب|س|ج)\s*[:：]")
 
 
 def speaker_span(text: str, start: int, end: int) -> dict:
-    """Assign roles to source offsets; expose boundaries crossed by a span."""
+    """Canonical code-point segments; question/answer markers stay whole."""
     start=max(0,min(start,len(text)));end=max(start,min(end,len(text)))
-    markers=list(SPEAKER_MARKER.finditer(text[:end]))
-    if not markers:return {}
-    positions=[start]+[m.start() for m in markers if start<m.start()<end]+[end]
+    marks=list(SPEAKER_MARKER.finditer(text));events=[]
+    for i,m in enumerate(marks):
+        label=m.group('label');question=label.startswith(('السائل','سؤال')) or label=='س'
+        role='question' if question else 'answer'
+        name='السائل' if question else label if 'الشيخ' in label or 'فخر' in label else None
+        events.append((m.start(),role,name,'explicit_marker' if name else 'structural'))
+        if question:
+            stop=marks[i+1].start() if i+1<len(marks) else len(text)
+            close=re.search(r'[؟?]',text[m.end():stop])
+            if close:events.append((m.end()+close.end(),'answer',None,'structural'))
+    events.sort();positions=sorted({start,end,*[pos for pos,_,_,_ in events if start<pos<end]})
     segments=[]
     for a,b in zip(positions,positions[1:]):
-        prior=next((m for m in reversed(markers) if m.start()<=a),None)
-        if prior is None:continue
-        label=prior.group('label')
-        role='question' if label.startswith(('السائل','سؤال')) else 'answer'
-        speaker='السائل' if role=='question' else 'مولانا الشيخ' if 'الشيخ' in label else None
-        segments.append({'start':a,'end':b,'role':role,'speaker':speaker})
+        prior=next((e for e in reversed(events) if e[0]<=a),None)
+        if prior is None or not text[a:b].strip():continue
+        _,role,name,basis=prior
+        segments.append({'start':a,'end':b,'role':role,'speaker':name,'basis':basis})
     if not segments:return {}
-    if len({(s['role'],s['speaker']) for s in segments})>1:
+    if len({(x['role'],x['speaker']) for x in segments})>1:
         return {'speaker':'mixed','dialogue_role':'mixed','speaker_segments':segments,
                 'speaker_basis':'explicit_markers_in_span'}
     first=segments[0]
     return {'speaker':first['speaker'],'dialogue_role':first['role'],
-            'speaker_segments':segments if len(segments)>1 else [],
-            'speaker_basis':'explicit_marker'}
+            'speaker_segments':segments if len(segments)>1 else [],'speaker_basis':first['basis']}
 
 
 def attribution_at(text: str, start: int, end: int | None = None) -> dict:

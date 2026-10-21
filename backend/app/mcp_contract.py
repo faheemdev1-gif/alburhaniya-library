@@ -7,9 +7,9 @@ import json
 from typing import Any
 
 
-SERVER_VERSION = "2.10.14"
-TOOL_CONTRACT_VERSION = "13.0"
-TOOL_CONTRACT_ID = "alburhaniya-tools-v13"
+SERVER_VERSION = "2.10.15"
+TOOL_CONTRACT_VERSION = "14.0"
+TOOL_CONTRACT_ID = "alburhaniya-tools-v14"
 
 REQUIRED_TOOLS = frozenset({
     "search_library",
@@ -94,12 +94,29 @@ def validate_registered_tools(server: Any) -> tuple[str, ...]:
 def contract_metadata(tools: Iterable[str] | None = None) -> dict[str, Any]:
     """Versioned metadata for health checks and deployment diagnostics."""
     actual = validate_tool_names(tools or REQUIRED_TOOLS)
+    from app.services.compact_response import ULTRA_FIELDS,BASE_FIELDS
+    from app.services.traffic_metrics import traffic_summary
     return {
-        "changes_since_previous":["Attested subject phrases keep role nouns: ما صفات المريد الصادق now retrieves b07 p138 and b16 p37","Source-attested synonyms bridge خشية/خوف, أمل/رجاء and محبة/حب with Prophet names, restoring b37 p156 and b12 p174 for new wordings","Paragraph reads on explicit numbered headings include the following section through the next heading; the prior after_heading pointer is superseded","Weak or empty evidence reports reformulation_status ok when all planned stages completed; fewer_than_limit_reason and normalized_pages clarify diagnostics","Lexeme expansion keeps the initial waw in وسواس and the taa marbuta in الصدقة","Local relation labels guard narrative companionship, formulaic رياء, and anger without remedy cues; speaker boundaries are exposed for mixed dialogue","b37 source_author is derived consistently from visible front matter and compiler; documentary review remains pending"],
-        "known_issues":["Independent source and documentary review remains open; no reviewer or review date was invented","Labels remain automated candidates until 200 hits receive independent grades","Private held-out Direct@5 and 7-day deployed acceptance remain pending","Scheduled monitoring needs a persistent mounted path to survive deploy container replacement","Some source topics have only passing mentions; no unsupported answer is inferred","Clients must refresh tools/list for contract 13"],
+        "changes_since_previous":[
+            "Persistent source evidence units, bounded route-family fusion and explicit caps",
+            "Subject-preserving question frames and typed unreviewed discovery links",
+            "Canonical get_page text with source-resolving code-point spans on every search path",
+            "Unreliable printed labels omitted; speaker and support metadata validated before projection",
+            "Supervisor-visible validated lexical checkpoints and cooperative cancellation",
+            "Reversible compact/ultra evidence projections and separate full diagnostics",
+            "Configurable all-traffic attempt metrics separate from scheduled samples"],
+        "known_issues":[
+            "No independent held-out Direct@5 or 10/10 rating established",
+            "Domain lexicon and automated support labels remain unreviewed and uncalibrated",
+            "Documentary provenance and unresolved printed labels need original scans and review",
+            "Production latency, client schema refresh and durable seven-day monitoring need deployment verification",
+            "No cross-encoder or contextual morphology model has been independently benchmarked"],
         "reformulation_status_policy":{"ok":"All planned discovery stages completed; not an answer-quality judgement","degraded":"A stage was skipped or stopped; inspect partial results","not_needed":"Literal/terms/lexeme path, no question rewrite"},
         "coverage_register":[{"topic":"raising children","status":"weak_coverage","basis":"Supplied audit: two passing mentions, no substantive guidance","grading_policy":"exclude from direct-answer denominator; do not invent filler"}],
         "result_defaults_policy":"Search hits inherit result_defaults; explicit hit fields override defaults. Contract 12 clients must expand defaults.",
+        "ultra_aliases":{**BASE_FIELDS,**{v:k for k,v in ULTRA_FIELDS.items()}},
+        "coordinate_policy":"Unicode code points in canonical unformatted get_page.text; half-open spans",
+        "traffic_monitoring":traffic_summary(),
         "monitoring":__import__("app.services.monitoring",fromlist=["monitoring_summary"]).monitoring_summary(),
         "rate_limit":{"requests_per_minute":__import__("app.core.config",fromlist=["get_settings"]).get_settings().mcp_requests_per_minute,"scope":"authenticated_client_or_peer_ip","retry_policy":"HTTP 429 JSON-RPC with Retry-After and retry_after_ms"},
         "server_version": SERVER_VERSION,
@@ -118,6 +135,12 @@ def contract_metadata(tools: Iterable[str] | None = None) -> dict[str, Any]:
 def bind_callable_schema(server: Any) -> None:
     """Validate capabilities against tools/list and fingerprint callable schemas."""
     tools = server._tool_manager.list_tools()
+    # The callable declarations are authoritative for every advertised argument.
+    for tool in tools:
+        SCHEMA_CAPABILITIES.setdefault(tool.name,{})["supported_parameters"]=sorted(tool.parameters.get("properties",{}))
+    global SCHEMA_DIGEST
+    SCHEMA_DIGEST=hashlib.sha256(json.dumps(SCHEMA_CAPABILITIES,ensure_ascii=False,sort_keys=True,separators=(',',':')).encode()).hexdigest()
+    TOOL_META['schema_digest']=SCHEMA_DIGEST
     schemas = {tool.name: tool.parameters for tool in tools}
     for name, capability in SCHEMA_CAPABILITIES.items():
         properties = schemas[name].get('properties', {})

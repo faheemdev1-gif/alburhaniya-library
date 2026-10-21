@@ -11,7 +11,7 @@ FIXTURES=Path(__file__).parent/'data'
 
 def test_repeated_pagination_is_unambiguous_everywhere():
     pages=[get_page('b01',seq) for seq in (153,193)]
-    assert pages[0]['printed_page']==pages[1]['printed_page']=='70'
+    assert all(p.get('printed_page') is None for p in pages)
     assert pages[0]['citation_label']!=pages[1]['citation_label']
     for p in pages:
         assert p['page_id'] in p['citation_label']

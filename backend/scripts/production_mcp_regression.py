@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import asyncio
 import json
 import os
@@ -18,6 +19,7 @@ sys.path.insert(0, str(ROOT))
 from mcp import ClientSession
 from mcp.client.streamable_http import streamable_http_client
 
+from app.mcp_server import mcp as _local_schema_registry  # Bind the authoritative callable manifest.
 from app.mcp_contract import (
     REQUIRED_TOOLS,
     SCHEMA_DIGEST,
@@ -166,7 +168,8 @@ async def _discover_all(session: ClientSession) -> list[Any]:
 async def run(endpoint: str, discovery_only: bool = False) -> dict[str, Any]:
     health = await _validate_live_health(endpoint)
     local = urlsplit(endpoint).hostname in {"localhost", "127.0.0.1", "::1"}
-    async with httpx.AsyncClient(timeout=300.0, follow_redirects=True, trust_env=not local) as client, \
+    headers={'Authorization':'Bearer '+os.environ['MCP_MONITOR_API_KEY']} if os.environ.get('MCP_MONITOR_API_KEY') else None
+    async with httpx.AsyncClient(timeout=300.0, follow_redirects=True, trust_env=not local,headers=headers) as client, \
             streamable_http_client(endpoint, http_client=client) as (read_stream, write_stream, _):
         async with ClientSession(read_stream, write_stream) as session:
             init = await session.initialize()
@@ -399,8 +402,11 @@ async def run(endpoint: str, discovery_only: bool = False) -> dict[str, Any]:
                 ))
                 if full_page.get("truncated") or full_page.get("full_chars", 0) < 8000:
                     raise AssertionError("get_page silently truncated b44 page 12")
-                if "quran_bracket_direction" not in (full_page.get("display_repairs") or []):
-                    raise AssertionError("get_page did not repair inverted Quran brackets")
+                coordinates=full_page.get('coordinate_contract',{})
+                if not (coordinates.get('representation_id')=='canonical-page-text-v1' and
+                        coordinates.get('offset_unit')=='unicode_codepoint' and
+                        coordinates.get('text_sha256')==hashlib.sha256(full_page['text'].encode()).hexdigest()):
+                    raise AssertionError('get_page source-coordinate contract does not resolve to returned text')
                 smoke["full_page_default"] = "pass"
 
                 footnote_page = _structured(await session.call_tool(

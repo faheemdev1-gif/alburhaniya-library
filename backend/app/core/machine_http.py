@@ -31,21 +31,29 @@ class MachineHTTP:
 def enable_threaded_tools(mcp):
  import anyio
  limiter=anyio.CapacityLimiter(2)
+ lexical_limiter=anyio.CapacityLimiter(2)
  for tool in mcp._tool_manager.list_tools():
   if tool.is_async:continue
   fn=tool.fn
   @wraps(fn)
   async def threaded(*args,__fn=fn,**kwargs):
+   from app.core.search_trace import CURRENT_TRACE,SearchTrace,partial_response
+   trace=SearchTrace();trace_token=CURRENT_TRACE.set(trace)
    enqueued=time.perf_counter()
    def execute():
     token=QUEUE_WAIT.set((time.perf_counter()-enqueued)*1000)
     try:return __fn(*args,**kwargs)
     finally:QUEUE_WAIT.reset(token)
-   seconds=min(19.0,max(.01,get_settings().request_budget_seconds));token=DEADLINE.set(time.monotonic()+seconds)
+   seconds=min(19.0,max(.01,get_settings().request_budget_seconds));token=DEADLINE.set(time.monotonic()+seconds-.05)
+   active_limiter=lexical_limiter if kwargs.get('match_mode') in ('exact','terms','lexeme') or __fn.__name__!='search_library' else limiter
    try:
-    with anyio.fail_after(seconds):return await anyio.to_thread.run_sync(execute,limiter=limiter,abandon_on_cancel=True)
+    with anyio.fail_after(seconds):return await anyio.to_thread.run_sync(execute,limiter=active_limiter,abandon_on_cancel=True)
    except TimeoutError:
-    from app.core.resilience import safe_error_payload
-    result=safe_error_payload('time_budget_exceeded','Request budget exhausted; narrow the query.',retryable=True);result['truncated_by_budget']=True;result['stage']='queue_or_worker_deadline';result['candidate_counts']={};result['partial_results_available']=False;result['timing']={'total_ms':round((time.perf_counter()-enqueued)*1000,3),'scope':'queue_and_worker_wait'};return result
-   finally:DEADLINE.reset(token)
+    trace.cancelled.set()
+    result=partial_response(trace,kwargs)
+    from app.services.traffic_metrics import record_attempt
+    record_attempt(trace.request_id,__fn.__name__,result,(time.perf_counter()-enqueued)*1000)
+    return result
+   finally:
+    DEADLINE.reset(token);CURRENT_TRACE.reset(trace_token)
   tool.fn=threaded;tool.is_async=True

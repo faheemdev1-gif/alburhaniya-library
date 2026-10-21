@@ -37,7 +37,7 @@ class Release270Tests(unittest.TestCase):
 
     def test_completeness_is_opt_in_without_counts(self):
         args = dict(query='طمأنينة',match_mode='lexeme',limit=2)
-        self.assertEqual(search_library(**args)['retrieval_completeness']['status'],'not_checked')
+        self.assertEqual(search_library(**args,detail='full')['retrieval_completeness']['status'],'not_checked')
         r = search_library(**args,check_completeness=True)
         self.assertEqual(r['retrieval_completeness']['method'],'actual_retrieved_candidates')
         self.assertEqual(r['retrieval_completeness']['status'],'ok')
@@ -130,7 +130,7 @@ class Release270Tests(unittest.TestCase):
         with TestClient(app) as client:
             response=client.get('/health')
             self.assertEqual(response.status_code,200)
-            self.assertEqual(response.json()['server_version'],'2.10.14')
+            self.assertEqual(response.json()['server_version'],'2.10.15')
             self.assertEqual(response.json()['tool_count'],5)
             self.assertEqual(response.json()['corpus_contract']['status'],'ok')
 

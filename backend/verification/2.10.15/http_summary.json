@@ -1,0 +1,7 @@
+{
+  "protocol": "pass",
+  "smoke_checks": 18,
+  "concurrent_calls": 8,
+  "concurrent_errors": 0,
+  "client_max_ms": 3986.982
+}

@@ -18,6 +18,8 @@ def profiled(name):
  def decorate(fn):
   @wraps(fn)
   def wrapped(*a,**kw):
+   from app.core.search_trace import stage
+   stage(name)
    t=perf_counter()
    try:return fn(*a,**kw)
    finally:record_phase(name,t)

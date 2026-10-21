@@ -6,6 +6,7 @@ from app.core.arabic_utils import safe_tokens,normalize_search_text
 RULING_WORDS=set('حرام حلال يجوز تجوز جائز جايز مكروه مباح واجب يمكن ممكن ينبغي يجب'.split())
 FUNCTION_WORDS=set('ما ماذا هل كيف لماذا متى أين اين من في على إلى الى عن مع و أو أم ثم هذا هذه ذلك تلك هو هي هم هن نحن أنا انا أنت انت الذي التي الذين إن أن كان كانت يكون وهل وما وهو وهي به بها لهم له لها عليه عليها عليهم لكي حتى عند بين كل أي اي ولا إلا لا لم لن بس لو لما عشان إزاي ازاي إيه ايه ليه عايز عاوز أعمل اعمل بماذا'.split())
 FUNCTION_WORDS|=RULING_WORDS
+FUNCTION_WORDS |= set('التي تدل حتى تكون مجرد وحدها وحده سيدنا انشغال الجوارح'.split())
 KEYS={normalize_search_text(t,level='broad') for t in FUNCTION_WORDS}
 FRAMES=sorted(['إيه رأي مولانا في','ما حقيقة','ما المراد بـ','ما المراد ب','ما المراد','ما المقصود بـ','ما المقصود ب','ما المقصود','ما ثواب','ما فضل','ما فائدة','ما أثر','ما هي','ما هو','ما حكم','ما معنى','ما الفرق بين','كيف يفرق الشيخ بين','كيف يفرق بين','كيف يجمع السالك بين','كيف يجمع بين','كيف يميز السالك بين','كيف يميز بين','كيف أميز بين','كيف يختلف','ما التوازن بين','لماذا تعد','لماذا يعتبر','إيه أعمل','ما','كيف','هل','لماذا','متى','ماذا','بماذا','إيه','ايه','عايز','عاوز','ليه','إزاي','ازاي'],key=len,reverse=True)
 _PAIR = re.compile(r'(?:الفرق|التوازن|يفرق|يجمع|يميز|أميز)\s+(?:(?:الشيخ|السالك)\s+)?بين\s+([ء-ي]+)\s+و\s*([ء-ي]+)')
@@ -45,6 +46,12 @@ DISCOVERY_VARIANTS = {
  'الرسول': ('محمد','النبي'),
  'صادق': ('صدق',), 'صدق': ('صادق',),
  'محبة': ('حب',), 'حب': ('محبة',),
+ 'ثناء': ('مدح','رياء'), 'أخلص': ('إخلاص','الإخلاص'),
+ 'يحب': ('حب','محبة'), 'علامات': ('علامة',),
+ 'المشايخ': ('الشيخ','شيخ'), 'مشايخ': ('شيخ',),
+ 'الفواتح': ('الفاتحة','فاتحة'), 'فواتح': ('الفاتحة','فاتحة'),
+ 'بقلبي': ('القلب','بقلبه'), 'بقلبه': ('القلب','بقلبي'),
+ 'يخشى': ('خشية','الخوف'), 'يرجو': ('رجاء','الرجاء'),
 }
 
 def synonym_variants(term):
@@ -155,6 +162,7 @@ def comparison_subjects(query):
  cleaned=[]
  for part in parts:
   part=re.sub(r'^و(?=[ء-ي])','',part.strip())
+  part=re.sub(r'^(?:مجرد|محض)\s+','',part)
   part=_TRAILING_CONTEXT.sub('',part).strip()
   part=re.sub(r'\s+(?:الحقيقي|الحقيقية)$','',part).strip()
   # A prepositional modifier ("خوفه من ربه", "الرجاء في رحمته") qualifies
@@ -222,7 +230,8 @@ def question_frame(query):
  if permission:
   return {'intent':'permission','slots':[permission.group(1)],'subject_phrase':permission.group(1),
           'frame_words':['هل','يجوز'],'cues':[],'presupposition':False}
- return None
+ from app.services.intent_frames import parse_frame
+ return parse_frame(query)
 
 
 def subject_phrase(query):
@@ -231,7 +240,7 @@ def subject_phrase(query):
  if subjects:return ' و'.join(subjects)
  frame=question_frame(query)
  if frame and frame.get('concept_subjects'):return ' و'.join(frame['concept_subjects'])
- if frame:return frame['subject_phrase']
+ if frame and (not frame.get('policy_version') or frame['intent'] in {'condition','signs','identity'}):return frame['subject_phrase']
  # صفات asks for the relation; the following attested noun phrase is the
  # subject. Retaining صفات in the literal phrase loses المريد الصادق.
  query=re.sub(r'^ما\s+صفات\s+(?=\S+\s+\S+)', '', query)
@@ -260,13 +269,14 @@ def subject_phrase(query):
 def language_plan(query,keep_terms=()):
  keep={normalize_search_text(t,level='broad') for t in keep_terms}
  frame=question_frame(query)
- source=' '.join(frame['slots']) if frame else subject_phrase(query)
+ source=(' '.join(frame['slots']) if frame and (not frame.get('policy_version') or frame['intent'] in {'condition','signs','identity'}) else subject_phrase(query))
  tokens=list(dict.fromkeys(safe_tokens(source)+[t for t in safe_tokens(query) if normalize_search_text(t,level='broad') in keep]))
  terms=[t for t in tokens if normalize_search_text(t,level='broad') not in KEYS or normalize_search_text(t,level='broad') in keep]
+ if frame and frame['intent']=='merit':terms=[t for t in terms if t not in {'ينال'}]
  focus=re.match(r'^ما\s+(ثواب|فضل|أجر)\b',query)
  focus_word=focus.group(1) if focus else None
  if focus_word and focus_word not in terms:terms.append(focus_word)
- negation=any(t in safe_tokens(query) for t in ('لا','لم','لن','ولا')) or any(t.endswith('ش') and len(t)>4 for t in tokens)
+ negation=any(t in safe_tokens(query) for t in ('لا','لم','لن','ولا','ليس')) or any(t.endswith('ش') and len(t)>4 for t in tokens)
  # Initial ما is an interrogative in these frames. Only a later ما can negate.
  negation=negation or bool(re.search(r'\S+\s+ما\s+',query))
  subjects=comparison_subjects(query)
@@ -277,8 +287,20 @@ def language_plan(query,keep_terms=()):
  observance=bool(re.search(r'(?:أحيي|نحيي|يحيي|تحيي)(?:ها)?\b',query) and re.search(r'ليلة\s+القدر',query))
  preference=bool(subjects and re.search(r'\b(?:يغلب|يرجح|يقدم|يفضل)\b',normalize_search_text(query,level='safe')))
  facets=(['merit'] if re.match(r'^ما\s+(?:فضل|ثواب|أجر)\b',query) else [])+(['observance'] if observance else [])+(['preference'] if preference else [])
+ if not frame:
+  conditional=re.match(r'^إذا\s+(.+?)\s+ف(هل|كيف)\s+(.+)$',query)
+  if conditional:
+   frame={'intent':'condition','slots':[conditional[1],conditional[3]],'subject_phrase':subject,
+          'frame_words':['إذا'],'cues':['ف'+conditional[2]],'qualifiers':conditional[1],
+          'presupposition':False,'policy_version':'frames-1.0'}
+  else:
+   from app.services.concept_links import query_groups
+   if query_groups(query)==['heart_dhikr','commerce']:
+    frame={'intent':'coexistence','slots':['heart_dhikr','commerce'],'subject_phrase':subject,
+           'frame_words':[],'cues':[t for t in safe_tokens(query) if t in {'مع','وهو','وأنا','يمنعان'}],
+           'presupposition':False,'policy_version':'frames-1.0'}
  if frame and frame['intent'] not in facets:facets.append(frame['intent'])
- return {'subject_phrase':subject,'terms':terms,'focus_word':focus_word,'dropped_function_words':[t for t in safe_tokens(query) if normalize_search_text(t,level='broad') in KEYS and normalize_search_text(t,level='broad') not in keep],'negation_present':negation,'comparison_subjects':subjects,'requested_facets':facets,'question_frame':frame}
+ return {'subject_phrase':subject,'terms':terms,'focus_word':focus_word,'dropped_function_words':[t for t in safe_tokens(query) if normalize_search_text(t,level='broad') in KEYS and normalize_search_text(t,level='broad') not in keep and t not in (frame or {}).get('cues',[])],'negation_present':negation,'comparison_subjects':subjects,'requested_facets':facets,'question_frame':frame}
 def derived_nouns(word):
  """Verbal nouns of common derived verb patterns, kept only when attested.
 

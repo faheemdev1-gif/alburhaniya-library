@@ -117,7 +117,8 @@ def livelihood_intent(query):
 
 
 def is_question(query):
- return len(safe_tokens(query))>=2 and (len(safe_tokens(query)) > 3 and bool(plan(query)['groups']) or any(query.startswith(frame+' ') for frame in FRAMES))
+ from app.services.query_language import question_frame
+ return len(safe_tokens(query))>=2 and (bool(question_frame(query)) or bool(__import__('re').search(r'^إذا\b.+(?:فكيف|فهل)',query)) or len(safe_tokens(query)) > 3 and bool(plan(query)['groups']) or any(query.startswith(frame+' ') for frame in FRAMES))
 
 
 def discovery_phrases(queries,limit=6):

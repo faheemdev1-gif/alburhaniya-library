@@ -38,6 +38,8 @@ def test_weak_coverage_no_root_filler():
 def test_quoted_opponent_warning_survives_compaction():
  for mode in ['compact','ultra_compact']:
   r=search_library(query='ما حكم زيارة قبور الأولياء والتوسل بهم',limit=5,mode=mode)
+  from app.services.compact_response import decode_search_response
+  r['results']=decode_search_response(r)['results']
   h=next(h for h in r['results'] if (h.get('book_id',h.get('b')),h.get('seq',h.get('s')))==('b07',256))
   assert h['reported_view'] and h['attribution_warning']
 
@@ -53,14 +55,14 @@ def test_partial_evidence_survives_later_deadline():
  query='ما فضل الصلاة على النبي صلى الله عليه وسلم'
  def timeout(*a,**kw):
   DEADLINE.set(time.monotonic()-1);raise BudgetExceeded()
- with patch('app.services.question_search.passage_candidates',side_effect=timeout):r=search_library(query=query,limit=5)
+ with patch('app.services.question_search.passage_candidates',side_effect=timeout):r=search_library(query=query,limit=5,detail='full')
  assert not r.get('error') and r['results'] and r['completion']=='partial'
  assert r['stages_skipped'] and r['candidate_counts']['phrase_candidates']>0
 
 def test_error_timing_and_retry_are_present():
  r=search_library(query='طمأنينة',match_mode='lexeme',min_tier=9)
  assert r['error'] and r['timing'] and r['stage'] and 'candidate_counts' in r
- assert r['retry']['match_mode']=='exact'
+ assert r['retry']['match_mode']=='auto' and r['retry']['query']=='طمأنينة'
 
 def test_census_literal_subset():
  r=search_library(query='طمأنينة',match_mode='lexeme',include_counts=True,limit=5)

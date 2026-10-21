@@ -250,6 +250,7 @@ def get_page(
             "error": f"no page {seq} in book '{book_id}'",
         }
 
+    if page.get('pagination_status')=='repeated_printed_label_unresolved':page['printed_page']=None
     from app.core.attribution import REPORTED, attribution_at
     # A page can contain opposing speakers. Preserve the original offsets so
     # the reader can locate guarded statements in the unformatted source.
@@ -259,8 +260,9 @@ def get_page(
         if (guard := attribution_at(page["text"], m.end())).get("reported_view")
     ]
 
-    page["text"] = format_page(page["text"])
-    page["text"], repaired_brackets = repair_quran_display_brackets(page["text"])
+    # Canonical page text is the coordinate authority. Display transforms belong
+    # in HTML views; they must never invalidate search/attribution offsets.
+    repaired_brackets = False
     requested_max_chars = max_chars
     max_chars = max(1, min(max_chars, 20000))
     full_chars = len(page["text"])
@@ -276,6 +278,7 @@ def get_page(
             "tier": page["source_tier"],
             "seq": page["seq"],
             "text": page["text"],
+            "coordinate_contract": page["coordinate_contract"],
             "full_chars": full_chars,
             "requested_max_chars": requested_max_chars,
             "effective_max_chars": max_chars,
@@ -548,6 +551,9 @@ def search_library(
         mode: compact or ultra_compact. When expand_top is requested,
             compact returns expanded_passage and ultra_compact returns the
             same bounded passage object under the abbreviated key ep.
+            Contract 14 aliases are reversible using the published decoder map
+            in contract metadata. Source spans address canonical get_page.text.
+            Candidate support is uncalibrated and never verifies an answer.
             Ultra-compact search hits expose citation_label as c and
             block_type as blk (body or toc). The key bt remains bayt_to.
         match_mode: auto, exact, terms, hybrid, or lexeme. When a local
@@ -742,6 +748,8 @@ def search_library(
     if match_mode != "auto":
         rows = search_fn(**search_args)
 
+    from app.services.hit_contract import canonical_hit
+    rows=[canonical_hit(row,db.get_page(row['book_id'],row['seq'])) for row in rows]
     has_more = len(rows) > limit
     results = rows[:limit]
     count_details = None
@@ -824,6 +832,10 @@ def search_library(
             payload["query_plan"] = [{"original_query":q, **anchor_plan(q,keep_terms or ())} for q in raw_queries]
             payload["dropped_function_words"] = list(dict.fromkeys(t for p in payload["query_plan"] for t in p["dropped_function_words"]))
             payload["answer_verified"] = False
+        from app.services.evidence_units import INDEX_VERSION
+        from app.services.concept_links import VERSION as LEXICON_VERSION
+        from app.services.intent_frames import VERSION as FRAME_VERSION
+        payload['versions']={'index':INDEX_VERSION,'lexicon':LEXICON_VERSION,'cues':FRAME_VERSION,'ranker':'source-rules-fusion-1'}
         payload["ranking_policy"] = db.ranking_policy(ranking)
         payload["effective_match_mode"] = effective_match_mode
         payload["whole_word"] = bool(whole_word)

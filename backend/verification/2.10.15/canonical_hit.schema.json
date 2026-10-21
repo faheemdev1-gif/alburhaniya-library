@@ -1,0 +1,204 @@
+{
+  "$defs": {
+    "SourceSpan": {
+      "properties": {
+        "start": {
+          "minimum": 0,
+          "title": "Start",
+          "type": "integer"
+        },
+        "end": {
+          "exclusiveMinimum": 0,
+          "title": "End",
+          "type": "integer"
+        },
+        "source_quote": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Source Quote"
+        }
+      },
+      "required": [
+        "start",
+        "end"
+      ],
+      "title": "SourceSpan",
+      "type": "object"
+    },
+    "SpeakerEvidence": {
+      "properties": {
+        "anchor_role": {
+          "enum": [
+            "unknown",
+            "question",
+            "answer",
+            "mixed"
+          ],
+          "title": "Anchor Role",
+          "type": "string"
+        },
+        "passage_role": {
+          "enum": [
+            "unknown",
+            "question",
+            "answer",
+            "mixed"
+          ],
+          "title": "Passage Role",
+          "type": "string"
+        },
+        "basis": {
+          "enum": [
+            "none",
+            "structural",
+            "explicit_marker"
+          ],
+          "title": "Basis",
+          "type": "string"
+        },
+        "name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Name"
+        },
+        "review_status": {
+          "const": "unreviewed",
+          "default": "unreviewed",
+          "title": "Review Status",
+          "type": "string"
+        },
+        "segments": {
+          "items": {
+            "additionalProperties": true,
+            "type": "object"
+          },
+          "title": "Segments",
+          "type": "array"
+        }
+      },
+      "required": [
+        "anchor_role",
+        "passage_role",
+        "basis"
+      ],
+      "title": "SpeakerEvidence",
+      "type": "object"
+    },
+    "SupportEstimate": {
+      "properties": {
+        "estimate": {
+          "enum": [
+            "candidate",
+            "topical"
+          ],
+          "title": "Estimate",
+          "type": "string"
+        },
+        "method": {
+          "title": "Method",
+          "type": "string"
+        },
+        "calibrated": {
+          "const": false,
+          "default": false,
+          "title": "Calibrated",
+          "type": "boolean"
+        },
+        "review_status": {
+          "const": "unreviewed",
+          "default": "unreviewed",
+          "title": "Review Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "estimate",
+        "method"
+      ],
+      "title": "SupportEstimate",
+      "type": "object"
+    }
+  },
+  "additionalProperties": true,
+  "properties": {
+    "book_id": {
+      "title": "Book Id",
+      "type": "string"
+    },
+    "seq": {
+      "minimum": 1,
+      "title": "Seq",
+      "type": "integer"
+    },
+    "match_id": {
+      "pattern": "^b\\d+-p\\d+-c\\d+$",
+      "title": "Match Id",
+      "type": "string"
+    },
+    "score": {
+      "maximum": 1,
+      "minimum": 0,
+      "title": "Score",
+      "type": "number"
+    },
+    "printed_page": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Printed Page"
+    },
+    "evidence_span": {
+      "$ref": "#/$defs/SourceSpan"
+    },
+    "speaker_evidence": {
+      "$ref": "#/$defs/SpeakerEvidence"
+    },
+    "support": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/SupportEstimate"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null
+    },
+    "answer_verified": {
+      "const": false,
+      "default": false,
+      "title": "Answer Verified",
+      "type": "boolean"
+    }
+  },
+  "required": [
+    "book_id",
+    "seq",
+    "match_id",
+    "score",
+    "evidence_span",
+    "speaker_evidence"
+  ],
+  "title": "CanonicalHit",
+  "type": "object"
+}

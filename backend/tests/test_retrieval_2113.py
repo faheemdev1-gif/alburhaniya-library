@@ -18,7 +18,7 @@ def test_children_mentions_remain_weak_and_scoped():
 
 
 def test_ten_gate_rejects_public_only_or_ungraded_claims():
-    with pytest.raises(ValueError, match='300 answerable intents'):
+    with pytest.raises(ValueError, match='334 answerable intents'):
         score({'owner': 'independent reviewer', 'release': '2.10.13', 'questions': []})
     with pytest.raises(ValueError, match='independent review'):
         score({'owner': 'independent reviewer', 'release': '2.10.13',

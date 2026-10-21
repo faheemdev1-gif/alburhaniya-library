@@ -9,13 +9,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libmagic1 poppler-utils \
     && rm -rf /var/lib/apt/lists/*
 
-COPY requirements-core.txt requirements-dev.txt ./
+COPY requirements-lock.txt ./
 ENV PIP_DEFAULT_TIMEOUT=120
 RUN python -m pip install \
     --no-cache-dir \
     --retries 10 \
     --timeout 120 \
-    -r requirements-dev.txt
+    -r requirements-lock.txt
 COPY . .
 
 # library.db is a generated build artifact (over 100 MiB with research
