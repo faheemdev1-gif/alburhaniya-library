@@ -1,8 +1,8 @@
-# Al Burhaniya Connector 2.10.16 / contract 15
+# Al Burhaniya Connector 2.10.17 / contract 15
 
 This is a tested engineering update, not a certified 10/10 service. Read
 RELEASE_REPORT.md for measured results and the remaining acceptance gates.
-This release closes the previously deferred canonical cache, minimal response encoding, shared qasida/expansion metadata, relation-route retention and build-isolated monitoring changes.
+This release reduces repeated checkpoint copying, preserves specific discovery routes, handles attached Arabic prefixes, separates shared concept aliases and builds the lexeme spelling dictionary before requests. Fixed language patterns compile during worker startup. Contract 15 input schemas and response decoding are unchanged.
 The uploaded source books are unchanged. Optional semantic assets are preserved;
 semantic search remains disabled by default and has not been independently graded.
 
@@ -12,10 +12,10 @@ semantic search remains disabled by default and has not been independently grade
    existing Render environment variables, endpoint and access controls.
 2. Use the included Dockerfile and redeploy. It uses Python 3.12 and installs the pinned lock file,
    rebuilds library.db, runs the tests, corpus audit and token-budget gates. The generated DB
-   must be rebuilt; an older DB is not compatible with the new evidence units.
-3. Confirm `/health` reports server_version `2.10.16`, tool_contract_version
+   must be rebuilt for evidence-units-1.2, including the build-time lexeme spelling table.
+3. Confirm `/health` reports server_version `2.10.17`, tool_contract_version
    `15.0`, five tools, and corpus_contract.status `ok`.
-4. Refresh/reconnect every MCP client so it reloads tools/list. Contract 15 changes
+4. Refresh/reconnect every MCP client so it reloads tools/list. This release retains contract 15. Contract 15 introduced
    the ultra minimal encoding (lossless-15), omits unreliable printed labels, and returns canonical raw
    get_page text so search offsets resolve exactly. Clients must use the supplied
    decoder app.services.compact_response.decode_search_response, inherited defaults,
@@ -56,10 +56,11 @@ deduplicate by request_id. Scheduled probes alone are not all-traffic evidence.
    python scripts/measure_workflow_2115.py
    python scripts/check_token_budgets.py
    python scripts/verify_http_2116.py
+   python scripts/benchmark_questions_2117.py --output verification/2.10.17/controlled_local.json
 
 These replay disclosed development cases and measure equivalent responses. They
 do not generate an independent quality score. The full JSON evidence, typed hit
-schema, source hashes and test output are under verification/2.10.16/.
+schema, source hashes and test output are under verification/2.10.17/.
 
 An independent reviewer can run evaluate_private_set.py against the deployed
 endpoint, grade source spans, and pass the graded file to score_retrieval_10.py.

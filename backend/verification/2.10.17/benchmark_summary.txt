@@ -1,0 +1,26 @@
+{
+  "version": "2.10.17",
+  "scope": "Controlled local direct question pipeline with new immutable trace per call, fixed language patterns precompiled for both versions, no answer-cache reuse, 18 disclosed questions repeated 3 times per budget. 0.25-second budget is a synthetic stress condition, not Render or independent answer grading.",
+  "precompile_ms": 2409.581,
+  "summaries": [
+    {
+      "budget_s": 5.0,
+      "calls": 54,
+      "source_page_hits": 54,
+      "full": 54,
+      "partial": 0,
+      "median_ms": 280.868,
+      "p95_ms": 547.765
+    },
+    {
+      "budget_s": 0.25,
+      "calls": 54,
+      "source_page_hits": 52,
+      "full": 10,
+      "partial": 44,
+      "median_ms": 177.234,
+      "p95_ms": 196.409
+    }
+  ],
+  "first_scoped_lexeme_ms": 853.126
+}

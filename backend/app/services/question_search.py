@@ -244,9 +244,9 @@ def supporting_span(query,text,keep_terms=(),ap=None,features=None):
   if best is None or value>best[0]:best=candidate
  return best
 @profiled("excerpt_selection")
-def make_row(page,query,start,end,score,matched,relation,context_chars=180):
+def make_row(page,query,start,end,score,matched,relation,context_chars=180,query_plan=None):
  text=page['text'];row={k:v for k,v in page.items() if k not in ('text','has_next','has_prev','content_types','evidence_blocks')};snippet=db._evidence_excerpt(text,start,end,context_chars,[])
- query_plan=language_plan(query)
+ query_plan=query_plan if query_plan is not None else language_plan(query)
  row.update(score=round(max(0,min(.99,score)),6),match_type='reformulated',score_kind='local_span_discovery',match_id=f"{page['book_id']}-p{page['seq']}-c{start}",snippet=snippet,evidence_span={'start':start,'end':end,'excerpt':snippet},original_queries=[query],reformulation_method='phrase_and_passage_union_v1',reformulation_warning='Candidate discovery only; inspect the Arabic passage before using it as an answer.',answer_verified=False,question_relevance='relation_candidate' if relation else 'topic_only',intent_term_coverage=round(len(matched)/max(1,len(query_plan['comparison_subjects'] or query_plan['terms'])),4),evidence_type=db.evidence_type(text,start,start+1),evidence_type_method='structural_heuristic',evidence_type_confidence='unverified',evidence_type_scope='start_anchor');row.update(dialogue_at(text,start))
  row['_matched_anchors']=matched
  if query_plan['comparison_subjects'] and not relation:row['comparison_side']=matched
@@ -265,6 +265,11 @@ def deduplicate(rows):
 
 def _fts(forms):
     return '(' + ' OR '.join('"'+normalize_search_text(f,level='broad').replace('"','""')+'"' for f in dict.fromkeys(forms) if len(f)>2) + ')'
+
+def _clitic_forms(forms):
+    # Match the same conservative attached prefixes accepted by local source
+    # validation. FTS stores والاخلاص as one token, not الاخلاص.
+    return tuple(dict.fromkeys(x for form in forms for x in (form,'و'+form,'ف'+form,'ب'+form,'ل'+form)))
 
 
 @profiled('candidate_union')
@@ -298,16 +303,26 @@ def passage_candidates(query, ap, scope):
         if len(groups)==1:add('intent_concepts',_fts(CONCEPTS[groups[0]])+' AND '+_fts(CONCEPTS['relief']+CONCEPTS['distress']))
     linked=query_groups(query)
     if linked:
-        add('typed_concepts',' AND '.join(_fts(normalized_forms(g)) for g in linked))
+        add('typed_concepts',' AND '.join(_fts(_clitic_forms(normalized_forms(g))) for g in linked))
+        if len(linked)>1:
+            # Related concept groups can share aliases (e.g. riya appears in
+            # both sincerity and praise-desire discovery). Reserve a route
+            # whose subjects have distinct lexical evidence, rather than
+            # allowing one shared word to fill every slot.
+            group_forms={g:set(normalized_forms(g)) for g in linked}
+            exclusive={g:forms-set().union(*(v for h,v in group_forms.items() if h!=g))
+                       for g,forms in group_forms.items()}
+            if all(exclusive.values()) and any(exclusive[g]!=group_forms[g] for g in linked):
+                add('distinct_subjects',' AND '.join(_fts(_clitic_forms(sorted(exclusive[g]))) for g in linked))
         # Preserve the requested relation in a separate bounded family so a
         # common subject cannot fill every slot before reward/condition cues.
         intent=(ap.get('question_frame') or {}).get('intent')
         from app.services.evidence_units import CUE_FORMS
         if intent in CUE_FORMS:
-            add('subject_relation',' AND '.join([*(_fts(normalized_forms(g)) for g in linked),_fts(CUE_FORMS[intent])]))
+            add('subject_relation',' AND '.join([*(_fts(_clitic_forms(normalized_forms(g))) for g in linked),_fts(CUE_FORMS[intent])]))
             surface_cues=[f for f in CUE_FORMS[intent] if pattern(f).search(query)]
             if surface_cues:
-                add('predicate_surface',' AND '.join([*(_fts(normalized_forms(g)) for g in linked),_fts(surface_cues)]))
+                add('predicate_surface',' AND '.join([*(_fts(_clitic_forms(normalized_forms(g))) for g in linked),_fts(surface_cues)]))
     if len(anchors)>=2 and not ap['comparison_subjects']:
         for left in (*synonym_variants(anchors[0]),anchors[0])[:4]:
             for right in (*synonym_variants(anchors[1]),anchors[1])[:4]:
@@ -334,9 +349,23 @@ def passage_candidates(query, ap, scope):
     # Reserve a small floor per family before filling by RRF. Otherwise an
     # exclusive relation route can lose all its candidates to multi-route
     # generic mentions despite being run successfully.
-    reserved={d['id'] for family in routes for d in sorted(output.values(),key=lambda x:x['route_ranks'].get(family,10**9))[:8]
-              if family in d['route_ranks']}
-    ordered=[d for d in ordered if d['id'] in reserved]+[d for d in ordered if d['id'] not in reserved]
+    priorities=('original_phrase','predicate_surface','distinct_subjects','content_conjunction',
+                'subject_relation','intent_concepts','typed_concepts','attested_phrase',
+                'subject_terms','content_terms')
+    families=list(dict.fromkeys((*priorities,*routes)))
+    family_lists={family:sorted((d for d in output.values() if family in d['route_ranks']),
+                               key=lambda d:(d['route_ranks'][family],d['id']))[:8]
+                  for family in families}
+    reserved=[];seen=set()
+    # Interleave the route floors instead of sorting all reserved units by
+    # their broad-route votes. Specific predicate routes now get an early
+    # validated checkpoint even when a later stage reaches its budget.
+    for position in range(8):
+        for family in families:
+            choices=family_lists[family]
+            if position<len(choices) and choices[position]['id'] not in seen:
+                d=choices[position];seen.add(d['id']);reserved.append(d)
+    ordered=reserved+[d for d in ordered if d['id'] not in seen]
     # Precomputed source-unit features; no per-request corpus scan.
     ids=[d['id'] for d in ordered[:160]]
     if ids:
@@ -366,7 +395,8 @@ def classify_row(row, query, ap, text, start, end, relation=False):
     if frame.get('intent')=='signs' and phrase:
         # A singular or plural sign cue attached to the subject is stronger
         # than the subject appearing incidentally elsewhere on a page.
-        if re.search(r'(?:علامة|علامات|من\s+علامات|دليل)\s+'+subject.pattern,window):
+        if (re.search(r'(?:علامة|علامات|من\s+علامات|دليل)\s+'+subject.pattern,window)
+                or re.search(r'(?:وضع|جعل)[^.!؟\n]{0,65}(?:شروط|الشرط)|شروط(?:ا|اً)?[^.!؟\n]{0,80}إذا',window)):
             row['score']=round(min(.985,row['score']+.20),6)
             row['question_relevance']='relation_candidate'
     if (frame.get('presupposition') or re.search(r'بديل|بديلا',query)) and (phrase or any(pattern(t).search(window) for t in ap['anchors'])) and re.search(r'مافيش|لا\s+توجد|أغنت\s+عن|لغى|ألغى|بدل(?:ا)?\s+من',window):
@@ -468,8 +498,8 @@ def search_questions(**kwargs):
     state={'completion':'full','stages_completed':[],'stages_skipped':[],
            'candidate_counts':{},'path':'full','phrase_search_counts':{}}
     SEARCH_STATE.set(state)
-    from app.core.search_trace import checkpoint, stage
-    records={};pages={};query_ids=[];plans={}
+    from app.core.search_trace import checkpoint, checkpoint_row, stage
+    records={};pages={};indexed_pages={};query_ids=[];plans={}
     overall=min(DEADLINE.get() or time.monotonic()+5,time.monotonic()+5)
     for query in queries:
         ap=anchor_plan(query,keep);plans[query]=ap;matched_ids=set()
@@ -522,7 +552,8 @@ def search_questions(**kwargs):
                 key=(candidate['book_id'],candidate['seq'])
                 if key not in pages:pages[key]=db.get_page(*key)
                 page=pages[key];left=candidate['start_char'];right=min(candidate['end_char'],left+1200)
-                window=db._indexable_text(page['text'])[left:right]
+                if key not in indexed_pages:indexed_pages[key]=db._indexable_text(page['text'])
+                window=indexed_pages[key][left:right]
                 # Filter fixed-expression homographs, never rewrite the source.
                 if re.search(r'العجب كل العجب|كتب على نفسه البقاء وعلى الدنيا الفناء',window):continue
                 from app.services.concept_links import linked_support
@@ -548,6 +579,10 @@ def search_questions(**kwargs):
                 start+=left;end+=left
                 if sense_conflict(query,page['text'],start,end):continue
                 score=value if linked else .10+.70*value
+                if linked:
+                    # A broad related-topic alias must not outrank the
+                    # requested subject solely through corpus authority.
+                    score+=ranker_config()['weights']['linked_subject_coverage']*len(matched)/max(1,len(ap['anchors']))
                 score+=procedural_support(query,window,start-left,end-left,matched,ap,relation)
                 q=candidate['question']
                 qa_match=bool(q) and all((comparison_pattern(t) if ap['comparison_subjects'] else pattern(t)).search(q) for t in ap['anchors'])
@@ -571,7 +606,7 @@ def search_questions(**kwargs):
                 if procedure:
                     cue=_PROCEDURAL_EVIDENCE.search(window)
                     start=left+cue.start();end=min(right,left+cue.end()+220)
-                row=make_row(page,query,start,end,min(.985,score),matched,relation,kwargs.get('context_chars',180))
+                row=make_row(page,query,start,end,min(.985,score),matched,relation,kwargs.get('context_chars',180),query_plan=ap)
                 if procedure:row['procedure_list_support']=True
                 row['candidate_routes']=candidate.get('route_ranks',{})
                 row['fusion_score']=round(candidate.get('fusion_score',0),6)
@@ -587,14 +622,12 @@ def search_questions(**kwargs):
                         row['requested_relation_match']=True
                 if qa_match:row['matched_source_question']=q
                 classify_row(row,query,ap,page['text'],start,end,relation)
-                if linked and 'preference' not in ap.get('requested_facets',[]):
-                    row['question_relevance']='relation_candidate'
                 matched_ids.add(key)
                 if key not in records or row['score']>records[key]['score']:
                     from app.services.hit_contract import canonical_hit
                     canonical_hit(row,page)
                     records[key]=row
-                    checkpoint(list(records.values()),'validated_ranked_candidates')
+                    checkpoint_row(row,'validated_ranked_candidates')
             record_phase('indexed_feature_ranking_and_span_validation',scored)
             if state['completion']=='full':state['stages_completed'].append('indexed_feature_ranking_and_span_validation')
         except (BudgetExceeded,__import__('sqlite3').OperationalError):

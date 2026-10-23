@@ -7,7 +7,7 @@ import hashlib,json,re
 from functools import lru_cache
 from app.core.arabic_utils import normalize_search_text
 from app.services.concept_links import CONCEPT_FORMS, normalized_forms, VERSION
-INDEX_VERSION='evidence-units-1.1'
+INDEX_VERSION='evidence-units-1.2'
 CUE_FORMS={
  'merit':('ينال','الشفاعة','الشفاعة','يحشر','حشر','ثواب','أجر','الجنة','معي في الجنة'),
  'condition':('شرط','شروط','الندم','الإقلاع','العزم'),
@@ -83,6 +83,20 @@ def features(text, *, source=None, start=0):
             'chars':len(text),'lexical_spans':tokens,
             'concept_spans':concepts}
 
+def build_lexeme_spellings(conn):
+    """Project broad discovery keys onto attested safe-index spellings once.
+
+    The old first lexeme request scanned every page and normalized the full
+    vocabulary. These are the exact same spellings, prepared during build.
+    """
+    conn.execute('DROP TABLE IF EXISTS lexeme_spellings')
+    conn.execute('CREATE TABLE lexeme_spellings(normalized TEXT,surface TEXT,PRIMARY KEY(normalized,surface)) WITHOUT ROWID')
+    tokens=set()
+    for row in conn.execute('SELECT norm_text FROM pages'):tokens.update(row[0].split())
+    conn.executemany('INSERT INTO lexeme_spellings VALUES(?,?)',
+                     [(normalize_search_text(token,level='broad'),token) for token in sorted(tokens)])
+    return len(tokens)
+
 def build_evidence_units(conn):
     conn.execute('DROP TABLE IF EXISTS evidence_units')
     conn.execute('CREATE TABLE evidence_units(id INTEGER PRIMARY KEY,unit_id TEXT UNIQUE,page_id INTEGER,start_char INTEGER,end_char INTEGER,kind TEXT,question TEXT,features TEXT,text_sha256 TEXT)')
@@ -108,5 +122,6 @@ def build_evidence_units(conn):
         stable=f'u{pid}-{start}-{end}-{sha[:12]}'
         conn.execute('INSERT INTO evidence_units VALUES(?,?,?,?,?,?,?,?,?)',(uid,stable,pid,start,end,kind,q,json.dumps(f,ensure_ascii=False),sha))
         conn.executemany('INSERT INTO evidence_concepts VALUES(?,?)',[(g,uid) for g in f['concepts']])
+    spellings=build_lexeme_spellings(conn)
     conn.executemany('INSERT OR REPLACE INTO discovery_meta VALUES(?,?)',[('index_version',INDEX_VERSION),('lexicon_version',VERSION)])
-    return {'units':len(rows),'index_version':INDEX_VERSION,'lexicon_version':VERSION}
+    return {'units':len(rows),'lexeme_spellings':spellings,'index_version':INDEX_VERSION,'lexicon_version':VERSION}

@@ -7,7 +7,7 @@ import json
 from typing import Any
 
 
-SERVER_VERSION = "2.10.16"
+SERVER_VERSION = "2.10.17"
 TOOL_CONTRACT_VERSION = "15.0"
 TOOL_CONTRACT_ID = "alburhaniya-tools-v15"
 
@@ -100,13 +100,13 @@ def contract_metadata(tools: Iterable[str] | None = None) -> dict[str, Any]:
     from app.services.traffic_metrics import traffic_summary
     return {
         "changes_since_previous":[
-            "Persistent source evidence units, bounded route-family fusion and explicit caps",
-            "Subject-preserving question frames and typed unreviewed discovery links",
-            "Canonical get_page text with source-resolving code-point spans on every search path",
-            "Unreliable printed labels omitted; speaker and support metadata validated before projection",
-            "Supervisor-visible validated lexical checkpoints and cooperative cancellation",
-            "Reversible compact/ultra evidence projections and separate full diagnostics",
-            "Configurable all-traffic attempt metrics separate from scheduled samples"],
+            "Incremental immutable source-validated checkpoints avoid quadratic result copying",
+            "Interleaved route floors prioritize requested predicates before budget cutoffs",
+            "Arabic clitic discovery and distinct subject routes preserve local validation",
+            "Shared negative aliases cannot alone establish positive sincerity support",
+            "Fixed language patterns are compiled during worker startup",
+            "Build-time safe lexeme spellings remove the first-request corpus vocabulary scan",
+            "Contract 15 input schemas, lossless decoding and source coordinates are preserved"],
         "known_issues":[
             "No independent held-out Direct@5 or 10/10 rating established",
             "Domain lexicon and automated support labels remain unreviewed and uncalibrated",

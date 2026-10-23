@@ -1,0 +1,10 @@
+{
+  "calls": 28,
+  "errors": 0,
+  "source_page_in_top5_numerator": 18,
+  "source_page_in_top5_denominator": 18,
+  "local_p50_ms": 353.772,
+  "local_p95_ms": 888.814,
+  "quality_score": null,
+  "quality_score_reason": "Requires independently owned and graded held-out families and production observation"
+}

@@ -1,0 +1,3814 @@
+{
+  "scope": "Controlled local development benchmark; not deployed scores",
+  "baseline": {
+    "version": "2.10.16",
+    "scope": "Controlled local direct question pipeline with new immutable trace per call, fixed language patterns precompiled for both versions, no answer-cache reuse, 18 disclosed questions repeated 3 times per budget. 0.25-second budget is a synthetic stress condition, not Render or independent answer grading.",
+    "precompile_ms": 2120.629,
+    "summaries": [
+      {
+        "budget_s": 5.0,
+        "calls": 54,
+        "source_page_hits": 54,
+        "full": 54,
+        "partial": 0,
+        "median_ms": 323.415,
+        "p95_ms": 688.964
+      },
+      {
+        "budget_s": 0.25,
+        "calls": 54,
+        "source_page_hits": 48,
+        "full": 9,
+        "partial": 45,
+        "median_ms": 177.26,
+        "p95_ms": 213.561
+      }
+    ],
+    "first_scoped_lexeme_ms": 1170.147,
+    "scoped_lexeme_response": {
+      "returned_count": 0,
+      "books": {},
+      "results": [],
+      "census_matching_pages": 0,
+      "census_occurrences": 0,
+      "count_basis": "phrase",
+      "count_semantics": {
+        "whole_word": true,
+        "normalization_level": "safe",
+        "footnotes_excluded": true
+      },
+      "per_query": [
+        {
+          "query": "وسواس",
+          "matching_pages": 0,
+          "surface_matching_pages": 0,
+          "normalized_occurrences": 0,
+          "surface_occurrences": 0,
+          "count_basis": "phrase",
+          "occurrences": 0
+        }
+      ],
+      "retrieval_hit_count": 0,
+      "retrieval_hit_count_relation": "article_normalized_phrase",
+      "retrieval_hit_count_scope": "lexeme_matching_pages_before_ranking_and_score_filter",
+      "literal_matching_pages": 0,
+      "literal_occurrences": 0,
+      "normalized_matching_pages": 0,
+      "normalized_occurrences": 0,
+      "census_version": {
+        "server_version": "2.10.16",
+        "navigation_scope": "body_only"
+      },
+      "suggestions": [
+        "وسواس",
+        "وسوس",
+        "وساس",
+        "الوسواس"
+      ],
+      "navigation_scope": "body_only",
+      "reformulation_status": "not_needed",
+      "versions": {
+        "index": "evidence-units-1.1",
+        "lexicon": "discovery-links-1.0-unreviewed",
+        "cues": "frames-1.0",
+        "ranker": "indexed-features-1"
+      },
+      "ranking_policy": "authority_adjusted_relevance_v1",
+      "effective_match_mode": "lexeme",
+      "whole_word": true,
+      "fewer_than_limit_reason": "only_n_passages_met_threshold",
+      "normalization_level": "broad_discovery",
+      "diagnostics": {
+        "zero_result_is_not_absence_proof": true,
+        "empty_stage": "matching_or_scope",
+        "attempted_modes": [
+          "lexeme"
+        ],
+        "per_term": [
+          {
+            "term": "وسواس",
+            "matching_pages": 0,
+            "occurrences": 0
+          }
+        ],
+        "dropped_stopwords": [],
+        "suggested_mode": null,
+        "verified_retry": null,
+        "retry_source_tiers": [],
+        "retry_warning": null,
+        "retry_scope": "exploration_not_verified_answer",
+        "message": "No displayed evidence met the request; do not infer corpus absence. A verified_retry, when present, was checked in the same source scope."
+      },
+      "retrieval_completeness": {
+        "normalized_pages": 0,
+        "candidate_pages": 0,
+        "missing_literal_pages": 0,
+        "missing_literal_page_sample": [],
+        "status": "ok",
+        "scope": "eligible_pages_before_ranking_score_filter_and_pagination",
+        "method": "actual_retrieved_candidates",
+        "per_query": [
+          {
+            "query": "وسواس",
+            "normalized_pages": 0,
+            "candidate_pages": 0,
+            "missing_literal_pages": 0,
+            "missing_literal_page_sample": [],
+            "status": "ok",
+            "scope": "eligible_pages_before_ranking_score_filter_and_pagination"
+          }
+        ],
+        "per_query_scope": "individual_query_eligibility"
+      },
+      "contract": {
+        "server_version": "2.10.16",
+        "tool_contract_version": "15.0",
+        "tool_contract": "alburhaniya-tools-v15",
+        "tool_count": 5,
+        "schema_digest": "0bb286448bb1697649f0eef89613308a2804edbd4668ac68a7e857d3b01c22b2",
+        "tool_schema_digest": "67eb72e89ab25cad317b45f6aca20cd00bdd83b639024b2ed4900ae6ca9fcf4c"
+      },
+      "request_id": "789b9cb8ecb14ca089f12c9fa45d8b2f",
+      "status": {
+        "execution": "full",
+        "evidence_status": "no_relevant_evidence"
+      },
+      "completion": "full",
+      "trace": {
+        "trace_id": "789b9cb8ecb14ca089f12c9fa45d8b2f",
+        "active_stage": "literal_census",
+        "last_completed_stage": null,
+        "checkpoint_id": null,
+        "checkpoint_count": 0,
+        "events": [
+          {
+            "stage": "literal_census",
+            "event": "start",
+            "elapsed_ms": 0.358
+          },
+          {
+            "stage": "completeness_audit",
+            "event": "start",
+            "elapsed_ms": 667.714
+          },
+          {
+            "stage": "literal_census",
+            "event": "start",
+            "elapsed_ms": 1166.309
+          }
+        ]
+      },
+      "timing": {
+        "total_ms": 1166.77,
+        "attempts": 1,
+        "phases_ms": {
+          "other_tool_execution": 0.111,
+          "cache_lookup": 0.001,
+          "response_building": 1149.639,
+          "literal_census": 7.762,
+          "candidate_sql": 1.086,
+          "evidence_validation": 7.727,
+          "ranking_and_pagination": 0.005,
+          "completeness_audit": 0.399,
+          "serialization_probe": 0.04,
+          "queue_wait": 0.0,
+          "authentication": 0.0
+        },
+        "phase_semantics": "exclusive",
+        "scope": "tool_execution_plus_measured_queue_and_auth; excludes network and final transport serialization"
+      }
+    },
+    "cases": [
+      {
+        "id": "F13_ROLE",
+        "budget_s": 5.0,
+        "repeat": 0,
+        "ms": 293.001,
+        "source_page_hit": true,
+        "completion": "full",
+        "checkpoint_count": 37,
+        "locators": [
+          "b07-p138-c30",
+          "b07-p132-c1156",
+          "b45-p3-c1974",
+          "b42-p14-c775",
+          "b44-p46-c5040"
+        ]
+      },
+      {
+        "id": "F13_HOPE",
+        "budget_s": 5.0,
+        "repeat": 0,
+        "ms": 183.311,
+        "source_page_hit": true,
+        "completion": "full",
+        "checkpoint_count": 6,
+        "locators": [
+          "b01-p159-c1997",
+          "b37-p156-c494",
+          "b07-p150-c486",
+          "b07-p38-c1294",
+          "b16-p44-c777"
+        ]
+      },
+      {
+        "id": "F13_LOVE",
+        "budget_s": 5.0,
+        "repeat": 0,
+        "ms": 703.493,
+        "source_page_hit": true,
+        "completion": "full",
+        "checkpoint_count": 64,
+        "locators": [
+          "b01-p143-c7750",
+          "b01-p62-c1148",
+          "b27-p43-c554",
+          "b12-p174-c1115",
+          "b13-p170-c214"
+        ]
+      },
+      {
+        "id": "F13_REPENTANCE",
+        "budget_s": 5.0,
+        "repeat": 0,
+        "ms": 575.938,
+        "source_page_hit": true,
+        "completion": "full",
+        "checkpoint_count": 104,
+        "locators": [
+          "b39-p94-c101",
+          "b39-p47-c1360",
+          "b44-p43-c6801",
+          "b45-p6-c547",
+          "b24-p16-c78"
+        ]
+      },
+      {
+        "id": "F13_HEART",
+        "budget_s": 5.0,
+        "repeat": 0,
+        "ms": 525.949,
+        "source_page_hit": true,
+        "completion": "full",
+        "checkpoint_count": 48,
+        "locators": [
+          "b27-p4-c96",
+          "b28-p39-c874",
+          "b42-p42-c701",
+          "b42-p9-c1012",
+          "b09-p7-c929"
+        ]
+      },
+      {
+        "id": "F13_HARM",
+        "budget_s": 5.0,
+        "repeat": 0,
+        "ms": 384.309,
+        "source_page_hit": true,
+        "completion": "full",
+        "checkpoint_count": 15,
+        "locators": [
+          "b44-p3-c4130",
+          "b44-p5-c8057",
+          "b20-p223-c932",
+          "b01-p153-c4122",
+          "b24-p260-c1185"
+        ]
+      },
+      {
+        "id": "F13_KHALWA",
+        "budget_s": 5.0,
+        "repeat": 0,
+        "ms": 254.232,
+        "source_page_hit": true,
+        "completion": "full",
+        "checkpoint_count": 35,
+        "locators": [
+          "b31-p90-c121",
+          "b10-p230-c292",
+          "b41-p101-c481",
+          "b41-p106-c1380",
+          "b40-p16-c363"
+        ]
+      },
+      {
+        "id": "F13_SINCERITY",
+        "budget_s": 5.0,
+        "repeat": 0,
+        "ms": 455.462,
+        "source_page_hit": true,
+        "completion": "full",
+        "checkpoint_count": 38,
+        "locators": [
+          "b07-p139-c435",
+          "b07-p134-c1222",
+          "b14-p135-c807",
+          "b14-p53-c773",
+          "b13-p36-c944"
+        ]
+      },
+      {
+        "id": "F13_FATIHA",
+        "budget_s": 5.0,
+        "repeat": 0,
+        "ms": 597.38,
+        "source_page_hit": true,
+        "completion": "full",
+        "checkpoint_count": 64,
+        "locators": [
+          "b37-p67-c44",
+          "b06-p18-c969",
+          "b06-p34-c662",
+          "b07-p304-c252",
+          "b07-p302-c1470"
+        ]
+      },
+      {
+        "id": "F13_RESTART",
+        "budget_s": 5.0,
+        "repeat": 0,
+        "ms": 356.165,
+        "source_page_hit": true,
+        "completion": "full",
+        "checkpoint_count": 17,
+        "locators": [
+          "b15-p26-c724",
+          "b39-p94-c269",
+          "b39-p229-c682",
+          "b44-p24-c1936",
+          "b44-p43-c7184"
+        ]
+      },
+      {
+        "id": "R13_T10_U1_repentance",
+        "budget_s": 5.0,
+        "repeat": 0,
+        "ms": 430.663,
+        "source_page_hit": true,
+        "completion": "full",
+        "checkpoint_count": 31,
+        "locators": [
+          "b13-p11-c329",
+          "b39-p47-c1360",
+          "b39-p94-c573",
+          "b45-p6-c547",
+          "b44-p43-c6801"
+        ]
+      },
+      {
+        "id": "R13_T10_U5_disagreement",
+        "budget_s": 5.0,
+        "repeat": 0,
+        "ms": 382.861,
+        "source_page_hit": true,
+        "completion": "full",
+        "checkpoint_count": 21,
+        "locators": [
+          "b44-p3-c4130",
+          "b44-p5-c8057",
+          "b20-p223-c932",
+          "b01-p153-c4122",
+          "b24-p260-c1185"
+        ]
+      },
+      {
+        "id": "R13_T10_U2_heart_dhikr",
+        "budget_s": 5.0,
+        "repeat": 0,
+        "ms": 727.515,
+        "source_page_hit": true,
+        "completion": "full",
+        "checkpoint_count": 98,
+        "locators": [
+          "b28-p43-c193",
+          "b29-p42-c1006",
+          "b41-p17-c490",
+          "b41-p21-c269",
+          "b27-p4-c96"
+        ]
+      },
+      {
+        "id": "R13_C10_KHALWA",
+        "budget_s": 5.0,
+        "repeat": 0,
+        "ms": 616.143,
+        "source_page_hit": true,
+        "completion": "full",
+        "checkpoint_count": 100,
+        "locators": [
+          "b31-p90-c242",
+          "b28-p69-c1191",
+          "b10-p230-c292",
+          "b26-p112-c688",
+          "b12-p147-c742"
+        ]
+      },
+      {
+        "id": "R13_N10_FATIHA_CONTACT",
+        "budget_s": 5.0,
+        "repeat": 0,
+        "ms": 284.04,
+        "source_page_hit": true,
+        "completion": "full",
+        "checkpoint_count": 45,
+        "locators": [
+          "b37-p67-c1115",
+          "b07-p302-c1470",
+          "b06-p386-c840",
+          "b06-p26-c89",
+          "b27-p115-c1395"
+        ]
+      },
+      {
+        "id": "R13_N10_MURAQABA_KHALWA",
+        "budget_s": 5.0,
+        "repeat": 0,
+        "ms": 171.186,
+        "source_page_hit": true,
+        "completion": "full",
+        "checkpoint_count": 30,
+        "locators": [
+          "b31-p90-c121",
+          "b10-p230-c292",
+          "b15-p39-c1169",
+          "b32-p85-c585",
+          "b41-p106-c1380"
+        ]
+      },
+      {
+        "id": "R13_N10_RESTART_WIRD",
+        "budget_s": 5.0,
+        "repeat": 0,
+        "ms": 274.201,
+        "source_page_hit": true,
+        "completion": "full",
+        "checkpoint_count": 13,
+        "locators": [
+          "b15-p26-c724",
+          "b39-p94-c269",
+          "b41-p21-c753",
+          "b44-p50-c4117",
+          "b44-p43-c8367"
+        ]
+      },
+      {
+        "id": "R13_M10_T9_A_W1",
+        "budget_s": 5.0,
+        "repeat": 0,
+        "ms": 277.711,
+        "source_page_hit": true,
+        "completion": "full",
+        "checkpoint_count": 38,
+        "locators": [
+          "b41-p131-c327",
+          "b15-p26-c37",
+          "b41-p100-c667",
+          "b15-p21-c34",
+          "b42-p4-c193"
+        ]
+      },
+      {
+        "id": "F13_ROLE",
+        "budget_s": 5.0,
+        "repeat": 1,
+        "ms": 275.493,
+        "source_page_hit": true,
+        "completion": "full",
+        "checkpoint_count": 37,
+        "locators": [
+          "b07-p138-c30",
+          "b07-p132-c1156",
+          "b45-p3-c1974",
+          "b42-p14-c775",
+          "b44-p46-c5040"
+        ]
+      },
+      {
+        "id": "F13_HOPE",
+        "budget_s": 5.0,
+        "repeat": 1,
+        "ms": 125.535,
+        "source_page_hit": true,
+        "completion": "full",
+        "checkpoint_count": 6,
+        "locators": [
+          "b01-p159-c1997",
+          "b37-p156-c494",
+          "b07-p150-c486",
+          "b07-p38-c1294",
+          "b16-p44-c777"
+        ]
+      },
+      {
+        "id": "F13_LOVE",
+        "budget_s": 5.0,
+        "repeat": 1,
+        "ms": 556.84,
+        "source_page_hit": true,
+        "completion": "full",
+        "checkpoint_count": 64,
+        "locators": [
+          "b01-p143-c7750",
+          "b01-p62-c1148",
+          "b27-p43-c554",
+          "b12-p174-c1115",
+          "b13-p170-c214"
+        ]
+      },
+      {
+        "id": "F13_REPENTANCE",
+        "budget_s": 5.0,
+        "repeat": 1,
+        "ms": 521.386,
+        "source_page_hit": true,
+        "completion": "full",
+        "checkpoint_count": 104,
+        "locators": [
+          "b39-p94-c101",
+          "b39-p47-c1360",
+          "b44-p43-c6801",
+          "b45-p6-c547",
+          "b24-p16-c78"
+        ]
+      },
+      {
+        "id": "F13_HEART",
+        "budget_s": 5.0,
+        "repeat": 1,
+        "ms": 464.711,
+        "source_page_hit": true,
+        "completion": "full",
+        "checkpoint_count": 48,
+        "locators": [
+          "b27-p4-c96",
+          "b28-p39-c874",
+          "b42-p42-c701",
+          "b42-p9-c1012",
+          "b09-p7-c929"
+        ]
+      },
+      {
+        "id": "F13_HARM",
+        "budget_s": 5.0,
+        "repeat": 1,
+        "ms": 323.415,
+        "source_page_hit": true,
+        "completion": "full",
+        "checkpoint_count": 15,
+        "locators": [
+          "b44-p3-c4130",
+          "b44-p5-c8057",
+          "b20-p223-c932",
+          "b01-p153-c4122",
+          "b24-p260-c1185"
+        ]
+      },
+      {
+        "id": "F13_KHALWA",
+        "budget_s": 5.0,
+        "repeat": 1,
+        "ms": 176.259,
+        "source_page_hit": true,
+        "completion": "full",
+        "checkpoint_count": 35,
+        "locators": [
+          "b31-p90-c121",
+          "b10-p230-c292",
+          "b41-p101-c481",
+          "b41-p106-c1380",
+          "b40-p16-c363"
+        ]
+      },
+      {
+        "id": "F13_SINCERITY",
+        "budget_s": 5.0,
+        "repeat": 1,
+        "ms": 470.05,
+        "source_page_hit": true,
+        "completion": "full",
+        "checkpoint_count": 38,
+        "locators": [
+          "b07-p139-c435",
+          "b07-p134-c1222",
+          "b14-p135-c807",
+          "b14-p53-c773",
+          "b13-p36-c944"
+        ]
+      },
+      {
+        "id": "F13_FATIHA",
+        "budget_s": 5.0,
+        "repeat": 1,
+        "ms": 465.934,
+        "source_page_hit": true,
+        "completion": "full",
+        "checkpoint_count": 64,
+        "locators": [
+          "b37-p67-c44",
+          "b06-p18-c969",
+          "b06-p34-c662",
+          "b07-p304-c252",
+          "b07-p302-c1470"
+        ]
+      },
+      {
+        "id": "F13_RESTART",
+        "budget_s": 5.0,
+        "repeat": 1,
+        "ms": 245.713,
+        "source_page_hit": true,
+        "completion": "full",
+        "checkpoint_count": 17,
+        "locators": [
+          "b15-p26-c724",
+          "b39-p94-c269",
+          "b39-p229-c682",
+          "b44-p24-c1936",
+          "b44-p43-c7184"
+        ]
+      },
+      {
+        "id": "R13_T10_U1_repentance",
+        "budget_s": 5.0,
+        "repeat": 1,
+        "ms": 245.456,
+        "source_page_hit": true,
+        "completion": "full",
+        "checkpoint_count": 31,
+        "locators": [
+          "b13-p11-c329",
+          "b39-p47-c1360",
+          "b39-p94-c573",
+          "b45-p6-c547",
+          "b44-p43-c6801"
+        ]
+      },
+      {
+        "id": "R13_T10_U5_disagreement",
+        "budget_s": 5.0,
+        "repeat": 1,
+        "ms": 295.353,
+        "source_page_hit": true,
+        "completion": "full",
+        "checkpoint_count": 21,
+        "locators": [
+          "b44-p3-c4130",
+          "b44-p5-c8057",
+          "b20-p223-c932",
+          "b01-p153-c4122",
+          "b24-p260-c1185"
+        ]
+      },
+      {
+        "id": "R13_T10_U2_heart_dhikr",
+        "budget_s": 5.0,
+        "repeat": 1,
+        "ms": 688.964,
+        "source_page_hit": true,
+        "completion": "full",
+        "checkpoint_count": 98,
+        "locators": [
+          "b28-p43-c193",
+          "b29-p42-c1006",
+          "b41-p17-c490",
+          "b41-p21-c269",
+          "b27-p4-c96"
+        ]
+      },
+      {
+        "id": "R13_C10_KHALWA",
+        "budget_s": 5.0,
+        "repeat": 1,
+        "ms": 598.689,
+        "source_page_hit": true,
+        "completion": "full",
+        "checkpoint_count": 100,
+        "locators": [
+          "b31-p90-c242",
+          "b28-p69-c1191",
+          "b10-p230-c292",
+          "b26-p112-c688",
+          "b12-p147-c742"
+        ]
+      },
+      {
+        "id": "R13_N10_FATIHA_CONTACT",
+        "budget_s": 5.0,
+        "repeat": 1,
+        "ms": 281.571,
+        "source_page_hit": true,
+        "completion": "full",
+        "checkpoint_count": 45,
+        "locators": [
+          "b37-p67-c1115",
+          "b07-p302-c1470",
+          "b06-p386-c840",
+          "b06-p26-c89",
+          "b27-p115-c1395"
+        ]
+      },
+      {
+        "id": "R13_N10_MURAQABA_KHALWA",
+        "budget_s": 5.0,
+        "repeat": 1,
+        "ms": 142.408,
+        "source_page_hit": true,
+        "completion": "full",
+        "checkpoint_count": 30,
+        "locators": [
+          "b31-p90-c121",
+          "b10-p230-c292",
+          "b15-p39-c1169",
+          "b32-p85-c585",
+          "b41-p106-c1380"
+        ]
+      },
+      {
+        "id": "R13_N10_RESTART_WIRD",
+        "budget_s": 5.0,
+        "repeat": 1,
+        "ms": 215.676,
+        "source_page_hit": true,
+        "completion": "full",
+        "checkpoint_count": 13,
+        "locators": [
+          "b15-p26-c724",
+          "b39-p94-c269",
+          "b41-p21-c753",
+          "b44-p50-c4117",
+          "b44-p43-c8367"
+        ]
+      },
+      {
+        "id": "R13_M10_T9_A_W1",
+        "budget_s": 5.0,
+        "repeat": 1,
+        "ms": 274.006,
+        "source_page_hit": true,
+        "completion": "full",
+        "checkpoint_count": 38,
+        "locators": [
+          "b41-p131-c327",
+          "b15-p26-c37",
+          "b41-p100-c667",
+          "b15-p21-c34",
+          "b42-p4-c193"
+        ]
+      },
+      {
+        "id": "F13_ROLE",
+        "budget_s": 5.0,
+        "repeat": 2,
+        "ms": 264.841,
+        "source_page_hit": true,
+        "completion": "full",
+        "checkpoint_count": 37,
+        "locators": [
+          "b07-p138-c30",
+          "b07-p132-c1156",
+          "b45-p3-c1974",
+          "b42-p14-c775",
+          "b44-p46-c5040"
+        ]
+      },
+      {
+        "id": "F13_HOPE",
+        "budget_s": 5.0,
+        "repeat": 2,
+        "ms": 133.672,
+        "source_page_hit": true,
+        "completion": "full",
+        "checkpoint_count": 6,
+        "locators": [
+          "b01-p159-c1997",
+          "b37-p156-c494",
+          "b07-p150-c486",
+          "b07-p38-c1294",
+          "b16-p44-c777"
+        ]
+      },
+      {
+        "id": "F13_LOVE",
+        "budget_s": 5.0,
+        "repeat": 2,
+        "ms": 567.339,
+        "source_page_hit": true,
+        "completion": "full",
+        "checkpoint_count": 64,
+        "locators": [
+          "b01-p143-c7750",
+          "b01-p62-c1148",
+          "b27-p43-c554",
+          "b12-p174-c1115",
+          "b13-p170-c214"
+        ]
+      },
+      {
+        "id": "F13_REPENTANCE",
+        "budget_s": 5.0,
+        "repeat": 2,
+        "ms": 540.01,
+        "source_page_hit": true,
+        "completion": "full",
+        "checkpoint_count": 104,
+        "locators": [
+          "b39-p94-c101",
+          "b39-p47-c1360",
+          "b44-p43-c6801",
+          "b45-p6-c547",
+          "b24-p16-c78"
+        ]
+      },
+      {
+        "id": "F13_HEART",
+        "budget_s": 5.0,
+        "repeat": 2,
+        "ms": 434.094,
+        "source_page_hit": true,
+        "completion": "full",
+        "checkpoint_count": 48,
+        "locators": [
+          "b27-p4-c96",
+          "b28-p39-c874",
+          "b42-p42-c701",
+          "b42-p9-c1012",
+          "b09-p7-c929"
+        ]
+      },
+      {
+        "id": "F13_HARM",
+        "budget_s": 5.0,
+        "repeat": 2,
+        "ms": 319.153,
+        "source_page_hit": true,
+        "completion": "full",
+        "checkpoint_count": 15,
+        "locators": [
+          "b44-p3-c4130",
+          "b44-p5-c8057",
+          "b20-p223-c932",
+          "b01-p153-c4122",
+          "b24-p260-c1185"
+        ]
+      },
+      {
+        "id": "F13_KHALWA",
+        "budget_s": 5.0,
+        "repeat": 2,
+        "ms": 179.371,
+        "source_page_hit": true,
+        "completion": "full",
+        "checkpoint_count": 35,
+        "locators": [
+          "b31-p90-c121",
+          "b10-p230-c292",
+          "b41-p101-c481",
+          "b41-p106-c1380",
+          "b40-p16-c363"
+        ]
+      },
+      {
+        "id": "F13_SINCERITY",
+        "budget_s": 5.0,
+        "repeat": 2,
+        "ms": 453.559,
+        "source_page_hit": true,
+        "completion": "full",
+        "checkpoint_count": 38,
+        "locators": [
+          "b07-p139-c435",
+          "b07-p134-c1222",
+          "b14-p135-c807",
+          "b14-p53-c773",
+          "b13-p36-c944"
+        ]
+      },
+      {
+        "id": "F13_FATIHA",
+        "budget_s": 5.0,
+        "repeat": 2,
+        "ms": 458.416,
+        "source_page_hit": true,
+        "completion": "full",
+        "checkpoint_count": 64,
+        "locators": [
+          "b37-p67-c44",
+          "b06-p18-c969",
+          "b06-p34-c662",
+          "b07-p304-c252",
+          "b07-p302-c1470"
+        ]
+      },
+      {
+        "id": "F13_RESTART",
+        "budget_s": 5.0,
+        "repeat": 2,
+        "ms": 263.088,
+        "source_page_hit": true,
+        "completion": "full",
+        "checkpoint_count": 17,
+        "locators": [
+          "b15-p26-c724",
+          "b39-p94-c269",
+          "b39-p229-c682",
+          "b44-p24-c1936",
+          "b44-p43-c7184"
+        ]
+      },
+      {
+        "id": "R13_T10_U1_repentance",
+        "budget_s": 5.0,
+        "repeat": 2,
+        "ms": 258.074,
+        "source_page_hit": true,
+        "completion": "full",
+        "checkpoint_count": 31,
+        "locators": [
+          "b13-p11-c329",
+          "b39-p47-c1360",
+          "b39-p94-c573",
+          "b45-p6-c547",
+          "b44-p43-c6801"
+        ]
+      },
+      {
+        "id": "R13_T10_U5_disagreement",
+        "budget_s": 5.0,
+        "repeat": 2,
+        "ms": 333.518,
+        "source_page_hit": true,
+        "completion": "full",
+        "checkpoint_count": 21,
+        "locators": [
+          "b44-p3-c4130",
+          "b44-p5-c8057",
+          "b20-p223-c932",
+          "b01-p153-c4122",
+          "b24-p260-c1185"
+        ]
+      },
+      {
+        "id": "R13_T10_U2_heart_dhikr",
+        "budget_s": 5.0,
+        "repeat": 2,
+        "ms": 679.832,
+        "source_page_hit": true,
+        "completion": "full",
+        "checkpoint_count": 98,
+        "locators": [
+          "b28-p43-c193",
+          "b29-p42-c1006",
+          "b41-p17-c490",
+          "b41-p21-c269",
+          "b27-p4-c96"
+        ]
+      },
+      {
+        "id": "R13_C10_KHALWA",
+        "budget_s": 5.0,
+        "repeat": 2,
+        "ms": 592.068,
+        "source_page_hit": true,
+        "completion": "full",
+        "checkpoint_count": 100,
+        "locators": [
+          "b31-p90-c242",
+          "b28-p69-c1191",
+          "b10-p230-c292",
+          "b26-p112-c688",
+          "b12-p147-c742"
+        ]
+      },
+      {
+        "id": "R13_N10_FATIHA_CONTACT",
+        "budget_s": 5.0,
+        "repeat": 2,
+        "ms": 280.099,
+        "source_page_hit": true,
+        "completion": "full",
+        "checkpoint_count": 45,
+        "locators": [
+          "b37-p67-c1115",
+          "b07-p302-c1470",
+          "b06-p386-c840",
+          "b06-p26-c89",
+          "b27-p115-c1395"
+        ]
+      },
+      {
+        "id": "R13_N10_MURAQABA_KHALWA",
+        "budget_s": 5.0,
+        "repeat": 2,
+        "ms": 175.731,
+        "source_page_hit": true,
+        "completion": "full",
+        "checkpoint_count": 30,
+        "locators": [
+          "b31-p90-c121",
+          "b10-p230-c292",
+          "b15-p39-c1169",
+          "b32-p85-c585",
+          "b41-p106-c1380"
+        ]
+      },
+      {
+        "id": "R13_N10_RESTART_WIRD",
+        "budget_s": 5.0,
+        "repeat": 2,
+        "ms": 217.664,
+        "source_page_hit": true,
+        "completion": "full",
+        "checkpoint_count": 13,
+        "locators": [
+          "b15-p26-c724",
+          "b39-p94-c269",
+          "b41-p21-c753",
+          "b44-p50-c4117",
+          "b44-p43-c8367"
+        ]
+      },
+      {
+        "id": "R13_M10_T9_A_W1",
+        "budget_s": 5.0,
+        "repeat": 2,
+        "ms": 201.561,
+        "source_page_hit": true,
+        "completion": "full",
+        "checkpoint_count": 38,
+        "locators": [
+          "b41-p131-c327",
+          "b15-p26-c37",
+          "b41-p100-c667",
+          "b15-p21-c34",
+          "b42-p4-c193"
+        ]
+      },
+      {
+        "id": "F13_ROLE",
+        "budget_s": 0.25,
+        "repeat": 0,
+        "ms": 180.248,
+        "source_page_hit": true,
+        "completion": "partial",
+        "checkpoint_count": 29,
+        "locators": [
+          "b07-p138-c30",
+          "b42-p14-c775",
+          "b44-p46-c5040",
+          "b44-p1-c8579",
+          "b01-p119-c291"
+        ]
+      },
+      {
+        "id": "F13_HOPE",
+        "budget_s": 0.25,
+        "repeat": 0,
+        "ms": 132.386,
+        "source_page_hit": true,
+        "completion": "full",
+        "checkpoint_count": 6,
+        "locators": [
+          "b01-p159-c1997",
+          "b37-p156-c494",
+          "b07-p150-c486",
+          "b07-p38-c1294",
+          "b16-p44-c777"
+        ]
+      },
+      {
+        "id": "F13_LOVE",
+        "budget_s": 0.25,
+        "repeat": 0,
+        "ms": 179.384,
+        "source_page_hit": true,
+        "completion": "partial",
+        "checkpoint_count": 19,
+        "locators": [
+          "b01-p62-c1148",
+          "b12-p174-c1115",
+          "b44-p10-c1440",
+          "b42-p145-c791",
+          "b09-p98-c670"
+        ]
+      },
+      {
+        "id": "F13_REPENTANCE",
+        "budget_s": 0.25,
+        "repeat": 0,
+        "ms": 237.343,
+        "source_page_hit": true,
+        "completion": "full",
+        "checkpoint_count": 80,
+        "locators": [
+          "b39-p94-c29",
+          "b07-p141-c611",
+          "b39-p97-c1163",
+          "b07-p273-c772",
+          "b12-p60-c481"
+        ]
+      },
+      {
+        "id": "F13_HEART",
+        "budget_s": 0.25,
+        "repeat": 0,
+        "ms": 176.589,
+        "source_page_hit": true,
+        "completion": "partial",
+        "checkpoint_count": 20,
+        "locators": [
+          "b27-p4-c96",
+          "b28-p39-c874",
+          "b42-p42-c701",
+          "b42-p9-c1012",
+          "b41-p106-c698"
+        ]
+      },
+      {
+        "id": "F13_HARM",
+        "budget_s": 0.25,
+        "repeat": 0,
+        "ms": 175.612,
+        "source_page_hit": true,
+        "completion": "partial",
+        "checkpoint_count": 7,
+        "locators": [
+          "b44-p3-c4130",
+          "b44-p5-c8057",
+          "b20-p223-c932",
+          "b24-p260-c1185",
+          "b01-p153-c4122"
+        ]
+      },
+      {
+        "id": "F13_KHALWA",
+        "budget_s": 0.25,
+        "repeat": 0,
+        "ms": 182.422,
+        "source_page_hit": true,
+        "completion": "partial",
+        "checkpoint_count": 35,
+        "locators": [
+          "b31-p90-c121",
+          "b10-p230-c292",
+          "b41-p101-c481",
+          "b41-p106-c1380",
+          "b40-p16-c363"
+        ]
+      },
+      {
+        "id": "F13_SINCERITY",
+        "budget_s": 0.25,
+        "repeat": 0,
+        "ms": 175.832,
+        "source_page_hit": false,
+        "completion": "partial",
+        "checkpoint_count": 14,
+        "locators": [
+          "b07-p259-c695",
+          "b14-p53-c773",
+          "b28-p20-c975",
+          "b45-p19-c2338",
+          "b45-p18-c7057"
+        ]
+      },
+      {
+        "id": "F13_FATIHA",
+        "budget_s": 0.25,
+        "repeat": 0,
+        "ms": 181.542,
+        "source_page_hit": true,
+        "completion": "partial",
+        "checkpoint_count": 27,
+        "locators": [
+          "b37-p67-c44",
+          "b06-p386-c840",
+          "b06-p26-c89",
+          "b07-p303-c60",
+          "b07-p294-c998"
+        ]
+      },
+      {
+        "id": "F13_RESTART",
+        "budget_s": 0.25,
+        "repeat": 0,
+        "ms": 175.764,
+        "source_page_hit": true,
+        "completion": "partial",
+        "checkpoint_count": 13,
+        "locators": [
+          "b15-p26-c724",
+          "b39-p94-c269",
+          "b39-p229-c682",
+          "b44-p24-c1936",
+          "b44-p43-c7184"
+        ]
+      },
+      {
+        "id": "R13_T10_U1_repentance",
+        "budget_s": 0.25,
+        "repeat": 0,
+        "ms": 178.037,
+        "source_page_hit": true,
+        "completion": "partial",
+        "checkpoint_count": 22,
+        "locators": [
+          "b39-p94-c573",
+          "b44-p43-c6358",
+          "b01-p159-c5068",
+          "b24-p16-c78",
+          "b20-p233-c195"
+        ]
+      },
+      {
+        "id": "R13_T10_U5_disagreement",
+        "budget_s": 0.25,
+        "repeat": 0,
+        "ms": 175.046,
+        "source_page_hit": false,
+        "completion": "partial",
+        "checkpoint_count": 13,
+        "locators": [
+          "b44-p20-c2264",
+          "b44-p5-c3490",
+          "b01-p153-c4122",
+          "b24-p260-c1185",
+          "b06-p2-c681"
+        ]
+      },
+      {
+        "id": "R13_T10_U2_heart_dhikr",
+        "budget_s": 0.25,
+        "repeat": 0,
+        "ms": 196.394,
+        "source_page_hit": true,
+        "completion": "partial",
+        "checkpoint_count": 79,
+        "locators": [
+          "b28-p40-c445",
+          "b39-p29-c560",
+          "b28-p39-c1123",
+          "b39-p132-c892",
+          "b26-p94-c975"
+        ]
+      },
+      {
+        "id": "R13_C10_KHALWA",
+        "budget_s": 0.25,
+        "repeat": 0,
+        "ms": 189.215,
+        "source_page_hit": true,
+        "completion": "partial",
+        "checkpoint_count": 69,
+        "locators": [
+          "b31-p90-c242",
+          "b28-p69-c1191",
+          "b10-p230-c292",
+          "b26-p112-c688",
+          "b15-p39-c1169"
+        ]
+      },
+      {
+        "id": "R13_N10_FATIHA_CONTACT",
+        "budget_s": 0.25,
+        "repeat": 0,
+        "ms": 177.26,
+        "source_page_hit": true,
+        "completion": "partial",
+        "checkpoint_count": 29,
+        "locators": [
+          "b37-p67-c747",
+          "b07-p302-c1470",
+          "b06-p386-c840",
+          "b06-p26-c89",
+          "b27-p115-c1395"
+        ]
+      },
+      {
+        "id": "R13_N10_MURAQABA_KHALWA",
+        "budget_s": 0.25,
+        "repeat": 0,
+        "ms": 132.065,
+        "source_page_hit": true,
+        "completion": "full",
+        "checkpoint_count": 30,
+        "locators": [
+          "b31-p90-c121",
+          "b10-p230-c292",
+          "b15-p39-c1169",
+          "b32-p85-c585",
+          "b41-p106-c1380"
+        ]
+      },
+      {
+        "id": "R13_N10_RESTART_WIRD",
+        "budget_s": 0.25,
+        "repeat": 0,
+        "ms": 174.188,
+        "source_page_hit": true,
+        "completion": "partial",
+        "checkpoint_count": 12,
+        "locators": [
+          "b15-p26-c724",
+          "b39-p94-c269",
+          "b44-p50-c3927",
+          "b44-p43-c8367",
+          "b17-p65-c27"
+        ]
+      },
+      {
+        "id": "R13_M10_T9_A_W1",
+        "budget_s": 0.25,
+        "repeat": 0,
+        "ms": 177.703,
+        "source_page_hit": true,
+        "completion": "partial",
+        "checkpoint_count": 28,
+        "locators": [
+          "b41-p131-c327",
+          "b15-p26-c37",
+          "b15-p21-c34",
+          "b41-p100-c667",
+          "b42-p4-c193"
+        ]
+      },
+      {
+        "id": "F13_ROLE",
+        "budget_s": 0.25,
+        "repeat": 1,
+        "ms": 179.687,
+        "source_page_hit": true,
+        "completion": "partial",
+        "checkpoint_count": 28,
+        "locators": [
+          "b07-p138-c30",
+          "b42-p14-c775",
+          "b44-p46-c5040",
+          "b44-p1-c8579",
+          "b01-p119-c291"
+        ]
+      },
+      {
+        "id": "F13_HOPE",
+        "budget_s": 0.25,
+        "repeat": 1,
+        "ms": 134.686,
+        "source_page_hit": true,
+        "completion": "full",
+        "checkpoint_count": 6,
+        "locators": [
+          "b01-p159-c1997",
+          "b37-p156-c494",
+          "b07-p150-c486",
+          "b07-p38-c1294",
+          "b16-p44-c777"
+        ]
+      },
+      {
+        "id": "F13_LOVE",
+        "budget_s": 0.25,
+        "repeat": 1,
+        "ms": 179.284,
+        "source_page_hit": true,
+        "completion": "partial",
+        "checkpoint_count": 25,
+        "locators": [
+          "b01-p62-c1148",
+          "b12-p174-c1115",
+          "b44-p10-c1440",
+          "b42-p145-c791",
+          "b09-p98-c670"
+        ]
+      },
+      {
+        "id": "F13_REPENTANCE",
+        "budget_s": 0.25,
+        "repeat": 1,
+        "ms": 213.561,
+        "source_page_hit": true,
+        "completion": "partial",
+        "checkpoint_count": 80,
+        "locators": [
+          "b39-p94-c29",
+          "b07-p141-c611",
+          "b39-p97-c1163",
+          "b07-p273-c772",
+          "b12-p60-c481"
+        ]
+      },
+      {
+        "id": "F13_HEART",
+        "budget_s": 0.25,
+        "repeat": 1,
+        "ms": 175.856,
+        "source_page_hit": true,
+        "completion": "partial",
+        "checkpoint_count": 22,
+        "locators": [
+          "b27-p4-c96",
+          "b28-p39-c874",
+          "b42-p42-c701",
+          "b42-p9-c1012",
+          "b41-p106-c698"
+        ]
+      },
+      {
+        "id": "F13_HARM",
+        "budget_s": 0.25,
+        "repeat": 1,
+        "ms": 176.614,
+        "source_page_hit": true,
+        "completion": "partial",
+        "checkpoint_count": 7,
+        "locators": [
+          "b44-p3-c4130",
+          "b44-p5-c8057",
+          "b20-p223-c932",
+          "b24-p260-c1185",
+          "b01-p153-c4122"
+        ]
+      },
+      {
+        "id": "F13_KHALWA",
+        "budget_s": 0.25,
+        "repeat": 1,
+        "ms": 173.959,
+        "source_page_hit": true,
+        "completion": "full",
+        "checkpoint_count": 35,
+        "locators": [
+          "b31-p90-c121",
+          "b10-p230-c292",
+          "b41-p101-c481",
+          "b41-p106-c1380",
+          "b40-p16-c363"
+        ]
+      },
+      {
+        "id": "F13_SINCERITY",
+        "budget_s": 0.25,
+        "repeat": 1,
+        "ms": 176.688,
+        "source_page_hit": false,
+        "completion": "partial",
+        "checkpoint_count": 14,
+        "locators": [
+          "b07-p259-c695",
+          "b14-p53-c773",
+          "b28-p20-c975",
+          "b45-p19-c2338",
+          "b45-p18-c7057"
+        ]
+      },
+      {
+        "id": "F13_FATIHA",
+        "budget_s": 0.25,
+        "repeat": 1,
+        "ms": 178.51,
+        "source_page_hit": true,
+        "completion": "partial",
+        "checkpoint_count": 28,
+        "locators": [
+          "b37-p67-c44",
+          "b06-p386-c840",
+          "b06-p26-c89",
+          "b07-p303-c60",
+          "b07-p294-c998"
+        ]
+      },
+      {
+        "id": "F13_RESTART",
+        "budget_s": 0.25,
+        "repeat": 1,
+        "ms": 175.692,
+        "source_page_hit": true,
+        "completion": "partial",
+        "checkpoint_count": 13,
+        "locators": [
+          "b15-p26-c724",
+          "b39-p94-c269",
+          "b39-p229-c682",
+          "b44-p24-c1936",
+          "b44-p43-c7184"
+        ]
+      },
+      {
+        "id": "R13_T10_U1_repentance",
+        "budget_s": 0.25,
+        "repeat": 1,
+        "ms": 175.891,
+        "source_page_hit": true,
+        "completion": "partial",
+        "checkpoint_count": 18,
+        "locators": [
+          "b39-p94-c573",
+          "b44-p43-c6358",
+          "b01-p159-c5068",
+          "b24-p16-c78",
+          "b20-p233-c195"
+        ]
+      },
+      {
+        "id": "R13_T10_U5_disagreement",
+        "budget_s": 0.25,
+        "repeat": 1,
+        "ms": 179.412,
+        "source_page_hit": false,
+        "completion": "partial",
+        "checkpoint_count": 13,
+        "locators": [
+          "b44-p20-c2264",
+          "b44-p5-c3490",
+          "b24-p260-c1185",
+          "b01-p153-c4122",
+          "b06-p2-c681"
+        ]
+      },
+      {
+        "id": "R13_T10_U2_heart_dhikr",
+        "budget_s": 0.25,
+        "repeat": 1,
+        "ms": 211.087,
+        "source_page_hit": true,
+        "completion": "partial",
+        "checkpoint_count": 79,
+        "locators": [
+          "b28-p40-c445",
+          "b39-p29-c560",
+          "b28-p39-c1123",
+          "b39-p132-c892",
+          "b26-p94-c975"
+        ]
+      },
+      {
+        "id": "R13_C10_KHALWA",
+        "budget_s": 0.25,
+        "repeat": 1,
+        "ms": 191.68,
+        "source_page_hit": true,
+        "completion": "partial",
+        "checkpoint_count": 69,
+        "locators": [
+          "b31-p90-c242",
+          "b28-p69-c1191",
+          "b10-p230-c292",
+          "b26-p112-c688",
+          "b15-p39-c1169"
+        ]
+      },
+      {
+        "id": "R13_N10_FATIHA_CONTACT",
+        "budget_s": 0.25,
+        "repeat": 1,
+        "ms": 177.106,
+        "source_page_hit": true,
+        "completion": "partial",
+        "checkpoint_count": 28,
+        "locators": [
+          "b37-p67-c747",
+          "b07-p302-c1470",
+          "b06-p386-c840",
+          "b06-p26-c89",
+          "b27-p115-c1395"
+        ]
+      },
+      {
+        "id": "R13_N10_MURAQABA_KHALWA",
+        "budget_s": 0.25,
+        "repeat": 1,
+        "ms": 131.155,
+        "source_page_hit": true,
+        "completion": "full",
+        "checkpoint_count": 30,
+        "locators": [
+          "b31-p90-c121",
+          "b10-p230-c292",
+          "b15-p39-c1169",
+          "b32-p85-c585",
+          "b41-p106-c1380"
+        ]
+      },
+      {
+        "id": "R13_N10_RESTART_WIRD",
+        "budget_s": 0.25,
+        "repeat": 1,
+        "ms": 174.292,
+        "source_page_hit": true,
+        "completion": "partial",
+        "checkpoint_count": 12,
+        "locators": [
+          "b15-p26-c724",
+          "b39-p94-c269",
+          "b44-p50-c3927",
+          "b44-p43-c8367",
+          "b17-p65-c27"
+        ]
+      },
+      {
+        "id": "R13_M10_T9_A_W1",
+        "budget_s": 0.25,
+        "repeat": 1,
+        "ms": 179.251,
+        "source_page_hit": true,
+        "completion": "partial",
+        "checkpoint_count": 30,
+        "locators": [
+          "b41-p131-c327",
+          "b15-p26-c37",
+          "b41-p100-c667",
+          "b15-p21-c34",
+          "b42-p4-c193"
+        ]
+      },
+      {
+        "id": "F13_ROLE",
+        "budget_s": 0.25,
+        "repeat": 2,
+        "ms": 180.429,
+        "source_page_hit": true,
+        "completion": "partial",
+        "checkpoint_count": 28,
+        "locators": [
+          "b07-p138-c30",
+          "b42-p14-c775",
+          "b44-p46-c5040",
+          "b44-p1-c8579",
+          "b01-p119-c291"
+        ]
+      },
+      {
+        "id": "F13_HOPE",
+        "budget_s": 0.25,
+        "repeat": 2,
+        "ms": 128.277,
+        "source_page_hit": true,
+        "completion": "full",
+        "checkpoint_count": 6,
+        "locators": [
+          "b01-p159-c1997",
+          "b37-p156-c494",
+          "b07-p150-c486",
+          "b07-p38-c1294",
+          "b16-p44-c777"
+        ]
+      },
+      {
+        "id": "F13_LOVE",
+        "budget_s": 0.25,
+        "repeat": 2,
+        "ms": 182.889,
+        "source_page_hit": true,
+        "completion": "partial",
+        "checkpoint_count": 26,
+        "locators": [
+          "b01-p62-c1148",
+          "b12-p174-c1115",
+          "b44-p10-c1440",
+          "b42-p145-c791",
+          "b09-p98-c670"
+        ]
+      },
+      {
+        "id": "F13_REPENTANCE",
+        "budget_s": 0.25,
+        "repeat": 2,
+        "ms": 216.68,
+        "source_page_hit": true,
+        "completion": "partial",
+        "checkpoint_count": 80,
+        "locators": [
+          "b39-p94-c29",
+          "b07-p141-c611",
+          "b39-p97-c1163",
+          "b07-p273-c772",
+          "b12-p60-c481"
+        ]
+      },
+      {
+        "id": "F13_HEART",
+        "budget_s": 0.25,
+        "repeat": 2,
+        "ms": 176.155,
+        "source_page_hit": true,
+        "completion": "partial",
+        "checkpoint_count": 21,
+        "locators": [
+          "b27-p4-c96",
+          "b28-p39-c874",
+          "b42-p42-c701",
+          "b42-p9-c1012",
+          "b41-p106-c698"
+        ]
+      },
+      {
+        "id": "F13_HARM",
+        "budget_s": 0.25,
+        "repeat": 2,
+        "ms": 174.761,
+        "source_page_hit": true,
+        "completion": "partial",
+        "checkpoint_count": 8,
+        "locators": [
+          "b44-p3-c4130",
+          "b44-p5-c8057",
+          "b20-p223-c932",
+          "b24-p260-c1185",
+          "b01-p153-c4122"
+        ]
+      },
+      {
+        "id": "F13_KHALWA",
+        "budget_s": 0.25,
+        "repeat": 2,
+        "ms": 178.569,
+        "source_page_hit": true,
+        "completion": "full",
+        "checkpoint_count": 35,
+        "locators": [
+          "b31-p90-c121",
+          "b10-p230-c292",
+          "b41-p101-c481",
+          "b41-p106-c1380",
+          "b40-p16-c363"
+        ]
+      },
+      {
+        "id": "F13_SINCERITY",
+        "budget_s": 0.25,
+        "repeat": 2,
+        "ms": 175.943,
+        "source_page_hit": false,
+        "completion": "partial",
+        "checkpoint_count": 20,
+        "locators": [
+          "b07-p259-c695",
+          "b14-p135-c807",
+          "b13-p36-c944",
+          "b14-p53-c773",
+          "b39-p1-c719"
+        ]
+      },
+      {
+        "id": "F13_FATIHA",
+        "budget_s": 0.25,
+        "repeat": 2,
+        "ms": 178.125,
+        "source_page_hit": true,
+        "completion": "partial",
+        "checkpoint_count": 22,
+        "locators": [
+          "b37-p67-c44",
+          "b06-p386-c840",
+          "b06-p26-c89",
+          "b07-p303-c60",
+          "b07-p294-c998"
+        ]
+      },
+      {
+        "id": "F13_RESTART",
+        "budget_s": 0.25,
+        "repeat": 2,
+        "ms": 176.663,
+        "source_page_hit": true,
+        "completion": "partial",
+        "checkpoint_count": 13,
+        "locators": [
+          "b15-p26-c724",
+          "b39-p94-c269",
+          "b39-p229-c682",
+          "b44-p24-c1936",
+          "b44-p43-c7184"
+        ]
+      },
+      {
+        "id": "R13_T10_U1_repentance",
+        "budget_s": 0.25,
+        "repeat": 2,
+        "ms": 175.539,
+        "source_page_hit": true,
+        "completion": "partial",
+        "checkpoint_count": 18,
+        "locators": [
+          "b39-p94-c573",
+          "b44-p43-c6358",
+          "b01-p159-c5068",
+          "b24-p16-c78",
+          "b20-p233-c195"
+        ]
+      },
+      {
+        "id": "R13_T10_U5_disagreement",
+        "budget_s": 0.25,
+        "repeat": 2,
+        "ms": 175.731,
+        "source_page_hit": false,
+        "completion": "partial",
+        "checkpoint_count": 13,
+        "locators": [
+          "b44-p20-c2264",
+          "b44-p5-c3490",
+          "b24-p260-c1185",
+          "b01-p153-c4122",
+          "b06-p2-c681"
+        ]
+      },
+      {
+        "id": "R13_T10_U2_heart_dhikr",
+        "budget_s": 0.25,
+        "repeat": 2,
+        "ms": 200.849,
+        "source_page_hit": true,
+        "completion": "partial",
+        "checkpoint_count": 79,
+        "locators": [
+          "b28-p40-c445",
+          "b39-p29-c560",
+          "b28-p39-c1123",
+          "b39-p132-c892",
+          "b26-p94-c975"
+        ]
+      },
+      {
+        "id": "R13_C10_KHALWA",
+        "budget_s": 0.25,
+        "repeat": 2,
+        "ms": 189.638,
+        "source_page_hit": true,
+        "completion": "partial",
+        "checkpoint_count": 69,
+        "locators": [
+          "b31-p90-c242",
+          "b28-p69-c1191",
+          "b10-p230-c292",
+          "b26-p112-c688",
+          "b15-p39-c1169"
+        ]
+      },
+      {
+        "id": "R13_N10_FATIHA_CONTACT",
+        "budget_s": 0.25,
+        "repeat": 2,
+        "ms": 177.925,
+        "source_page_hit": true,
+        "completion": "partial",
+        "checkpoint_count": 29,
+        "locators": [
+          "b37-p67-c747",
+          "b07-p302-c1470",
+          "b06-p386-c840",
+          "b06-p26-c89",
+          "b27-p115-c1395"
+        ]
+      },
+      {
+        "id": "R13_N10_MURAQABA_KHALWA",
+        "budget_s": 0.25,
+        "repeat": 2,
+        "ms": 137.099,
+        "source_page_hit": true,
+        "completion": "full",
+        "checkpoint_count": 30,
+        "locators": [
+          "b31-p90-c121",
+          "b10-p230-c292",
+          "b15-p39-c1169",
+          "b32-p85-c585",
+          "b41-p106-c1380"
+        ]
+      },
+      {
+        "id": "R13_N10_RESTART_WIRD",
+        "budget_s": 0.25,
+        "repeat": 2,
+        "ms": 174.018,
+        "source_page_hit": true,
+        "completion": "partial",
+        "checkpoint_count": 12,
+        "locators": [
+          "b15-p26-c724",
+          "b39-p94-c269",
+          "b44-p50-c3927",
+          "b44-p43-c8367",
+          "b17-p65-c27"
+        ]
+      },
+      {
+        "id": "R13_M10_T9_A_W1",
+        "budget_s": 0.25,
+        "repeat": 2,
+        "ms": 177.42,
+        "source_page_hit": true,
+        "completion": "partial",
+        "checkpoint_count": 28,
+        "locators": [
+          "b41-p131-c327",
+          "b15-p26-c37",
+          "b15-p21-c34",
+          "b41-p100-c667",
+          "b42-p4-c193"
+        ]
+      }
+    ]
+  },
+  "updated": {
+    "version": "2.10.17",
+    "scope": "Controlled local direct question pipeline with new immutable trace per call, fixed language patterns precompiled for both versions, no answer-cache reuse, 18 disclosed questions repeated 3 times per budget. 0.25-second budget is a synthetic stress condition, not Render or independent answer grading.",
+    "precompile_ms": 2409.581,
+    "summaries": [
+      {
+        "budget_s": 5.0,
+        "calls": 54,
+        "source_page_hits": 54,
+        "full": 54,
+        "partial": 0,
+        "median_ms": 280.868,
+        "p95_ms": 547.765
+      },
+      {
+        "budget_s": 0.25,
+        "calls": 54,
+        "source_page_hits": 52,
+        "full": 10,
+        "partial": 44,
+        "median_ms": 177.234,
+        "p95_ms": 196.409
+      }
+    ],
+    "first_scoped_lexeme_ms": 853.126,
+    "scoped_lexeme_response": {
+      "returned_count": 0,
+      "books": {},
+      "results": [],
+      "census_matching_pages": 0,
+      "census_occurrences": 0,
+      "count_basis": "phrase",
+      "count_semantics": {
+        "whole_word": true,
+        "normalization_level": "safe",
+        "footnotes_excluded": true
+      },
+      "per_query": [
+        {
+          "query": "وسواس",
+          "matching_pages": 0,
+          "surface_matching_pages": 0,
+          "normalized_occurrences": 0,
+          "surface_occurrences": 0,
+          "count_basis": "phrase",
+          "occurrences": 0
+        }
+      ],
+      "retrieval_hit_count": 0,
+      "retrieval_hit_count_relation": "article_normalized_phrase",
+      "retrieval_hit_count_scope": "lexeme_matching_pages_before_ranking_and_score_filter",
+      "literal_matching_pages": 0,
+      "literal_occurrences": 0,
+      "normalized_matching_pages": 0,
+      "normalized_occurrences": 0,
+      "census_version": {
+        "server_version": "2.10.17",
+        "navigation_scope": "body_only"
+      },
+      "suggestions": [
+        "وسواس",
+        "وسوس",
+        "وساس",
+        "الوسواس"
+      ],
+      "navigation_scope": "body_only",
+      "reformulation_status": "not_needed",
+      "versions": {
+        "index": "evidence-units-1.2",
+        "lexicon": "discovery-links-1.0-unreviewed",
+        "cues": "frames-1.0",
+        "ranker": "indexed-features-2"
+      },
+      "ranking_policy": "authority_adjusted_relevance_v1",
+      "effective_match_mode": "lexeme",
+      "whole_word": true,
+      "fewer_than_limit_reason": "only_n_passages_met_threshold",
+      "normalization_level": "broad_discovery",
+      "diagnostics": {
+        "zero_result_is_not_absence_proof": true,
+        "empty_stage": "matching_or_scope",
+        "attempted_modes": [
+          "lexeme"
+        ],
+        "per_term": [
+          {
+            "term": "وسواس",
+            "matching_pages": 0,
+            "occurrences": 0
+          }
+        ],
+        "dropped_stopwords": [],
+        "suggested_mode": null,
+        "verified_retry": null,
+        "retry_source_tiers": [],
+        "retry_warning": null,
+        "retry_scope": "exploration_not_verified_answer",
+        "message": "No displayed evidence met the request; do not infer corpus absence. A verified_retry, when present, was checked in the same source scope."
+      },
+      "retrieval_completeness": {
+        "normalized_pages": 0,
+        "candidate_pages": 0,
+        "missing_literal_pages": 0,
+        "missing_literal_page_sample": [],
+        "status": "ok",
+        "scope": "eligible_pages_before_ranking_score_filter_and_pagination",
+        "method": "actual_retrieved_candidates",
+        "per_query": [
+          {
+            "query": "وسواس",
+            "normalized_pages": 0,
+            "candidate_pages": 0,
+            "missing_literal_pages": 0,
+            "missing_literal_page_sample": [],
+            "status": "ok",
+            "scope": "eligible_pages_before_ranking_score_filter_and_pagination"
+          }
+        ],
+        "per_query_scope": "individual_query_eligibility"
+      },
+      "contract": {
+        "server_version": "2.10.17",
+        "tool_contract_version": "15.0",
+        "tool_contract": "alburhaniya-tools-v15",
+        "tool_count": 5,
+        "schema_digest": "0bb286448bb1697649f0eef89613308a2804edbd4668ac68a7e857d3b01c22b2",
+        "tool_schema_digest": "67eb72e89ab25cad317b45f6aca20cd00bdd83b639024b2ed4900ae6ca9fcf4c"
+      },
+      "request_id": "daa73ceb51ad464dbeb847106c422784",
+      "status": {
+        "execution": "full",
+        "evidence_status": "no_relevant_evidence"
+      },
+      "completion": "full",
+      "trace": {
+        "trace_id": "daa73ceb51ad464dbeb847106c422784",
+        "active_stage": "literal_census",
+        "last_completed_stage": null,
+        "checkpoint_id": null,
+        "checkpoint_count": 0,
+        "events": [
+          {
+            "stage": "literal_census",
+            "event": "start",
+            "elapsed_ms": 0.321
+          },
+          {
+            "stage": "completeness_audit",
+            "event": "start",
+            "elapsed_ms": 377.707
+          },
+          {
+            "stage": "literal_census",
+            "event": "start",
+            "elapsed_ms": 849.858
+          }
+        ]
+      },
+      "timing": {
+        "total_ms": 850.365,
+        "attempts": 1,
+        "phases_ms": {
+          "other_tool_execution": 0.105,
+          "cache_lookup": 0.001,
+          "response_building": 830.83,
+          "literal_census": 10.591,
+          "candidate_sql": 0.795,
+          "evidence_validation": 7.714,
+          "ranking_and_pagination": 0.005,
+          "completeness_audit": 0.287,
+          "serialization_probe": 0.037,
+          "queue_wait": 0.0,
+          "authentication": 0.0
+        },
+        "phase_semantics": "exclusive",
+        "scope": "tool_execution_plus_measured_queue_and_auth; excludes network and final transport serialization"
+      }
+    },
+    "cases": [
+      {
+        "id": "F13_ROLE",
+        "budget_s": 5.0,
+        "repeat": 0,
+        "ms": 251.636,
+        "source_page_hit": true,
+        "completion": "full",
+        "checkpoint_count": 37,
+        "locators": [
+          "b07-p138-c30",
+          "b07-p132-c1156",
+          "b45-p3-c1974",
+          "b42-p14-c775",
+          "b44-p46-c5040"
+        ]
+      },
+      {
+        "id": "F13_HOPE",
+        "budget_s": 5.0,
+        "repeat": 0,
+        "ms": 220.82,
+        "source_page_hit": true,
+        "completion": "full",
+        "checkpoint_count": 11,
+        "locators": [
+          "b07-p150-c486",
+          "b07-p38-c1294",
+          "b01-p159-c1997",
+          "b37-p156-c494",
+          "b42-p142-c719"
+        ]
+      },
+      {
+        "id": "F13_LOVE",
+        "budget_s": 5.0,
+        "repeat": 0,
+        "ms": 630.033,
+        "source_page_hit": true,
+        "completion": "full",
+        "checkpoint_count": 70,
+        "locators": [
+          "b27-p43-c554",
+          "b01-p62-c1148",
+          "b01-p143-c7750",
+          "b21-p220-c1069",
+          "b12-p174-c1115"
+        ]
+      },
+      {
+        "id": "F13_REPENTANCE",
+        "budget_s": 5.0,
+        "repeat": 0,
+        "ms": 466.736,
+        "source_page_hit": true,
+        "completion": "full",
+        "checkpoint_count": 106,
+        "locators": [
+          "b39-p47-c1360",
+          "b39-p94-c573",
+          "b44-p43-c6801",
+          "b45-p6-c547",
+          "b01-p159-c5068"
+        ]
+      },
+      {
+        "id": "F13_HEART",
+        "budget_s": 5.0,
+        "repeat": 0,
+        "ms": 454.267,
+        "source_page_hit": true,
+        "completion": "full",
+        "checkpoint_count": 51,
+        "locators": [
+          "b27-p4-c96",
+          "b28-p39-c874",
+          "b42-p9-c1012",
+          "b42-p42-c701",
+          "b29-p8-c791"
+        ]
+      },
+      {
+        "id": "F13_HARM",
+        "budget_s": 5.0,
+        "repeat": 0,
+        "ms": 405.187,
+        "source_page_hit": true,
+        "completion": "full",
+        "checkpoint_count": 13,
+        "locators": [
+          "b07-p143-c1185",
+          "b44-p3-c4130",
+          "b44-p5-c8057",
+          "b24-p260-c1185",
+          "b20-p223-c932"
+        ]
+      },
+      {
+        "id": "F13_KHALWA",
+        "budget_s": 5.0,
+        "repeat": 0,
+        "ms": 235.748,
+        "source_page_hit": true,
+        "completion": "full",
+        "checkpoint_count": 41,
+        "locators": [
+          "b31-p90-c242",
+          "b39-p197-c328",
+          "b27-p36-c562",
+          "b10-p230-c292",
+          "b27-p104-c873"
+        ]
+      },
+      {
+        "id": "F13_SINCERITY",
+        "budget_s": 5.0,
+        "repeat": 0,
+        "ms": 386.164,
+        "source_page_hit": true,
+        "completion": "full",
+        "checkpoint_count": 20,
+        "locators": [
+          "b07-p134-c1163",
+          "b29-p72-c901",
+          "b03-p27-c847",
+          "b02-p4-c7102"
+        ]
+      },
+      {
+        "id": "F13_FATIHA",
+        "budget_s": 5.0,
+        "repeat": 0,
+        "ms": 420.699,
+        "source_page_hit": true,
+        "completion": "full",
+        "checkpoint_count": 63,
+        "locators": [
+          "b37-p67-c1115",
+          "b06-p26-c89",
+          "b06-p386-c116",
+          "b07-p304-c252",
+          "b07-p302-c1470"
+        ]
+      },
+      {
+        "id": "F13_RESTART",
+        "budget_s": 5.0,
+        "repeat": 0,
+        "ms": 361.953,
+        "source_page_hit": true,
+        "completion": "full",
+        "checkpoint_count": 19,
+        "locators": [
+          "b15-p26-c724",
+          "b39-p229-c682",
+          "b39-p94-c269",
+          "b44-p24-c1936",
+          "b44-p43-c7184"
+        ]
+      },
+      {
+        "id": "R13_T10_U1_repentance",
+        "budget_s": 5.0,
+        "repeat": 0,
+        "ms": 367.253,
+        "source_page_hit": true,
+        "completion": "full",
+        "checkpoint_count": 31,
+        "locators": [
+          "b39-p94-c573",
+          "b13-p11-c329",
+          "b44-p43-c6801",
+          "b39-p47-c1360",
+          "b45-p6-c547"
+        ]
+      },
+      {
+        "id": "R13_T10_U5_disagreement",
+        "budget_s": 5.0,
+        "repeat": 0,
+        "ms": 377.377,
+        "source_page_hit": true,
+        "completion": "full",
+        "checkpoint_count": 19,
+        "locators": [
+          "b07-p143-c1185",
+          "b44-p55-c6850",
+          "b44-p3-c2254",
+          "b24-p260-c1185",
+          "b01-p153-c4122"
+        ]
+      },
+      {
+        "id": "R13_T10_U2_heart_dhikr",
+        "budget_s": 5.0,
+        "repeat": 0,
+        "ms": 607.094,
+        "source_page_hit": true,
+        "completion": "full",
+        "checkpoint_count": 99,
+        "locators": [
+          "b28-p39-c874",
+          "b28-p43-c193",
+          "b29-p42-c1006",
+          "b41-p17-c490",
+          "b41-p75-c899"
+        ]
+      },
+      {
+        "id": "R13_C10_KHALWA",
+        "budget_s": 5.0,
+        "repeat": 0,
+        "ms": 428.814,
+        "source_page_hit": true,
+        "completion": "full",
+        "checkpoint_count": 106,
+        "locators": [
+          "b31-p90-c242",
+          "b28-p69-c1191",
+          "b12-p147-c742",
+          "b10-p230-c292",
+          "b27-p13-c1054"
+        ]
+      },
+      {
+        "id": "R13_N10_FATIHA_CONTACT",
+        "budget_s": 5.0,
+        "repeat": 0,
+        "ms": 252.279,
+        "source_page_hit": true,
+        "completion": "full",
+        "checkpoint_count": 45,
+        "locators": [
+          "b37-p67-c747",
+          "b30-p92-c654",
+          "b27-p1-c733",
+          "b28-p1-c690",
+          "b28-p44-c215"
+        ]
+      },
+      {
+        "id": "R13_N10_MURAQABA_KHALWA",
+        "budget_s": 5.0,
+        "repeat": 0,
+        "ms": 165.099,
+        "source_page_hit": true,
+        "completion": "full",
+        "checkpoint_count": 39,
+        "locators": [
+          "b31-p90-c242",
+          "b29-p87-c604",
+          "b39-p135-c322",
+          "b28-p69-c1306",
+          "b31-p115-c505"
+        ]
+      },
+      {
+        "id": "R13_N10_RESTART_WIRD",
+        "budget_s": 5.0,
+        "repeat": 0,
+        "ms": 280.122,
+        "source_page_hit": true,
+        "completion": "full",
+        "checkpoint_count": 13,
+        "locators": [
+          "b15-p26-c724",
+          "b39-p94-c269",
+          "b41-p21-c753",
+          "b44-p50-c4117",
+          "b44-p43-c8367"
+        ]
+      },
+      {
+        "id": "R13_M10_T9_A_W1",
+        "budget_s": 5.0,
+        "repeat": 0,
+        "ms": 239.032,
+        "source_page_hit": true,
+        "completion": "full",
+        "checkpoint_count": 38,
+        "locators": [
+          "b41-p131-c327",
+          "b15-p26-c37",
+          "b41-p100-c667",
+          "b15-p21-c34",
+          "b42-p4-c193"
+        ]
+      },
+      {
+        "id": "F13_ROLE",
+        "budget_s": 5.0,
+        "repeat": 1,
+        "ms": 253.445,
+        "source_page_hit": true,
+        "completion": "full",
+        "checkpoint_count": 37,
+        "locators": [
+          "b07-p138-c30",
+          "b07-p132-c1156",
+          "b45-p3-c1974",
+          "b42-p14-c775",
+          "b44-p46-c5040"
+        ]
+      },
+      {
+        "id": "F13_HOPE",
+        "budget_s": 5.0,
+        "repeat": 1,
+        "ms": 164.762,
+        "source_page_hit": true,
+        "completion": "full",
+        "checkpoint_count": 11,
+        "locators": [
+          "b07-p150-c486",
+          "b07-p38-c1294",
+          "b01-p159-c1997",
+          "b37-p156-c494",
+          "b42-p142-c719"
+        ]
+      },
+      {
+        "id": "F13_LOVE",
+        "budget_s": 5.0,
+        "repeat": 1,
+        "ms": 428.704,
+        "source_page_hit": true,
+        "completion": "full",
+        "checkpoint_count": 70,
+        "locators": [
+          "b27-p43-c554",
+          "b01-p62-c1148",
+          "b01-p143-c7750",
+          "b21-p220-c1069",
+          "b12-p174-c1115"
+        ]
+      },
+      {
+        "id": "F13_REPENTANCE",
+        "budget_s": 5.0,
+        "repeat": 1,
+        "ms": 405.707,
+        "source_page_hit": true,
+        "completion": "full",
+        "checkpoint_count": 106,
+        "locators": [
+          "b39-p47-c1360",
+          "b39-p94-c573",
+          "b44-p43-c6801",
+          "b45-p6-c547",
+          "b01-p159-c5068"
+        ]
+      },
+      {
+        "id": "F13_HEART",
+        "budget_s": 5.0,
+        "repeat": 1,
+        "ms": 429.782,
+        "source_page_hit": true,
+        "completion": "full",
+        "checkpoint_count": 51,
+        "locators": [
+          "b27-p4-c96",
+          "b28-p39-c874",
+          "b42-p9-c1012",
+          "b42-p42-c701",
+          "b29-p8-c791"
+        ]
+      },
+      {
+        "id": "F13_HARM",
+        "budget_s": 5.0,
+        "repeat": 1,
+        "ms": 331.177,
+        "source_page_hit": true,
+        "completion": "full",
+        "checkpoint_count": 13,
+        "locators": [
+          "b07-p143-c1185",
+          "b44-p3-c4130",
+          "b44-p5-c8057",
+          "b24-p260-c1185",
+          "b20-p223-c932"
+        ]
+      },
+      {
+        "id": "F13_KHALWA",
+        "budget_s": 5.0,
+        "repeat": 1,
+        "ms": 162.425,
+        "source_page_hit": true,
+        "completion": "full",
+        "checkpoint_count": 41,
+        "locators": [
+          "b31-p90-c242",
+          "b39-p197-c328",
+          "b27-p36-c562",
+          "b10-p230-c292",
+          "b27-p104-c873"
+        ]
+      },
+      {
+        "id": "F13_SINCERITY",
+        "budget_s": 5.0,
+        "repeat": 1,
+        "ms": 270.897,
+        "source_page_hit": true,
+        "completion": "full",
+        "checkpoint_count": 20,
+        "locators": [
+          "b07-p134-c1163",
+          "b29-p72-c901",
+          "b03-p27-c847",
+          "b02-p4-c7102"
+        ]
+      },
+      {
+        "id": "F13_FATIHA",
+        "budget_s": 5.0,
+        "repeat": 1,
+        "ms": 347.386,
+        "source_page_hit": true,
+        "completion": "full",
+        "checkpoint_count": 63,
+        "locators": [
+          "b37-p67-c1115",
+          "b06-p26-c89",
+          "b06-p386-c116",
+          "b07-p304-c252",
+          "b07-p302-c1470"
+        ]
+      },
+      {
+        "id": "F13_RESTART",
+        "budget_s": 5.0,
+        "repeat": 1,
+        "ms": 268.616,
+        "source_page_hit": true,
+        "completion": "full",
+        "checkpoint_count": 19,
+        "locators": [
+          "b15-p26-c724",
+          "b39-p229-c682",
+          "b39-p94-c269",
+          "b44-p24-c1936",
+          "b44-p43-c7184"
+        ]
+      },
+      {
+        "id": "R13_T10_U1_repentance",
+        "budget_s": 5.0,
+        "repeat": 1,
+        "ms": 197.417,
+        "source_page_hit": true,
+        "completion": "full",
+        "checkpoint_count": 31,
+        "locators": [
+          "b39-p94-c573",
+          "b13-p11-c329",
+          "b44-p43-c6801",
+          "b39-p47-c1360",
+          "b45-p6-c547"
+        ]
+      },
+      {
+        "id": "R13_T10_U5_disagreement",
+        "budget_s": 5.0,
+        "repeat": 1,
+        "ms": 280.868,
+        "source_page_hit": true,
+        "completion": "full",
+        "checkpoint_count": 19,
+        "locators": [
+          "b07-p143-c1185",
+          "b44-p55-c6850",
+          "b44-p3-c2254",
+          "b24-p260-c1185",
+          "b01-p153-c4122"
+        ]
+      },
+      {
+        "id": "R13_T10_U2_heart_dhikr",
+        "budget_s": 5.0,
+        "repeat": 1,
+        "ms": 547.765,
+        "source_page_hit": true,
+        "completion": "full",
+        "checkpoint_count": 99,
+        "locators": [
+          "b28-p39-c874",
+          "b28-p43-c193",
+          "b29-p42-c1006",
+          "b41-p17-c490",
+          "b41-p75-c899"
+        ]
+      },
+      {
+        "id": "R13_C10_KHALWA",
+        "budget_s": 5.0,
+        "repeat": 1,
+        "ms": 295.903,
+        "source_page_hit": true,
+        "completion": "full",
+        "checkpoint_count": 106,
+        "locators": [
+          "b31-p90-c242",
+          "b28-p69-c1191",
+          "b12-p147-c742",
+          "b10-p230-c292",
+          "b27-p13-c1054"
+        ]
+      },
+      {
+        "id": "R13_N10_FATIHA_CONTACT",
+        "budget_s": 5.0,
+        "repeat": 1,
+        "ms": 179.575,
+        "source_page_hit": true,
+        "completion": "full",
+        "checkpoint_count": 45,
+        "locators": [
+          "b37-p67-c747",
+          "b30-p92-c654",
+          "b27-p1-c733",
+          "b28-p1-c690",
+          "b28-p44-c215"
+        ]
+      },
+      {
+        "id": "R13_N10_MURAQABA_KHALWA",
+        "budget_s": 5.0,
+        "repeat": 1,
+        "ms": 117.65,
+        "source_page_hit": true,
+        "completion": "full",
+        "checkpoint_count": 39,
+        "locators": [
+          "b31-p90-c242",
+          "b29-p87-c604",
+          "b39-p135-c322",
+          "b28-p69-c1306",
+          "b31-p115-c505"
+        ]
+      },
+      {
+        "id": "R13_N10_RESTART_WIRD",
+        "budget_s": 5.0,
+        "repeat": 1,
+        "ms": 226.388,
+        "source_page_hit": true,
+        "completion": "full",
+        "checkpoint_count": 13,
+        "locators": [
+          "b15-p26-c724",
+          "b39-p94-c269",
+          "b41-p21-c753",
+          "b44-p50-c4117",
+          "b44-p43-c8367"
+        ]
+      },
+      {
+        "id": "R13_M10_T9_A_W1",
+        "budget_s": 5.0,
+        "repeat": 1,
+        "ms": 133.172,
+        "source_page_hit": true,
+        "completion": "full",
+        "checkpoint_count": 38,
+        "locators": [
+          "b41-p131-c327",
+          "b15-p26-c37",
+          "b41-p100-c667",
+          "b15-p21-c34",
+          "b42-p4-c193"
+        ]
+      },
+      {
+        "id": "F13_ROLE",
+        "budget_s": 5.0,
+        "repeat": 2,
+        "ms": 176.879,
+        "source_page_hit": true,
+        "completion": "full",
+        "checkpoint_count": 37,
+        "locators": [
+          "b07-p138-c30",
+          "b07-p132-c1156",
+          "b45-p3-c1974",
+          "b42-p14-c775",
+          "b44-p46-c5040"
+        ]
+      },
+      {
+        "id": "F13_HOPE",
+        "budget_s": 5.0,
+        "repeat": 2,
+        "ms": 136.25,
+        "source_page_hit": true,
+        "completion": "full",
+        "checkpoint_count": 11,
+        "locators": [
+          "b07-p150-c486",
+          "b07-p38-c1294",
+          "b01-p159-c1997",
+          "b37-p156-c494",
+          "b42-p142-c719"
+        ]
+      },
+      {
+        "id": "F13_LOVE",
+        "budget_s": 5.0,
+        "repeat": 2,
+        "ms": 432.914,
+        "source_page_hit": true,
+        "completion": "full",
+        "checkpoint_count": 70,
+        "locators": [
+          "b27-p43-c554",
+          "b01-p62-c1148",
+          "b01-p143-c7750",
+          "b21-p220-c1069",
+          "b12-p174-c1115"
+        ]
+      },
+      {
+        "id": "F13_REPENTANCE",
+        "budget_s": 5.0,
+        "repeat": 2,
+        "ms": 353.112,
+        "source_page_hit": true,
+        "completion": "full",
+        "checkpoint_count": 106,
+        "locators": [
+          "b39-p47-c1360",
+          "b39-p94-c573",
+          "b44-p43-c6801",
+          "b45-p6-c547",
+          "b01-p159-c5068"
+        ]
+      },
+      {
+        "id": "F13_HEART",
+        "budget_s": 5.0,
+        "repeat": 2,
+        "ms": 342.55,
+        "source_page_hit": true,
+        "completion": "full",
+        "checkpoint_count": 51,
+        "locators": [
+          "b27-p4-c96",
+          "b28-p39-c874",
+          "b42-p9-c1012",
+          "b42-p42-c701",
+          "b29-p8-c791"
+        ]
+      },
+      {
+        "id": "F13_HARM",
+        "budget_s": 5.0,
+        "repeat": 2,
+        "ms": 302.579,
+        "source_page_hit": true,
+        "completion": "full",
+        "checkpoint_count": 13,
+        "locators": [
+          "b07-p143-c1185",
+          "b44-p3-c4130",
+          "b44-p5-c8057",
+          "b24-p260-c1185",
+          "b20-p223-c932"
+        ]
+      },
+      {
+        "id": "F13_KHALWA",
+        "budget_s": 5.0,
+        "repeat": 2,
+        "ms": 149.168,
+        "source_page_hit": true,
+        "completion": "full",
+        "checkpoint_count": 41,
+        "locators": [
+          "b31-p90-c242",
+          "b39-p197-c328",
+          "b27-p36-c562",
+          "b10-p230-c292",
+          "b27-p104-c873"
+        ]
+      },
+      {
+        "id": "F13_SINCERITY",
+        "budget_s": 5.0,
+        "repeat": 2,
+        "ms": 304.833,
+        "source_page_hit": true,
+        "completion": "full",
+        "checkpoint_count": 20,
+        "locators": [
+          "b07-p134-c1163",
+          "b29-p72-c901",
+          "b03-p27-c847",
+          "b02-p4-c7102"
+        ]
+      },
+      {
+        "id": "F13_FATIHA",
+        "budget_s": 5.0,
+        "repeat": 2,
+        "ms": 277.47,
+        "source_page_hit": true,
+        "completion": "full",
+        "checkpoint_count": 63,
+        "locators": [
+          "b37-p67-c1115",
+          "b06-p26-c89",
+          "b06-p386-c116",
+          "b07-p304-c252",
+          "b07-p302-c1470"
+        ]
+      },
+      {
+        "id": "F13_RESTART",
+        "budget_s": 5.0,
+        "repeat": 2,
+        "ms": 240.134,
+        "source_page_hit": true,
+        "completion": "full",
+        "checkpoint_count": 19,
+        "locators": [
+          "b15-p26-c724",
+          "b39-p229-c682",
+          "b39-p94-c269",
+          "b44-p24-c1936",
+          "b44-p43-c7184"
+        ]
+      },
+      {
+        "id": "R13_T10_U1_repentance",
+        "budget_s": 5.0,
+        "repeat": 2,
+        "ms": 178.614,
+        "source_page_hit": true,
+        "completion": "full",
+        "checkpoint_count": 31,
+        "locators": [
+          "b39-p94-c573",
+          "b13-p11-c329",
+          "b44-p43-c6801",
+          "b39-p47-c1360",
+          "b45-p6-c547"
+        ]
+      },
+      {
+        "id": "R13_T10_U5_disagreement",
+        "budget_s": 5.0,
+        "repeat": 2,
+        "ms": 315.453,
+        "source_page_hit": true,
+        "completion": "full",
+        "checkpoint_count": 19,
+        "locators": [
+          "b07-p143-c1185",
+          "b44-p55-c6850",
+          "b44-p3-c2254",
+          "b24-p260-c1185",
+          "b01-p153-c4122"
+        ]
+      },
+      {
+        "id": "R13_T10_U2_heart_dhikr",
+        "budget_s": 5.0,
+        "repeat": 2,
+        "ms": 488.705,
+        "source_page_hit": true,
+        "completion": "full",
+        "checkpoint_count": 99,
+        "locators": [
+          "b28-p39-c874",
+          "b28-p43-c193",
+          "b29-p42-c1006",
+          "b41-p17-c490",
+          "b41-p75-c899"
+        ]
+      },
+      {
+        "id": "R13_C10_KHALWA",
+        "budget_s": 5.0,
+        "repeat": 2,
+        "ms": 307.491,
+        "source_page_hit": true,
+        "completion": "full",
+        "checkpoint_count": 106,
+        "locators": [
+          "b31-p90-c242",
+          "b28-p69-c1191",
+          "b12-p147-c742",
+          "b10-p230-c292",
+          "b27-p13-c1054"
+        ]
+      },
+      {
+        "id": "R13_N10_FATIHA_CONTACT",
+        "budget_s": 5.0,
+        "repeat": 2,
+        "ms": 197.294,
+        "source_page_hit": true,
+        "completion": "full",
+        "checkpoint_count": 45,
+        "locators": [
+          "b37-p67-c747",
+          "b30-p92-c654",
+          "b27-p1-c733",
+          "b28-p1-c690",
+          "b28-p44-c215"
+        ]
+      },
+      {
+        "id": "R13_N10_MURAQABA_KHALWA",
+        "budget_s": 5.0,
+        "repeat": 2,
+        "ms": 186.755,
+        "source_page_hit": true,
+        "completion": "full",
+        "checkpoint_count": 39,
+        "locators": [
+          "b31-p90-c242",
+          "b29-p87-c604",
+          "b39-p135-c322",
+          "b28-p69-c1306",
+          "b31-p115-c505"
+        ]
+      },
+      {
+        "id": "R13_N10_RESTART_WIRD",
+        "budget_s": 5.0,
+        "repeat": 2,
+        "ms": 198.512,
+        "source_page_hit": true,
+        "completion": "full",
+        "checkpoint_count": 13,
+        "locators": [
+          "b15-p26-c724",
+          "b39-p94-c269",
+          "b41-p21-c753",
+          "b44-p50-c4117",
+          "b44-p43-c8367"
+        ]
+      },
+      {
+        "id": "R13_M10_T9_A_W1",
+        "budget_s": 5.0,
+        "repeat": 2,
+        "ms": 129.542,
+        "source_page_hit": true,
+        "completion": "full",
+        "checkpoint_count": 38,
+        "locators": [
+          "b41-p131-c327",
+          "b15-p26-c37",
+          "b41-p100-c667",
+          "b15-p21-c34",
+          "b42-p4-c193"
+        ]
+      },
+      {
+        "id": "F13_ROLE",
+        "budget_s": 0.25,
+        "repeat": 0,
+        "ms": 175.765,
+        "source_page_hit": true,
+        "completion": "full",
+        "checkpoint_count": 37,
+        "locators": [
+          "b07-p138-c30",
+          "b07-p132-c1156",
+          "b45-p3-c1974",
+          "b42-p14-c775",
+          "b44-p46-c5040"
+        ]
+      },
+      {
+        "id": "F13_HOPE",
+        "budget_s": 0.25,
+        "repeat": 0,
+        "ms": 136.55,
+        "source_page_hit": true,
+        "completion": "full",
+        "checkpoint_count": 11,
+        "locators": [
+          "b07-p150-c486",
+          "b07-p38-c1294",
+          "b01-p159-c1997",
+          "b37-p156-c494",
+          "b42-p142-c719"
+        ]
+      },
+      {
+        "id": "F13_LOVE",
+        "budget_s": 0.25,
+        "repeat": 0,
+        "ms": 180.234,
+        "source_page_hit": true,
+        "completion": "partial",
+        "checkpoint_count": 27,
+        "locators": [
+          "b01-p62-c1148",
+          "b21-p220-c1069",
+          "b12-p174-c1115",
+          "b42-p145-c791",
+          "b44-p10-c1440"
+        ]
+      },
+      {
+        "id": "F13_REPENTANCE",
+        "budget_s": 0.25,
+        "repeat": 0,
+        "ms": 193.319,
+        "source_page_hit": true,
+        "completion": "partial",
+        "checkpoint_count": 81,
+        "locators": [
+          "b39-p94-c573",
+          "b44-p43-c6801",
+          "b01-p159-c5068",
+          "b07-p141-c611",
+          "b39-p97-c1163"
+        ]
+      },
+      {
+        "id": "F13_HEART",
+        "budget_s": 0.25,
+        "repeat": 0,
+        "ms": 176.152,
+        "source_page_hit": true,
+        "completion": "partial",
+        "checkpoint_count": 25,
+        "locators": [
+          "b28-p39-c874",
+          "b42-p9-c1012",
+          "b42-p42-c701",
+          "b41-p75-c146",
+          "b29-p42-c1006"
+        ]
+      },
+      {
+        "id": "F13_HARM",
+        "budget_s": 0.25,
+        "repeat": 0,
+        "ms": 175.063,
+        "source_page_hit": true,
+        "completion": "partial",
+        "checkpoint_count": 6,
+        "locators": [
+          "b44-p3-c2254",
+          "b44-p5-c3490",
+          "b20-p223-c932",
+          "b43-p30-c8072"
+        ]
+      },
+      {
+        "id": "F13_KHALWA",
+        "budget_s": 0.25,
+        "repeat": 0,
+        "ms": 143.798,
+        "source_page_hit": true,
+        "completion": "full",
+        "checkpoint_count": 41,
+        "locators": [
+          "b31-p90-c242",
+          "b39-p197-c328",
+          "b27-p36-c562",
+          "b10-p230-c292",
+          "b27-p104-c873"
+        ]
+      },
+      {
+        "id": "F13_SINCERITY",
+        "budget_s": 0.25,
+        "repeat": 0,
+        "ms": 174.779,
+        "source_page_hit": true,
+        "completion": "partial",
+        "checkpoint_count": 15,
+        "locators": [
+          "b07-p134-c1163",
+          "b29-p72-c901",
+          "b03-p27-c847",
+          "b02-p4-c7102"
+        ]
+      },
+      {
+        "id": "F13_FATIHA",
+        "budget_s": 0.25,
+        "repeat": 0,
+        "ms": 180.962,
+        "source_page_hit": true,
+        "completion": "partial",
+        "checkpoint_count": 35,
+        "locators": [
+          "b37-p67-c1115",
+          "b06-p26-c89",
+          "b06-p386-c116",
+          "b10-p243-c233",
+          "b07-p303-c60"
+        ]
+      },
+      {
+        "id": "F13_RESTART",
+        "budget_s": 0.25,
+        "repeat": 0,
+        "ms": 175.783,
+        "source_page_hit": false,
+        "completion": "partial",
+        "checkpoint_count": 7,
+        "locators": [
+          "b39-p94-c269",
+          "b44-p43-c7184",
+          "b25-p61-c1397",
+          "b22-p78-c1237",
+          "b25-p56-c405"
+        ]
+      },
+      {
+        "id": "R13_T10_U1_repentance",
+        "budget_s": 0.25,
+        "repeat": 0,
+        "ms": 193.256,
+        "source_page_hit": true,
+        "completion": "partial",
+        "checkpoint_count": 27,
+        "locators": [
+          "b39-p94-c573",
+          "b13-p11-c329",
+          "b44-p43-c6801",
+          "b39-p47-c1360",
+          "b45-p6-c547"
+        ]
+      },
+      {
+        "id": "R13_T10_U5_disagreement",
+        "budget_s": 0.25,
+        "repeat": 0,
+        "ms": 176.465,
+        "source_page_hit": true,
+        "completion": "partial",
+        "checkpoint_count": 9,
+        "locators": [
+          "b44-p3-c2254",
+          "b44-p5-c3490",
+          "b43-p30-c8072",
+          "b06-p2-c681",
+          "b05-p10-c16"
+        ]
+      },
+      {
+        "id": "R13_T10_U2_heart_dhikr",
+        "budget_s": 0.25,
+        "repeat": 0,
+        "ms": 196.409,
+        "source_page_hit": true,
+        "completion": "partial",
+        "checkpoint_count": 79,
+        "locators": [
+          "b28-p40-c445",
+          "b39-p29-c560",
+          "b28-p39-c1123",
+          "b39-p132-c892",
+          "b26-p94-c975"
+        ]
+      },
+      {
+        "id": "R13_C10_KHALWA",
+        "budget_s": 0.25,
+        "repeat": 0,
+        "ms": 194.841,
+        "source_page_hit": true,
+        "completion": "partial",
+        "checkpoint_count": 71,
+        "locators": [
+          "b31-p90-c242",
+          "b28-p69-c1191",
+          "b10-p230-c292",
+          "b26-p112-c688",
+          "b31-p115-c505"
+        ]
+      },
+      {
+        "id": "R13_N10_FATIHA_CONTACT",
+        "budget_s": 0.25,
+        "repeat": 0,
+        "ms": 176.498,
+        "source_page_hit": true,
+        "completion": "partial",
+        "checkpoint_count": 21,
+        "locators": [
+          "b37-p67-c747",
+          "b30-p92-c502",
+          "b15-p24-c1247",
+          "b07-p302-c1470",
+          "b06-p26-c89"
+        ]
+      },
+      {
+        "id": "R13_N10_MURAQABA_KHALWA",
+        "budget_s": 0.25,
+        "repeat": 0,
+        "ms": 124.634,
+        "source_page_hit": true,
+        "completion": "full",
+        "checkpoint_count": 39,
+        "locators": [
+          "b31-p90-c242",
+          "b29-p87-c604",
+          "b39-p135-c322",
+          "b28-p69-c1306",
+          "b31-p115-c505"
+        ]
+      },
+      {
+        "id": "R13_N10_RESTART_WIRD",
+        "budget_s": 0.25,
+        "repeat": 0,
+        "ms": 174.21,
+        "source_page_hit": true,
+        "completion": "partial",
+        "checkpoint_count": 11,
+        "locators": [
+          "b15-p26-c724",
+          "b39-p94-c269",
+          "b44-p50-c3927",
+          "b44-p43-c8367",
+          "b17-p65-c27"
+        ]
+      },
+      {
+        "id": "R13_M10_T9_A_W1",
+        "budget_s": 0.25,
+        "repeat": 0,
+        "ms": 143.002,
+        "source_page_hit": true,
+        "completion": "full",
+        "checkpoint_count": 38,
+        "locators": [
+          "b41-p131-c327",
+          "b15-p26-c37",
+          "b41-p100-c667",
+          "b15-p21-c34",
+          "b42-p4-c193"
+        ]
+      },
+      {
+        "id": "F13_ROLE",
+        "budget_s": 0.25,
+        "repeat": 1,
+        "ms": 177.488,
+        "source_page_hit": true,
+        "completion": "full",
+        "checkpoint_count": 37,
+        "locators": [
+          "b07-p138-c30",
+          "b07-p132-c1156",
+          "b45-p3-c1974",
+          "b42-p14-c775",
+          "b44-p46-c5040"
+        ]
+      },
+      {
+        "id": "F13_HOPE",
+        "budget_s": 0.25,
+        "repeat": 1,
+        "ms": 177.761,
+        "source_page_hit": true,
+        "completion": "partial",
+        "checkpoint_count": 10,
+        "locators": [
+          "b07-p38-c1294",
+          "b01-p159-c1997",
+          "b37-p156-c494",
+          "b42-p142-c719",
+          "b09-p88-c1523"
+        ]
+      },
+      {
+        "id": "F13_LOVE",
+        "budget_s": 0.25,
+        "repeat": 1,
+        "ms": 180.633,
+        "source_page_hit": true,
+        "completion": "partial",
+        "checkpoint_count": 30,
+        "locators": [
+          "b01-p62-c1148",
+          "b21-p220-c1069",
+          "b12-p174-c1115",
+          "b29-p80-c905",
+          "b42-p145-c791"
+        ]
+      },
+      {
+        "id": "F13_REPENTANCE",
+        "budget_s": 0.25,
+        "repeat": 1,
+        "ms": 190.289,
+        "source_page_hit": true,
+        "completion": "partial",
+        "checkpoint_count": 80,
+        "locators": [
+          "b39-p94-c29",
+          "b07-p141-c611",
+          "b39-p97-c1163",
+          "b07-p273-c772",
+          "b12-p60-c481"
+        ]
+      },
+      {
+        "id": "F13_HEART",
+        "budget_s": 0.25,
+        "repeat": 1,
+        "ms": 177.234,
+        "source_page_hit": true,
+        "completion": "partial",
+        "checkpoint_count": 20,
+        "locators": [
+          "b28-p39-c874",
+          "b42-p42-c701",
+          "b41-p75-c146",
+          "b28-p75-c954",
+          "b41-p109-c805"
+        ]
+      },
+      {
+        "id": "F13_HARM",
+        "budget_s": 0.25,
+        "repeat": 1,
+        "ms": 175.292,
+        "source_page_hit": true,
+        "completion": "partial",
+        "checkpoint_count": 7,
+        "locators": [
+          "b44-p3-c2254",
+          "b44-p55-c6850",
+          "b20-p223-c932",
+          "b43-p30-c8072"
+        ]
+      },
+      {
+        "id": "F13_KHALWA",
+        "budget_s": 0.25,
+        "repeat": 1,
+        "ms": 179.941,
+        "source_page_hit": true,
+        "completion": "partial",
+        "checkpoint_count": 35,
+        "locators": [
+          "b31-p90-c242",
+          "b39-p197-c328",
+          "b27-p36-c562",
+          "b10-p230-c292",
+          "b27-p104-c873"
+        ]
+      },
+      {
+        "id": "F13_SINCERITY",
+        "budget_s": 0.25,
+        "repeat": 1,
+        "ms": 183.132,
+        "source_page_hit": true,
+        "completion": "partial",
+        "checkpoint_count": 13,
+        "locators": [
+          "b07-p134-c1163",
+          "b29-p72-c901",
+          "b03-p27-c847",
+          "b02-p4-c7102"
+        ]
+      },
+      {
+        "id": "F13_FATIHA",
+        "budget_s": 0.25,
+        "repeat": 1,
+        "ms": 182.193,
+        "source_page_hit": true,
+        "completion": "partial",
+        "checkpoint_count": 34,
+        "locators": [
+          "b37-p67-c1115",
+          "b06-p26-c89",
+          "b06-p386-c116",
+          "b10-p243-c233",
+          "b07-p303-c60"
+        ]
+      },
+      {
+        "id": "F13_RESTART",
+        "budget_s": 0.25,
+        "repeat": 1,
+        "ms": 175.897,
+        "source_page_hit": true,
+        "completion": "partial",
+        "checkpoint_count": 12,
+        "locators": [
+          "b15-p26-c724",
+          "b39-p229-c682",
+          "b39-p94-c269",
+          "b44-p43-c7184",
+          "b44-p50-c3927"
+        ]
+      },
+      {
+        "id": "R13_T10_U1_repentance",
+        "budget_s": 0.25,
+        "repeat": 1,
+        "ms": 175.771,
+        "source_page_hit": true,
+        "completion": "partial",
+        "checkpoint_count": 17,
+        "locators": [
+          "b39-p94-c573",
+          "b13-p11-c329",
+          "b39-p47-c1360",
+          "b44-p43-c6358",
+          "b01-p159-c5068"
+        ]
+      },
+      {
+        "id": "R13_T10_U5_disagreement",
+        "budget_s": 0.25,
+        "repeat": 1,
+        "ms": 175.525,
+        "source_page_hit": true,
+        "completion": "partial",
+        "checkpoint_count": 11,
+        "locators": [
+          "b44-p55-c6850",
+          "b44-p3-c2254",
+          "b43-p30-c8072",
+          "b06-p2-c681",
+          "b05-p10-c16"
+        ]
+      },
+      {
+        "id": "R13_T10_U2_heart_dhikr",
+        "budget_s": 0.25,
+        "repeat": 1,
+        "ms": 202.547,
+        "source_page_hit": true,
+        "completion": "partial",
+        "checkpoint_count": 79,
+        "locators": [
+          "b28-p40-c445",
+          "b39-p29-c560",
+          "b28-p39-c1123",
+          "b39-p132-c892",
+          "b26-p94-c975"
+        ]
+      },
+      {
+        "id": "R13_C10_KHALWA",
+        "budget_s": 0.25,
+        "repeat": 1,
+        "ms": 194.785,
+        "source_page_hit": true,
+        "completion": "partial",
+        "checkpoint_count": 71,
+        "locators": [
+          "b31-p90-c242",
+          "b28-p69-c1191",
+          "b10-p230-c292",
+          "b26-p112-c688",
+          "b31-p80-c1478"
+        ]
+      },
+      {
+        "id": "R13_N10_FATIHA_CONTACT",
+        "budget_s": 0.25,
+        "repeat": 1,
+        "ms": 175.471,
+        "source_page_hit": true,
+        "completion": "partial",
+        "checkpoint_count": 21,
+        "locators": [
+          "b37-p67-c747",
+          "b30-p92-c502",
+          "b15-p24-c1247",
+          "b07-p302-c1470",
+          "b06-p26-c89"
+        ]
+      },
+      {
+        "id": "R13_N10_MURAQABA_KHALWA",
+        "budget_s": 0.25,
+        "repeat": 1,
+        "ms": 135.02,
+        "source_page_hit": true,
+        "completion": "full",
+        "checkpoint_count": 39,
+        "locators": [
+          "b31-p90-c242",
+          "b29-p87-c604",
+          "b39-p135-c322",
+          "b28-p69-c1306",
+          "b31-p115-c505"
+        ]
+      },
+      {
+        "id": "R13_N10_RESTART_WIRD",
+        "budget_s": 0.25,
+        "repeat": 1,
+        "ms": 174.771,
+        "source_page_hit": true,
+        "completion": "partial",
+        "checkpoint_count": 11,
+        "locators": [
+          "b15-p26-c724",
+          "b39-p94-c269",
+          "b44-p50-c3927",
+          "b44-p43-c8367",
+          "b17-p65-c248"
+        ]
+      },
+      {
+        "id": "R13_M10_T9_A_W1",
+        "budget_s": 0.25,
+        "repeat": 1,
+        "ms": 146.616,
+        "source_page_hit": true,
+        "completion": "full",
+        "checkpoint_count": 38,
+        "locators": [
+          "b41-p131-c327",
+          "b15-p26-c37",
+          "b41-p100-c667",
+          "b15-p21-c34",
+          "b42-p4-c193"
+        ]
+      },
+      {
+        "id": "F13_ROLE",
+        "budget_s": 0.25,
+        "repeat": 2,
+        "ms": 183.283,
+        "source_page_hit": true,
+        "completion": "partial",
+        "checkpoint_count": 37,
+        "locators": [
+          "b07-p138-c30",
+          "b07-p132-c1156",
+          "b45-p3-c1974",
+          "b42-p14-c775",
+          "b44-p46-c5040"
+        ]
+      },
+      {
+        "id": "F13_HOPE",
+        "budget_s": 0.25,
+        "repeat": 2,
+        "ms": 176.828,
+        "source_page_hit": true,
+        "completion": "partial",
+        "checkpoint_count": 9,
+        "locators": [
+          "b07-p38-c1294",
+          "b37-p156-c494",
+          "b42-p142-c719",
+          "b09-p88-c1523",
+          "b16-p28-c668"
+        ]
+      },
+      {
+        "id": "F13_LOVE",
+        "budget_s": 0.25,
+        "repeat": 2,
+        "ms": 182.217,
+        "source_page_hit": true,
+        "completion": "partial",
+        "checkpoint_count": 30,
+        "locators": [
+          "b01-p62-c1148",
+          "b21-p220-c1069",
+          "b12-p174-c1115",
+          "b29-p80-c905",
+          "b42-p145-c791"
+        ]
+      },
+      {
+        "id": "F13_REPENTANCE",
+        "budget_s": 0.25,
+        "repeat": 2,
+        "ms": 199.878,
+        "source_page_hit": true,
+        "completion": "partial",
+        "checkpoint_count": 80,
+        "locators": [
+          "b39-p94-c29",
+          "b07-p141-c611",
+          "b39-p97-c1163",
+          "b07-p273-c772",
+          "b12-p60-c481"
+        ]
+      },
+      {
+        "id": "F13_HEART",
+        "budget_s": 0.25,
+        "repeat": 2,
+        "ms": 177.87,
+        "source_page_hit": true,
+        "completion": "partial",
+        "checkpoint_count": 18,
+        "locators": [
+          "b28-p39-c874",
+          "b42-p42-c701",
+          "b41-p75-c146",
+          "b41-p109-c891",
+          "b45-p18-c7184"
+        ]
+      },
+      {
+        "id": "F13_HARM",
+        "budget_s": 0.25,
+        "repeat": 2,
+        "ms": 179.276,
+        "source_page_hit": true,
+        "completion": "partial",
+        "checkpoint_count": 4,
+        "locators": [
+          "b44-p3-c2254",
+          "b44-p5-c4065",
+          "b20-p223-c932"
+        ]
+      },
+      {
+        "id": "F13_KHALWA",
+        "budget_s": 0.25,
+        "repeat": 2,
+        "ms": 182.93,
+        "source_page_hit": true,
+        "completion": "partial",
+        "checkpoint_count": 40,
+        "locators": [
+          "b31-p90-c242",
+          "b39-p197-c328",
+          "b27-p36-c562",
+          "b10-p230-c292",
+          "b27-p104-c873"
+        ]
+      },
+      {
+        "id": "F13_SINCERITY",
+        "budget_s": 0.25,
+        "repeat": 2,
+        "ms": 175.838,
+        "source_page_hit": true,
+        "completion": "partial",
+        "checkpoint_count": 12,
+        "locators": [
+          "b07-p134-c1163",
+          "b29-p72-c901",
+          "b03-p27-c847"
+        ]
+      },
+      {
+        "id": "F13_FATIHA",
+        "budget_s": 0.25,
+        "repeat": 2,
+        "ms": 181.282,
+        "source_page_hit": true,
+        "completion": "partial",
+        "checkpoint_count": 36,
+        "locators": [
+          "b37-p67-c1115",
+          "b06-p26-c89",
+          "b06-p386-c116",
+          "b07-p72-c216",
+          "b10-p243-c233"
+        ]
+      },
+      {
+        "id": "F13_RESTART",
+        "budget_s": 0.25,
+        "repeat": 2,
+        "ms": 176.044,
+        "source_page_hit": false,
+        "completion": "partial",
+        "checkpoint_count": 11,
+        "locators": [
+          "b39-p229-c682",
+          "b39-p94-c269",
+          "b44-p43-c7184",
+          "b44-p50-c3927",
+          "b22-p26-c730"
+        ]
+      },
+      {
+        "id": "R13_T10_U1_repentance",
+        "budget_s": 0.25,
+        "repeat": 2,
+        "ms": 178.042,
+        "source_page_hit": true,
+        "completion": "partial",
+        "checkpoint_count": 28,
+        "locators": [
+          "b39-p94-c573",
+          "b13-p11-c329",
+          "b44-p43-c6801",
+          "b39-p47-c1360",
+          "b45-p6-c547"
+        ]
+      },
+      {
+        "id": "R13_T10_U5_disagreement",
+        "budget_s": 0.25,
+        "repeat": 2,
+        "ms": 175.428,
+        "source_page_hit": true,
+        "completion": "partial",
+        "checkpoint_count": 12,
+        "locators": [
+          "b44-p55-c6850",
+          "b44-p3-c2254",
+          "b43-p30-c8072",
+          "b06-p2-c681",
+          "b05-p10-c16"
+        ]
+      },
+      {
+        "id": "R13_T10_U2_heart_dhikr",
+        "budget_s": 0.25,
+        "repeat": 2,
+        "ms": 195.226,
+        "source_page_hit": true,
+        "completion": "partial",
+        "checkpoint_count": 81,
+        "locators": [
+          "b28-p40-c445",
+          "b39-p29-c560",
+          "b28-p39-c1123",
+          "b39-p132-c892",
+          "b26-p94-c975"
+        ]
+      },
+      {
+        "id": "R13_C10_KHALWA",
+        "budget_s": 0.25,
+        "repeat": 2,
+        "ms": 191.244,
+        "source_page_hit": true,
+        "completion": "partial",
+        "checkpoint_count": 71,
+        "locators": [
+          "b31-p90-c242",
+          "b28-p69-c1191",
+          "b10-p230-c292",
+          "b26-p112-c688",
+          "b32-p70-c1224"
+        ]
+      },
+      {
+        "id": "R13_N10_FATIHA_CONTACT",
+        "budget_s": 0.25,
+        "repeat": 2,
+        "ms": 176.444,
+        "source_page_hit": true,
+        "completion": "partial",
+        "checkpoint_count": 28,
+        "locators": [
+          "b37-p67-c747",
+          "b28-p1-c690",
+          "b28-p44-c215",
+          "b30-p92-c502",
+          "b15-p24-c1247"
+        ]
+      },
+      {
+        "id": "R13_N10_MURAQABA_KHALWA",
+        "budget_s": 0.25,
+        "repeat": 2,
+        "ms": 117.979,
+        "source_page_hit": true,
+        "completion": "full",
+        "checkpoint_count": 39,
+        "locators": [
+          "b31-p90-c242",
+          "b29-p87-c604",
+          "b39-p135-c322",
+          "b28-p69-c1306",
+          "b31-p115-c505"
+        ]
+      },
+      {
+        "id": "R13_N10_RESTART_WIRD",
+        "budget_s": 0.25,
+        "repeat": 2,
+        "ms": 178.033,
+        "source_page_hit": true,
+        "completion": "partial",
+        "checkpoint_count": 11,
+        "locators": [
+          "b15-p26-c724",
+          "b39-p94-c269",
+          "b44-p50-c3927",
+          "b44-p43-c8367",
+          "b17-p65-c27"
+        ]
+      },
+      {
+        "id": "R13_M10_T9_A_W1",
+        "budget_s": 0.25,
+        "repeat": 2,
+        "ms": 160.789,
+        "source_page_hit": true,
+        "completion": "full",
+        "checkpoint_count": 38,
+        "locators": [
+          "b41-p131-c327",
+          "b15-p26-c37",
+          "b41-p100-c667",
+          "b15-p21-c34",
+          "b42-p4-c193"
+        ]
+      }
+    ]
+  },
+  "comparison": {
+    "full_budget_p95_reduction_pct": 20.49,
+    "first_scoped_lexeme_reduction_pct": 27.09
+  }
+}

@@ -14,7 +14,7 @@ class SearchTrace:
     def __init__(self):
         self.request_id=uuid.uuid4().hex;self.started=time.monotonic()
         self.lock=RLock();self.cancelled=Event();self.events=[];self.active='queue_wait'
-        self.rows=[];self.checkpoint_id=None;self.completed=None
+        self.rows=[];self.row_positions={};self.publications=0;self.checkpoint_id=None;self.completed=None
     def start(self,stage):
         with self.lock:
             self.active=stage
@@ -24,9 +24,28 @@ class SearchTrace:
         # Callers publish only source-validated rows, before optional work.
         with self.lock:
             self.rows=deepcopy(rows);self.completed=stage
-            self.checkpoint_id=f'{self.request_id}:{len(self.events)}:{len(rows)}'
+            self.row_positions={(r['book_id'],r['seq']):i for i,r in enumerate(self.rows)}
+            self.publications+=1
+            self.checkpoint_id=f'{self.request_id}:{self.publications}:{len(rows)}'
             self.events.append({'stage':stage,'event':'checkpoint','count':len(rows),
                                 'elapsed_ms':round((time.monotonic()-self.started)*1000,3)})
+            self.events=self.events[-128:]
+    def publish_row(self,row,stage):
+        # Copy only the changed, already validated page. Copying the entire
+        # growing set after each update made checkpoint work quadratic.
+        saved=deepcopy(row)
+        key=(saved['book_id'],saved['seq'])
+        with self.lock:
+            position=self.row_positions.get(key)
+            if position is None:
+                self.row_positions[key]=len(self.rows);self.rows.append(saved)
+            else:self.rows[position]=saved
+            self.completed=stage
+            self.publications+=1
+            self.checkpoint_id=f'{self.request_id}:{self.publications}:{len(self.rows)}'
+            self.events.append({'stage':stage,'event':'checkpoint','count':len(self.rows),
+                                'elapsed_ms':round((time.monotonic()-self.started)*1000,3)})
+            self.events=self.events[-128:]
     def snapshot(self):
         with self.lock:
             return {'trace_id':self.request_id,'active_stage':self.active,
@@ -42,6 +61,10 @@ def stage(name):
 def checkpoint(rows,name):
     trace=CURRENT_TRACE.get()
     if trace:trace.publish(rows,name)
+
+def checkpoint_row(row,name):
+    trace=CURRENT_TRACE.get()
+    if trace:trace.publish_row(row,name)
 
 def partial_response(trace,kwargs):
     from app.services.compact_response import compact_search_response,project_search_response

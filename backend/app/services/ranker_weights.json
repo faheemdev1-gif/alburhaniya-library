@@ -1,7 +1,8 @@
 {
-  "version": "indexed-features-1",
+  "version": "indexed-features-2",
   "review_status": "development_weights_unreviewed",
   "weights": {
+    "linked_subject_coverage": 0.04,
     "slot_coverage": 0.48,
     "required_concept_coverage": 0.24,
     "co_location": 0.18,

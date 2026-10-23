@@ -47,6 +47,8 @@ def _init_search_backend():
             "during `docker build`, see Dockerfile)."
         )
     logger.info("library.db found at %s ✓", s.library_db_path)
+    from app.services.concept_links import prepare_patterns
+    prepare_patterns()
 
 
 @asynccontextmanager

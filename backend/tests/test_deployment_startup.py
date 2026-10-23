@@ -63,7 +63,8 @@ def test_assigned_port_foreground_health_and_shutdown(tmp_path):
                 else:
                     pytest.fail("Assigned port never became healthy")
                 payload = response.json()
-                assert payload["server_version"] == "2.10.16"
+                from app.mcp_contract import SERVER_VERSION
+                assert payload["server_version"] == SERVER_VERSION
                 assert payload["corpus_contract"]["status"] == "ok"
                 # A successful request must not end the persistent process.
                 assert client.get(f"http://127.0.0.1:{port}/health").status_code == 200

@@ -65,6 +65,11 @@ def linked_support(query,text):
     groups=query_groups(query)
     if not groups or groups==['sincerity']:return None
     events={g:list(source_pattern(g).finditer(text)) for g in groups}
+    if groups==['sincerity','praise_desire']:
+        # Riya is a related discovery alias, not evidence of positive
+        # sincerity. One occurrence cannot satisfy both subject slots.
+        events['sincerity']=[m for m in events['sincerity'] if
+                             re.search(r'اخلاص|اخلص|مخلص',normalize_search_text(m.group(),level='broad'))]
     if any(not v for v in events.values()):return None
     norm=normalize_search_text(text,level='broad')
     cues={'seclusion':r'اغنت عن|مافيش|لا.*خلوه|المراقبه|لغ[يى]',
@@ -103,3 +108,12 @@ def linked_support(query,text):
     elif groups==['interrupted_practice'] and re.search(r'يرجع\s+للاسم',text):score=.98
     elif groups==['fawatih_connection'] and re.search(r'توصيل|بحضرتهم|حضور دائم|تجعلك',text):score=.97
     return score,start,end,groups
+
+def prepare_patterns():
+    """Compile fixed language patterns before accepting the first request.
+
+    This performs no searches and populates no answer/result cache.
+    """
+    from app.services.question_intent import CONCEPTS,concept_regex
+    for name in CONCEPTS:concept_regex(name)
+    for name in CONCEPT_FORMS:source_pattern(name)

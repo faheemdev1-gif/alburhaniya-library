@@ -1,0 +1,18 @@
+Al Burhaniya Connector 2.10.17 - complete release
+
+Includes the application, source texts, tests, documentation, verification
+evidence and the preserved optional semantic_embeddings.npy and
+semantic_manifest.json files. No files from the delivered 2.10.16 project
+inventory are missing; application and documentation updates are from 2.10.17.
+
+The optional semantic artifacts are unchanged from the full 2.10.16 package.
+They have not been newly trained or independently benchmarked. Local semantic
+search remains disabled by default. Default retrieval uses SQLite and requires
+no model download or external vector service.
+
+Deploy using the included Dockerfile. It rebuilds the generated library.db
+with evidence-units-1.2. Generated databases, local caches and private .env
+settings are not shipped. Keep your existing hosting environment settings.
+
+Read START_HERE.md and RELEASE_REPORT.md. After deployment, /health should
+report server_version 2.10.17, tool_contract_version 15.0 and corpus status ok.

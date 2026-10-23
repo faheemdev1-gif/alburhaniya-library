@@ -570,11 +570,15 @@ LEXEME_POLICY_VERSION = "safe-vocabulary-union-v1"
 @lru_cache(maxsize=2)
 def _indexed_spellings(path: str, mtime_ns: int, size: int) -> dict[str, tuple[str, ...]]:
     forms: dict[str, set[str]] = {}
-    tokens = set()
-    for row in _connection().execute("SELECT norm_text FROM pages"):
-        tokens.update(row[0].split())
-    for token in tokens:
-        forms.setdefault(normalize_search_text(token, level="broad"), set()).add(token)
+    conn=_connection()
+    if conn.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='lexeme_spellings'").fetchone():
+        for row in conn.execute('SELECT normalized,surface FROM lexeme_spellings'):
+            forms.setdefault(row[0],set()).add(row[1])
+    else:
+        # Older indexes remain readable outside the deployment launcher.
+        tokens=set()
+        for row in conn.execute('SELECT norm_text FROM pages'):tokens.update(row[0].split())
+        for token in tokens:forms.setdefault(normalize_search_text(token,level='broad'),set()).add(token)
     return {key: tuple(sorted(value)) for key, value in forms.items()}
 
 
