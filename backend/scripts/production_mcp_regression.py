@@ -189,7 +189,7 @@ async def run(endpoint: str, discovery_only: bool = False) -> dict[str, Any]:
 
             smoke: dict[str, str] = {}
             if not discovery_only:
-                catalogue = _structured(await session.call_tool("list_books", {}))
+                catalogue = _structured(await session.call_tool("list_books", {"detail": "full"}))
                 if catalogue.get("total") != 43:
                     raise AssertionError(
                         f"list_books smoke expected 43, received {catalogue.get('total')}"
@@ -204,10 +204,8 @@ async def run(endpoint: str, discovery_only: bool = False) -> dict[str, Any]:
                     and connector.get("schema_digest") == SCHEMA_DIGEST
                 ):
                     raise AssertionError("list_books MCP contract evidence is stale")
-                # Compact catalogue intentionally omits the long repeated-page
-                # register; compare the rest of the contract verbatim.
-                expected_corpus = {k: v for k, v in health["corpus_contract"].items()
-                                   if k != "repeated_printed_labels"}
+                # Detailed verification explicitly requests the full live contract.
+                expected_corpus = health["corpus_contract"]
                 if catalogue.get("corpus_contract") != expected_corpus:
                     raise AssertionError("list_books corpus evidence differs from /health")
                 smoke["list_books"] = "pass"
@@ -223,7 +221,7 @@ async def run(endpoint: str, discovery_only: bool = False) -> dict[str, Any]:
                 ):
                     raise AssertionError("list_books does not expose the b38->b37 edition policy")
 
-                book = _structured(await session.call_tool("get_book", {"book_id": "b14"}))
+                book = _structured(await session.call_tool("get_book", {"book_id": "b14", "detail": "full"}))
                 if (book.get("connector_contract") or {}).get("server_version") != SERVER_VERSION:
                     raise AssertionError("get_book does not expose the live connector version")
                 b20 = _structured(await session.call_tool("get_book", {"book_id": "b20"}))
@@ -399,7 +397,7 @@ async def run(endpoint: str, discovery_only: bool = False) -> dict[str, Any]:
                 smoke["min_tier"] = "pass"
 
                 full_page = _structured(await session.call_tool(
-                    "get_page", {"book_id": "b44", "seq": 12, "mode": "compact"},
+                    "get_page", {"book_id": "b44", "seq": 12, "mode": "compact", "detail": "full"},
                 ))
                 if full_page.get("truncated") or full_page.get("full_chars", 0) < 8000:
                     raise AssertionError("get_page silently truncated b44 page 12")

@@ -12,7 +12,7 @@ def cached_census(fn):
   path=os.path.abspath(get_settings().library_db_path);st=os.stat(path)
   try:row=_connection().execute("SELECT value FROM discovery_meta WHERE key='corpus_digest'").fetchone();digest=row[0] if row else ''
   except Exception:digest='unavailable'
-  key=(path,st.st_ino,st.st_size,st.st_mtime_ns,digest,INCLUDE_TOC.get(),json.dumps([a,kw],ensure_ascii=False,sort_keys=True,default=str))
+  key=(fn.__module__,fn.__qualname__,path,st.st_ino,st.st_size,st.st_mtime_ns,digest,INCLUDE_TOC.get(),json.dumps([a,kw],ensure_ascii=False,sort_keys=True,default=str))
   with _lock:
    if key in _cache:return copy.deepcopy(_cache[key])
   value=fn(*a,**kw)

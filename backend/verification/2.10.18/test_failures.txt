@@ -1,0 +1,14 @@
+tests/test_live_audit_regressions.py::test_comparison_finds_primary_source_and_avoids_unrelated_relief
+def test_comparison_finds_primary_source_and_avoids_unrelated_relief():
+        result_cache.clear()
+        query = "ما الفرق بين التوكل والتواكل؟"
+        assert language_plan(query)["negation_present"] is False
+        result = search_library(query=query, limit=8, detail="full")
+>       assert result["completion"] == "full"
+E       AssertionError: assert 'partial' == 'full'
+E         
+E         - full
+E         + partial
+
+tests/test_live_audit_regressions.py:12: AssertionError
+

@@ -1,0 +1,39 @@
+bringing up nodes...
+bringing up nodes...
+
+........................................................................ [ 19%]
+........................................................................ [ 39%]
+........................................................................ [ 58%]
+........................................................................ [ 78%]
+........F............................................................... [ 97%]
+.........                                                                [100%]
+=================================== FAILURES ===================================
+_______ test_comparison_finds_primary_source_and_avoids_unrelated_relief _______
+[gw1] linux -- Python 3.12.14 /workspace/scratch/c7860a3eb3bd/test-venv/bin/python
+
+    def test_comparison_finds_primary_source_and_avoids_unrelated_relief():
+        result_cache.clear()
+        query = "ما الفرق بين التوكل والتواكل؟"
+        assert language_plan(query)["negation_present"] is False
+        result = search_library(query=query, limit=8, detail="full")
+>       assert result["completion"] == "full"
+E       AssertionError: assert 'partial' == 'full'
+E         
+E         - full
+E         + partial
+
+tests/test_live_audit_regressions.py:12: AssertionError
+============================= slowest 10 durations =============================
+76.80s call     tests/test_regression_gates.py::FinalRegressionGates::test_quality_h11_paraphrases_share_top_evidence
+49.84s call     tests/test_compact_retrieval.py::CompactRetrievalTests::test_hybrid_evidence_span_drives_match_id_and_passage
+18.82s call     tests/test_compact_retrieval.py::CompactRetrievalTests::test_hybrid_uses_real_local_match_offsets
+14.12s call     tests/test_compact_retrieval.py::CompactRetrievalTests::test_hybrid_min_score_filters
+13.89s call     tests/test_compact_retrieval.py::CompactRetrievalTests::test_hybrid_recovers_separated_terms
+13.66s call     tests/test_compact_retrieval.py::CompactRetrievalTests::test_hybrid_or_alternatives_remain_or_during_local_scoring
+13.42s call     tests/test_compact_retrieval.py::CompactRetrievalTests::test_long_question_gets_declared_bounded_reformulations
+13.29s call     tests/test_release_280.py::test_all_eighteen_false_relation_labels[L3-b16-p39-c2]
+12.91s call     tests/test_release_270.py::Release270Tests::test_reformulation_pagination_is_stable
+12.58s call     tests/test_compact_retrieval.py::CompactRetrievalTests::test_short_concept_query_recovers_relevant_prayer_evidence
+=========================== short test summary info ============================
+FAILED tests/test_live_audit_regressions.py::test_comparison_finds_primary_source_and_avoids_unrelated_relief
+1 failed, 368 passed, 1 warning in 208.24s (0:03:28)

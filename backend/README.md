@@ -1,3 +1,5 @@
+> Current patch: **2.10.18 / contract 15.1**. See [release notes and deployment](RELEASE_NOTES_2.10.18.md) and `verification/2.10.18/` for evidence and remaining acceptance work.
+
 # Al Burhaniya Connector 2.10.7
 
 This release broadens Arabic question understanding for comparisons, reward,

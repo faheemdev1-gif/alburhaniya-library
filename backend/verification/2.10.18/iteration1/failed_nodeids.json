@@ -1,0 +1,5 @@
+[
+  "tests/test_deployment_startup.py::test_assigned_port_foreground_health_and_shutdown",
+  "tests/test_engineering_2116.py::test_excerpt_contains_the_full_source_span_and_requested_context[\\u0645\\u0627\\u0630\\u0627 \\u064a\\u0646\\u0627\\u0644 \\u0645\\u0646 \\u064a\\u062d\\u0628 \\u0633\\u064a\\u062f\\u0646\\u0627 \\u0645\\u062d\\u0645\\u062f-auto]",
+  "tests/test_release_270.py::Release270Tests::test_equal_count_substitutions_are_detected_in_all_scopes"
+]

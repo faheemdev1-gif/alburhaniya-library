@@ -24,7 +24,7 @@ def main():
     if not row or row[0]!=INDEX_VERSION:raise SystemExit('library.db feature version differs from this build; run python scripts/build_index.py.')
   except sqlite3.Error as exc:raise SystemExit('library.db could not be read; rebuild before deploying.') from exc
  try:
-  workers=int(os.environ.get('WEB_CONCURRENCY','2'))
+  workers=int(os.environ.get('WEB_CONCURRENCY','1'))
   if not 1<=workers<=8:raise ValueError
  except ValueError:raise SystemExit('Invalid WEB_CONCURRENCY: use 1 to 8.')
  os.environ['PYTHONUNBUFFERED']='1';print(f'Starting library HTTP service on 0.0.0.0:{port}; health=/health; MCP=/mcp/',flush=True)

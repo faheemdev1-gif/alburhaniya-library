@@ -128,7 +128,7 @@ from app.core.evidence_blocks import navigation_scope
 @mcp.tool(structured_output=True, meta=TOOL_META)
 @safe_tool_call
 def list_books(include_legend: bool = False, projection: Literal["compact", "ids", "full"] = "compact",
-               book_ids: Optional[list[str]] = None) -> dict[str, Any]:
+               book_ids: Optional[list[str]] = None, detail: Literal["summary", "full"] = "summary") -> dict[str, Any]:
     """List books in a compact catalogue, ordered by source authority.
 
     This is one of the five required Al Burhania research tools. The response
@@ -182,7 +182,10 @@ def list_books(include_legend: bool = False, projection: Literal["compact", "ids
         "corpus_contract": corpus_contract_snapshot(),
     }
 
-    if projection!="full":result["corpus_contract"].pop("repeated_printed_labels",None)
+    if detail != "full":
+        result.pop("connector_contract", None)
+        result["corpus_contract"] = {key: value for key, value in result["corpus_contract"].items()
+                                     if key in {"books", "pages", "diwan", "status", "edition_deduplication"}}
     from app.services import semantic_search as semantic
     result["active_indexes"] = {
         "lexical": "sqlite_fts5_safe",
@@ -200,7 +203,7 @@ def list_books(include_legend: bool = False, projection: Literal["compact", "ids
 
 @mcp.tool(structured_output=True, meta=TOOL_META)
 @safe_tool_call
-def get_book(book_id: str) -> dict[str, Any]:
+def get_book(book_id: str, detail: Literal["summary", "full"] = "summary") -> dict[str, Any]:
     """Get the metadata and provenance of one book.
 
     This is one of the five required Al Burhania research tools. The response
@@ -213,12 +216,13 @@ def get_book(book_id: str) -> dict[str, Any]:
 
     if book is None:
         return {
-            "error": f"no book with id '{book_id}'",
+            "error": f"Unknown book_id {book_id!r}. Valid IDs: {', '.join(b['book_id'] for b in db.list_books())}",
         }
 
     book["searchable_by_default"] = bool(book["searchable_by_default"])
     book["review_basis"] = {"status":"documentary_review_pending","basis":book.get("provenance_status"),"reviewer":None,"review_date":None}
-    book["connector_contract"] = contract_metadata(REQUIRED_TOOLS)
+    if detail == "full":
+        book["connector_contract"] = contract_metadata(REQUIRED_TOOLS)
     return book
 
 
@@ -229,6 +233,7 @@ def get_page(
     seq: int,
     mode: ResponseMode = "compact",
     max_chars: int = 20000,
+    detail: Literal["summary", "full"] = "summary",
 ) -> dict[str, Any]:
     """Read one specific full page.
 
@@ -247,7 +252,7 @@ def get_page(
 
     if page is None:
         return {
-            "error": f"no page {seq} in book '{book_id}'",
+            "error": (f"Book {book_id} has pages 1–{db.get_book(book_id)['page_count']}; requested {seq}." if db.get_book(book_id) else f"Unknown book_id {book_id!r}; use list_books for valid IDs."),
         }
 
     if page.get('pagination_status')=='repeated_printed_label_unresolved':page['printed_page']=None
@@ -301,7 +306,7 @@ def get_page(
             "qasida_number", "qasida_title", "qasida_bayt_count",
             "bayt_from", "bayt_to", "block_type", "canonical_book_id",
             "edition_relation", "searchable_by_default", "page_id",
-            "pagination_status", "pagination_warning", "evidence_blocks",
+            "pagination_status", "pagination_warning", "evidence_blocks", "text_errata",
         ):
             if page.get(field) is not None:
                 result[field] = page[field]
@@ -341,6 +346,7 @@ def get_passage(
     parallel_limit: int = 5,
     context_mode: Literal["bounded", "paragraph"] = "bounded",
     max_chars: int = 12000,
+    detail: Literal["summary", "full"] = "summary",
 ) -> dict[str, Any]:
     """Read one or several bounded passages returned by search_library.
 
@@ -446,12 +452,9 @@ def _explicit_count_details(
         relation = "lower_bound"
         scope = "eligible_candidates_after_intent_and_score_filter"
     elif effective_match_mode == "lexeme":
-        lexeme_rows = db.search(
-            queries=raw_queries, operator=operator, search_mode="lexeme",
-            ranking="book_order", diversify_books=False, limit=10000,
-            offset=0, min_score=0.0, **count_args,
-        )
-        retrieval_count = len({(row["book_id"], row["seq"]) for row in lexeme_rows})
+        retrieval_count = len(db._matching_page_ids(
+            raw_queries, operator=operator, search_mode="lexeme", **count_args))
+        relation = "lexeme_expanded_pages"
         scope = "lexeme_matching_pages_before_ranking_and_score_filter"
     else:
         # Hybrid and semantic retrieval apply a calibrated evidence threshold.
@@ -752,6 +755,15 @@ def search_library(
     if match_mode != "auto":
         rows = search_fn(**search_args)
 
+    if match_mode == "auto" and not question_mode:
+        from app.services.spelling_search import search as spelling_search
+        spelling_args = {key: value for key, value in search_args.items()
+                         if key not in {'query', 'queries', 'search_mode', '_audit_candidates'}}
+        spelling_rows = spelling_search(raw_queries, db=db, **spelling_args)
+        if spelling_rows:
+            rows = spelling_rows
+            effective_match_mode = "spelling_discovery"
+
     from app.services.hit_contract import canonical_hit
     rows=[canonical_hit(row,db.get_page(row['book_id'],row['seq'])) for row in rows]
     has_more = len(rows) > limit
@@ -846,7 +858,7 @@ def search_library(
         if len(results)<limit and not has_more:
             payload["fewer_than_limit_reason"] = "only_n_passages_met_threshold"
         payload["normalization_level"] = (
-            "broad_discovery" if effective_match_mode in {"hybrid", "lexeme", "reformulated", "semantic_auto"}
+            "broad_discovery" if effective_match_mode in {"hybrid", "lexeme", "reformulated", "semantic_auto", "spelling_discovery"}
             else "safe"
         )
         if not results:
@@ -888,7 +900,7 @@ def search_library(
         "min_tier": min_tier,
         "whole_word": bool(whole_word),
         "normalization_level": (
-            "broad_discovery" if effective_match_mode in {"hybrid", "lexeme", "reformulated", "semantic_auto"}
+            "broad_discovery" if effective_match_mode in {"hybrid", "lexeme", "reformulated", "semantic_auto", "spelling_discovery"}
             else "safe"
         ),
         "returned_count": len(results),
@@ -926,8 +938,21 @@ def search_library(
 # prevents the application from starting instead of silently shipping drift.
 from app.services.compact_response import encoding_guide
 import json as _encoding_json
-next(t for t in mcp._tool_manager.list_tools() if t.name=='search_library').description += (
-    '\nMinimal response decoding contract: '+_encoding_json.dumps(encoding_guide(),ensure_ascii=False,separators=(',',':')))
+next(t for t in mcp._tool_manager.list_tools() if t.name=='search_library').description = (
+    "Search the Al Burhania books, then read a result with get_passage(match_id). "
+    "Basic controls: query (or queries), limit, book_scope, mode. "
+    "Advanced: filters book_ids/source_code/min_tier/page_from/page_to/qasida_number; "
+    "operator OR/AND; offset; ranking; context_chars (40–300 per side); "
+    "match_mode auto/exact/terms/hybrid/lexeme; include_counts/check_completeness; "
+    "whole_word; count_basis phrase/term_bag; include_toc/include_topic_only; "
+    "diversify_books/max_per_book; min_score; keep_terms; expand_top/expand_chars. "
+    "Auto recovers hamza variants and questions as labelled discovery. "
+    "Exact counts preserve spelling; discovery matches do not verify answers. "
+    "Default mode=compact uses readable keys. Advanced mode=ultra_compact uses "
+    "lossless-15 codes; request list_books(detail=full) for its minimal_encoding decoder. "
+    "detail=full returns diagnostics. search_mode is a legacy alias; prefer match_mode. "
+    "Cite citation_label; Dīwān bayt ranges are page-scoped, qasida_bayt_count is total."
+)
 DISCOVERABLE_TOOLS = validate_registered_tools(mcp)
 bind_callable_schema(mcp)
 from app.core.machine_http import enable_threaded_tools

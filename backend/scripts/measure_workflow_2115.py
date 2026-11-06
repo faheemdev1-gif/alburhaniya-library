@@ -9,7 +9,7 @@ import json,sys,logging,importlib.metadata
 from pathlib import Path
 ROOT=Path(__file__).resolve().parent.parent;sys.path.insert(0,str(ROOT))
 import tiktoken
-from app.mcp_server import search_library,get_passage,mcp
+from app.mcp_server import search_library,get_passage,list_books,mcp
 from app.core import result_cache
 from app.mcp_contract import SERVER_VERSION
 from app.services.compact_response import decode_search_response
@@ -23,6 +23,7 @@ def main():
       ('six_hit_lexical',{'queries':['الخلوة','المراقبة'],'match_mode':'terms','operator':'OR','limit':6}),
       ('census',{'query':'التوبة','match_mode':'exact','include_counts':True,'limit':5}),
       ('weak_negative',{'query':'ما حكم استعمال الهاتف في الصلاة','limit':5})]
+    decoder_response=list_books(detail='full',book_ids=[])
     results=[]
     for label,args in fixtures:
         payloads={}
@@ -40,9 +41,11 @@ def main():
                 'payload_reduction_pct':round(100*(1-costs['ultra_compact']/costs['compact']),2),
                 'compact_bytes':len(packed(payloads['compact']).encode()),'ultra_bytes':len(packed(payloads['ultra_compact']).encode()),
                 'schema_and_followup_tokens':overhead,'compact_workflow_tokens':costs['compact']+overhead,
-                'ultra_workflow_tokens':costs['ultra_compact']+overhead,'metadata_hydration_calls':0})
+                'ultra_workflow_tokens':costs['ultra_compact']+overhead+len(enc.encode(packed(decoder_response))),
+                'metadata_hydration_calls':{'compact':0,'ultra_compact':1},
+                'ultra_decoder_tokens':len(enc.encode(packed(decoder_response)))})
     output={'tokenizer_library':'tiktoken','version':importlib.metadata.version('tiktoken'),'profiles':list(encodings),
-      'scope':'Identical current-release evidence. tools/list includes the complete decoding legend; no extra contract/metadata hydration. One tool-discovery schema + one search + one bounded passage follow-up (context_chars=300); no metadata hydration needed. Excludes unavailable client/system wrapper and network serialization. Not a before/after retrieval-quality score.',
+      'scope':'Identical current-release evidence. Readable compact tool discovery; ultra mode additionally includes one list_books(detail=full,book_ids=[]) decoder retrieval. One tool-discovery schema + one search + one bounded passage follow-up (context_chars=300); ultra decoder hydration is counted once per workflow. Excludes unavailable client/system wrapper and network serialization. Not a before/after retrieval-quality score.',
       'claude_usage':'Not measured; no Anthropic token-counting account supplied','results':results}
     path=ROOT/'verification'/SERVER_VERSION/'token_workflows.json';path.parent.mkdir(parents=True,exist_ok=True);path.write_text(json.dumps(output,indent=2)+'\n')
     print(json.dumps(results,indent=2))

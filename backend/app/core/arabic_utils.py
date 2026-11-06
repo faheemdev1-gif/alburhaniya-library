@@ -28,7 +28,7 @@ _PUNCT_WS = re.compile(r"[\u060c\u061b\u061f،؛؟!\"#$%&'()*+,\-./:;<=>?@\[\\\]
 # Function words never contribute to lexical relevance.  Keep this in the
 # canonical text module so terms, hybrid ranking and future indexers cannot
 # silently acquire different lists.
-ARABIC_STOPWORDS = frozenset({"في", "علي", "من", "الي", "عن", "ما", "ان", "الذي"})
+ARABIC_STOPWORDS = frozenset({"في", "علي", "من", "الي", "عن", "ما", "ان", "الذي", "what", "is", "the", "a", "an", "of", "and", "in", "to", "how", "are", "does"})
 
 # Concept retrieval may ignore explicit nominal negation while retaining the
 # meaningful verb/noun that follows it.  Strict terms retrieval never uses
@@ -140,7 +140,7 @@ def safe_tokens(text: str, *, drop_stopwords: bool = False) -> list[str]:
     # never replace the authoritative safe token returned to the caller.
     return [
         word for word in words
-        if normalize_search_text(word, level="broad") not in ARABIC_STOPWORDS
+        if normalize_search_text(word, level="broad").lower() not in ARABIC_STOPWORDS
     ]
 
 

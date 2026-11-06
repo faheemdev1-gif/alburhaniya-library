@@ -1,0 +1,1185 @@
+--- a/README.md
++++ b/README.md
+@@ -1,3 +1,5 @@
++> Current patch: **2.10.18 / contract 15.1**. See [release notes and deployment](RELEASE_NOTES_2.10.18.md) and `verification/2.10.18/` for evidence and remaining acceptance work.
++
+ # Al Burhaniya Connector 2.10.7
+ 
+ This release broadens Arabic question understanding for comparisons, reward,
+--- /dev/null
++++ b/RELEASE_NOTES_2.10.18.md
+@@ -0,0 +1,52 @@
++# Burhaniya connector 2.10.18 — run-2 report fixes
++
++Tool contract 15.1; the same five research tools remain available.
++
++## Changes
++
++- Metadata tools return a small summary by default. Request `detail="full"` for the complete live connector/corpus contract and printed-label diagnostics. `projection="full"` selects complete book metadata without implicitly selecting all server diagnostics.
++- Page and passage tools also accept `detail="full"`. Routine passages retain exact offsets and text versions without duplicating the passage in `source_span.source_quote`. Detailed replies retain the quote and full timing/digests.
++- Default auto search unions attested hamza spellings for short phrases. The response labels these as `spelling_discovery`, identifies original and source forms, and retains spelling-sensitive literal censuses. Explicit `match_mode="exact"` preserves the existing research contract. Expansion is bounded to 128 attested phrase forms; longer/larger requests retain the normal cascade.
++- English function words no longer drive term relevance. Highlight matching uses Unicode word boundaries. Requested context surrounds the actual evidence span; apostrophes and quotation marks remain readable, while HTML delimiters stay escaped.
++- Completed counted searches use the corpus-bound result cache. An explicitly requested completeness audit bypasses it so the candidate stage is inspected afresh. Lexeme census counting no longer performs another full ranked search. Vocabulary lookup uses indexed subsets instead of loading all 120,275 spellings. Pure source transformations are cached by source text and navigation scope. Ranking runs before expensive attribution/structural enrichment.
++- Census cache keys include the operation, preventing a page-identity set from colliding with a count response.
++- Invalid selectors/arguments are recorded as `client_error`, separately from server failures. Unknown-book errors list valid IDs; invalid-page errors give the book's valid page range. Non-search errors omit search retry/intent fields.
++- The ambiguous root form `فان` is no longer taken as evidence for `فني`; this prevents `فإنّ` from manufacturing annihilation parallels. Returned parallel candidates include the actual source/candidate words supporting every claimed root. They remain unverified discovery candidates.
++- Footnote evidence blocks agree with the explicit separator used by content classification and search exclusion.
++- Source corruption recorded by the supplied report is flagged for scan review. Source quotations and ambiguous printed labels are preserved.
++- The search-tool description groups basic and advanced controls. Readable compact responses are the default; advanced ultra-compact clients can obtain the decoder through `list_books(detail="full")`. Token measurements include that extra decoder call.
++- The launcher defaults to one HTTP worker, avoiding duplicate eager language-pattern compilation during startup on small VPS instances. Shared source-pattern clitics are factored to reduce compilation work. `WEB_CONCURRENCY` can still select 1–8 workers.
++- `deploy/compose.state.yml` supplies a named Docker volume for monitoring and cache continuity.
++
++## Deployment
++
++This package contains the complete backend source and source corpus. `library.db` is intentionally rebuilt by the existing Dockerfile, as in previous releases. Old semantic artifacts are retained but are not enabled automatically.
++
++1. Back up the current backend directory and configuration. Replace the backend files with this directory. Preserve deployment secrets and the parent Compose/Caddy configuration.
++2. From the repository root, rebuild using the existing Compose configuration:
++
++   `sudo docker compose up -d --build --no-deps backend`
++
++3. To enable durable monitoring/cache storage, add the supplied override last in the existing Compose file list. For the setup with both existing files:
++
++   `sudo docker compose -f docker-compose.yml -f docker-compose.override.yml -f backend/deploy/compose.state.yml up -d --build --no-deps backend`
++
++   If there is no `docker-compose.override.yml`, omit that argument. The named volume must be retained; `docker compose down -v` deletes it. Prior ephemeral history cannot be recovered.
++
++4. Check `/health`, refresh the MCP connection if its schema is cached, and verify `get_book("b14")` reports server 2.10.18 / contract 15.1. Repeat the report's tests against the deployed service.
++
++The package is locally tested; deploying it to the OVH server is a separate step. Nothing in this archive changes a running server by itself.
++
++## Remaining acceptance work
++
++No 10/10 production or retrieval rating is claimed.
++
++- Missing Quran verse references and the duplicated verse in b39 page 248 require the original source scan and editorial verification.
++- Repeated printed labels need source-by-source scan review. Sequence-based citations continue to avoid presenting unreliable printed labels as certain.
++- First uncached lexeme censuses still require performance measurement on the target VPS; warm-cache improvements do not establish a cold-request latency guarantee.
++- Article-based homograph errors and general question-answer relevance need independently graded Arabic passages. Returning fewer than five defensible results is not repaired by padding results.
++- Semantic retrieval requires a matching rebuilt index and the E5 query-model dependency/weights. The supplied old vector files are not evidence that this path is ready. Semantic availability alone is not a relevance score.
++- A 7-day reliability score requires 7 days of deployed observations on persistent storage.
++- The existing independent retrieval-rating script requires a separately graded private set. Tests are engineering evidence, not an automatic religious-answer relevance rating.
++
++See `verification/2.10.18/` for local validation results.
+--- /dev/null
++++ b/VERIFICATION_2.10.18.md
+@@ -0,0 +1,27 @@
++# Local verification — 2.10.18
++
++- All five MCP tools discovered and executed through the actual HTTP SDK: 18 smoke checks passed.
++- Eight concurrent HTTP searches completed fully without errors; slowest client call 4,869 ms.
++- Run-2 report regressions: 11 passed.
++- Historical suite with three isolated test workers: 368 passed; one cold comparison query reached the 18-second budget. Its complete four-test module then passed serially in 3.98 seconds. The budget observation remains recorded, not relabelled as a pass.
++- Ten corrected regression checks and the separate startup/shutdown checks passed.
++- Independent corpus audit: pass (43 books, 6,935 pages, 95 qasidas, 2,682 bayts).
++- Token-budget gate: all 10 controls passed, with decoder-fetch cost accounted for.
++- Pinned production dependency lock installed successfully. A Docker image was not built here.
++
++## Spot measurements
++
++| Check | Local result |
++| --- | ---: |
++| One-book default JSON | 1,247 characters |
++| Two complete book records with summary diagnostics | 2,764 characters |
++| First uncached lexeme census | 1,553 ms |
++| Repeated lexeme census | 1.9 ms |
++
++These are local measurements, not hardware-matched before/after latency comparisons. Literal counts preserve spelling; expanded retrieval counts describe a different evidence relation.
++
++## Acceptance boundary
++
++No 10/10 rating is assigned. Cold count latency is still above one second, and a parallel regression exposed a budget limit. Original scans are required for damaged verse references, a duplicated verse, and repeated printed-page labels. Semantic search still needs a rebuilt matching index and installed model weights. General question relevance needs independent Arabic judgments. Production reliability needs deployment plus seven days of retained observations.
++
++Deployment instructions and the full change list are in `RELEASE_NOTES_2.10.18.md`. Machine-readable results, test logs, and the earlier iteration are in `verification/2.10.18/`.
+--- a/app/core/arabic_utils.py
++++ b/app/core/arabic_utils.py
+@@ -28,7 +28,7 @@
+ # Function words never contribute to lexical relevance.  Keep this in the
+ # canonical text module so terms, hybrid ranking and future indexers cannot
+ # silently acquire different lists.
+-ARABIC_STOPWORDS = frozenset({"في", "علي", "من", "الي", "عن", "ما", "ان", "الذي"})
++ARABIC_STOPWORDS = frozenset({"في", "علي", "من", "الي", "عن", "ما", "ان", "الذي", "what", "is", "the", "a", "an", "of", "and", "in", "to", "how", "are", "does"})
+ 
+ # Concept retrieval may ignore explicit nominal negation while retaining the
+ # meaningful verb/noun that follows it.  Strict terms retrieval never uses
+@@ -140,7 +140,7 @@
+     # never replace the authoritative safe token returned to the caller.
+     return [
+         word for word in words
+-        if normalize_search_text(word, level="broad") not in ARABIC_STOPWORDS
++        if normalize_search_text(word, level="broad").lower() not in ARABIC_STOPWORDS
+     ]
+ 
+ 
+--- a/app/core/census_cache.py
++++ b/app/core/census_cache.py
+@@ -12,7 +12,7 @@
+   path=os.path.abspath(get_settings().library_db_path);st=os.stat(path)
+   try:row=_connection().execute("SELECT value FROM discovery_meta WHERE key='corpus_digest'").fetchone();digest=row[0] if row else ''
+   except Exception:digest='unavailable'
+-  key=(path,st.st_ino,st.st_size,st.st_mtime_ns,digest,INCLUDE_TOC.get(),json.dumps([a,kw],ensure_ascii=False,sort_keys=True,default=str))
++  key=(fn.__module__,fn.__qualname__,path,st.st_ino,st.st_size,st.st_mtime_ns,digest,INCLUDE_TOC.get(),json.dumps([a,kw],ensure_ascii=False,sort_keys=True,default=str))
+   with _lock:
+    if key in _cache:return copy.deepcopy(_cache[key])
+   value=fn(*a,**kw)
+--- a/app/core/evidence_blocks.py
++++ b/app/core/evidence_blocks.py
+@@ -19,8 +19,11 @@
+     return next((b['type'] for b in blocks(text,page_type) if b['start']<=start<b['end']),page_type)
+ 
+ def body_text(text, page_type='body'):
++    evidence = blocks(text,page_type)
++    if not any(b['type'] == 'toc' for b in evidence):
++        return text
+     chars=list(text)
+-    for b in blocks(text,page_type):
++    for b in evidence:
+         if b['type']=='toc':chars[b['start']:b['end']]=' '*(b['end']-b['start'])
+     return ''.join(chars)
+ 
+--- a/app/core/resilience.py
++++ b/app/core/resilience.py
+@@ -86,7 +86,7 @@
+                     payload["error"] = {"code":"invalid_selector", "message":payload["error"],
+                                         "retryable":False,"request_id":request_id}
+                 payload["contract"] = dict(TOOL_META)
+-                if payload.get('error'):
++                if search_call and payload.get('error'):
+                     from app.services.question_search import SEARCH_STATE
+                     state=SEARCH_STATE.get() or {}
+                     payload['stage']=state.get('stages_completed',['validation_or_initial_candidates'])[-1] if state.get('stages_completed') else 'validation_or_initial_candidates'
+@@ -98,6 +98,16 @@
+                     payload['retry_scope']='original_intent_unreviewed'
+                     for key in ('book_ids','source_code','page_from','page_to','qasida_number','min_tier','operator','include_toc'):
+                         if key in kwargs:payload['retry'][key]=kwargs[key]
++                if function.__name__ == 'get_passage':
++                    from app.services.source_quality import warnings
++                    for item in payload.get('results', [payload]):
++                        if isinstance(item, dict) and item.get('book_id') and item.get('seq'):
++                            errata = warnings(item['book_id'], item['seq'])
++                            if errata:
++                                item['text_errata'] = errata
++                if kwargs.get('detail', 'summary') != 'full':
++                    from app.services.response_projection import summarize_payload
++                    payload = summarize_payload(payload, function.__name__)
+                 payload["request_id"] = request_id
+                 if function.__name__=='search_library':
+                     has_evidence=bool(payload.get('results'))
+@@ -114,7 +124,7 @@
+                 phases=phase_snapshot();phases['queue_wait']=round(QUEUE_WAIT.get(),3);phases['authentication']=round(AUTH_TIME.get(),3)
+                 payload['timing']={'total_ms':round(sum(phases.values()),3),'attempts':attempts,'phases_ms':phases,'phase_semantics':'exclusive','scope':'tool_execution_plus_measured_queue_and_auth; excludes network and final transport serialization'}
+                 if expired():payload['truncated_by_budget']=True
+-                if function.__name__=='search_library' and kwargs.get('detail','summary')!='full':
++                if kwargs.get('detail','summary')!='full':
+                     payload['timing']={'total_ms':payload['timing']['total_ms'],'scope':payload['timing']['scope']}
+                 from app.services.traffic_metrics import record_attempt
+                 record_attempt(request_id,function.__name__,payload,(time.perf_counter()-started)*1000)
+@@ -136,7 +146,7 @@
+                 check()
+                 from app.core import result_cache
+                 k=None;cache_started=time.perf_counter()
+-                if function.__name__=='search_library' and not (kwargs.get('include_counts') or kwargs.get('check_completeness')):
++                if function.__name__=='search_library' and not kwargs.get('check_completeness'):
+                     k=result_cache.key(function.__name__,args,call_kwargs)
+                     cached=result_cache.get(k)
+                     if cached is not None:
+--- a/app/mcp_contract.py
++++ b/app/mcp_contract.py
+@@ -7,8 +7,8 @@
+ from typing import Any
+ 
+ 
+-SERVER_VERSION = "2.10.17"
+-TOOL_CONTRACT_VERSION = "15.0"
++SERVER_VERSION = "2.10.18"
++TOOL_CONTRACT_VERSION = "15.1"
+ TOOL_CONTRACT_ID = "alburhaniya-tools-v15"
+ 
+ REQUIRED_TOOLS = frozenset({
+@@ -34,7 +34,7 @@
+         ],
+     },
+     "get_passage": {
+-        "supported_parameters": ["match_id", "match_ids", "stable_id", "qasida_number", "context_mode", "max_chars", "context_chars", "query", "include_parallels", "parallel_limit"],
++        "supported_parameters": ["match_id", "match_ids", "stable_id", "qasida_number", "context_mode", "max_chars", "context_chars", "query", "include_parallels", "parallel_limit", "detail"],
+         "selector_policy": "exactly_one; qasida_number_returns_full_structure",
+         "selectors": ["match_id", "match_ids", "stable_id", "qasida_number"],
+         "parallel_candidates": True,
+@@ -44,8 +44,9 @@
+         "max_context_pages": 3,
+         "numbered_heading_section": True,
+     },
+-    "get_page": {"default_max_chars": 20000, "declares_truncation": True, "effective_cap_disclosed": True, "ultra_compact": "omits_book_metadata"},
+-    "list_books": {"supported_parameters": ["include_legend", "projection", "book_ids"],
++    "get_book": {"supported_parameters": ["book_id", "detail"]},
++    "get_page": {"detail": ["summary", "full"], "default_max_chars": 20000, "declares_truncation": True, "effective_cap_disclosed": True, "ultra_compact": "omits_book_metadata"},
++    "list_books": {"supported_parameters": ["include_legend", "projection", "book_ids", "detail"],
+                    "projections": ["compact", "ids", "full"]},
+ }
+ SCHEMA_DIGEST = hashlib.sha256(
+--- a/app/mcp_server.py
++++ b/app/mcp_server.py
+@@ -128,7 +128,7 @@
+ @mcp.tool(structured_output=True, meta=TOOL_META)
+ @safe_tool_call
+ def list_books(include_legend: bool = False, projection: Literal["compact", "ids", "full"] = "compact",
+-               book_ids: Optional[list[str]] = None) -> dict[str, Any]:
++               book_ids: Optional[list[str]] = None, detail: Literal["summary", "full"] = "summary") -> dict[str, Any]:
+     """List books in a compact catalogue, ordered by source authority.
+ 
+     This is one of the five required Al Burhania research tools. The response
+@@ -182,7 +182,10 @@
+         "corpus_contract": corpus_contract_snapshot(),
+     }
+ 
+-    if projection!="full":result["corpus_contract"].pop("repeated_printed_labels",None)
++    if detail != "full":
++        result.pop("connector_contract", None)
++        result["corpus_contract"] = {key: value for key, value in result["corpus_contract"].items()
++                                     if key in {"books", "pages", "diwan", "status", "edition_deduplication"}}
+     from app.services import semantic_search as semantic
+     result["active_indexes"] = {
+         "lexical": "sqlite_fts5_safe",
+@@ -200,7 +203,7 @@
+ 
+ @mcp.tool(structured_output=True, meta=TOOL_META)
+ @safe_tool_call
+-def get_book(book_id: str) -> dict[str, Any]:
++def get_book(book_id: str, detail: Literal["summary", "full"] = "summary") -> dict[str, Any]:
+     """Get the metadata and provenance of one book.
+ 
+     This is one of the five required Al Burhania research tools. The response
+@@ -213,12 +216,13 @@
+ 
+     if book is None:
+         return {
+-            "error": f"no book with id '{book_id}'",
++            "error": f"Unknown book_id {book_id!r}. Valid IDs: {', '.join(b['book_id'] for b in db.list_books())}",
+         }
+ 
+     book["searchable_by_default"] = bool(book["searchable_by_default"])
+     book["review_basis"] = {"status":"documentary_review_pending","basis":book.get("provenance_status"),"reviewer":None,"review_date":None}
+-    book["connector_contract"] = contract_metadata(REQUIRED_TOOLS)
++    if detail == "full":
++        book["connector_contract"] = contract_metadata(REQUIRED_TOOLS)
+     return book
+ 
+ 
+@@ -229,6 +233,7 @@
+     seq: int,
+     mode: ResponseMode = "compact",
+     max_chars: int = 20000,
++    detail: Literal["summary", "full"] = "summary",
+ ) -> dict[str, Any]:
+     """Read one specific full page.
+ 
+@@ -247,7 +252,7 @@
+ 
+     if page is None:
+         return {
+-            "error": f"no page {seq} in book '{book_id}'",
++            "error": (f"Book {book_id} has pages 1–{db.get_book(book_id)['page_count']}; requested {seq}." if db.get_book(book_id) else f"Unknown book_id {book_id!r}; use list_books for valid IDs."),
+         }
+ 
+     if page.get('pagination_status')=='repeated_printed_label_unresolved':page['printed_page']=None
+@@ -301,7 +306,7 @@
+             "qasida_number", "qasida_title", "qasida_bayt_count",
+             "bayt_from", "bayt_to", "block_type", "canonical_book_id",
+             "edition_relation", "searchable_by_default", "page_id",
+-            "pagination_status", "pagination_warning", "evidence_blocks",
++            "pagination_status", "pagination_warning", "evidence_blocks", "text_errata",
+         ):
+             if page.get(field) is not None:
+                 result[field] = page[field]
+@@ -341,6 +346,7 @@
+     parallel_limit: int = 5,
+     context_mode: Literal["bounded", "paragraph"] = "bounded",
+     max_chars: int = 12000,
++    detail: Literal["summary", "full"] = "summary",
+ ) -> dict[str, Any]:
+     """Read one or several bounded passages returned by search_library.
+ 
+@@ -446,12 +452,9 @@
+         relation = "lower_bound"
+         scope = "eligible_candidates_after_intent_and_score_filter"
+     elif effective_match_mode == "lexeme":
+-        lexeme_rows = db.search(
+-            queries=raw_queries, operator=operator, search_mode="lexeme",
+-            ranking="book_order", diversify_books=False, limit=10000,
+-            offset=0, min_score=0.0, **count_args,
+-        )
+-        retrieval_count = len({(row["book_id"], row["seq"]) for row in lexeme_rows})
++        retrieval_count = len(db._matching_page_ids(
++            raw_queries, operator=operator, search_mode="lexeme", **count_args))
++        relation = "lexeme_expanded_pages"
+         scope = "lexeme_matching_pages_before_ranking_and_score_filter"
+     else:
+         # Hybrid and semantic retrieval apply a calibrated evidence threshold.
+@@ -752,6 +755,15 @@
+     if match_mode != "auto":
+         rows = search_fn(**search_args)
+ 
++    if match_mode == "auto" and not question_mode:
++        from app.services.spelling_search import search as spelling_search
++        spelling_args = {key: value for key, value in search_args.items()
++                         if key not in {'query', 'queries', 'search_mode', '_audit_candidates'}}
++        spelling_rows = spelling_search(raw_queries, db=db, **spelling_args)
++        if spelling_rows:
++            rows = spelling_rows
++            effective_match_mode = "spelling_discovery"
++
+     from app.services.hit_contract import canonical_hit
+     rows=[canonical_hit(row,db.get_page(row['book_id'],row['seq'])) for row in rows]
+     has_more = len(rows) > limit
+@@ -846,7 +858,7 @@
+         if len(results)<limit and not has_more:
+             payload["fewer_than_limit_reason"] = "only_n_passages_met_threshold"
+         payload["normalization_level"] = (
+-            "broad_discovery" if effective_match_mode in {"hybrid", "lexeme", "reformulated", "semantic_auto"}
++            "broad_discovery" if effective_match_mode in {"hybrid", "lexeme", "reformulated", "semantic_auto", "spelling_discovery"}
+             else "safe"
+         )
+         if not results:
+@@ -888,7 +900,7 @@
+         "min_tier": min_tier,
+         "whole_word": bool(whole_word),
+         "normalization_level": (
+-            "broad_discovery" if effective_match_mode in {"hybrid", "lexeme", "reformulated", "semantic_auto"}
++            "broad_discovery" if effective_match_mode in {"hybrid", "lexeme", "reformulated", "semantic_auto", "spelling_discovery"}
+             else "safe"
+         ),
+         "returned_count": len(results),
+@@ -926,8 +938,21 @@
+ # prevents the application from starting instead of silently shipping drift.
+ from app.services.compact_response import encoding_guide
+ import json as _encoding_json
+-next(t for t in mcp._tool_manager.list_tools() if t.name=='search_library').description += (
+-    '\nMinimal response decoding contract: '+_encoding_json.dumps(encoding_guide(),ensure_ascii=False,separators=(',',':')))
++next(t for t in mcp._tool_manager.list_tools() if t.name=='search_library').description = (
++    "Search the Al Burhania books, then read a result with get_passage(match_id). "
++    "Basic controls: query (or queries), limit, book_scope, mode. "
++    "Advanced: filters book_ids/source_code/min_tier/page_from/page_to/qasida_number; "
++    "operator OR/AND; offset; ranking; context_chars (40–300 per side); "
++    "match_mode auto/exact/terms/hybrid/lexeme; include_counts/check_completeness; "
++    "whole_word; count_basis phrase/term_bag; include_toc/include_topic_only; "
++    "diversify_books/max_per_book; min_score; keep_terms; expand_top/expand_chars. "
++    "Auto recovers hamza variants and questions as labelled discovery. "
++    "Exact counts preserve spelling; discovery matches do not verify answers. "
++    "Default mode=compact uses readable keys. Advanced mode=ultra_compact uses "
++    "lossless-15 codes; request list_books(detail=full) for its minimal_encoding decoder. "
++    "detail=full returns diagnostics. search_mode is a legacy alias; prefer match_mode. "
++    "Cite citation_label; Dīwān bayt ranges are page-scoped, qasida_bayt_count is total."
++)
+ DISCOVERABLE_TOOLS = validate_registered_tools(mcp)
+ bind_callable_schema(mcp)
+ from app.core.machine_http import enable_threaded_tools
+--- a/app/services/concept_links.py
++++ b/app/services/concept_links.py
+@@ -56,9 +56,14 @@
+ import re
+ @lru_cache(maxsize=128)
+ def source_pattern(group):
+-    from app.services.library_db import _build_highlight_regex
+-    return re.compile('|'.join(_build_highlight_regex(f,normalization_level='broad',whole_word=True).pattern for f in
+-                              dict.fromkeys(x for form in CONCEPT_FORMS[group] for x in (form,'و'+form,'ف'+form,'ب'+form,'ل'+form))))
++    from app.services.library_db import _build_highlight_regex, _DIACRITIC_CLASS
++    # Factor the shared optional clitic instead of compiling five almost
++    # identical copies of every source form during process startup.
++    bases = '|'.join(_build_highlight_regex(form, normalization_level='broad',
++                    whole_word=False).pattern for form in dict.fromkeys(CONCEPT_FORMS[group]))
++    boundary = r'[\w\u064b-\u065f]'
++    return re.compile(r'(?<!' + boundary + r')(?:[وفبل]' + _DIACRITIC_CLASS +
++                      r')?(?:' + bases + r')(?!' + boundary + r')', re.IGNORECASE)
+ 
+ def linked_support(query,text):
+     """Uncalibrated local relation signal; no page routing or truth claim."""
+--- a/app/services/library_db.py
++++ b/app/services/library_db.py
+@@ -18,6 +18,7 @@
+ """
+ from __future__ import annotations
+ import os
++import json
+ import re
+ import sqlite3
+ import threading
+@@ -183,7 +184,7 @@
+         word_patterns.append(_DIACRITIC_CLASS.join(parts) + _DIACRITIC_CLASS)
+     pattern = r"(?:[\s\u060c\u061b\u061f،؛؟.,:;!()\[\]{}]+)".join(word_patterns)
+     if whole_word:
+-        pattern = rf"(?<!{_ARABIC_BOUNDARY}){pattern}(?!{_ARABIC_BOUNDARY})"
++        pattern = rf"(?<![\w\u064b-\u065f]){pattern}(?![\w\u064b-\u065f])"
+     return re.compile(pattern, re.IGNORECASE)
+ 
+ 
+@@ -225,16 +226,17 @@
+ 
+ 
+ def _indexable_text(text: str) -> str:
+-    """Return authorial/page text eligible for search and census.
+-
+-    Only an explicit footnote rule is removed. Ambiguous inline parenthetical
+-    material remains indexed; conservative exclusion is safer than silently
+-    deleting source prose.
+-    """
+-    marker = _FOOTNOTE_SEPARATOR_RE.search(text or "")
+-    value = text[:marker.start()].rstrip() if marker else (text or "")
+-    from app.core.evidence_blocks import INCLUDE_TOC, body_text
+-    return value if INCLUDE_TOC.get() else body_text(value)
++    from app.core.evidence_blocks import INCLUDE_TOC
++    return _indexable_cached(text or "", INCLUDE_TOC.get())
++
++
++@lru_cache(maxsize=8192)
++def _indexable_cached(text: str, include_toc: bool) -> str:
++    """Cache pure source transformations, separately for each navigation scope."""
++    marker = _FOOTNOTE_SEPARATOR_RE.search(text)
++    value = text[:marker.start()].rstrip() if marker else text
++    from app.core.evidence_blocks import body_text
++    return value if include_toc else body_text(value)
+ 
+ 
+ @lru_cache(maxsize=8192)
+@@ -320,7 +322,7 @@
+         window = plain_text[start:end]
+         prefix = "…" if start > 0 else ""
+         suffix = "…" if end < len(plain_text) else ""
+-    highlighted_window, _ = _highlight(window, pattern)
++    highlighted_window, _ = _highlight(_esc(window, quote=False), pattern)
+     return prefix + highlighted_window + suffix
+ 
+ 
+@@ -446,7 +448,17 @@
+     d["content_types"] = content_types(d["text"])
+     from app.core.evidence_blocks import blocks
+     d["evidence_blocks"] = blocks(d["text"], d["block_type"])
++    footnote = _FOOTNOTE_SEPARATOR_RE.search(d["text"])
++    if footnote:
++        boundary = footnote.start()
++        d["evidence_blocks"] = [dict(block, end=min(block['end'], boundary))
++                                for block in d["evidence_blocks"] if block['start'] < boundary]
++        d["evidence_blocks"].append({'type': 'footnote', 'start': boundary, 'end': len(d['text'])})
+     d.update(citation_metadata(book_id, seq, d["printed_page"]))
++    from app.services.source_quality import warnings
++    errata = warnings(book_id, seq)
++    if errata:
++        d["text_errata"] = errata
+     d["has_prev"] = seq > 1
+     d["has_next"] = seq < d["total_pages"]
+     return d
+@@ -582,19 +594,35 @@
+     return {key: tuple(sorted(value)) for key, value in forms.items()}
+ 
+ 
++@lru_cache(maxsize=4096)
++def _spelling_subset(path: str, mtime_ns: int, size: int, keys: tuple[str, ...]) -> dict:
++    conn = _connection()
++    if not conn.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='lexeme_spellings'").fetchone():
++        vocabulary = _indexed_spellings(path, mtime_ns, size)
++        return {key: vocabulary.get(key, ()) for key in keys}
++    forms = {}
++    for offset in range(0, len(keys), 400):
++        batch = keys[offset:offset + 400]
++        placeholders = ','.join('?' for _ in batch)
++        for normalized, surface in conn.execute(
++                'SELECT normalized,surface FROM lexeme_spellings WHERE normalized IN (' + placeholders + ')', batch):
++            forms.setdefault(normalized, []).append(surface)
++    return {key: tuple(sorted(value)) for key, value in forms.items()}
++
++
+ def _lexeme_index_forms(query: str) -> list[str]:
+     path = os.path.abspath(get_settings().library_db_path)
+     stat = os.stat(path)
+-    vocabulary = _indexed_spellings(path, stat.st_mtime_ns, stat.st_size)
+     words = safe_tokens(query)
+     if len(words) != 1:
+         raise ValueError("lexeme search supports one Arabic word per query")
+     forms = set(safe_term_variants(words[0]))
+-    for stem in _lexeme_stems(words[0]):
+-        for prefix in _LEXEME_PREFIXES:
+-            for suffix in _LEXEME_SUFFIXES:
+-                key = normalize_search_text(prefix + stem + suffix, level="broad")
+-                forms.update(vocabulary.get(key, ()))
++    keys = tuple(sorted({normalize_search_text(prefix + stem + suffix, level="broad")
++                         for stem in _lexeme_stems(words[0])
++                         for prefix in _LEXEME_PREFIXES for suffix in _LEXEME_SUFFIXES}))
++    vocabulary = _spelling_subset(path, stat.st_mtime_ns, stat.st_size, keys)
++    for values in vocabulary.values():
++        forms.update(values)
+     # A written taa marbuta is not a possessive haa. The broad index unifies
+     # them for candidate discovery, but citation-capable lexemes must not.
+     if normalize_search_text(words[0], level="safe").endswith("ة"):
+@@ -730,6 +758,7 @@
+     return sql, params
+ 
+ 
++@__import__("app.core.census_cache",fromlist=["cached_census"]).cached_census
+ def _matching_page_ids(queries, operator="OR", search_mode="exact_phrase", whole_word=True, **scope):
+     """Eligible source identities, before ranking, thresholds or pagination."""
+     expression = _fts_expression(queries, operator, search_mode)
+@@ -1035,14 +1064,14 @@
+     radius = max(0, min(radius, 300))
+     left = max(0, start - radius)
+     right = min(len(text), max(end, start + 1) + radius)
+-    excerpt = _esc(text[left:right])
++    excerpt = _esc(text[left:right], quote=False)
+     if patterns:
+         union = re.compile("(?:" + "|".join(p.pattern for p in patterns) + ")", re.IGNORECASE)
+         excerpt, _ = _highlight(excerpt, union)
+     return ("…" if left else "") + excerpt + ("…" if right < len(text) else "")
+ 
+ 
+-_ARABIC_TOKEN_RE = re.compile(r"[\u0621-\u06ff]+")
++_ARABIC_TOKEN_RE = re.compile(r"[\u0621-\u06ff]+|[A-Za-z]+")
+ 
+ 
+ def _content_query_terms(raw_queries: list[str]) -> list[tuple[str, str]]:
+@@ -1052,7 +1081,7 @@
+         for match in _ARABIC_TOKEN_RE.finditer(query):
+             display = match.group(0)
+             normalized = normalize_arabic(display, aggressive=True)
+-            if normalized and normalized not in ARABIC_STOPWORDS:
++            if normalized and normalized.lower() not in ARABIC_STOPWORDS:
+                 terms.append((display, normalized))
+     return terms
+ 
+@@ -1443,7 +1472,7 @@
+             snippet = _make_snippet(plain_text, pattern, radius=context_chars)
+         else:
+             occ = 0
+-            snippet = _esc(plain_text[: context_chars * 2])
++            snippet = _esc(plain_text[: context_chars * 2], quote=False)
+             if len(plain_text) > context_chars * 2:
+                 snippet += "…"
+ 
+@@ -1514,39 +1543,18 @@
+             result["matched_terms"] = _matched_literal_terms(
+                 plain_text, raw_queries, first_match, evidence_end,
+             )
+-        result["evidence_type"] = evidence_type(
+-            source_text, first_match, evidence_end,
+-        )
++        # Only block type participates in ranking. Expensive source metadata,
++        # speaker analysis and structural parsing run after pagination.
+         result["block_type"] = block_at(source_text, first_match, row["block_type"])
+-        result.update(citation_metadata(row["book_id"], row["seq"], row["printed_page"]))
+-        result["evidence_type_scope"] = "start_anchor"
+-        result["evidence_type"] = evidence_type(source_text, first_match, first_match + 1)
+-        result["evidence_type_method"] = "heuristic"
+-        result["evidence_type_confidence"] = "unverified"
+         result["whole_word"] = bool(whole_word)
+-        result["normalization_level"] = (
+-            "broad_discovery" if search_mode == "lexeme" else "safe"
+-        )
++        result["normalization_level"] = "broad_discovery" if search_mode == "lexeme" else "safe"
+         result["footnotes_excluded"] = True
+-        if row["book_id"] == "b14":
+-            result.update(_structural_identity(
+-                plain_text, first_match, evidence_end, row["qasida_number"],
+-                row["qasida_bayt_count"],
+-            ))
+         result["match_id"] = f"{row['book_id']}-p{row['seq']}-c{first_match}"
+         result["evidence_span"] = {
+             "start": first_match,
+             "end": evidence_end,
+             "excerpt": result["snippet"],
+         }
+-        from app.core.attribution import attribution_at
+-        result.update(attribution_at(source_text, first_match, evidence_end))
+-        if include_full_text:
+-            safe_text = _esc(source_text)
+-            for pattern in patterns:
+-                safe_text, _ = _highlight(safe_text, pattern)
+-            result["highlight"] = safe_text
+-            result["text"] = source_text
+         results.append(result)
+         if _audit_candidates:
+             for q, pat in zip(raw_queries, patterns):
+@@ -1607,6 +1615,26 @@
+     record_phase("ranking_and_pagination", phase_started)
+     for rank, item in enumerate(results, start=requested_offset + 1):
+         item["rank"] = rank
++        page = get_page(item['book_id'], item['seq'])
++        source_text = page['text']
++        first_match = item['evidence_span']['start']
++        evidence_end = item['evidence_span']['end']
++        item.update(citation_metadata(item['book_id'], item['seq'], item['printed_page']))
++        item['evidence_type'] = evidence_type(source_text, first_match, first_match + 1)
++        item['evidence_type_scope'] = 'start_anchor'
++        item['evidence_type_method'] = 'heuristic'
++        item['evidence_type_confidence'] = 'unverified'
++        if item['book_id'] == 'b14':
++            item.update(_structural_identity(_indexable_text(source_text), first_match, evidence_end,
++                                           page['qasida_number'], page['qasida_bayt_count']))
++        from app.core.attribution import attribution_at
++        item.update(attribution_at(source_text, first_match, evidence_end))
++        if include_full_text:
++            safe_text = _esc(source_text)
++            for pattern in patterns:
++                safe_text, _ = _highlight(safe_text, pattern)
++            item['highlight'] = safe_text
++            item['text'] = source_text
+     return results
+ 
+ 
+@@ -2295,7 +2323,22 @@
+            ORDER BY d.rarity_score DESC, d.candidate_stable_id LIMIT ?""",
+         (stable_id, max(1, min(int(limit), 20))),
+     ).fetchall()
+-    return [dict(row) | {"citation_safe": bool(row["citation_safe"])} for row in rows]
++    results = []
++    for row in rows:
++        item = dict(row) | {"citation_safe": bool(row["citation_safe"])}
++        roots = json.loads(item['shared_roots'])
++        evidence = {}
++        for key, identity in [('source', stable_id), ('candidate', item['candidate_stable_id'])]:
++            tokens = _connection().execute(
++                'SELECT root,surface_form FROM tokens WHERE stable_id=? AND root IS NOT NULL ORDER BY position',
++                (identity,)).fetchall()
++            evidence[key] = {root: list(dict.fromkeys(t['surface_form'] for t in tokens if t['root'] == root))
++                             for root in roots}
++        # An old/mismatched index must never expose an unsupported root claim.
++        if all(evidence[side][root] for side in evidence for root in roots):
++            item['root_evidence'] = evidence
++            results.append(item)
++    return results
+ 
+ 
+ @lru_cache(maxsize=1)
+--- /dev/null
++++ b/app/services/response_projection.py
+@@ -0,0 +1,33 @@
++"""Small routine MCP replies; full diagnostics remain opt-in.
++
++Canonical source text, identifiers and coordinate offsets are unchanged.
++"""
++from copy import deepcopy
++
++
++def summarize_payload(payload, operation):
++    result = deepcopy(payload)
++
++    def visit(value):
++        if isinstance(value, list):
++            for item in value:
++                visit(item)
++        elif isinstance(value, dict):
++            # passage already contains this exact span. Keep coordinates and
++            # text_version for verification without repeating its Arabic text.
++            for key in ('source_span',):
++                span = value.get(key)
++                if isinstance(span, dict):
++                    span.pop('source_quote', None)
++            coordinate = value.get('coordinate_contract')
++            if isinstance(coordinate, dict):
++                coordinate.pop('text_sha256', None)
++            for item in value.values():
++                visit(item)
++    if operation != 'search_library':
++        visit(result)
++    contract = result.get('contract')
++    if isinstance(contract, dict):
++        result['contract'] = {key: (value[:8] if key.endswith('digest') and isinstance(value, str) else value)
++                              for key, value in contract.items()}
++    return result
+--- /dev/null
++++ b/app/services/source_quality.py
+@@ -0,0 +1,13 @@
++"""Source-quality warnings never silently rewrite quoted religious text."""
++from functools import lru_cache
++import json
++from pathlib import Path
++
++@lru_cache(maxsize=1)
++def _entries():
++    path = Path(__file__).resolve().parents[2] / 'data' / 'text_errata.json'
++    return json.loads(path.read_text(encoding='utf-8')).get('entries', [])
++
++def warnings(book_id, seq):
++    return [dict(entry, source_text_preserved=True) for entry in _entries()
++            if entry.get('book_id') == book_id and entry.get('seq') == seq]
+--- /dev/null
++++ b/app/services/spelling_search.py
+@@ -0,0 +1,77 @@
++"""Hamza-only discovery with original source evidence and separate literal counts."""
++from itertools import product
++from pathlib import Path
++from app.core.arabic_utils import normalize_alef, normalize_search_text
++
++
++def variants(query, db):
++    tokens = normalize_search_text(query).split()
++    if not tokens or len(tokens) > 8:
++        return [query]
++    path = Path(db.get_settings().library_db_path).resolve()
++    stamp = path.stat()
++    vocabulary = db._spelling_subset(str(path), stamp.st_mtime_ns, stamp.st_size,
++                                     tuple(sorted({normalize_search_text(token, level="broad") for token in tokens})))
++    groups = []
++    for token in tokens:
++        broad = normalize_search_text(token, level='broad')
++        forms = {token}
++        forms.update(form for form in vocabulary.get(broad, ())
++                     if normalize_alef(form) == normalize_alef(token))
++        groups.append(sorted(forms))
++    size = 1
++    for group in groups:
++        size *= len(group)
++    # Bound query expansion rather than silently returning an incomplete census.
++    if size > 128:
++        return [query]
++    return [' '.join(parts) for parts in product(*groups)]
++
++
++def search(raw_queries, *, db, **kwargs):
++    expanded = [variants(query, db) for query in raw_queries]
++    if all(len(forms) == 1 for forms in expanded):
++        return None
++    offset = kwargs.pop('offset', 0)
++    limit = kwargs.pop('limit', 8)
++    diversify = kwargs.pop('diversify_books', True)
++    max_per_book = kwargs.pop('max_per_book', 2)
++    operator = kwargs.pop('operator', 'OR')
++    groups = []
++    for original, forms in zip(raw_queries, expanded):
++        rows = db.search(queries=forms, operator='OR', search_mode='exact_phrase',
++                         limit=10000, offset=0, diversify_books=False, **kwargs)
++        grouped = {}
++        for row in rows:
++            start, end = row['evidence_span']['start'], row['evidence_span']['end']
++            text = db.get_page(row['book_id'], row['seq'])['text'][start:end]
++            row.update(match_type='spelling_discovery', original_queries=raw_queries,
++                       normalization_level='hamza_discovery',
++                       reformulation_warning='Hamza spelling discovery; literal counts retain the original spelling.',
++                       matched_terms={original: {'corpus_form': text, 'relation': 'hamza_variant' if normalize_search_text(text) != normalize_search_text(original) else 'exact'}},
++                       answer_verified=False)
++            grouped[(row['book_id'], row['seq'])] = row
++        groups.append(grouped)
++    keys = set(groups[0])
++    for group in groups[1:]:
++        keys = keys & set(group) if operator == 'AND' else keys | set(group)
++    rows = [next(group[key] for group in groups if key in group) for key in keys]
++    ranking = kwargs.get('ranking', 'primary_first')
++    if ranking in {'book_order', 'chronological'}:
++        rows.sort(key=lambda row: (row['book_id'], row['seq']))
++    elif ranking == 'primary_first':
++        rows.sort(key=db.primary_first_sort_key)
++    else:
++        rows.sort(key=lambda row: (-row['score'], row['book_id'], row['seq']))
++    if diversify and len(kwargs.get('book_ids') or []) != 1:
++        counts, selected = {}, []
++        for row in rows:
++            book = row['book_id']
++            if counts.get(book, 0) < max_per_book:
++                counts[book] = counts.get(book, 0) + 1
++                selected.append(row)
++        rows = selected
++    rows = rows[offset:offset + limit]
++    for rank, row in enumerate(rows, offset + 1):
++        row['rank'] = rank
++    return rows
+--- a/app/services/traffic_metrics.py
++++ b/app/services/traffic_metrics.py
+@@ -10,6 +10,8 @@
+ def record_attempt(request_id,tool,payload,ms):
+     from app.mcp_contract import SERVER_VERSION
+     outcome=(payload.get('status') or {}).get('execution') if isinstance(payload.get('status'),dict) else 'failed' if payload.get('error') else 'full'
++    if isinstance(payload.get('error'), dict) and payload['error'].get('code') in {'invalid_request', 'invalid_selector'}:
++        outcome = 'client_error'
+     event={'request_id':request_id,'tool':tool,'build':SERVER_VERSION,'execution':outcome,'ms':round(ms,3),'timestamp':time.time()}
+     try:
+         with sqlite3.connect(get_settings().traffic_metrics_path,timeout=.05) as c:
+@@ -28,7 +30,7 @@
+             rows=c.execute('SELECT execution,ms,timestamp FROM attempts WHERE timestamp>=? AND build=?',(time.time()-7*86400,SERVER_VERSION)).fetchall()
+         times=sorted(x[1] for x in rows);n=len(rows)
+         return {'scope':'all_tool_attempts_for_current_build','build':SERVER_VERSION,'persistence_scope':persistence,'attempts_7d':n,
+-                'failed':sum(x[0]=='failed' for x in rows),'partial':sum(x[0]=='partial' for x in rows),
++                'client_errors':sum(x[0]=='client_error' for x in rows),'failed':sum(x[0]=='failed' for x in rows),'partial':sum(x[0]=='partial' for x in rows),
+                 'p95_ms':times[math.ceil(.95*n)-1] if n else None,
+                 'observed_days':round((max(x[2] for x in rows)-min(x[2] for x in rows))/86400,3) if n else 0,
+                 'production_acceptance':'pending_independent_deployed_observation'}
+--- a/data/text_errata.json
++++ b/data/text_errata.json
+@@ -1 +1,34 @@
+-{"policy":"Preserve source quotation. Proposed readings are never applied silently.","entries":[{"book_id":"b39","seq":5,"surface":"لقراءة الأورام","proposed_reading":"لقراءة الأوراد","status":"editorial_proposal_pending_scan","basis":"Parallel wording in b42 seq 4 and supplied developer audit"}],"scan_review":[{"book_id":"b01","printed_label":"70","locations":138,"status":"original_scan_required"},{"book_id":"b42","printed_label":"118","locations":38,"status":"original_scan_required"}]}
++{
++  "policy": "Preserve source quotation. Proposed readings are never applied silently.",
++  "entries": [
++    {
++      "book_id": "b39",
++      "seq": 5,
++      "surface": "لقراءة الأورام",
++      "proposed_reading": "لقراءة الأوراد",
++      "status": "editorial_proposal_pending_scan",
++      "basis": "Parallel wording in b42 seq 4 and supplied developer audit"
++    },
++    {
++      "book_id": "b39",
++      "seq": 248,
++      "surface": "???",
++      "status": "original_scan_required",
++      "basis": "Run-2 audit reports missing Quran verse references and a duplicated verse. Preserve quotations until the source scan can be reviewed."
++    }
++  ],
++  "scan_review": [
++    {
++      "book_id": "b01",
++      "printed_label": "70",
++      "locations": 138,
++      "status": "original_scan_required"
++    },
++    {
++      "book_id": "b42",
++      "printed_label": "118",
++      "locations": 38,
++      "status": "original_scan_required"
++    }
++  ]
++}
+--- /dev/null
++++ b/deploy/compose.state.yml
+@@ -0,0 +1,13 @@
++# Add this file LAST to the existing Docker Compose file list.
++# Example: docker compose -f docker-compose.yml -f docker-compose.override.yml \
++#          -f backend/deploy/compose.state.yml up -d --build --no-deps backend
++services:
++  backend:
++    environment:
++      TRAFFIC_METRICS_PATH: /var/lib/burhaniya/traffic.sqlite3
++      MONITOR_SUMMARY_PATH: /var/lib/burhaniya/monitor-history.json
++      RESULT_CACHE_PATH: /var/lib/burhaniya/result-cache.sqlite3
++    volumes:
++      - burhaniya_observations:/var/lib/burhaniya
++volumes:
++  burhaniya_observations:
+--- a/scripts/book_parser.py
++++ b/scripts/book_parser.py
+@@ -15,6 +15,7 @@
+ """
+ from __future__ import annotations
+ import json
++import html
+ import re
+ 
+ ANCHOR = "</div></ul></td></tr></table><ul><p>"
+@@ -163,6 +164,9 @@
+     for i, page in enumerate(pages):
+         if "paragraphs" not in page:
+             raise ValueError(f"{raw_path}: page {i} missing 'paragraphs'")
++        # Decode transport entities once, before indexing and assigning source
++        # offsets. Original JSON remains untouched for provenance review.
++        page["paragraphs"] = [html.unescape(paragraph) for paragraph in page["paragraphs"]]
+         page.setdefault("printed_page", None)
+         page.setdefault("page_label", None)
+ 
+--- a/scripts/measure_workflow_2115.py
++++ b/scripts/measure_workflow_2115.py
+@@ -9,7 +9,7 @@
+ from pathlib import Path
+ ROOT=Path(__file__).resolve().parent.parent;sys.path.insert(0,str(ROOT))
+ import tiktoken
+-from app.mcp_server import search_library,get_passage,mcp
++from app.mcp_server import search_library,get_passage,list_books,mcp
+ from app.core import result_cache
+ from app.mcp_contract import SERVER_VERSION
+ from app.services.compact_response import decode_search_response
+@@ -23,6 +23,7 @@
+       ('six_hit_lexical',{'queries':['الخلوة','المراقبة'],'match_mode':'terms','operator':'OR','limit':6}),
+       ('census',{'query':'التوبة','match_mode':'exact','include_counts':True,'limit':5}),
+       ('weak_negative',{'query':'ما حكم استعمال الهاتف في الصلاة','limit':5})]
++    decoder_response=list_books(detail='full',book_ids=[])
+     results=[]
+     for label,args in fixtures:
+         payloads={}
+@@ -40,9 +41,11 @@
+                 'payload_reduction_pct':round(100*(1-costs['ultra_compact']/costs['compact']),2),
+                 'compact_bytes':len(packed(payloads['compact']).encode()),'ultra_bytes':len(packed(payloads['ultra_compact']).encode()),
+                 'schema_and_followup_tokens':overhead,'compact_workflow_tokens':costs['compact']+overhead,
+-                'ultra_workflow_tokens':costs['ultra_compact']+overhead,'metadata_hydration_calls':0})
++                'ultra_workflow_tokens':costs['ultra_compact']+overhead+len(enc.encode(packed(decoder_response))),
++                'metadata_hydration_calls':{'compact':0,'ultra_compact':1},
++                'ultra_decoder_tokens':len(enc.encode(packed(decoder_response)))})
+     output={'tokenizer_library':'tiktoken','version':importlib.metadata.version('tiktoken'),'profiles':list(encodings),
+-      'scope':'Identical current-release evidence. tools/list includes the complete decoding legend; no extra contract/metadata hydration. One tool-discovery schema + one search + one bounded passage follow-up (context_chars=300); no metadata hydration needed. Excludes unavailable client/system wrapper and network serialization. Not a before/after retrieval-quality score.',
++      'scope':'Identical current-release evidence. Readable compact tool discovery; ultra mode additionally includes one list_books(detail=full,book_ids=[]) decoder retrieval. One tool-discovery schema + one search + one bounded passage follow-up (context_chars=300); ultra decoder hydration is counted once per workflow. Excludes unavailable client/system wrapper and network serialization. Not a before/after retrieval-quality score.',
+       'claude_usage':'Not measured; no Anthropic token-counting account supplied','results':results}
+     path=ROOT/'verification'/SERVER_VERSION/'token_workflows.json';path.parent.mkdir(parents=True,exist_ok=True);path.write_text(json.dumps(output,indent=2)+'\n')
+     print(json.dumps(results,indent=2))
+--- a/scripts/production_mcp_regression.py
++++ b/scripts/production_mcp_regression.py
+@@ -189,7 +189,7 @@
+ 
+             smoke: dict[str, str] = {}
+             if not discovery_only:
+-                catalogue = _structured(await session.call_tool("list_books", {}))
++                catalogue = _structured(await session.call_tool("list_books", {"detail": "full"}))
+                 if catalogue.get("total") != 43:
+                     raise AssertionError(
+                         f"list_books smoke expected 43, received {catalogue.get('total')}"
+@@ -204,10 +204,8 @@
+                     and connector.get("schema_digest") == SCHEMA_DIGEST
+                 ):
+                     raise AssertionError("list_books MCP contract evidence is stale")
+-                # Compact catalogue intentionally omits the long repeated-page
+-                # register; compare the rest of the contract verbatim.
+-                expected_corpus = {k: v for k, v in health["corpus_contract"].items()
+-                                   if k != "repeated_printed_labels"}
++                # Detailed verification explicitly requests the full live contract.
++                expected_corpus = health["corpus_contract"]
+                 if catalogue.get("corpus_contract") != expected_corpus:
+                     raise AssertionError("list_books corpus evidence differs from /health")
+                 smoke["list_books"] = "pass"
+@@ -223,7 +221,7 @@
+                 ):
+                     raise AssertionError("list_books does not expose the b38->b37 edition policy")
+ 
+-                book = _structured(await session.call_tool("get_book", {"book_id": "b14"}))
++                book = _structured(await session.call_tool("get_book", {"book_id": "b14", "detail": "full"}))
+                 if (book.get("connector_contract") or {}).get("server_version") != SERVER_VERSION:
+                     raise AssertionError("get_book does not expose the live connector version")
+                 b20 = _structured(await session.call_tool("get_book", {"book_id": "b20"}))
+@@ -399,7 +397,7 @@
+                 smoke["min_tier"] = "pass"
+ 
+                 full_page = _structured(await session.call_tool(
+-                    "get_page", {"book_id": "b44", "seq": 12, "mode": "compact"},
++                    "get_page", {"book_id": "b44", "seq": 12, "mode": "compact", "detail": "full"},
+                 ))
+                 if full_page.get("truncated") or full_page.get("full_chars", 0) < 8000:
+                     raise AssertionError("get_page silently truncated b44 page 12")
+--- a/scripts/research_indexes.py
++++ b/scripts/research_indexes.py
+@@ -23,8 +23,8 @@
+ 
+ 
+ ARABIC_TOKEN_RE = re.compile(r"[\u0621-\u06ff]+")
+-ANALYSIS_VERSION = "curated-arabic-roots-v1"
+-PARALLEL_VERSION = "diwan-shared-rare-roots-v1"
++ANALYSIS_VERSION = "curated-arabic-roots-v2"
++PARALLEL_VERSION = "diwan-shared-rare-roots-v2"
+ 
+ # root -> (lemma, explicitly audited normalized forms)
+ _CURATED_FAMILIES: dict[str, tuple[str, set[str]]] = {
+@@ -32,7 +32,7 @@
+     "غني": ("غني", {"غني", "غني", "غناء", "اغتني", "استغني", "مغني"}),
+     "فقر": ("فقر", {"فقر", "فقير", "فقراء", "افتقر", "افتقار", "مفتقر"}),
+     "وصل": ("وصل", {"وصل", "وصال", "واصل", "موصول"}),
+-    "فني": ("فني", {"فني", "فناء", "فان"}),
++    "فني": ("فني", {"فني", "فناء"}),
+     "بقي": ("بقي", {"بقي", "بقاء", "باق"}),
+     "حمد": ("حمد", {"حمد", "احمد", "محمد", "محمود"}),
+     "علم": ("علم", {"علم", "عالم", "علوم", "معلوم", "معلم"}),
+--- a/scripts/start_server.py
++++ b/scripts/start_server.py
+@@ -24,7 +24,7 @@
+     if not row or row[0]!=INDEX_VERSION:raise SystemExit('library.db feature version differs from this build; run python scripts/build_index.py.')
+   except sqlite3.Error as exc:raise SystemExit('library.db could not be read; rebuild before deploying.') from exc
+  try:
+-  workers=int(os.environ.get('WEB_CONCURRENCY','2'))
++  workers=int(os.environ.get('WEB_CONCURRENCY','1'))
+   if not 1<=workers<=8:raise ValueError
+  except ValueError:raise SystemExit('Invalid WEB_CONCURRENCY: use 1 to 8.')
+  os.environ['PYTHONUNBUFFERED']='1';print(f'Starting library HTTP service on 0.0.0.0:{port}; health=/health; MCP=/mcp/',flush=True)
+--- /dev/null
++++ b/scripts/validate_release_2118.py
+@@ -0,0 +1,34 @@
++#!/usr/bin/env python3
++"""Run the complete regression suite and preserve failure evidence immediately."""
++import importlib.metadata
++import json
++from pathlib import Path
++import sys
++import pytest
++ROOT = Path(__file__).resolve().parent.parent
++sys.path.insert(0, str(ROOT))
++from app.mcp_contract import SERVER_VERSION
++OUT = ROOT / 'verification' / SERVER_VERSION
++OUT.mkdir(parents=True, exist_ok=True)
++
++class Evidence:
++    def __init__(self):
++        self.failures = []
++        self.counts = {'passed': 0, 'failed': 0, 'skipped': 0}
++        (OUT / 'test_failures.txt').write_text('')
++        (OUT / 'failed_nodeids.json').write_text('[]\n')
++    def pytest_runtest_logreport(self, report):
++        if report.failed:
++            self.failures.append(report.nodeid)
++            with (OUT / 'test_failures.txt').open('a') as stream:
++                stream.write(report.nodeid + '\n' + str(report.longrepr) + '\n\n')
++            (OUT / 'failed_nodeids.json').write_text(json.dumps(self.failures, indent=2))
++        if report.when == 'call' or (report.when == 'setup' and report.outcome != 'passed'):
++            self.counts[report.outcome] = self.counts.get(report.outcome, 0) + 1
++    def pytest_sessionfinish(self, session, exitstatus):
++        versions = {name: importlib.metadata.version(name) for name in ('mcp','uvicorn','fastapi','pydantic','anyio','pytest')}
++        (OUT / 'pytest_summary.json').write_text(json.dumps({'exit_code':int(exitstatus),
++            'counts':self.counts, 'failed_nodeids':self.failures, 'runtime_versions':versions},indent=2)+'\n')
++
++if __name__ == '__main__':
++    raise SystemExit(pytest.main(['tests','-q','--disable-warnings','--durations=10', *sys.argv[1:]], plugins=[Evidence()]))
+--- /dev/null
++++ b/tests/conftest.py
+@@ -0,0 +1,13 @@
++"""Isolate optional parallel test workers from shared runtime cache files."""
++import os
++from pathlib import Path
++import tempfile
++
++
++def pytest_configure(config):
++    if not hasattr(config, 'workerinput'):
++        return
++    state = Path(tempfile.mkdtemp(prefix='burhaniya-tests-' + config.workerinput['workerid'] + '-'))
++    os.environ['RESULT_CACHE_PATH'] = str(state / 'results.sqlite3')
++    os.environ['TRAFFIC_METRICS_PATH'] = str(state / 'traffic.sqlite3')
++    os.environ['MONITOR_SUMMARY_PATH'] = str(state / 'monitor-history.json')
+--- a/tests/test_engineering_2115.py
++++ b/tests/test_engineering_2115.py
+@@ -11,7 +11,7 @@
+ 
+ @pytest.mark.parametrize('book,seq',[('b41',131),('b31',90),('b37',156),('b37',67),('b14',246)])
+ def test_get_page_is_the_exact_coordinate_authority(book,seq):
+-    raw=db.get_page(book,seq)['text'];page=get_page(book,seq)
++    raw=db.get_page(book,seq)['text'];page=get_page(book,seq,detail='full')
+     assert page['text']==raw
+     cc=page['coordinate_contract']
+     assert cc['offset_unit']=='unicode_codepoint' and cc['range']=='[start,end)'
+--- a/tests/test_mcp_contract.py
++++ b/tests/test_mcp_contract.py
+@@ -82,9 +82,9 @@
+         self.assertIn('ResponseMode = Literal["compact", "ultra_compact"]', self.source)
+ 
+     def test_hard_versioned_instructions_explain_incomplete_discovery(self):
+-        self.assertEqual(SERVER_VERSION, "2.10.17")
++        self.assertEqual(SERVER_VERSION, "2.10.18")
+         self.assertEqual(TOOL_CONTRACT_ID, "alburhaniya-tools-v15")
+-        self.assertEqual(TOOL_CONTRACT_VERSION, "15.0")
++        self.assertEqual(TOOL_CONTRACT_VERSION, "15.1")
+         self.assertIn("mcp._mcp_server.version = SERVER_VERSION", self.source)
+         self.assertIn("connector discovery is incomplete", self.source)
+         self.assertIn("get_passage for the precise passage", self.source)
+--- /dev/null
++++ b/tests/test_report_run2_2118.py
+@@ -0,0 +1,122 @@
++"""Regression cases reproduced from the supplied 30 October run-2 report."""
++import json
++import re
++import sqlite3
++from time import perf_counter
++from app.mcp_server import get_book, list_books, get_page, get_passage, search_library
++from app.core import result_cache
++from app.services import library_db as db
++
++
++def test_metadata_defaults_are_small_and_diagnostics_are_opt_in():
++    small = get_book('b14')
++    full = get_book('b14', detail='full')
++    assert 'connector_contract' not in small
++    assert len(json.dumps(small, ensure_ascii=False)) < 1800
++    assert 'connector_contract' in full
++    batch = list_books(projection='full', book_ids=['b14', 'b38'])
++    assert len(json.dumps(batch, ensure_ascii=False)) < 4000
++    assert 'repeated_printed_labels' not in batch['corpus_contract']
++    assert batch['corpus_contract']['books'] == 43
++    assert 'repeated_printed_labels' in list_books(book_ids=['b14'], detail='full')['corpus_contract']
++
++
++def test_passage_summary_keeps_offsets_without_duplicating_source_quote():
++    small = get_passage(match_id='b39-p248-c1137')
++    full = get_passage(match_id='b39-p248-c1137', detail='full')
++    assert small['passage'] == full['passage']
++    assert 'source_quote' not in small['source_span']
++    assert 'source_quote' in full['source_span']
++    assert small['source_span']['start'] == full['source_span']['start']
++    assert 'phases_ms' not in small['timing']
++    assert 'text_sha256' not in small['coordinate_contract']
++
++
++def test_hamza_discovery_unions_both_spellings_but_preserves_literal_census():
++    params = dict(limit=20, include_counts=True, diversify_books=False, detail='full')
++    a = search_library(query='اسم الله الاعظم', **params)
++    b = search_library(query='اسم الله الأعظم', **params)
++    assert not a.get('error') and not b.get('error')
++    assert a['effective_match_mode'] == b['effective_match_mode'] == 'spelling_discovery'
++    assert {(h['book_id'], h['seq']) for h in a['results']} == {(h['book_id'], h['seq']) for h in b['results']}
++    assert len(a['results']) >= 5
++    assert a['literal_matching_pages'] != b['literal_matching_pages']
++    from app.services.compact_response import decode_search_response
++    assert all(h['answer_verified'] is False for h in decode_search_response(a)['results'])
++    literal = search_library(query='اسم الله الاعظم', match_mode='exact', **params)
++    assert literal['effective_match_mode'] == 'exact'
++    assert literal['literal_matching_pages'] == a['literal_matching_pages']
++
++
++def test_english_stopwords_and_context_are_bounded():
++    result = search_library(query='what is dhikr', context_chars=40, detail='full')
++    assert result['results']
++    for hit in result['results']:
++        marks = re.findall(r'<mark>(.*?)</mark>', hit['excerpt'])
++        assert marks and all('dhikr' in term.lower() for term in marks)
++        assert len(hit['excerpt']) < 300
++    assert not db._build_highlight_regex('is').search('This wisdom exists')
++
++
++def test_invalid_selectors_are_client_errors_with_useful_page_range(tmp_path, monkeypatch):
++    from app.core.config import get_settings
++    from app.services.traffic_metrics import traffic_summary
++    monkeypatch.setattr(get_settings(), 'traffic_metrics_path', str(tmp_path / 'metrics.db'))
++    unknown = get_book('b99')
++    invalid = get_page('b14', 999)
++    assert 'b14' in unknown['error']['message']
++    assert '1–255' in invalid['error']['message']
++    assert not {'retry', 'retry_scope', 'candidate_counts', 'stage'} & invalid.keys()
++    summary = traffic_summary()
++    assert summary['client_errors'] == 2 and summary['failed'] == 0
++
++
++def test_lexeme_census_repeat_uses_result_cache():
++    result_cache.clear()
++    params = dict(query='ذكر', match_mode='lexeme', include_counts=True, limit=2, detail='full')
++    first = search_library(**params)
++    started = perf_counter()
++    second = search_library(**params)
++    elapsed = perf_counter() - started
++    assert not first.get('error') and first['completion'] == 'full'
++    assert second['cache']['status'] == 'hit'
++    assert first['retrieval_hit_count'] == second['retrieval_hit_count']
++    assert first['literal_occurrences'] == second['literal_occurrences']
++    assert elapsed < 1
++
++
++def test_parallel_analysis_does_not_read_conjunction_as_annihilation():
++    from scripts.research_indexes import curated_analysis
++    assert curated_analysis('فان')[1] != 'فني'
++    assert curated_analysis('فناء')[1] == 'فني'
++
++
++def test_footnote_blocks_agree_with_content_type():
++    page = get_page('b14', 247)
++    if 'footnote' in page['content_types']:
++        assert any(block['type'] == 'footnote' for block in page['evidence_blocks'])
++
++
++def test_utf8_ingestion_decodes_transport_entities(tmp_path):
++    from scripts.book_parser import parse_utf8_pages
++    source = tmp_path / 'book.json'
++    source.write_text(json.dumps([{'paragraphs': ['It&#x27;s &quot;dhikr&quot;.']}]))
++    assert parse_utf8_pages(str(source))[0]['paragraphs'] == ['It\'s "dhikr".']
++
++
++def test_parallel_roots_have_source_witnesses_and_exclude_fain_false_positives():
++    result = get_passage(stable_id='b14-q091-b002', include_parallels=True)
++    assert not result.get('error')
++    candidates = result['parallel_candidates']
++    assert candidates
++    assert not {'b14-q031-b018', 'b14-q056-b026'} & {item['candidate_stable_id'] for item in candidates}
++    for item in candidates:
++        for side in ('source', 'candidate'):
++            assert all(item['root_evidence'][side][root] for root in json.loads(item['shared_roots']))
++        assert item['citation_safe'] is False
++
++
++def test_source_corruption_is_flagged_without_changing_the_quote():
++    page = get_page('b39', 248)
++    assert any(entry['status'] == 'original_scan_required' for entry in page['text_errata'])
++    assert page['text'] == db.get_page('b39', 248)['text']

@@ -1,0 +1,13 @@
+# Add this file LAST to the existing Docker Compose file list.
+# Example: docker compose -f docker-compose.yml -f docker-compose.override.yml \
+#          -f backend/deploy/compose.state.yml up -d --build --no-deps backend
+services:
+  backend:
+    environment:
+      TRAFFIC_METRICS_PATH: /var/lib/burhaniya/traffic.sqlite3
+      MONITOR_SUMMARY_PATH: /var/lib/burhaniya/monitor-history.json
+      RESULT_CACHE_PATH: /var/lib/burhaniya/result-cache.sqlite3
+    volumes:
+      - burhaniya_observations:/var/lib/burhaniya
+volumes:
+  burhaniya_observations:

@@ -15,6 +15,7 @@ so build_index.py doesn't need to care which path a given book came from.
 """
 from __future__ import annotations
 import json
+import html
 import re
 
 ANCHOR = "</div></ul></td></tr></table><ul><p>"
@@ -163,6 +164,9 @@ def parse_utf8_pages(raw_path: str) -> list[dict]:
     for i, page in enumerate(pages):
         if "paragraphs" not in page:
             raise ValueError(f"{raw_path}: page {i} missing 'paragraphs'")
+        # Decode transport entities once, before indexing and assigning source
+        # offsets. Original JSON remains untouched for provenance review.
+        page["paragraphs"] = [html.unescape(paragraph) for paragraph in page["paragraphs"]]
         page.setdefault("printed_page", None)
         page.setdefault("page_label", None)
 

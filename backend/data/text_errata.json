@@ -1,1 +1,34 @@
-{"policy":"Preserve source quotation. Proposed readings are never applied silently.","entries":[{"book_id":"b39","seq":5,"surface":"لقراءة الأورام","proposed_reading":"لقراءة الأوراد","status":"editorial_proposal_pending_scan","basis":"Parallel wording in b42 seq 4 and supplied developer audit"}],"scan_review":[{"book_id":"b01","printed_label":"70","locations":138,"status":"original_scan_required"},{"book_id":"b42","printed_label":"118","locations":38,"status":"original_scan_required"}]}
+{
+  "policy": "Preserve source quotation. Proposed readings are never applied silently.",
+  "entries": [
+    {
+      "book_id": "b39",
+      "seq": 5,
+      "surface": "لقراءة الأورام",
+      "proposed_reading": "لقراءة الأوراد",
+      "status": "editorial_proposal_pending_scan",
+      "basis": "Parallel wording in b42 seq 4 and supplied developer audit"
+    },
+    {
+      "book_id": "b39",
+      "seq": 248,
+      "surface": "???",
+      "status": "original_scan_required",
+      "basis": "Run-2 audit reports missing Quran verse references and a duplicated verse. Preserve quotations until the source scan can be reviewed."
+    }
+  ],
+  "scan_review": [
+    {
+      "book_id": "b01",
+      "printed_label": "70",
+      "locations": 138,
+      "status": "original_scan_required"
+    },
+    {
+      "book_id": "b42",
+      "printed_label": "118",
+      "locations": 38,
+      "status": "original_scan_required"
+    }
+  ]
+}

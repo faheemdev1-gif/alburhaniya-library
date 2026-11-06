@@ -7,8 +7,8 @@ import json
 from typing import Any
 
 
-SERVER_VERSION = "2.10.17"
-TOOL_CONTRACT_VERSION = "15.0"
+SERVER_VERSION = "2.10.18"
+TOOL_CONTRACT_VERSION = "15.1"
 TOOL_CONTRACT_ID = "alburhaniya-tools-v15"
 
 REQUIRED_TOOLS = frozenset({
@@ -34,7 +34,7 @@ SCHEMA_CAPABILITIES = {
         ],
     },
     "get_passage": {
-        "supported_parameters": ["match_id", "match_ids", "stable_id", "qasida_number", "context_mode", "max_chars", "context_chars", "query", "include_parallels", "parallel_limit"],
+        "supported_parameters": ["match_id", "match_ids", "stable_id", "qasida_number", "context_mode", "max_chars", "context_chars", "query", "include_parallels", "parallel_limit", "detail"],
         "selector_policy": "exactly_one; qasida_number_returns_full_structure",
         "selectors": ["match_id", "match_ids", "stable_id", "qasida_number"],
         "parallel_candidates": True,
@@ -44,8 +44,9 @@ SCHEMA_CAPABILITIES = {
         "max_context_pages": 3,
         "numbered_heading_section": True,
     },
-    "get_page": {"default_max_chars": 20000, "declares_truncation": True, "effective_cap_disclosed": True, "ultra_compact": "omits_book_metadata"},
-    "list_books": {"supported_parameters": ["include_legend", "projection", "book_ids"],
+    "get_book": {"supported_parameters": ["book_id", "detail"]},
+    "get_page": {"detail": ["summary", "full"], "default_max_chars": 20000, "declares_truncation": True, "effective_cap_disclosed": True, "ultra_compact": "omits_book_metadata"},
+    "list_books": {"supported_parameters": ["include_legend", "projection", "book_ids", "detail"],
                    "projections": ["compact", "ids", "full"]},
 }
 SCHEMA_DIGEST = hashlib.sha256(

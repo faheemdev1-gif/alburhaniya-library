@@ -11,7 +11,7 @@ from app.services.question_search import anchor_plan
 
 @pytest.mark.parametrize('book,seq',[('b41',131),('b31',90),('b37',156),('b37',67),('b14',246)])
 def test_get_page_is_the_exact_coordinate_authority(book,seq):
-    raw=db.get_page(book,seq)['text'];page=get_page(book,seq)
+    raw=db.get_page(book,seq)['text'];page=get_page(book,seq,detail='full')
     assert page['text']==raw
     cc=page['coordinate_contract']
     assert cc['offset_unit']=='unicode_codepoint' and cc['range']=='[start,end)'

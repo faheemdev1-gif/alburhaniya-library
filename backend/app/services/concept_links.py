@@ -56,9 +56,14 @@ from functools import lru_cache
 import re
 @lru_cache(maxsize=128)
 def source_pattern(group):
-    from app.services.library_db import _build_highlight_regex
-    return re.compile('|'.join(_build_highlight_regex(f,normalization_level='broad',whole_word=True).pattern for f in
-                              dict.fromkeys(x for form in CONCEPT_FORMS[group] for x in (form,'و'+form,'ف'+form,'ب'+form,'ل'+form))))
+    from app.services.library_db import _build_highlight_regex, _DIACRITIC_CLASS
+    # Factor the shared optional clitic instead of compiling five almost
+    # identical copies of every source form during process startup.
+    bases = '|'.join(_build_highlight_regex(form, normalization_level='broad',
+                    whole_word=False).pattern for form in dict.fromkeys(CONCEPT_FORMS[group]))
+    boundary = r'[\w\u064b-\u065f]'
+    return re.compile(r'(?<!' + boundary + r')(?:[وفبل]' + _DIACRITIC_CLASS +
+                      r')?(?:' + bases + r')(?!' + boundary + r')', re.IGNORECASE)
 
 def linked_support(query,text):
     """Uncalibrated local relation signal; no page routing or truth claim."""

@@ -10,6 +10,8 @@ log=logging.getLogger(__name__)
 def record_attempt(request_id,tool,payload,ms):
     from app.mcp_contract import SERVER_VERSION
     outcome=(payload.get('status') or {}).get('execution') if isinstance(payload.get('status'),dict) else 'failed' if payload.get('error') else 'full'
+    if isinstance(payload.get('error'), dict) and payload['error'].get('code') in {'invalid_request', 'invalid_selector'}:
+        outcome = 'client_error'
     event={'request_id':request_id,'tool':tool,'build':SERVER_VERSION,'execution':outcome,'ms':round(ms,3),'timestamp':time.time()}
     try:
         with sqlite3.connect(get_settings().traffic_metrics_path,timeout=.05) as c:
@@ -28,7 +30,7 @@ def traffic_summary():
             rows=c.execute('SELECT execution,ms,timestamp FROM attempts WHERE timestamp>=? AND build=?',(time.time()-7*86400,SERVER_VERSION)).fetchall()
         times=sorted(x[1] for x in rows);n=len(rows)
         return {'scope':'all_tool_attempts_for_current_build','build':SERVER_VERSION,'persistence_scope':persistence,'attempts_7d':n,
-                'failed':sum(x[0]=='failed' for x in rows),'partial':sum(x[0]=='partial' for x in rows),
+                'client_errors':sum(x[0]=='client_error' for x in rows),'failed':sum(x[0]=='failed' for x in rows),'partial':sum(x[0]=='partial' for x in rows),
                 'p95_ms':times[math.ceil(.95*n)-1] if n else None,
                 'observed_days':round((max(x[2] for x in rows)-min(x[2] for x in rows))/86400,3) if n else 0,
                 'production_acceptance':'pending_independent_deployed_observation'}

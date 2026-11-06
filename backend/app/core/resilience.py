@@ -86,7 +86,7 @@ def safe_tool_call(function):
                     payload["error"] = {"code":"invalid_selector", "message":payload["error"],
                                         "retryable":False,"request_id":request_id}
                 payload["contract"] = dict(TOOL_META)
-                if payload.get('error'):
+                if search_call and payload.get('error'):
                     from app.services.question_search import SEARCH_STATE
                     state=SEARCH_STATE.get() or {}
                     payload['stage']=state.get('stages_completed',['validation_or_initial_candidates'])[-1] if state.get('stages_completed') else 'validation_or_initial_candidates'
@@ -98,6 +98,16 @@ def safe_tool_call(function):
                     payload['retry_scope']='original_intent_unreviewed'
                     for key in ('book_ids','source_code','page_from','page_to','qasida_number','min_tier','operator','include_toc'):
                         if key in kwargs:payload['retry'][key]=kwargs[key]
+                if function.__name__ == 'get_passage':
+                    from app.services.source_quality import warnings
+                    for item in payload.get('results', [payload]):
+                        if isinstance(item, dict) and item.get('book_id') and item.get('seq'):
+                            errata = warnings(item['book_id'], item['seq'])
+                            if errata:
+                                item['text_errata'] = errata
+                if kwargs.get('detail', 'summary') != 'full':
+                    from app.services.response_projection import summarize_payload
+                    payload = summarize_payload(payload, function.__name__)
                 payload["request_id"] = request_id
                 if function.__name__=='search_library':
                     has_evidence=bool(payload.get('results'))
@@ -114,7 +124,7 @@ def safe_tool_call(function):
                 phases=phase_snapshot();phases['queue_wait']=round(QUEUE_WAIT.get(),3);phases['authentication']=round(AUTH_TIME.get(),3)
                 payload['timing']={'total_ms':round(sum(phases.values()),3),'attempts':attempts,'phases_ms':phases,'phase_semantics':'exclusive','scope':'tool_execution_plus_measured_queue_and_auth; excludes network and final transport serialization'}
                 if expired():payload['truncated_by_budget']=True
-                if function.__name__=='search_library' and kwargs.get('detail','summary')!='full':
+                if kwargs.get('detail','summary')!='full':
                     payload['timing']={'total_ms':payload['timing']['total_ms'],'scope':payload['timing']['scope']}
                 from app.services.traffic_metrics import record_attempt
                 record_attempt(request_id,function.__name__,payload,(time.perf_counter()-started)*1000)
@@ -136,7 +146,7 @@ def safe_tool_call(function):
                 check()
                 from app.core import result_cache
                 k=None;cache_started=time.perf_counter()
-                if function.__name__=='search_library' and not (kwargs.get('include_counts') or kwargs.get('check_completeness')):
+                if function.__name__=='search_library' and not kwargs.get('check_completeness'):
                     k=result_cache.key(function.__name__,args,call_kwargs)
                     cached=result_cache.get(k)
                     if cached is not None:

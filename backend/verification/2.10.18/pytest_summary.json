@@ -1,0 +1,19 @@
+{
+  "exit_code": 1,
+  "counts": {
+    "passed": 368,
+    "failed": 1,
+    "skipped": 0
+  },
+  "failed_nodeids": [
+    "tests/test_live_audit_regressions.py::test_comparison_finds_primary_source_and_avoids_unrelated_relief"
+  ],
+  "runtime_versions": {
+    "mcp": "1.28.1",
+    "uvicorn": "0.32.1",
+    "fastapi": "0.111.0",
+    "pydantic": "2.11.10",
+    "anyio": "4.15.1",
+    "pytest": "8.4.2"
+  }
+}

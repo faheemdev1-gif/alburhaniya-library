@@ -1,0 +1,83 @@
+tests/test_deployment_startup.py::test_assigned_port_foreground_health_and_shutdown
+tmp_path = PosixPath('/tmp/pytest-of-agent/pytest-7/test_assigned_port_foreground_0')
+
+    def test_assigned_port_foreground_health_and_shutdown(tmp_path):
+        with socket.socket() as sock:
+            sock.bind(("0.0.0.0", 0))
+            port = sock.getsockname()[1]
+        with (tmp_path / "server.log").open("w+") as log:
+            server = subprocess.Popen(
+                [sys.executable, str(LAUNCHER)], cwd=tmp_path,
+                env={**os.environ, "PORT": str(port), "LIBRARY_DB_PATH": "library.db",
+                     "ENABLE_LEGACY_MEILISEARCH": "false"},
+                stdout=log, stderr=log,
+            )
+            try:
+                deadline = time.monotonic() + 20
+                with httpx.Client(trust_env=False, timeout=1) as client:
+                    while time.monotonic() < deadline:
+                        assert server.poll() is None, "Server exited before readiness"
+                        try:
+                            response = client.get(f"http://127.0.0.1:{port}/health")
+                            if response.status_code == 200:
+                                break
+                        except httpx.HTTPError:
+                            pass
+                        time.sleep(0.1)
+                    else:
+>                       pytest.fail("Assigned port never became healthy")
+E                       Failed: Assigned port never became healthy
+
+tests/test_deployment_startup.py:64: Failed
+
+tests/test_engineering_2116.py::test_excerpt_contains_the_full_source_span_and_requested_context[\u0645\u0627\u0630\u0627 \u064a\u0646\u0627\u0644 \u0645\u0646 \u064a\u062d\u0628 \u0633\u064a\u062f\u0646\u0627 \u0645\u062d\u0645\u062f-auto]
+query = 'ماذا ينال من يحب سيدنا محمد', match_mode = 'auto'
+
+    @pytest.mark.parametrize('query,match_mode',[
+     ('الخلوة','exact'),('الخلوة المراقبة','terms'),('الأوراد','lexeme'),
+     ('ماذا ينال من يحب سيدنا محمد','auto'),
+    ])
+    def test_excerpt_contains_the_full_source_span_and_requested_context(query,match_mode):
+     import html,re
+     result_cache.clear()
+     r=search_library(query=query,match_mode=match_mode,limit=5,context_chars=40,detail='full')
+     assert not r.get('error') and r['results']
+     for hit in r['results']:
+      text=db.get_page(hit['book_id'],hit['seq'])['text'];span=hit['evidence_span']
+      shown=html.unescape(re.sub(r'</?mark>','',hit['excerpt']))
+>     assert text[span['start']:span['end']] in shown
+E     AssertionError: assert 'محبة النبي، محبة ربنا، ما حد يقدر يقول ده مكتسب، يقدر يشتريه أو يقرضه أو يلقاه واقع أو يستلفه ما فيش، إذا ظن ظان بإنه المحبة مكتسبة عمل لمعرفة الله تمن، عمل المعرفة الله تمن، وده ما ممكن يقولوا الرؤساء: قد كنت أحسب أن حبك ... ' in '…الأولياء، محبة الصحابة، محبة أهل البيت، محبة النبي، محبة ربنا، ما حد يقدر يقول ده مكتسب، يقدر يشتريه أو يقرضه أو يلق... أو يستلفه ما فيش، إذا ظن ظان بإنه المحبة مكتسبة عمل لمعرفة الله تمن، عمل المعرفة الله تمن، وده ما ممكن يقولوا الرؤسا…'
+
+tests/test_engineering_2116.py:121: AssertionError
+
+tests/test_release_270.py::Release270Tests::test_equal_count_substitutions_are_detected_in_all_scopes
+self = <test_release_270.Release270Tests testMethod=test_equal_count_substitutions_are_detected_in_all_scopes>
+
+    def test_equal_count_substitutions_are_detected_in_all_scopes(self):
+        scopes = [dict(query='طمأنينة'),dict(queries=['إيمان','مسألة'],operator='OR'),
+            dict(queries=['إيمان','مسألة'],operator='AND'),
+            dict(query='طمأنينة',source_code='primary'),dict(query='الله',book_ids=['b38'])]
+        original = db.record_candidates
+        for args in scopes:
+            with self.subTest(args=args):
+                query = args.get('queries') or [args['query']]
+                scope={k:v for k,v in args.items() if k in ('source_code','book_ids')}
+                literals=db._matching_page_ids(query,operator=args.get('operator','OR'),**scope)
+                self.assertTrue(literals)
+                omitted=sorted(literals)[0]
+                def substitute(ids,per_query=None):
+                    ids=set(ids)
+                    if omitted in ids:
+                        ids.remove(omitted);ids.add(('b99',999))
+                    changed={q:(set(v)-{omitted}) for q,v in (per_query or {}).items()}
+                    original(ids,changed)
+                with patch.object(db,'record_candidates',side_effect=substitute):
+                    r=search_library(**args,match_mode='lexeme',limit=2,check_completeness=True)
+                self.assertNotIn('error',r)
+>               self.assertEqual(r['retrieval_completeness']['status'],'warning')
+E               AssertionError: 'ok' != 'warning'
+E               - ok
+E               + warning
+
+tests/test_release_270.py:82: AssertionError
+

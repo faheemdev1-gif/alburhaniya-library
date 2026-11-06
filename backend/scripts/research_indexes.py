@@ -23,8 +23,8 @@ from app.core.arabic_utils import normalize_arabic  # noqa: E402
 
 
 ARABIC_TOKEN_RE = re.compile(r"[\u0621-\u06ff]+")
-ANALYSIS_VERSION = "curated-arabic-roots-v1"
-PARALLEL_VERSION = "diwan-shared-rare-roots-v1"
+ANALYSIS_VERSION = "curated-arabic-roots-v2"
+PARALLEL_VERSION = "diwan-shared-rare-roots-v2"
 
 # root -> (lemma, explicitly audited normalized forms)
 _CURATED_FAMILIES: dict[str, tuple[str, set[str]]] = {
@@ -32,7 +32,7 @@ _CURATED_FAMILIES: dict[str, tuple[str, set[str]]] = {
     "غني": ("غني", {"غني", "غني", "غناء", "اغتني", "استغني", "مغني"}),
     "فقر": ("فقر", {"فقر", "فقير", "فقراء", "افتقر", "افتقار", "مفتقر"}),
     "وصل": ("وصل", {"وصل", "وصال", "واصل", "موصول"}),
-    "فني": ("فني", {"فني", "فناء", "فان"}),
+    "فني": ("فني", {"فني", "فناء"}),
     "بقي": ("بقي", {"بقي", "بقاء", "باق"}),
     "حمد": ("حمد", {"حمد", "احمد", "محمد", "محمود"}),
     "علم": ("علم", {"علم", "عالم", "علوم", "معلوم", "معلم"}),

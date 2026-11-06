@@ -1,0 +1,32 @@
+{
+  "book_summary": {
+    "ms": 8.651,
+    "json_chars": 1247
+  },
+  "catalogue_two_full_books": {
+    "ms": 248.222,
+    "json_chars": 2764
+  },
+  "cold_lexeme_census": {
+    "ms": 1553.109,
+    "completion": "full",
+    "cache": {
+      "status": "miss",
+      "scope": "shared_sqlite_with_process_fallback",
+      "corpus_bound": true
+    },
+    "retrieval_hit_count": 1329,
+    "literal_matching_pages": 636
+  },
+  "warm_lexeme_census": {
+    "ms": 1.877,
+    "completion": "full",
+    "cache": {
+      "status": "hit",
+      "scope": "shared_sqlite_with_process_fallback",
+      "corpus_bound": true
+    },
+    "retrieval_hit_count": 1329,
+    "literal_matching_pages": 636
+  }
+}

@@ -18,6 +18,7 @@ Token budget rule of thumb:
 """
 from __future__ import annotations
 import os
+import json
 import re
 import sqlite3
 import threading
@@ -183,7 +184,7 @@ def _build_highlight_regex(
         word_patterns.append(_DIACRITIC_CLASS.join(parts) + _DIACRITIC_CLASS)
     pattern = r"(?:[\s\u060c\u061b\u061f،؛؟.,:;!()\[\]{}]+)".join(word_patterns)
     if whole_word:
-        pattern = rf"(?<!{_ARABIC_BOUNDARY}){pattern}(?!{_ARABIC_BOUNDARY})"
+        pattern = rf"(?<![\w\u064b-\u065f]){pattern}(?![\w\u064b-\u065f])"
     return re.compile(pattern, re.IGNORECASE)
 
 
@@ -225,16 +226,17 @@ def _build_exact_variant_regex(
 
 
 def _indexable_text(text: str) -> str:
-    """Return authorial/page text eligible for search and census.
+    from app.core.evidence_blocks import INCLUDE_TOC
+    return _indexable_cached(text or "", INCLUDE_TOC.get())
 
-    Only an explicit footnote rule is removed. Ambiguous inline parenthetical
-    material remains indexed; conservative exclusion is safer than silently
-    deleting source prose.
-    """
-    marker = _FOOTNOTE_SEPARATOR_RE.search(text or "")
-    value = text[:marker.start()].rstrip() if marker else (text or "")
-    from app.core.evidence_blocks import INCLUDE_TOC, body_text
-    return value if INCLUDE_TOC.get() else body_text(value)
+
+@lru_cache(maxsize=8192)
+def _indexable_cached(text: str, include_toc: bool) -> str:
+    """Cache pure source transformations, separately for each navigation scope."""
+    marker = _FOOTNOTE_SEPARATOR_RE.search(text)
+    value = text[:marker.start()].rstrip() if marker else text
+    from app.core.evidence_blocks import body_text
+    return value if include_toc else body_text(value)
 
 
 @lru_cache(maxsize=8192)
@@ -320,7 +322,7 @@ def _make_snippet(plain_text: str, pattern: re.Pattern, radius: int = 120) -> st
         window = plain_text[start:end]
         prefix = "…" if start > 0 else ""
         suffix = "…" if end < len(plain_text) else ""
-    highlighted_window, _ = _highlight(window, pattern)
+    highlighted_window, _ = _highlight(_esc(window, quote=False), pattern)
     return prefix + highlighted_window + suffix
 
 
@@ -446,7 +448,17 @@ def get_page(book_id: str, seq: int) -> dict | None:
     d["content_types"] = content_types(d["text"])
     from app.core.evidence_blocks import blocks
     d["evidence_blocks"] = blocks(d["text"], d["block_type"])
+    footnote = _FOOTNOTE_SEPARATOR_RE.search(d["text"])
+    if footnote:
+        boundary = footnote.start()
+        d["evidence_blocks"] = [dict(block, end=min(block['end'], boundary))
+                                for block in d["evidence_blocks"] if block['start'] < boundary]
+        d["evidence_blocks"].append({'type': 'footnote', 'start': boundary, 'end': len(d['text'])})
     d.update(citation_metadata(book_id, seq, d["printed_page"]))
+    from app.services.source_quality import warnings
+    errata = warnings(book_id, seq)
+    if errata:
+        d["text_errata"] = errata
     d["has_prev"] = seq > 1
     d["has_next"] = seq < d["total_pages"]
     return d
@@ -582,19 +594,35 @@ def _indexed_spellings(path: str, mtime_ns: int, size: int) -> dict[str, tuple[s
     return {key: tuple(sorted(value)) for key, value in forms.items()}
 
 
+@lru_cache(maxsize=4096)
+def _spelling_subset(path: str, mtime_ns: int, size: int, keys: tuple[str, ...]) -> dict:
+    conn = _connection()
+    if not conn.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='lexeme_spellings'").fetchone():
+        vocabulary = _indexed_spellings(path, mtime_ns, size)
+        return {key: vocabulary.get(key, ()) for key in keys}
+    forms = {}
+    for offset in range(0, len(keys), 400):
+        batch = keys[offset:offset + 400]
+        placeholders = ','.join('?' for _ in batch)
+        for normalized, surface in conn.execute(
+                'SELECT normalized,surface FROM lexeme_spellings WHERE normalized IN (' + placeholders + ')', batch):
+            forms.setdefault(normalized, []).append(surface)
+    return {key: tuple(sorted(value)) for key, value in forms.items()}
+
+
 def _lexeme_index_forms(query: str) -> list[str]:
     path = os.path.abspath(get_settings().library_db_path)
     stat = os.stat(path)
-    vocabulary = _indexed_spellings(path, stat.st_mtime_ns, stat.st_size)
     words = safe_tokens(query)
     if len(words) != 1:
         raise ValueError("lexeme search supports one Arabic word per query")
     forms = set(safe_term_variants(words[0]))
-    for stem in _lexeme_stems(words[0]):
-        for prefix in _LEXEME_PREFIXES:
-            for suffix in _LEXEME_SUFFIXES:
-                key = normalize_search_text(prefix + stem + suffix, level="broad")
-                forms.update(vocabulary.get(key, ()))
+    keys = tuple(sorted({normalize_search_text(prefix + stem + suffix, level="broad")
+                         for stem in _lexeme_stems(words[0])
+                         for prefix in _LEXEME_PREFIXES for suffix in _LEXEME_SUFFIXES}))
+    vocabulary = _spelling_subset(path, stat.st_mtime_ns, stat.st_size, keys)
+    for values in vocabulary.values():
+        forms.update(values)
     # A written taa marbuta is not a possessive haa. The broad index unifies
     # them for candidate discovery, but citation-capable lexemes must not.
     if normalize_search_text(words[0], level="safe").endswith("ة"):
@@ -730,6 +758,7 @@ def _search_filters(
     return sql, params
 
 
+@__import__("app.core.census_cache",fromlist=["cached_census"]).cached_census
 def _matching_page_ids(queries, operator="OR", search_mode="exact_phrase", whole_word=True, **scope):
     """Eligible source identities, before ranking, thresholds or pagination."""
     expression = _fts_expression(queries, operator, search_mode)
@@ -1035,14 +1064,14 @@ def _evidence_excerpt(
     radius = max(0, min(radius, 300))
     left = max(0, start - radius)
     right = min(len(text), max(end, start + 1) + radius)
-    excerpt = _esc(text[left:right])
+    excerpt = _esc(text[left:right], quote=False)
     if patterns:
         union = re.compile("(?:" + "|".join(p.pattern for p in patterns) + ")", re.IGNORECASE)
         excerpt, _ = _highlight(excerpt, union)
     return ("…" if left else "") + excerpt + ("…" if right < len(text) else "")
 
 
-_ARABIC_TOKEN_RE = re.compile(r"[\u0621-\u06ff]+")
+_ARABIC_TOKEN_RE = re.compile(r"[\u0621-\u06ff]+|[A-Za-z]+")
 
 
 def _content_query_terms(raw_queries: list[str]) -> list[tuple[str, str]]:
@@ -1052,7 +1081,7 @@ def _content_query_terms(raw_queries: list[str]) -> list[tuple[str, str]]:
         for match in _ARABIC_TOKEN_RE.finditer(query):
             display = match.group(0)
             normalized = normalize_arabic(display, aggressive=True)
-            if normalized and normalized not in ARABIC_STOPWORDS:
+            if normalized and normalized.lower() not in ARABIC_STOPWORDS:
                 terms.append((display, normalized))
     return terms
 
@@ -1443,7 +1472,7 @@ def search(
             snippet = _make_snippet(plain_text, pattern, radius=context_chars)
         else:
             occ = 0
-            snippet = _esc(plain_text[: context_chars * 2])
+            snippet = _esc(plain_text[: context_chars * 2], quote=False)
             if len(plain_text) > context_chars * 2:
                 snippet += "…"
 
@@ -1514,39 +1543,18 @@ def search(
             result["matched_terms"] = _matched_literal_terms(
                 plain_text, raw_queries, first_match, evidence_end,
             )
-        result["evidence_type"] = evidence_type(
-            source_text, first_match, evidence_end,
-        )
+        # Only block type participates in ranking. Expensive source metadata,
+        # speaker analysis and structural parsing run after pagination.
         result["block_type"] = block_at(source_text, first_match, row["block_type"])
-        result.update(citation_metadata(row["book_id"], row["seq"], row["printed_page"]))
-        result["evidence_type_scope"] = "start_anchor"
-        result["evidence_type"] = evidence_type(source_text, first_match, first_match + 1)
-        result["evidence_type_method"] = "heuristic"
-        result["evidence_type_confidence"] = "unverified"
         result["whole_word"] = bool(whole_word)
-        result["normalization_level"] = (
-            "broad_discovery" if search_mode == "lexeme" else "safe"
-        )
+        result["normalization_level"] = "broad_discovery" if search_mode == "lexeme" else "safe"
         result["footnotes_excluded"] = True
-        if row["book_id"] == "b14":
-            result.update(_structural_identity(
-                plain_text, first_match, evidence_end, row["qasida_number"],
-                row["qasida_bayt_count"],
-            ))
         result["match_id"] = f"{row['book_id']}-p{row['seq']}-c{first_match}"
         result["evidence_span"] = {
             "start": first_match,
             "end": evidence_end,
             "excerpt": result["snippet"],
         }
-        from app.core.attribution import attribution_at
-        result.update(attribution_at(source_text, first_match, evidence_end))
-        if include_full_text:
-            safe_text = _esc(source_text)
-            for pattern in patterns:
-                safe_text, _ = _highlight(safe_text, pattern)
-            result["highlight"] = safe_text
-            result["text"] = source_text
         results.append(result)
         if _audit_candidates:
             for q, pat in zip(raw_queries, patterns):
@@ -1607,6 +1615,26 @@ def search(
     record_phase("ranking_and_pagination", phase_started)
     for rank, item in enumerate(results, start=requested_offset + 1):
         item["rank"] = rank
+        page = get_page(item['book_id'], item['seq'])
+        source_text = page['text']
+        first_match = item['evidence_span']['start']
+        evidence_end = item['evidence_span']['end']
+        item.update(citation_metadata(item['book_id'], item['seq'], item['printed_page']))
+        item['evidence_type'] = evidence_type(source_text, first_match, first_match + 1)
+        item['evidence_type_scope'] = 'start_anchor'
+        item['evidence_type_method'] = 'heuristic'
+        item['evidence_type_confidence'] = 'unverified'
+        if item['book_id'] == 'b14':
+            item.update(_structural_identity(_indexable_text(source_text), first_match, evidence_end,
+                                           page['qasida_number'], page['qasida_bayt_count']))
+        from app.core.attribution import attribution_at
+        item.update(attribution_at(source_text, first_match, evidence_end))
+        if include_full_text:
+            safe_text = _esc(source_text)
+            for pattern in patterns:
+                safe_text, _ = _highlight(safe_text, pattern)
+            item['highlight'] = safe_text
+            item['text'] = source_text
     return results
 
 
@@ -2295,7 +2323,22 @@ def get_parallel_candidates(stable_id: str, limit: int = 5) -> list[dict]:
            ORDER BY d.rarity_score DESC, d.candidate_stable_id LIMIT ?""",
         (stable_id, max(1, min(int(limit), 20))),
     ).fetchall()
-    return [dict(row) | {"citation_safe": bool(row["citation_safe"])} for row in rows]
+    results = []
+    for row in rows:
+        item = dict(row) | {"citation_safe": bool(row["citation_safe"])}
+        roots = json.loads(item['shared_roots'])
+        evidence = {}
+        for key, identity in [('source', stable_id), ('candidate', item['candidate_stable_id'])]:
+            tokens = _connection().execute(
+                'SELECT root,surface_form FROM tokens WHERE stable_id=? AND root IS NOT NULL ORDER BY position',
+                (identity,)).fetchall()
+            evidence[key] = {root: list(dict.fromkeys(t['surface_form'] for t in tokens if t['root'] == root))
+                             for root in roots}
+        # An old/mismatched index must never expose an unsupported root claim.
+        if all(evidence[side][root] for side in evidence for root in roots):
+            item['root_evidence'] = evidence
+            results.append(item)
+    return results
 
 
 @lru_cache(maxsize=1)

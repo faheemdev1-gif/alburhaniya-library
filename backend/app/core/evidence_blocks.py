@@ -19,8 +19,11 @@ def block_at(text, start, page_type='body'):
     return next((b['type'] for b in blocks(text,page_type) if b['start']<=start<b['end']),page_type)
 
 def body_text(text, page_type='body'):
+    evidence = blocks(text,page_type)
+    if not any(b['type'] == 'toc' for b in evidence):
+        return text
     chars=list(text)
-    for b in blocks(text,page_type):
+    for b in evidence:
         if b['type']=='toc':chars[b['start']:b['end']]=' '*(b['end']-b['start'])
     return ''.join(chars)
 
