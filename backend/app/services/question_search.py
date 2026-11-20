@@ -137,6 +137,17 @@ def sense_conflict(query, text, start, end):
     describing physical growth cannot stand in for the noun الكِبْر.
     """
     normalized_query=normalize_search_text(query,level='broad')
+    # An expression elsewhere on the page must not exclude unrelated evidence.
+    # Check overlap with the cited span in both literal and ranked paths.
+    for subject, expression in (("العجب", "العجب كل العجب"),
+                                ("الفناء", "كتب على نفسه البقاء وعلى الدنيا الفناء")):
+        if subject in normalized_query and expression not in normalized_query:
+            for match in db._build_highlight_regex(expression, whole_word=True).finditer(
+                    text, max(0, start - 100), min(len(text), end + 100)):
+                if match.start() < end and match.end() > start:
+                    return True
+    if re.search(r'كِبَر|كَبُر', query):
+        return False
     if not re.search(r'(?<![ء-ي])(?:ال|بال|من\s+ال)كبر(?![ء-ي])',normalized_query):
         return False
     local=text[max(0,start-90):min(len(text),end+130)]
@@ -392,13 +403,24 @@ def classify_row(row, query, ap, text, start, end, relation=False):
     directive=bool(re.search(r'عليك|ينبغي|يجب|حافظ|لا تغضب|أربع خصال|أربعة|معنى|عبارة عن|يعني|علامة|إنما\s+الاستعداد|\b(?:هو|هي)\s+أن\b|المراد\s+ب|(?:^|[:؟?\n])\s*نعم\b',window))
     row['question_relevance']='relation_candidate' if relation or (phrase and directive) or row.get('matched_source_question') else 'phrase_candidate' if phrase else 'topic_only'
     frame=ap.get('question_frame') or {}
-    if frame.get('intent')=='signs' and phrase:
-        # A singular or plural sign cue attached to the subject is stronger
-        # than the subject appearing incidentally elsewhere on a page.
-        if (re.search(r'(?:علامة|علامات|من\s+علامات|دليل)\s+'+subject.pattern,window)
-                or re.search(r'(?:وضع|جعل)[^.!؟\n]{0,65}(?:شروط|الشرط)|شروط(?:ا|اً)?[^.!؟\n]{0,80}إذا',window)):
-            row['score']=round(min(.985,row['score']+.20),6)
-            row['question_relevance']='relation_candidate'
+    if frame.get('intent') == 'signs':
+        # Only boost a sign explicitly attached to the subject or a known
+        # multiword expression for it. A bare "truth" mention is insufficient.
+        from app.services.concept_links import CONCEPT_FORMS
+        subjects = [ap['subject_phrase']]
+        for group in row.get('concept_coverage', ()):
+            subjects.extend(form for form in CONCEPT_FORMS[group] if ' ' in form)
+        local = text[max(0, start-80):min(len(text), end+80)]
+        direct_sign = any(db._build_highlight_regex(
+            cue + ' ' + form, normalization_level='broad', whole_word=True
+        ).search(local) for form in subjects for cue in ('علامة', 'علامات', 'دليل'))
+        conditions = phrase and re.search(
+            r'(?:وضع|جعل)[^.!؟\n]{0,65}(?:شروط|الشرط)|شروط(?:ا|اً)?[^.!؟\n]{0,80}إذا', window)
+        if direct_sign or conditions:
+            row['score'] = round(min(.985, row['score'] + .20), 6)
+            row['question_relevance'] = 'relation_candidate'
+            if direct_sign:
+                row['requested_relation_match'] = True
     if (frame.get('presupposition') or re.search(r'بديل|بديلا',query)) and (phrase or any(pattern(t).search(window) for t in ap['anchors'])) and re.search(r'مافيش|لا\s+توجد|أغنت\s+عن|لغى|ألغى|بدل(?:ا)?\s+من',window):
         row['corrects_premise']=True
         row['question_relevance']='relation_candidate'
@@ -555,7 +577,6 @@ def search_questions(**kwargs):
                 if key not in indexed_pages:indexed_pages[key]=db._indexable_text(page['text'])
                 window=indexed_pages[key][left:right]
                 # Filter fixed-expression homographs, never rewrite the source.
-                if re.search(r'العجب كل العجب|كتب على نفسه البقاء وعلى الدنيا الفناء',window):continue
                 from app.services.concept_links import linked_support
                 linked=linked_support(query,window) if not ap.get('focus_word') else None
                 if linked and ap['comparison_subjects'] and linked[3]==['sincerity','praise_desire']:linked=None
@@ -623,7 +644,7 @@ def search_questions(**kwargs):
                 if qa_match:row['matched_source_question']=q
                 classify_row(row,query,ap,page['text'],start,end,relation)
                 matched_ids.add(key)
-                if key not in records or row['score']>records[key]['score']:
+                if key not in records or (bool(row.get('requested_relation_match')), row['score']) > (bool(records[key].get('requested_relation_match')), records[key]['score']):
                     from app.services.hit_contract import canonical_hit
                     canonical_hit(row,page)
                     records[key]=row

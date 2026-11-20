@@ -7,7 +7,7 @@ import json
 from typing import Any
 
 
-SERVER_VERSION = "2.10.18"
+SERVER_VERSION = "2.10.19"
 TOOL_CONTRACT_VERSION = "15.1"
 TOOL_CONTRACT_ID = "alburhaniya-tools-v15"
 

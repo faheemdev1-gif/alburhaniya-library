@@ -11,15 +11,18 @@ def monitoring_summary():
   values=json.loads(Path(path).read_text());values=values if isinstance(values,list) else [values]
   recent=[v for v in values if v.get('event')!='restart' and v.get('timestamp',0)>=time.time()-86400]
   count=sum(v.get('calls',0) for v in recent);passed=sum(v.get('successful',0) for v in recent)
+  planned=sum(v.get('planned_calls',v.get('calls',0)) for v in recent)
+  outages=sum(bool(v.get('session_error')) for v in recent)
   samples=[r for v in recent for r in v.get('results',[])];times=sorted(r['ms'] for r in samples)
   codes=Counter()
   for row in samples:
    if not row.get('ok'):
-    err=row.get('error');codes[(err.get('error',{}).get('code','unknown') if isinstance(err,dict) else str(err))]+=1
+    err=row.get('error');codes[(err.get('code') or err.get('error',{}).get('code','unknown') if isinstance(err,dict) else str(err))]+=1
   oldest=min((v['timestamp'] for v in values if v.get('event')!='restart'),default=time.time())
   restarts=[{'timestamp':v['timestamp'],'server_version':v.get('server_version')} for v in values if v.get('event')=='restart']
   return {'status':'ok' if recent and max(v['timestamp'] for v in recent)>time.time()-900 else 'stale',
-   'samples_24h':count,'success_rate_24h':passed/count if count else None,
+   'samples_24h':count,'planned_calls_24h':planned,'unattempted_calls_24h':planned-count,
+   'session_errors_24h':outages,'scheduled_success_rate_24h':passed/planned if planned else None,'success_rate_24h':passed/count if count else None,
    'p50_ms':times[len(times)//2] if times else None,'p95_ms':times[min(len(times)-1,math.ceil(len(times)*.95)-1)] if times else None,
    'error_codes':dict(codes),'observed_days':round((time.time()-oldest)/86400,3),
    'restarts':restarts[-20:],

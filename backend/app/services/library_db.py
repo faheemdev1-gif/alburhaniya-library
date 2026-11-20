@@ -708,6 +708,8 @@ def _pattern_for_query(
 
 
 def _unique_occurrence_count(text: str, patterns: list[re.Pattern]) -> int:
+    if len(patterns) == 1:
+        return len(_match_spans(text, patterns[0]))
     return len({span for pattern in patterns for span in _match_spans(text, pattern)})
 
 
@@ -775,7 +777,7 @@ def _matching_page_ids(queries, operator="OR", search_mode="exact_phrase", whole
     for row in rows:
         if search_mode in {"exact_phrase", "lexeme"}:
             text = _indexable_text(row["text"])
-            flags = [bool(_match_spans(text, p)) for p in patterns]
+            flags = (bool(_match_spans(text, p)) for p in patterns)
             if not (all(flags) if operator == "AND" else any(flags)):
                 continue
         identities.add((row["book_id"], row["seq"]))
@@ -873,7 +875,7 @@ def search_stats(
     rows = _connection().execute(sql, [expression, *params]).fetchall()
     if count_basis == "phrase":
         def eligible(row, qs, op):
-            flags = [bool(_pattern_for_query(q, "exact_phrase", whole_word=whole_word).search(_indexable_text(row["text"]))) for q in qs]
+            flags = [bool(_match_spans(_indexable_text(row["text"]), _pattern_for_query(q, "exact_phrase", whole_word=whole_word))) for q in qs]
             return all(flags) if op == "AND" else any(flags)
         rows = [r for r in rows if eligible(r, queries, operator)]
     if count_basis == "phrase":
@@ -888,9 +890,12 @@ def search_stats(
     per_query = []
     for query in queries:
         q_expression = _fts_expression([query], "OR", count_mode)
-        q_rows = _connection().execute(sql, [q_expression, *params]).fetchall()
-        if count_basis == "phrase":
-            q_rows = [r for r in q_rows if eligible(r, [query], "OR")]
+        if len(queries) == 1:
+            q_rows = rows
+        else:
+            q_rows = _connection().execute(sql, [q_expression, *params]).fetchall()
+            if count_basis == "phrase":
+                q_rows = [r for r in q_rows if eligible(r, [query], "OR")]
         q_patterns = (
             [_pattern_for_query(query, "exact_phrase", whole_word=whole_word)]
             if count_basis == "phrase"
@@ -903,7 +908,7 @@ def search_stats(
             "query": query,
             "matching_pages": len(q_rows),
             "surface_matching_pages": sum(
-                bool(surface_pattern.search(_indexable_text(r["text"])))
+                bool(_match_spans(_indexable_text(r["text"]), surface_pattern))
                 for r in q_rows
             ),
             "normalized_occurrences": sum(
@@ -917,6 +922,16 @@ def search_stats(
             "count_basis": count_basis,
         })
         per_query[-1]["occurrences"] = per_query[-1]["normalized_occurrences"]
+    if len(per_query) == 1:
+        item = per_query[0]
+        return {
+            **{key: item[key] for key in ("matching_pages", "surface_matching_pages",
+                                          "normalized_occurrences", "surface_occurrences")},
+            "matching_occurrences": item["normalized_occurrences"],
+            "count_basis": count_basis, "whole_word": bool(whole_word),
+            "normalization_level": "safe", "footnotes_excluded": True,
+            "per_query": per_query,
+        }
     normalized_occurrences = sum(
         _unique_occurrence_count(_indexable_text(r["text"]), aggregate_patterns)
         for r in rows
@@ -1531,13 +1546,6 @@ def search(
                 )
         elif search_mode == "lexeme" and raw_queries:
             evidence_end = selected.end() if selected else first_match + 1
-            result["matched_terms"] = {}
-            for raw_query, pat in zip(raw_queries, patterns):
-                local = pat.fullmatch(plain_text[first_match:evidence_end])
-                if local:
-                    result["matched_terms"].update(_matched_lexeme(local.group(0), raw_query))
-            result["selected_queries"] = sorted(result["matched_terms"])
-            result["match_attribution_scope"] = "selected_evidence_span"
         else:
             evidence_end = selected.end() if selected else first_match + 1
             result["matched_terms"] = _matched_literal_terms(
@@ -1619,6 +1627,14 @@ def search(
         source_text = page['text']
         first_match = item['evidence_span']['start']
         evidence_end = item['evidence_span']['end']
+        if search_mode == "lexeme" and raw_queries:
+            item["matched_terms"] = {}
+            for raw_query, pat in zip(raw_queries, patterns):
+                local = pat.fullmatch(source_text[first_match:evidence_end])
+                if local:
+                    item["matched_terms"].update(_matched_lexeme(local.group(0), raw_query))
+            item["selected_queries"] = sorted(item["matched_terms"])
+            item["match_attribution_scope"] = "selected_evidence_span"
         item.update(citation_metadata(item['book_id'], item['seq'], item['printed_page']))
         item['evidence_type'] = evidence_type(source_text, first_match, first_match + 1)
         item['evidence_type_scope'] = 'start_anchor'

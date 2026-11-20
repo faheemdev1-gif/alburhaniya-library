@@ -1,0 +1,283 @@
+[
+  {
+    "fixture": "F13_ROLE",
+    "expected": [
+      "b07-p138",
+      "b16-p37"
+    ],
+    "returned": [
+      "b07-p138",
+      "b07-p132",
+      "b45-p3",
+      "b42-p14",
+      "b44-p46"
+    ],
+    "hit": true,
+    "completion": "full"
+  },
+  {
+    "fixture": "F13_HOPE",
+    "expected": [
+      "b37-p156",
+      "b07-p150"
+    ],
+    "returned": [
+      "b07-p150",
+      "b07-p38",
+      "b01-p159",
+      "b37-p156",
+      "b42-p142"
+    ],
+    "hit": true,
+    "completion": "full"
+  },
+  {
+    "fixture": "F13_LOVE",
+    "expected": [
+      "b01-p62"
+    ],
+    "returned": [
+      "b27-p43",
+      "b01-p62",
+      "b01-p143",
+      "b21-p220",
+      "b12-p174"
+    ],
+    "hit": true,
+    "completion": "full"
+  },
+  {
+    "fixture": "F13_REPENTANCE",
+    "expected": [
+      "b39-p94",
+      "b44-p43"
+    ],
+    "returned": [
+      "b39-p47",
+      "b39-p94",
+      "b44-p43",
+      "b45-p6",
+      "b01-p159"
+    ],
+    "hit": true,
+    "completion": "full"
+  },
+  {
+    "fixture": "F13_HEART",
+    "expected": [
+      "b28-p39",
+      "b27-p4",
+      "b41-p134"
+    ],
+    "returned": [
+      "b27-p4",
+      "b28-p39",
+      "b42-p9",
+      "b42-p42",
+      "b29-p8"
+    ],
+    "hit": true,
+    "completion": "full"
+  },
+  {
+    "fixture": "F13_HARM",
+    "expected": [
+      "b19-p21",
+      "b44-p3"
+    ],
+    "returned": [
+      "b07-p143",
+      "b44-p3",
+      "b44-p5",
+      "b24-p260",
+      "b20-p223"
+    ],
+    "hit": true,
+    "completion": "full"
+  },
+  {
+    "fixture": "F13_KHALWA",
+    "expected": [
+      "b31-p90",
+      "b28-p69"
+    ],
+    "returned": [
+      "b31-p90",
+      "b39-p197",
+      "b27-p36",
+      "b10-p230",
+      "b27-p104"
+    ],
+    "hit": true,
+    "completion": "full"
+  },
+  {
+    "fixture": "F13_SINCERITY",
+    "expected": [
+      "b07-p134"
+    ],
+    "returned": [
+      "b07-p134",
+      "b29-p72",
+      "b03-p27",
+      "b02-p4"
+    ],
+    "hit": true,
+    "completion": "full"
+  },
+  {
+    "fixture": "F13_FATIHA",
+    "expected": [
+      "b37-p67",
+      "b15-p31"
+    ],
+    "returned": [
+      "b37-p67",
+      "b06-p26",
+      "b06-p386",
+      "b07-p304",
+      "b07-p302"
+    ],
+    "hit": true,
+    "completion": "full"
+  },
+  {
+    "fixture": "F13_RESTART",
+    "expected": [
+      "b15-p26"
+    ],
+    "returned": [
+      "b15-p26",
+      "b39-p229",
+      "b39-p94",
+      "b44-p24",
+      "b44-p43"
+    ],
+    "hit": true,
+    "completion": "full"
+  },
+  {
+    "fixture": "R13_T10_U1_repentance",
+    "expected": [
+      "b39-p94",
+      "b44-p43"
+    ],
+    "returned": [
+      "b39-p94",
+      "b13-p11",
+      "b44-p43",
+      "b39-p47",
+      "b45-p6"
+    ],
+    "hit": true,
+    "completion": "full"
+  },
+  {
+    "fixture": "R13_T10_U5_disagreement",
+    "expected": [
+      "b19-p21",
+      "b44-p3"
+    ],
+    "returned": [
+      "b07-p143",
+      "b44-p55",
+      "b44-p3",
+      "b24-p260",
+      "b01-p153"
+    ],
+    "hit": true,
+    "completion": "full"
+  },
+  {
+    "fixture": "R13_T10_U2_heart_dhikr",
+    "expected": [
+      "b28-p39",
+      "b27-p4",
+      "b41-p134"
+    ],
+    "returned": [
+      "b28-p39",
+      "b28-p43",
+      "b29-p42",
+      "b41-p17",
+      "b41-p75"
+    ],
+    "hit": true,
+    "completion": "full"
+  },
+  {
+    "fixture": "R13_C10_KHALWA",
+    "expected": [
+      "b31-p90",
+      "b28-p69"
+    ],
+    "returned": [
+      "b31-p90",
+      "b28-p69",
+      "b12-p147",
+      "b10-p230",
+      "b27-p13"
+    ],
+    "hit": true,
+    "completion": "full"
+  },
+  {
+    "fixture": "R13_N10_FATIHA_CONTACT",
+    "expected": [
+      "b37-p67",
+      "b15-p31"
+    ],
+    "returned": [
+      "b37-p67",
+      "b30-p92",
+      "b27-p1",
+      "b28-p1",
+      "b28-p44"
+    ],
+    "hit": true,
+    "completion": "full"
+  },
+  {
+    "fixture": "R13_N10_MURAQABA_KHALWA",
+    "expected": [
+      "b28-p69",
+      "b31-p90"
+    ],
+    "returned": [
+      "b31-p90",
+      "b29-p87",
+      "b39-p135",
+      "b28-p69",
+      "b31-p115"
+    ],
+    "hit": true,
+    "completion": "full"
+  },
+  {
+    "fixture": "R13_N10_RESTART_WIRD",
+    "expected": [
+      "b15-p26"
+    ],
+    "returned": [
+      "b15-p26",
+      "b39-p94",
+      "b41-p21",
+      "b44-p50",
+      "b44-p43"
+    ],
+    "hit": true,
+    "completion": "full"
+  },
+  {
+    "fixture": "R13_M10_T9_A_W1",
+    "expected": [
+      "b41-p131"
+    ],
+    "returned": [
+      "b41-p131",
+      "b15-p26"
+    ],
+    "hit": true,
+    "completion": "full"
+  }
+]

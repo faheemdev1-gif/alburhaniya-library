@@ -1,4 +1,8 @@
-# Al Burhaniya Connector 2.10.17 / contract 15
+# Al Burhaniya Connector 2.10.19 / contract 15.1
+
+Use [the 2.10.19 release notes](RELEASE_NOTES_2.10.19.md) for the current OVH deployment, semantic model and verification results.
+
+## Historical notes for 2.10.17 / contract 15
 
 This is a tested engineering update, not a certified 10/10 service. Read
 RELEASE_REPORT.md for measured results and the remaining acceptance gates.

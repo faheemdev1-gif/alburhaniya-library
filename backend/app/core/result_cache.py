@@ -13,6 +13,19 @@ def _shared():
  c.execute('PRAGMA busy_timeout=250')
  c.execute('CREATE TABLE IF NOT EXISTS results (key TEXT PRIMARY KEY, value TEXT NOT NULL, created REAL NOT NULL)')
  return c
+def _semantic_identity(settings):
+ if not settings.enable_local_semantic_search:
+  return None
+ stamps=[]
+ for filename in (settings.semantic_embeddings_path, settings.semantic_manifest_path):
+  path=os.path.abspath(filename)
+  try:
+   stat=os.stat(path)
+   stamps.append((path,stat.st_ino,stat.st_size,stat.st_mtime_ns))
+  except FileNotFoundError:
+   stamps.append((path,None))
+ return stamps
+
 def key(function,args,kwargs):
  from app.mcp_contract import SERVER_VERSION
  path=os.path.abspath(get_settings().library_db_path);st=os.stat(path);stamp=(path,st.st_mtime_ns,st.st_size,st.st_ino)
@@ -21,7 +34,7 @@ def key(function,args,kwargs):
    with sqlite3.connect('file:'+path+'?mode=ro',uri=True) as c:row=c.execute("SELECT value FROM discovery_meta WHERE key='corpus_digest'").fetchone()
    _DIGEST.clear();_DIGEST[stamp]=row[0] if row else None
   digest=_DIGEST[stamp]
- return hashlib.sha256(json.dumps([SERVER_VERSION,function,args,kwargs,stamp,digest,INCLUDE_TOC.get()],sort_keys=True,ensure_ascii=False,default=str).encode()).hexdigest()
+ return hashlib.sha256(json.dumps([SERVER_VERSION,function,args,kwargs,stamp,digest,INCLUDE_TOC.get(),_semantic_identity(get_settings())],sort_keys=True,ensure_ascii=False,default=str).encode()).hexdigest()
 def get(k):
  with _LOCK:
   value=_CACHE.get(k)

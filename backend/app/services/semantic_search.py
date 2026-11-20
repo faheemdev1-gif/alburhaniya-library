@@ -46,14 +46,18 @@ def semantic_available() -> bool:
         row = db._connection().execute(
             "SELECT 1 FROM sqlite_master WHERE type='table' AND name='semantic_chunks'"
         ).fetchone()
-        if not row:
+        if not row or not any(column[1] == "evidence_scope" for column in db._connection().execute("PRAGMA table_info(semantic_chunks)")):
             return False
         vectors, manifest = _load_index()
         path = os.path.abspath(_setting("library_db_path", "library.db"))
         stat = os.stat(path)
         corpus_hash, chunk_count = _semantic_corpus_identity(path, stat.st_mtime_ns, stat.st_size)
-        return (manifest.get("corpus_sha256") == corpus_hash
-                and chunk_count == vectors.shape[0])
+        if manifest.get("corpus_sha256") != corpus_hash or chunk_count != vectors.shape[0]:
+            return False
+        from app.services.embeddings import get_embedding_service
+        service = get_embedding_service(manifest["model"], manifest.get("model_revision"))
+        service._load()
+        return True
     except Exception:
         return False
 
@@ -99,7 +103,10 @@ def _candidate_rows(
 ) -> list:
     from app.services import library_db as db
 
-    where, params = [], []
+    from app.core.evidence_blocks import INCLUDE_TOC
+    where = ["c.evidence_scope IN ('body','navigation')" if INCLUDE_TOC.get()
+             else "c.evidence_scope = 'body'"]
+    params = []
     if book_ids:
         where.append("c.book_id IN (" + ",".join("?" for _ in book_ids) + ")")
         params.extend(book_ids)
@@ -156,7 +163,7 @@ def semantic_search(
 
     normalized_query = normalize_arabic(query, aggressive=False).strip()
     query_vector = np.asarray(
-        get_embedding_service(model_name).embed_query(normalized_query),
+        get_embedding_service(model_name, manifest.get("model_revision")).embed_query(normalized_query),
         dtype=np.float32,
     )
     if query_vector.shape != (vectors.shape[1],):
@@ -172,7 +179,11 @@ def semantic_search(
     vector_indices = np.fromiter(
         (int(row["vector_index"]) for row in rows), dtype=np.int64
     )
-    scores = np.asarray(vectors[vector_indices], dtype=np.float32) @ query_vector
+    # A broad scope otherwise copies nearly the entire memory-mapped matrix.
+    if len(vector_indices) > vectors.shape[0] // 2:
+        scores = (vectors @ query_vector)[vector_indices]
+    else:
+        scores = vectors[vector_indices] @ query_vector
     threshold = (
         float(min_score) if min_score is not None
         else float(_setting("semantic_min_score", 0.0))
@@ -223,6 +234,9 @@ def semantic_search(
             "semantic_score": round(raw_score, 6),
             "citation_verified": False, "verification_required": True,
         }
+        start, end = _optional_field(row, "start_char"), _optional_field(row, "end_char")
+        if start is not None and end is not None:
+            result["evidence_span"] = {"start": start, "end": end}
         if row["book_id"] == "b14" and row["qasida_number"] is not None:
             result["container_id"] = f"b14-q{int(row['qasida_number']):03d}"
         results.append(result)

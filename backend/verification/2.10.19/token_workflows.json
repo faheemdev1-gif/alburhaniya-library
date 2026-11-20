@@ -1,0 +1,268 @@
+{
+  "tokenizer_library": "tiktoken",
+  "version": "0.12.0",
+  "profiles": [
+    "cl100k_base",
+    "o200k_base"
+  ],
+  "scope": "Identical current-release evidence. Readable compact tool discovery; ultra mode additionally includes one list_books(detail=full,book_ids=[]) decoder retrieval. One tool-discovery schema + one search + one bounded passage follow-up (context_chars=300); ultra decoder hydration is counted once per workflow. Excludes unavailable client/system wrapper and network serialization. Not a before/after retrieval-quality score.",
+  "claude_usage": "Not measured; no Anthropic token-counting account supplied",
+  "results": [
+    {
+      "fixture": "one_hit_question",
+      "profile": "cl100k_base",
+      "arguments": {
+        "query": "\u0645\u0627 \u0639\u0644\u0627\u0645\u0627\u062a \u0627\u0644\u0645\u0631\u064a\u062f \u0627\u0644\u0635\u0627\u062f\u0642",
+        "limit": 1,
+        "context_chars": 40
+      },
+      "same_evidence_and_provenance": true,
+      "returned_count": 1,
+      "compact_payload_tokens": 731,
+      "ultra_payload_tokens": 509,
+      "payload_reduction_pct": 30.37,
+      "compact_bytes": 2739,
+      "ultra_bytes": 1459,
+      "schema_and_followup_tokens": 2677,
+      "compact_workflow_tokens": 3408,
+      "ultra_workflow_tokens": 8563,
+      "metadata_hydration_calls": {
+        "compact": 0,
+        "ultra_compact": 1
+      },
+      "ultra_decoder_tokens": 5377
+    },
+    {
+      "fixture": "one_hit_question",
+      "profile": "o200k_base",
+      "arguments": {
+        "query": "\u0645\u0627 \u0639\u0644\u0627\u0645\u0627\u062a \u0627\u0644\u0645\u0631\u064a\u062f \u0627\u0644\u0635\u0627\u062f\u0642",
+        "limit": 1,
+        "context_chars": 40
+      },
+      "same_evidence_and_provenance": true,
+      "returned_count": 1,
+      "compact_payload_tokens": 666,
+      "ultra_payload_tokens": 461,
+      "payload_reduction_pct": 30.78,
+      "compact_bytes": 2739,
+      "ultra_bytes": 1459,
+      "schema_and_followup_tokens": 2600,
+      "compact_workflow_tokens": 3266,
+      "ultra_workflow_tokens": 8483,
+      "metadata_hydration_calls": {
+        "compact": 0,
+        "ultra_compact": 1
+      },
+      "ultra_decoder_tokens": 5422
+    },
+    {
+      "fixture": "five_hit_conjunction",
+      "profile": "cl100k_base",
+      "arguments": {
+        "queries": [
+          "\u0627\u0644\u062e\u0644\u0648\u0629",
+          "\u0627\u0644\u0645\u0631\u0627\u0642\u0628\u0629"
+        ],
+        "match_mode": "terms",
+        "operator": "AND",
+        "limit": 6
+      },
+      "same_evidence_and_provenance": true,
+      "returned_count": 5,
+      "compact_payload_tokens": 2569,
+      "ultra_payload_tokens": 1898,
+      "payload_reduction_pct": 26.12,
+      "compact_bytes": 8297,
+      "ultra_bytes": 4830,
+      "schema_and_followup_tokens": 2941,
+      "compact_workflow_tokens": 5510,
+      "ultra_workflow_tokens": 10216,
+      "metadata_hydration_calls": {
+        "compact": 0,
+        "ultra_compact": 1
+      },
+      "ultra_decoder_tokens": 5377
+    },
+    {
+      "fixture": "five_hit_conjunction",
+      "profile": "o200k_base",
+      "arguments": {
+        "queries": [
+          "\u0627\u0644\u062e\u0644\u0648\u0629",
+          "\u0627\u0644\u0645\u0631\u0627\u0642\u0628\u0629"
+        ],
+        "match_mode": "terms",
+        "operator": "AND",
+        "limit": 6
+      },
+      "same_evidence_and_provenance": true,
+      "returned_count": 5,
+      "compact_payload_tokens": 2115,
+      "ultra_payload_tokens": 1515,
+      "payload_reduction_pct": 28.37,
+      "compact_bytes": 8297,
+      "ultra_bytes": 4830,
+      "schema_and_followup_tokens": 2794,
+      "compact_workflow_tokens": 4909,
+      "ultra_workflow_tokens": 9731,
+      "metadata_hydration_calls": {
+        "compact": 0,
+        "ultra_compact": 1
+      },
+      "ultra_decoder_tokens": 5422
+    },
+    {
+      "fixture": "six_hit_lexical",
+      "profile": "cl100k_base",
+      "arguments": {
+        "queries": [
+          "\u0627\u0644\u062e\u0644\u0648\u0629",
+          "\u0627\u0644\u0645\u0631\u0627\u0642\u0628\u0629"
+        ],
+        "match_mode": "terms",
+        "operator": "OR",
+        "limit": 6
+      },
+      "same_evidence_and_provenance": true,
+      "returned_count": 6,
+      "compact_payload_tokens": 2385,
+      "ultra_payload_tokens": 1598,
+      "payload_reduction_pct": 33.0,
+      "compact_bytes": 7802,
+      "ultra_bytes": 3989,
+      "schema_and_followup_tokens": 2801,
+      "compact_workflow_tokens": 5186,
+      "ultra_workflow_tokens": 9776,
+      "metadata_hydration_calls": {
+        "compact": 0,
+        "ultra_compact": 1
+      },
+      "ultra_decoder_tokens": 5377
+    },
+    {
+      "fixture": "six_hit_lexical",
+      "profile": "o200k_base",
+      "arguments": {
+        "queries": [
+          "\u0627\u0644\u062e\u0644\u0648\u0629",
+          "\u0627\u0644\u0645\u0631\u0627\u0642\u0628\u0629"
+        ],
+        "match_mode": "terms",
+        "operator": "OR",
+        "limit": 6
+      },
+      "same_evidence_and_provenance": true,
+      "returned_count": 6,
+      "compact_payload_tokens": 1952,
+      "ultra_payload_tokens": 1273,
+      "payload_reduction_pct": 34.78,
+      "compact_bytes": 7802,
+      "ultra_bytes": 3989,
+      "schema_and_followup_tokens": 2701,
+      "compact_workflow_tokens": 4653,
+      "ultra_workflow_tokens": 9396,
+      "metadata_hydration_calls": {
+        "compact": 0,
+        "ultra_compact": 1
+      },
+      "ultra_decoder_tokens": 5422
+    },
+    {
+      "fixture": "census",
+      "profile": "cl100k_base",
+      "arguments": {
+        "query": "\u0627\u0644\u062a\u0648\u0628\u0629",
+        "match_mode": "exact",
+        "include_counts": true,
+        "limit": 5
+      },
+      "same_evidence_and_provenance": true,
+      "returned_count": 5,
+      "compact_payload_tokens": 2225,
+      "ultra_payload_tokens": 1609,
+      "payload_reduction_pct": 27.69,
+      "compact_bytes": 7661,
+      "ultra_bytes": 4637,
+      "schema_and_followup_tokens": 2835,
+      "compact_workflow_tokens": 5060,
+      "ultra_workflow_tokens": 9821,
+      "metadata_hydration_calls": {
+        "compact": 0,
+        "ultra_compact": 1
+      },
+      "ultra_decoder_tokens": 5377
+    },
+    {
+      "fixture": "census",
+      "profile": "o200k_base",
+      "arguments": {
+        "query": "\u0627\u0644\u062a\u0648\u0628\u0629",
+        "match_mode": "exact",
+        "include_counts": true,
+        "limit": 5
+      },
+      "same_evidence_and_provenance": true,
+      "returned_count": 5,
+      "compact_payload_tokens": 1877,
+      "ultra_payload_tokens": 1353,
+      "payload_reduction_pct": 27.92,
+      "compact_bytes": 7661,
+      "ultra_bytes": 4637,
+      "schema_and_followup_tokens": 2763,
+      "compact_workflow_tokens": 4640,
+      "ultra_workflow_tokens": 9538,
+      "metadata_hydration_calls": {
+        "compact": 0,
+        "ultra_compact": 1
+      },
+      "ultra_decoder_tokens": 5422
+    },
+    {
+      "fixture": "weak_negative",
+      "profile": "cl100k_base",
+      "arguments": {
+        "query": "\u0645\u0627 \u062d\u0643\u0645 \u0627\u0633\u062a\u0639\u0645\u0627\u0644 \u0627\u0644\u0647\u0627\u062a\u0641 \u0641\u064a \u0627\u0644\u0635\u0644\u0627\u0629",
+        "limit": 5
+      },
+      "same_evidence_and_provenance": true,
+      "returned_count": 0,
+      "compact_payload_tokens": 589,
+      "ultra_payload_tokens": 483,
+      "payload_reduction_pct": 18.0,
+      "compact_bytes": 2379,
+      "ultra_bytes": 1784,
+      "schema_and_followup_tokens": 2000,
+      "compact_workflow_tokens": 2589,
+      "ultra_workflow_tokens": 7860,
+      "metadata_hydration_calls": {
+        "compact": 0,
+        "ultra_compact": 1
+      },
+      "ultra_decoder_tokens": 5377
+    },
+    {
+      "fixture": "weak_negative",
+      "profile": "o200k_base",
+      "arguments": {
+        "query": "\u0645\u0627 \u062d\u0643\u0645 \u0627\u0633\u062a\u0639\u0645\u0627\u0644 \u0627\u0644\u0647\u0627\u062a\u0641 \u0641\u064a \u0627\u0644\u0635\u0644\u0627\u0629",
+        "limit": 5
+      },
+      "same_evidence_and_provenance": true,
+      "returned_count": 0,
+      "compact_payload_tokens": 574,
+      "ultra_payload_tokens": 468,
+      "payload_reduction_pct": 18.47,
+      "compact_bytes": 2379,
+      "ultra_bytes": 1784,
+      "schema_and_followup_tokens": 2074,
+      "compact_workflow_tokens": 2648,
+      "ultra_workflow_tokens": 7964,
+      "metadata_hydration_calls": {
+        "compact": 0,
+        "ultra_compact": 1
+      },
+      "ultra_decoder_tokens": 5422
+    }
+  ]
+}

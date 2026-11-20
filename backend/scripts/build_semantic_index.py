@@ -14,6 +14,7 @@ import sqlite3
 import sys
 import tempfile
 from datetime import date
+from pathlib import Path
 
 import numpy as np
 
@@ -53,6 +54,7 @@ CREATE TABLE IF NOT EXISTS semantic_chunks (
     bayt_from      INTEGER,
     bayt_to        INTEGER,
     source_tier    INTEGER NOT NULL,
+    evidence_scope TEXT NOT NULL,
     FOREIGN KEY (book_id) REFERENCES books(book_id)
 );
 CREATE INDEX IF NOT EXISTS idx_semantic_chunks_page
@@ -64,14 +66,13 @@ CREATE INDEX IF NOT EXISTS idx_semantic_chunks_tier
 """
 
 
-def build_chunk_metadata(conn: sqlite3.Connection) -> tuple[list[str], str]:
-    conn.executescript(SCHEMA)
-    conn.execute("DELETE FROM semantic_chunks")
+def build_chunk_metadata(conn: sqlite3.Connection, *, commit=True) -> tuple[list[str], str]:
+    conn.executescript("BEGIN;\n" + SCHEMA)
     rows = conn.execute(
         """SELECT p.book_id, p.seq, p.printed_page, p.citation_label,
                   p.qasida_number, p.qasida_title, p.qasida_bayt_count,
                   p.bayt_from, p.bayt_to,
-                  p.text, b.source_tier
+                  p.text, b.source_tier, p.block_type
              FROM pages p JOIN books b ON b.book_id = p.book_id
             ORDER BY p.book_id, p.seq"""
     ).fetchall()
@@ -80,17 +81,27 @@ def build_chunk_metadata(conn: sqlite3.Connection) -> tuple[list[str], str]:
     chunk_texts: list[str] = []
     inserts = []
     vector_index = 0
+    from app.core.evidence_blocks import HEADER
+    from app.services.library_db import _FOOTNOTE_SEPARATOR_RE
     for row in rows:
         page_text = row[9]
         corpus_hash.update(row[0].encode("utf-8"))
         corpus_hash.update(str(row[1]).encode("ascii"))
         corpus_hash.update(page_text.encode("utf-8"))
+        footnote = _FOOTNOTE_SEPARATOR_RE.search(page_text)
+        toc = HEADER.search(page_text)
         for chunk in split_semantic_chunks(page_text):
+            if footnote and chunk.end_char > footnote.start():
+                evidence_scope = "footnote"
+            elif row[11] == "toc" or (toc and chunk.end_char > toc.start()):
+                evidence_scope = "navigation"
+            else:
+                evidence_scope = "body"
             chunk_id = f"{row[0]}-p{row[1]}-c{chunk.start_char}"
             inserts.append((
                 chunk_id, vector_index, row[0], row[1], row[2], row[3],
                 chunk.start_char, chunk.end_char, chunk.text,
-                row[4], row[5], row[6], row[7], row[8], row[10],
+                row[4], row[5], row[6], row[7], row[8], row[10], evidence_scope,
             ))
             chunk_texts.append(chunk.text)
             vector_index += 1
@@ -99,11 +110,12 @@ def build_chunk_metadata(conn: sqlite3.Connection) -> tuple[list[str], str]:
         """INSERT INTO semantic_chunks (
                chunk_id, vector_index, book_id, seq, printed_page,
                citation_label, start_char, end_char, text, qasida_number,
-               qasida_title, qasida_bayt_count, bayt_from, bayt_to, source_tier
-           ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+               qasida_title, qasida_bayt_count, bayt_from, bayt_to, source_tier, evidence_scope
+           ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
         inserts,
     )
-    conn.commit()
+    if commit:
+        conn.commit()
     return chunk_texts, corpus_hash.hexdigest()
 
 
@@ -157,11 +169,16 @@ def build(*, model_name: str, batch_size: int, metadata_only: bool = False) -> d
 
     from sentence_transformers import SentenceTransformer
 
-    model = SentenceTransformer(model_name)
+    revision = os.environ.get("SEMANTIC_MODEL_REVISION") or (
+        "d128750597153bb5987e10b1c3493a34e5a4502a" if model_name == "intfloat/multilingual-e5-base" else None)
+    model = SentenceTransformer(model_name, revision=revision)
+    manifest["model_revision"] = revision
     prompts = getattr(model, "prompts", {}) or {}
     documents = chunk_texts if any(
         name in prompts for name in ("document", "passage", "corpus")
     ) else [f"passage: {text}" for text in chunk_texts]
+    if documents is chunk_texts:
+        manifest["document_prefix"] = next((prompts[k] for k in ("document", "passage", "corpus") if k in prompts), "")
     vectors = model.encode_document(
         documents,
         normalize_embeddings=True,
@@ -171,6 +188,8 @@ def build(*, model_name: str, batch_size: int, metadata_only: bool = False) -> d
     ).astype(np.float32, copy=False)
     manifest["dimensions"] = int(vectors.shape[1])
     _atomic_save_vectors(VECTORS_PATH, vectors)
+    with open(VECTORS_PATH, "rb") as handle:
+        manifest["vectors_sha256"] = hashlib.file_digest(handle, "sha256").hexdigest()
     _atomic_write_json(MANIFEST_PATH, manifest)
     print(
         f"Built {len(chunk_texts)} embeddings ({vectors.shape[1]} dimensions) "
@@ -187,7 +206,21 @@ def main() -> None:
         "--metadata-only", action="store_true",
         help="Build/check SQLite chunks without loading an embedding model.",
     )
+    parser.add_argument("--verify-packaged", action="store_true", help="Rebuild chunk metadata and verify the packaged vectors before deployment.")
     args = parser.parse_args()
+    if args.verify_packaged:
+        recorded = json.loads(Path(MANIFEST_PATH).read_text(encoding="utf-8"))
+        with open(VECTORS_PATH, "rb") as handle:
+            digest = hashlib.file_digest(handle, "sha256").hexdigest()
+        matrix = np.load(VECTORS_PATH, mmap_mode="r")
+        if (digest != recorded.get("vectors_sha256")
+                or matrix.shape != (recorded["chunk_count"], recorded["dimensions"])):
+            raise RuntimeError("Packaged vector file failed checksum or dimension verification")
+        with sqlite3.connect(DB_PATH) as conn:
+            chunks, digest = build_chunk_metadata(conn, commit=False)
+            if digest != recorded["corpus_sha256"] or len(chunks) != matrix.shape[0]:
+                raise RuntimeError("Packaged vectors do not match the rebuilt corpus")
+        return
     build(
         model_name=args.model,
         batch_size=max(1, args.batch_size),

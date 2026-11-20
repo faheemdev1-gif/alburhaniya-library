@@ -34,3 +34,14 @@ RUN python -m pytest -q \
 EXPOSE 8000
 
 CMD ["python", "scripts/start_server.py"]
+
+# Build with --build-arg WITH_E5=1 to publish a self-contained semantic image.
+ARG WITH_E5=0
+RUN if [ "$WITH_E5" = 1 ]; then \
+      python -m pip install --no-cache-dir torch==2.5.1 --index-url https://download.pytorch.org/whl/cpu && \
+      python -m pip install --no-cache-dir 'sentence-transformers==5.1.2' 'transformers==4.51.3' && \
+      python scripts/build_semantic_index.py --verify-packaged && \
+      python -c "import json; from huggingface_hub import snapshot_download; m=json.load(open('semantic_manifest.json')); snapshot_download(m['model'], revision=m['model_revision'], allow_patterns=['*.json','model.safetensors','sentencepiece.bpe.model'], ignore_patterns=['onnx/*','openvino/*'])" && \
+      ENABLE_LOCAL_SEMANTIC_SEARCH=true HF_HUB_OFFLINE=1 python -c "from app.services.semantic_search import semantic_search; assert semantic_search('آداب المريد', book_ids=['b14'], limit=1)"; \
+    else test "$WITH_E5" = 0; fi
+ENV ENABLE_LOCAL_SEMANTIC_SEARCH=${WITH_E5}

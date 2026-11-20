@@ -27,10 +27,17 @@ def canonical_hit(row,page):
         if speaker not in (None,'mixed'):row['speaker_evidence']['name']=speaker
         if segments:row['speaker_evidence']['segments']=segments
         if not speaker and row.get('speaker_basis')=='explicit_marker':row['speaker_basis']='structural'
+    if page.get('text_errata'):
+        row['text_errata'] = page['text_errata']
+    if page.get('pagination_status') == 'repeated_printed_label_unresolved':
+        for field in ('citation_label', 'citation_basis', 'pagination_status', 'pagination_warning', 'page_id'):
+            if field in page:
+                row[field] = page[field]
     if row.get('pagination_status')=='repeated_printed_label_unresolved':
         # Unreliable labels remain only in the source/review files. The public
         # citation and machine identity already use the sequence.
         row['printed_page']=None
+        row['page_label'] = row.get('page_id') or f"{row['book_id']}-p{row['seq']}"
     row.setdefault('answer_verified',False)
     if row.get('question_relevance'):
         row['support']={'estimate':'candidate' if row['question_relevance']!='topic_only' else 'topical',

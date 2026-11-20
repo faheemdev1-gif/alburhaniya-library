@@ -1,0 +1,4 @@
+{
+  "command": "python -m pytest -q",
+  "result": "373 passed, 3 warnings, 41 subtests passed in 130.23s (0:02:10)"
+}

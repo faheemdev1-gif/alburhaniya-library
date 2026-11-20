@@ -1,3 +1,7 @@
+# Al Burhaniya Books 2.10.19
+
+[Current deployment instructions and measured results](RELEASE_NOTES_2.10.19.md)
+
 > Current patch: **2.10.18 / contract 15.1**. See [release notes and deployment](RELEASE_NOTES_2.10.18.md) and `verification/2.10.18/` for evidence and remaining acceptance work.
 
 # Al Burhaniya Connector 2.10.7
