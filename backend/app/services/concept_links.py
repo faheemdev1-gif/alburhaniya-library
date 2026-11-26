@@ -4,6 +4,7 @@ A small development lexicon, not the requested 600-concept reviewed lexicon.
 Forms are used only in discovery and must be attested before entering the index.
 Exact search and occurrence counting never use these links.
 """
+from functools import lru_cache
 from app.core.arabic_utils import normalize_search_text
 VERSION='discovery-links-1.0-unreviewed'
 CONCEPT_FORMS={
@@ -34,6 +35,7 @@ LINKS=[{'from_id':a,'to_id':b,'relation':kind,'direction':'bidirectional',
 def normalized_forms(group):
     return tuple(dict.fromkeys(normalize_search_text(x,level='broad') for x in CONCEPT_FORMS[group]))
 
+@lru_cache(maxsize=2048)
 def query_groups(query):
     """Composable relationships; qualifiers do not erase the named subjects."""
     import re
@@ -41,18 +43,17 @@ def query_groups(query):
     groups=[]
     if re.search(r'خلو',q):groups=['seclusion']
     elif re.search(r'يحب|حب|محبه',q) and re.search(r'محمد|النبي|الرسول',q):groups=['love_affection','prophet_names']
-    elif re.search(r'ذكر|اذكر|يذكر',q) and re.search(r'قلب',q) and re.search(r'عمل|يعمل|تجار|بيع|شراء|جوارح|السوق',q):groups=['heart_dhikr','commerce']
+    elif re.search(r'ذكر|ذاكر',q) and re.search(r'قلب',q) and re.search(r'عمل|يعمل|تجار|بيع|شراء|جوارح|السوق',q):groups=['heart_dhikr','commerce']
     elif re.search(r'خش|خوف|يخاف',q) and re.search(r'امل|رجاء|يرجو|يطمع',q):groups=['fear','hope']
-    elif re.search(r'فاتح|فواتح',q) and re.search(r'اتصال|مواظب|مشايخ|شيخ',q):groups=['fawatih_connection']
+    elif re.search(r'فاتح|فواتح',q) and re.search(r'اتصال|مواظب|مشايخ|مشائخ|شيخ|شيوخ|صله',q):groups=['fawatih_connection']
     elif re.search(r'ورد|اوراد',q) and re.search(r'تركت|انقطع|انقطاع|اعود|يبدا',q):groups=['interrupted_practice']
-    elif re.search(r'توب',q) and re.search(r'شرط|شروط|نصوح|تكفي|كلام|لسان|ذنب|استغفار',q):groups=['repentance_conditions']
-    elif re.search(r'اخوان|خصوم|اذاني|اجيب|اختلاف',q) and re.search(r'ادب|لسان|اذاني|اجيب|حفظ|يحافظ',q):groups=['disagreement']
+    elif re.search(r'توب|تائب',q) and re.search(r'شرط|شروط|نصوح|تكفي|كلام|لسان|ذنب|استغفار',q):groups=['repentance_conditions']
+    elif re.search(r'اخوان|خصوم|اذاني|اجيب|اختلاف|الخلاف|تخاصم',q) and re.search(r'ادب|لسان|اذاني|اجيب|حفظ|يحافظ|ارد|اساء',q):groups=['disagreement']
     elif re.search(r'اخلص|اخلاص',q) and re.search(r'ثناء|رياء|مدح',q):groups=['sincerity','praise_desire']
     elif re.search(r'لله',q) and re.search(r'مدح|ثناء|رياء',q):groups=['sincerity']
     elif re.search(r'صدق|صادق',q) and re.search(r'مريد',q):groups=['disciple_sincerity']
     return groups
 
-from functools import lru_cache
 import re
 @lru_cache(maxsize=128)
 def source_pattern(group):

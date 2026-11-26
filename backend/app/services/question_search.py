@@ -313,6 +313,18 @@ def passage_candidates(query, ap, scope):
         add('intent_concepts',' AND '.join(_fts(CONCEPTS[g]) for g in groups))
         if len(groups)==1:add('intent_concepts',_fts(CONCEPTS[groups[0]])+' AND '+_fts(CONCEPTS['relief']+CONCEPTS['distress']))
     linked=query_groups(query)
+    if linked == ['love_affection', 'prophet_names']:
+        # A verb or noun of love governing the named person is stronger than
+        # both words occurring somewhere on the page.
+        from app.services.evidence_units import CUE_FORMS
+        predicate = (ap.get('question_frame') or {}).get('intent')
+        if predicate == 'merit':
+            subject = _fts(_clitic_forms(('حب النبي','محبة النبي','يحب النبي',
+                                         'حب الرسول','محبة الرسول','يحب الرسول')))
+            add('predicate_surface', subject + ' AND ' + _fts(CUE_FORMS['merit']))
+    if linked == ['disagreement']:
+        add('subject_relation', _fts(_clitic_forms(('خصومة','الخصومة','غضب','أذى','إساءة','خصام')))
+            + ' AND ' + _fts(_clitic_forms(('أخيك','أخيه','إخوان','أخ','اللين','القول','الجدال'))))
     if linked:
         add('typed_concepts',' AND '.join(_fts(_clitic_forms(normalized_forms(g))) for g in linked))
         if len(linked)>1:
@@ -639,7 +651,10 @@ def search_questions(**kwargs):
                     intent=(ap.get('question_frame') or {}).get('intent')
                     cues=[f for f in CUE_FORMS.get(intent,()) if pattern(f).search(query)]
                     local=page['text'][max(left,start-80):min(right,end+120)]
-                    if intent=='merit' and cues and any(pattern(cue).search(local) for cue in cues):
+                    direct_love = linked_groups == ['love_affection','prophet_names'] and re.search(
+                        r'(?:محبه|ي?حب)\s+(?:النبي|الرسول|رسول الله)', normalize_search_text(local,level='broad'))
+                    if intent=='merit' and any(pattern(cue).search(local) for cue in
+                                               (cues or (CUE_FORMS['merit'] if direct_love else ()))):
                         row['requested_relation_match']=True
                 if qa_match:row['matched_source_question']=q
                 classify_row(row,query,ap,page['text'],start,end,relation)

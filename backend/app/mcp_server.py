@@ -669,17 +669,59 @@ def search_library(
 
     effective_match_mode = match_mode
     from app.services.question_intent import is_question, plan
-    question_mode = match_mode == "auto" and any(is_question(q) for q in raw_queries)
+    from app.services.urdu_questions import discovery_question
+    question_queries = raw_queries
+    if match_mode == "auto" and len(raw_queries) == 1 and not keep_terms:
+        gloss = discovery_question(raw_queries[0])
+        if gloss:
+            question_queries = [gloss]
+    translated = question_queries != raw_queries
+    question_mode = match_mode == "auto" and any(is_question(q) for q in question_queries)
     if question_mode:
         effective_match_mode = "reformulated"
         from app.services.question_search import search_questions
-        rows = search_questions(query=query, queries=raw_queries, operator=operator, keep_terms=keep_terms,
+        rows = search_questions(query=query, queries=question_queries, operator=operator, keep_terms=keep_terms,
             ranking=ranking, book_ids=book_ids, source_code=source_code,
             page_from=page_from, page_to=page_to, limit=limit+1, offset=offset,
             context_chars=context_chars, diversify_books=diversify_books,
             max_per_book=max_per_book, qasida_number=qasida_number, min_tier=min_tier,
             whole_word=whole_word, min_score=min_score, include_topic_only=include_topic_only)
+        if translated:
+            for row in rows:
+                row["original_queries"] = raw_queries
+                row["reformulated_query"] = question_queries[0]
+                row["reformulation_method"] = "urdu_to_arabic_discovery"
+    search_args = dict(
+        query=query,
+        queries=raw_queries,
+        operator=operator,
+        search_mode=resolved_search_mode,
+        ranking=ranking,
+        book_ids=book_ids,
+        source_code=source_code,
+        page_from=page_from,
+        page_to=page_to,
+        limit=limit + 1,
+        offset=offset,
+        context_chars=context_chars,
+        diversify_books=diversify_books,
+        max_per_book=max_per_book,
+        qasida_number=qasida_number,
+        min_tier=min_tier,
+        whole_word=whole_word,
+    )
+    search_args["min_score"] = min_score
+    search_args["_audit_candidates"] = audit_requested
     if match_mode == "auto" and not question_mode:
+        from app.services.spelling_search import search as spelling_search
+        spelling_args = {key: value for key, value in search_args.items()
+                         if key not in {'query', 'queries', 'search_mode', '_audit_candidates'}}
+        spelling_rows = spelling_search(raw_queries, db=db, **spelling_args)
+        if spelling_rows:
+            rows = spelling_rows
+            effective_match_mode = "spelling_discovery"
+
+    if effective_match_mode == "auto" and not question_mode:
         from app.services import semantic_search as semantic
         rows = []
         if semantic.semantic_available():
@@ -731,38 +773,8 @@ def search_library(
                 whole_word=whole_word, min_score=min_score,
             )
     search_fn = db.hybrid_search if effective_match_mode == "hybrid" else db.search
-    search_args = dict(
-        query=query,
-        queries=raw_queries,
-        operator=operator,
-        search_mode=resolved_search_mode,
-        ranking=ranking,
-        book_ids=book_ids,
-        source_code=source_code,
-        page_from=page_from,
-        page_to=page_to,
-        limit=limit + 1,
-        offset=offset,
-        context_chars=context_chars,
-        diversify_books=diversify_books,
-        max_per_book=max_per_book,
-        qasida_number=qasida_number,
-        min_tier=min_tier,
-        whole_word=whole_word,
-    )
-    search_args["min_score"] = min_score
-    search_args["_audit_candidates"] = audit_requested
     if match_mode != "auto":
         rows = search_fn(**search_args)
-
-    if match_mode == "auto" and not question_mode:
-        from app.services.spelling_search import search as spelling_search
-        spelling_args = {key: value for key, value in search_args.items()
-                         if key not in {'query', 'queries', 'search_mode', '_audit_candidates'}}
-        spelling_rows = spelling_search(raw_queries, db=db, **spelling_args)
-        if spelling_rows:
-            rows = spelling_rows
-            effective_match_mode = "spelling_discovery"
 
     from app.services.hit_contract import canonical_hit
     rows=[canonical_hit(row,db.get_page(row['book_id'],row['seq'])) for row in rows]
@@ -845,8 +857,16 @@ def search_library(
             payload.update(SEARCH_STATE.get() or {})
             payload['reformulation_status']='degraded' if (payload.get('completion')=='partial' or payload.get('stages_skipped')) else 'ok'
             from app.services.question_search import anchor_plan
-            payload["query_plan"] = [{"original_query":q, **anchor_plan(q,keep_terms or ())} for q in raw_queries]
+            payload["query_plan"] = [{**anchor_plan(q, keep_terms or ()), "original_query": original}
+                                     for original, q in zip(raw_queries, question_queries)]
+            if translated:
+                payload["discovery_query"] = question_queries[0]
             payload["dropped_function_words"] = list(dict.fromkeys(t for p in payload["query_plan"] for t in p["dropped_function_words"]))
+            payload["answer_verified"] = False
+        if effective_match_mode == "semantic_auto" and results and all(
+            row.get("match_type") == "semantic" for row in results
+        ):
+            payload["evidence_strength"] = "weak"
             payload["answer_verified"] = False
         from app.services.evidence_units import INDEX_VERSION
         from app.services.concept_links import VERSION as LEXICON_VERSION

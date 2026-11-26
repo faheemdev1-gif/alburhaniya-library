@@ -100,6 +100,7 @@ def _candidate_rows(
     *, book_ids: list[str] | None, source_code: str | None,
     page_from: int | None, page_to: int | None, qasida_number: int | None,
     min_tier: int | None = None,
+    indices_only: bool = False, vector_indices: list[int] | None = None,
 ) -> list:
     from app.services import library_db as db
 
@@ -127,14 +128,19 @@ def _candidate_rows(
     if qasida_number is not None:
         where.append("c.qasida_number = ?")
         params.append(qasida_number)
+    if vector_indices is not None:
+        if not vector_indices:
+            return []
+        where.append("c.vector_index IN (" + ",".join("?" for _ in vector_indices) + ")")
+        params.extend(vector_indices)
     clause = " WHERE " + " AND ".join(where) if where else ""
-    return db._connection().execute(
-        """SELECT c.*, b.title AS book_title, b.source_grade, b.source_code,
+    projection = "c.vector_index" if indices_only else """c.*, b.title AS book_title, b.source_grade, b.source_code,
                     b.source_author, b.compiler, b.authorship_mode,
                     b.attribution_confidence, b.provenance_status,
                     b.canonical_book_id, b.edition_relation,
-                    b.searchable_by_default
-             FROM semantic_chunks c
+                    b.searchable_by_default"""
+    return db._connection().execute(
+        "SELECT " + projection + """ FROM semantic_chunks c
              JOIN books b ON b.book_id = c.book_id""" + clause +
         " ORDER BY c.vector_index",
         params,
@@ -161,19 +167,23 @@ def semantic_search(
     model_name = str(manifest["model"])
     from app.services.embeddings import get_embedding_service
 
-    normalized_query = normalize_arabic(query, aggressive=False).strip()
+    # Arabic normalization folds Urdu bari ye and Farsi ye. Preserve their
+    # spelling for the multilingual encoder while retaining Arabic behavior.
+    model_query = (query.strip() if any(c in query for c in "ےیٹڈڑںھہپچگژ")
+                   else normalize_arabic(query, aggressive=False).strip())
     query_vector = np.asarray(
-        get_embedding_service(model_name, manifest.get("model_revision")).embed_query(normalized_query),
+        get_embedding_service(model_name, manifest.get("model_revision")).embed_query(model_query),
         dtype=np.float32,
     )
     if query_vector.shape != (vectors.shape[1],):
         raise RuntimeError("query embedding dimensions do not match semantic index")
 
-    rows = _candidate_rows(
+    scope = dict(
         book_ids=book_ids, source_code=source_code,
         page_from=page_from, page_to=page_to, qasida_number=qasida_number,
         min_tier=min_tier,
     )
+    rows = _candidate_rows(**scope, indices_only=True)
     if not rows:
         return []
     vector_indices = np.fromiter(
@@ -188,14 +198,15 @@ def semantic_search(
         float(min_score) if min_score is not None
         else float(_setting("semantic_min_score", 0.0))
     )
-    selected = _top_indices(scores, limit)
+    selected = [int(i) for i in _top_indices(scores, limit) if scores[i] >= threshold]
+    selected_indices = [int(vector_indices[i]) for i in selected]
+    metadata = {row["vector_index"]: row for row in
+                _candidate_rows(**scope, vector_indices=selected_indices)}
     results = []
     excerpt_chars = max(40, min(int(context_chars), 300)) * 2
     for rank, local_index in enumerate(selected, start=1):
         raw_score = float(scores[local_index])
-        if raw_score < threshold:
-            continue
-        row = rows[int(local_index)]
+        row = metadata[int(vector_indices[local_index])]
         text = row["text"]
         snippet = _esc(text[:excerpt_chars])
         if len(text) > excerpt_chars:
@@ -299,8 +310,9 @@ def combine_candidates(
         if semantic:
             row["semantic_score"] = round(semantic, 6)
         if row.get("match_type") != "semantic":
-            row["citation_verified"] = True
-            row["verification_required"] = False
+            literal_support = row.get("match_type") in {"exact", "terms"}
+            row["citation_verified"] = literal_support
+            row["verification_required"] = not literal_support
         ranked.append(row)
 
     ranked.sort(key=lambda row: (
@@ -339,7 +351,7 @@ def auto_search(**kwargs) -> list[dict]:
         qasida_number=kwargs.get("qasida_number"), limit=pool,
         min_tier=kwargs.get("min_tier"),
         context_chars=kwargs.get("context_chars", 60),
-        min_score=0.0,
+        min_score=None,
     )
     rows = combine_candidates(combined_query, groups, semantic_rows)
 

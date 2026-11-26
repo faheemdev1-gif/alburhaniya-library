@@ -1,0 +1,1530 @@
+[
+  {
+    "version": "2.10.20",
+    "group": "original",
+    "query": "ما العلامات التي تدل على صدق المريد في الطريق",
+    "expected": [
+      "b07-p138",
+      "b16-p37"
+    ],
+    "returned": [
+      "b07-p138",
+      "b07-p132",
+      "b45-p3",
+      "b42-p14",
+      "b44-p46"
+    ],
+    "rank": 1,
+    "completion": "full"
+  },
+  {
+    "version": "2.10.20",
+    "group": "paraphrase",
+    "query": "بم يُعرف المريد الصادق في سلوكه؟",
+    "expected": [
+      "b07-p138",
+      "b16-p37"
+    ],
+    "returned": [
+      "b07-p138",
+      "b40-p6",
+      "b10-p174",
+      "b07-p146",
+      "b15-p33"
+    ],
+    "rank": 1,
+    "completion": "full"
+  },
+  {
+    "version": "2.10.20",
+    "group": "original",
+    "query": "كيف يجمع السالك بين خشية الله والأمل في عفوه",
+    "expected": [
+      "b37-p156",
+      "b07-p150"
+    ],
+    "returned": [
+      "b07-p150",
+      "b07-p38",
+      "b01-p159",
+      "b37-p156",
+      "b42-p142"
+    ],
+    "rank": 1,
+    "completion": "full"
+  },
+  {
+    "version": "2.10.20",
+    "group": "paraphrase",
+    "query": "كيف يوازن المريد بين خوفه من الله ورجائه في المغفرة؟",
+    "expected": [
+      "b37-p156",
+      "b07-p150"
+    ],
+    "returned": [
+      "b09-p88",
+      "b37-p156",
+      "b07-p150",
+      "b16-p28",
+      "b16-p27"
+    ],
+    "rank": 2,
+    "completion": "full"
+  },
+  {
+    "version": "2.10.20",
+    "group": "original",
+    "query": "ماذا ينال من يحب سيدنا محمد",
+    "expected": [
+      "b01-p62"
+    ],
+    "returned": [
+      "b27-p43",
+      "b01-p62",
+      "b01-p143",
+      "b21-p220",
+      "b12-p174"
+    ],
+    "rank": 2,
+    "completion": "full"
+  },
+  {
+    "version": "2.10.20",
+    "group": "paraphrase",
+    "query": "ما ثمرة محبة النبي صلى الله عليه وسلم؟",
+    "expected": [
+      "b01-p62"
+    ],
+    "returned": [
+      "b12-p174",
+      "b29-p80",
+      "b01-p62",
+      "b27-p43",
+      "b07-p250"
+    ],
+    "rank": 3,
+    "completion": "full"
+  },
+  {
+    "version": "2.10.20",
+    "group": "original",
+    "query": "ما شروط التوبة حتى لا تكون مجرد كلام باللسان",
+    "expected": [
+      "b39-p94",
+      "b44-p43"
+    ],
+    "returned": [
+      "b39-p47",
+      "b39-p94",
+      "b44-p43",
+      "b45-p6",
+      "b01-p159"
+    ],
+    "rank": 2,
+    "completion": "full"
+  },
+  {
+    "version": "2.10.20",
+    "group": "paraphrase",
+    "query": "ماذا يلزم التائب سوى الاستغفار بلسانه؟",
+    "expected": [
+      "b39-p94",
+      "b44-p43"
+    ],
+    "returned": [
+      "b13-p11",
+      "b39-p47",
+      "b39-p94",
+      "b44-p43",
+      "b45-p6"
+    ],
+    "rank": 3,
+    "completion": "full"
+  },
+  {
+    "version": "2.10.20",
+    "group": "original",
+    "query": "هل البيع والشراء يمنعان العبد من ذكر الله بقلبه",
+    "expected": [
+      "b28-p39",
+      "b27-p4",
+      "b41-p134"
+    ],
+    "returned": [
+      "b27-p4",
+      "b28-p39",
+      "b42-p9",
+      "b42-p42",
+      "b29-p8"
+    ],
+    "rank": 1,
+    "completion": "full"
+  },
+  {
+    "version": "2.10.20",
+    "group": "paraphrase",
+    "query": "كيف يظل القلب ذاكراً لله أثناء التجارة؟",
+    "expected": [
+      "b28-p39",
+      "b27-p4",
+      "b41-p134"
+    ],
+    "returned": [
+      "b27-p4",
+      "b28-p39",
+      "b42-p9",
+      "b42-p42",
+      "b09-p7"
+    ],
+    "rank": 1,
+    "completion": "full"
+  },
+  {
+    "version": "2.10.20",
+    "group": "original",
+    "query": "إذا آذاني أخ في الطريقة فكيف أجيبه من غير خصومة",
+    "expected": [
+      "b19-p21",
+      "b44-p3"
+    ],
+    "returned": [
+      "b07-p143",
+      "b44-p5",
+      "b44-p3",
+      "b24-p260",
+      "b20-p223"
+    ],
+    "rank": 3,
+    "completion": "full"
+  },
+  {
+    "version": "2.10.20",
+    "group": "paraphrase",
+    "query": "بم أرد على أخ أساء إلي حتى لا نتخاصم؟",
+    "expected": [
+      "b19-p21",
+      "b44-p3"
+    ],
+    "returned": [
+      "b07-p147",
+      "b07-p143",
+      "b31-p22",
+      "b40-p94",
+      "b44-p39"
+    ],
+    "rank": null,
+    "completion": "full"
+  },
+  {
+    "version": "2.10.20",
+    "group": "original",
+    "query": "لماذا لا يلزم البرهاني بدخول الخلوة",
+    "expected": [
+      "b31-p90",
+      "b28-p69"
+    ],
+    "returned": [
+      "b31-p90",
+      "b39-p197",
+      "b27-p36",
+      "b10-p230",
+      "b27-p104"
+    ],
+    "rank": 1,
+    "completion": "full"
+  },
+  {
+    "version": "2.10.20",
+    "group": "paraphrase",
+    "query": "هل الخلوة واجبة على كل مريد برهاني؟",
+    "expected": [
+      "b31-p90",
+      "b28-p69"
+    ],
+    "returned": [
+      "b31-p90",
+      "b39-p197",
+      "b27-p36",
+      "b10-p230",
+      "b15-p39"
+    ],
+    "rank": 1,
+    "completion": "full"
+  },
+  {
+    "version": "2.10.20",
+    "group": "original",
+    "query": "كيف أتخلص من حب الثناء وأخلص في عبادتي",
+    "expected": [
+      "b07-p134"
+    ],
+    "returned": [
+      "b07-p134",
+      "b29-p72",
+      "b03-p27",
+      "b02-p4"
+    ],
+    "rank": 1,
+    "completion": "full"
+  },
+  {
+    "version": "2.10.20",
+    "group": "paraphrase",
+    "query": "كيف أعبد الله بإخلاص من غير أن أنتظر مدح الناس؟",
+    "expected": [
+      "b07-p134"
+    ],
+    "returned": [
+      "b07-p134",
+      "b29-p72",
+      "b03-p27",
+      "b02-p4"
+    ],
+    "rank": 1,
+    "completion": "full"
+  },
+  {
+    "version": "2.10.20",
+    "group": "original",
+    "query": "ما علاقة المواظبة على الفواتح بالاتصال بالمشايخ",
+    "expected": [
+      "b37-p67",
+      "b15-p31"
+    ],
+    "returned": [
+      "b37-p67",
+      "b06-p26",
+      "b06-p386",
+      "b07-p304",
+      "b07-p302"
+    ],
+    "rank": 1,
+    "completion": "full"
+  },
+  {
+    "version": "2.10.20",
+    "group": "paraphrase",
+    "query": "كيف تقوي قراءة الفواتح صلة المريد بمشايخه؟",
+    "expected": [
+      "b37-p67",
+      "b15-p31"
+    ],
+    "returned": [
+      "b37-p67",
+      "b26-p87",
+      "b15-p24",
+      "b30-p92",
+      "b06-p26"
+    ],
+    "rank": 1,
+    "completion": "full"
+  },
+  {
+    "version": "2.10.20",
+    "group": "original",
+    "query": "إذا تركت وردي مدة فهل أعود للاسم الذي كنت فيه",
+    "expected": [
+      "b15-p26"
+    ],
+    "returned": [
+      "b15-p26",
+      "b39-p229",
+      "b39-p94",
+      "b44-p24",
+      "b44-p43"
+    ],
+    "rank": 1,
+    "completion": "full"
+  },
+  {
+    "version": "2.10.20",
+    "group": "paraphrase",
+    "query": "هل أستأنف الاسم نفسه بعد انقطاعي عن الورد؟",
+    "expected": [
+      "b15-p26"
+    ],
+    "returned": [
+      "b15-p26",
+      "b41-p109",
+      "b39-p94",
+      "b44-p50",
+      "b44-p43"
+    ],
+    "rank": 1,
+    "completion": "full"
+  },
+  {
+    "version": "2.10.20",
+    "group": "original",
+    "query": "ما الذي يميز التوبة النصوح عن مجرد الاستغفار",
+    "expected": [
+      "b39-p94",
+      "b44-p43"
+    ],
+    "returned": [
+      "b39-p94",
+      "b13-p11",
+      "b44-p43",
+      "b39-p47",
+      "b45-p6"
+    ],
+    "rank": 1,
+    "completion": "full"
+  },
+  {
+    "version": "2.10.20",
+    "group": "paraphrase",
+    "query": "كيف أعرف أن توبتي نصوح وليست استغفاراً باللسان؟",
+    "expected": [
+      "b39-p94",
+      "b44-p43"
+    ],
+    "returned": [
+      "b25-p137",
+      "b13-p11",
+      "b39-p47",
+      "b39-p94",
+      "b45-p6"
+    ],
+    "rank": 4,
+    "completion": "full"
+  },
+  {
+    "version": "2.10.20",
+    "group": "original",
+    "query": "كيف يحافظ المريد على أدب اللسان عند اختلافه مع إخوانه",
+    "expected": [
+      "b19-p21",
+      "b44-p3"
+    ],
+    "returned": [
+      "b07-p143",
+      "b44-p55",
+      "b44-p3",
+      "b24-p260",
+      "b01-p153"
+    ],
+    "rank": 3,
+    "completion": "full"
+  },
+  {
+    "version": "2.10.20",
+    "group": "paraphrase",
+    "query": "ما أدب الكلام عند الخلاف بين المريد وإخوانه؟",
+    "expected": [
+      "b19-p21",
+      "b44-p3"
+    ],
+    "returned": [
+      "b07-p143",
+      "b44-p20",
+      "b44-p55",
+      "b19-p21",
+      "b05-p6"
+    ],
+    "rank": 4,
+    "completion": "full"
+  },
+  {
+    "version": "2.10.20",
+    "group": "original",
+    "query": "كيف يكون ذكر القلب مع انشغال الجوارح بالعمل",
+    "expected": [
+      "b28-p39",
+      "b27-p4",
+      "b41-p134"
+    ],
+    "returned": [
+      "b28-p39",
+      "b28-p43",
+      "b29-p42",
+      "b41-p17",
+      "b41-p75"
+    ],
+    "rank": 1,
+    "completion": "full"
+  },
+  {
+    "version": "2.10.20",
+    "group": "paraphrase",
+    "query": "هل يستطيع المرء أن يذكر الله بقلبه وهو يعمل؟",
+    "expected": [
+      "b28-p39",
+      "b27-p4",
+      "b41-p134"
+    ],
+    "returned": [
+      "b27-p4",
+      "b28-p39",
+      "b28-p43",
+      "b29-p8",
+      "b29-p42"
+    ],
+    "rank": 1,
+    "completion": "full"
+  },
+  {
+    "version": "2.10.20",
+    "group": "original",
+    "query": "ما أهمية الخلوة للسالك",
+    "expected": [
+      "b31-p90",
+      "b28-p69"
+    ],
+    "returned": [
+      "b31-p90",
+      "b28-p69",
+      "b12-p147",
+      "b10-p230",
+      "b27-p13"
+    ],
+    "rank": 1,
+    "completion": "full"
+  },
+  {
+    "version": "2.10.20",
+    "group": "paraphrase",
+    "query": "لماذا يلجأ السالك إلى الخلوة؟",
+    "expected": [
+      "b31-p90",
+      "b28-p69"
+    ],
+    "returned": [
+      "b31-p90",
+      "b10-p230",
+      "b28-p10",
+      "b40-p38",
+      "b31-p80"
+    ],
+    "rank": 1,
+    "completion": "full"
+  },
+  {
+    "version": "2.10.20",
+    "group": "original",
+    "query": "كيف يكون اتصال المريد بالمشايخ بالفواتح",
+    "expected": [
+      "b37-p67",
+      "b15-p31"
+    ],
+    "returned": [
+      "b37-p67",
+      "b30-p92",
+      "b27-p1",
+      "b28-p1",
+      "b28-p44"
+    ],
+    "rank": 1,
+    "completion": "full"
+  },
+  {
+    "version": "2.10.20",
+    "group": "paraphrase",
+    "query": "ما أثر قراءة الفواتح في الصلة بالشيوخ؟",
+    "expected": [
+      "b37-p67",
+      "b15-p31"
+    ],
+    "returned": [
+      "b37-p67",
+      "b15-p24",
+      "b07-p72",
+      "b10-p243",
+      "b06-p386"
+    ],
+    "rank": 1,
+    "completion": "full"
+  },
+  {
+    "version": "2.10.20",
+    "group": "original",
+    "query": "هل يمكن أن تكون المراقبة بديلا عن الخلوة",
+    "expected": [
+      "b28-p69",
+      "b31-p90"
+    ],
+    "returned": [
+      "b31-p90",
+      "b29-p87",
+      "b39-p135",
+      "b28-p69",
+      "b31-p115"
+    ],
+    "rank": 1,
+    "completion": "full"
+  },
+  {
+    "version": "2.10.20",
+    "group": "paraphrase",
+    "query": "هل تغني المراقبة عن الاعتزال في الخلوة؟",
+    "expected": [
+      "b28-p69",
+      "b31-p90"
+    ],
+    "returned": [
+      "b31-p90",
+      "b10-p230",
+      "b29-p87",
+      "b39-p135",
+      "b28-p69"
+    ],
+    "rank": 1,
+    "completion": "full"
+  },
+  {
+    "version": "2.10.20",
+    "group": "original",
+    "query": "هل يبدأ المريد من الاستغفار كلما انقطع عن أوراده",
+    "expected": [
+      "b15-p26"
+    ],
+    "returned": [
+      "b15-p26",
+      "b39-p94",
+      "b41-p21",
+      "b44-p50",
+      "b44-p43"
+    ],
+    "rank": 1,
+    "completion": "full"
+  },
+  {
+    "version": "2.10.20",
+    "group": "paraphrase",
+    "query": "إذا انقطعت أورادي فهل أرجع إلى أول الاستغفار؟",
+    "expected": [
+      "b15-p26"
+    ],
+    "returned": [
+      "b15-p26",
+      "b15-p33",
+      "b39-p94",
+      "b44-p43",
+      "b44-p24"
+    ],
+    "rank": 1,
+    "completion": "full"
+  },
+  {
+    "version": "2.10.20",
+    "group": "original",
+    "query": "هل يكفي أن أقرأ الأوراد وأترك السعي للكسب",
+    "expected": [
+      "b41-p131"
+    ],
+    "returned": [
+      "b41-p131",
+      "b15-p26"
+    ],
+    "rank": 1,
+    "completion": "full"
+  },
+  {
+    "version": "2.10.20",
+    "group": "paraphrase",
+    "query": "هل يجوز ترك العمل بحجة المواظبة على الأوراد؟",
+    "expected": [
+      "b41-p131"
+    ],
+    "returned": [
+      "b15-p26",
+      "b41-p131"
+    ],
+    "rank": 2,
+    "completion": "full"
+  },
+  {
+    "version": "2.10.19",
+    "group": "fresh",
+    "query": "بأي شيء يظهر صدق السالك في طريقه؟",
+    "expected": [
+      "b07-p138",
+      "b16-p37"
+    ],
+    "returned": [
+      "b12-p129",
+      "b11-p94",
+      "b10-p174",
+      "b10-p215",
+      "b13-p42"
+    ],
+    "rank": null,
+    "completion": "full"
+  },
+  {
+    "version": "2.10.19",
+    "group": "fresh",
+    "query": "كيف يجتمع الرجاء والخشية في قلب المؤمن؟",
+    "expected": [
+      "b37-p156",
+      "b07-p150"
+    ],
+    "returned": [
+      "b07-p150",
+      "b07-p38",
+      "b01-p159",
+      "b37-p156",
+      "b42-p142"
+    ],
+    "rank": 1,
+    "completion": "full"
+  },
+  {
+    "version": "2.10.19",
+    "group": "fresh",
+    "query": "ما جزاء من أحب رسول الله؟",
+    "expected": [
+      "b01-p62"
+    ],
+    "returned": [
+      "b09-p70"
+    ],
+    "rank": null,
+    "completion": "full"
+  },
+  {
+    "version": "2.10.19",
+    "group": "fresh",
+    "query": "هل يصدق اسم التائب على من يستغفر بلسانه فقط؟",
+    "expected": [
+      "b39-p94",
+      "b44-p43"
+    ],
+    "returned": [],
+    "rank": null,
+    "completion": "full"
+  },
+  {
+    "version": "2.10.19",
+    "group": "fresh",
+    "query": "هل يصرف الاشتغال بالبيع عن الذكر بالقلب؟",
+    "expected": [
+      "b28-p39",
+      "b27-p4",
+      "b41-p134"
+    ],
+    "returned": [
+      "b27-p4",
+      "b28-p39",
+      "b42-p9",
+      "b42-p42",
+      "b29-p8"
+    ],
+    "rank": 1,
+    "completion": "full"
+  },
+  {
+    "version": "2.10.19",
+    "group": "fresh",
+    "query": "أخي أساء إلي فكيف أضبط لساني عند الرد عليه؟",
+    "expected": [
+      "b19-p21",
+      "b44-p3"
+    ],
+    "returned": [
+      "b27-p18",
+      "b41-p99",
+      "b13-p27",
+      "b32-p174",
+      "b28-p42"
+    ],
+    "rank": null,
+    "completion": "full"
+  },
+  {
+    "version": "2.10.19",
+    "group": "fresh",
+    "query": "هل يشترط اعتزال الناس في خلوة عند أهل الطريقة؟",
+    "expected": [
+      "b31-p90",
+      "b28-p69"
+    ],
+    "returned": [
+      "b31-p90",
+      "b10-p230",
+      "b40-p38",
+      "b31-p80",
+      "b40-p60"
+    ],
+    "rank": 1,
+    "completion": "full"
+  },
+  {
+    "version": "2.10.19",
+    "group": "fresh",
+    "query": "ما السبيل إلى إخلاص العبادة وترك انتظار ثناء الناس؟",
+    "expected": [
+      "b07-p134"
+    ],
+    "returned": [
+      "b07-p134",
+      "b29-p72",
+      "b03-p27",
+      "b02-p4"
+    ],
+    "rank": 1,
+    "completion": "full"
+  },
+  {
+    "version": "2.10.19",
+    "group": "fresh",
+    "query": "كيف تصل الفواتح من يقرؤها بأهل الطريق؟",
+    "expected": [
+      "b37-p67",
+      "b15-p31"
+    ],
+    "returned": [
+      "b37-p82",
+      "b41-p113",
+      "b39-p114",
+      "b28-p72",
+      "b41-p51"
+    ],
+    "rank": null,
+    "completion": "full"
+  },
+  {
+    "version": "2.10.19",
+    "group": "fresh",
+    "query": "انقطعت عن ورد الاسم، فمن أين أستأنف؟",
+    "expected": [
+      "b15-p26"
+    ],
+    "returned": [
+      "b26-p70",
+      "b41-p31",
+      "b32-p10",
+      "b32-p19",
+      "b26-p51"
+    ],
+    "rank": null,
+    "completion": "full"
+  },
+  {
+    "version": "2.10.19",
+    "group": "fresh",
+    "query": "ما الذي يتطلبه صدق التوبة إضافة إلى قول أستغفر الله؟",
+    "expected": [
+      "b39-p94",
+      "b44-p43"
+    ],
+    "returned": [
+      "b07-p273",
+      "b07-p120",
+      "b39-p97",
+      "b39-p53"
+    ],
+    "rank": null,
+    "completion": "full"
+  },
+  {
+    "version": "2.10.19",
+    "group": "fresh",
+    "query": "كيف يتكلم الإخوة عند النزاع من غير أن يؤذي بعضهم بعضا؟",
+    "expected": [
+      "b19-p21",
+      "b44-p3"
+    ],
+    "returned": [
+      "b05-p17"
+    ],
+    "rank": null,
+    "completion": "full"
+  },
+  {
+    "version": "2.10.19",
+    "group": "fresh",
+    "query": "هل يجتمع عمل اليد مع ذكر القلب؟",
+    "expected": [
+      "b28-p39",
+      "b27-p4",
+      "b41-p134"
+    ],
+    "returned": [
+      "b27-p4",
+      "b28-p39",
+      "b28-p43",
+      "b29-p42",
+      "b41-p37"
+    ],
+    "rank": 1,
+    "completion": "full"
+  },
+  {
+    "version": "2.10.19",
+    "group": "fresh",
+    "query": "ما فائدة الخلوة في طريق السلوك؟",
+    "expected": [
+      "b31-p90",
+      "b28-p69"
+    ],
+    "returned": [
+      "b31-p90",
+      "b28-p69",
+      "b10-p230",
+      "b39-p271",
+      "b32-p70"
+    ],
+    "rank": 1,
+    "completion": "full"
+  },
+  {
+    "version": "2.10.19",
+    "group": "fresh",
+    "query": "ما علاقة الفاتحة بصلة السالك بشيخه؟",
+    "expected": [
+      "b37-p67",
+      "b15-p31"
+    ],
+    "returned": [
+      "b37-p67",
+      "b06-p26",
+      "b06-p386",
+      "b07-p72",
+      "b10-p243"
+    ],
+    "rank": 1,
+    "completion": "full"
+  },
+  {
+    "version": "2.10.19",
+    "group": "fresh",
+    "query": "هل تقوم المراقبة مقام الخلوة؟",
+    "expected": [
+      "b28-p69",
+      "b31-p90"
+    ],
+    "returned": [
+      "b31-p90",
+      "b07-p144",
+      "b10-p230",
+      "b29-p87",
+      "b39-p135"
+    ],
+    "rank": 1,
+    "completion": "full"
+  },
+  {
+    "version": "2.10.19",
+    "group": "fresh",
+    "query": "حين أرجع لأورادي بعد انقطاع أأبدأ من جديد؟",
+    "expected": [
+      "b15-p26"
+    ],
+    "returned": [
+      "b14-p163",
+      "b13-p69",
+      "b13-p53",
+      "b07-p273",
+      "b07-p96"
+    ],
+    "rank": null,
+    "completion": "full"
+  },
+  {
+    "version": "2.10.19",
+    "group": "fresh",
+    "query": "هل يغنيني الورد عن طلب الرزق؟",
+    "expected": [
+      "b41-p131"
+    ],
+    "returned": [
+      "b41-p131",
+      "b15-p26"
+    ],
+    "rank": 1,
+    "completion": "full"
+  },
+  {
+    "version": "2.10.20",
+    "group": "fresh",
+    "query": "بأي شيء يظهر صدق السالك في طريقه؟",
+    "expected": [
+      "b07-p138",
+      "b16-p37"
+    ],
+    "returned": [
+      "b12-p129",
+      "b11-p94",
+      "b10-p174",
+      "b10-p215",
+      "b13-p42"
+    ],
+    "rank": null,
+    "completion": "full"
+  },
+  {
+    "version": "2.10.20",
+    "group": "fresh",
+    "query": "كيف يجتمع الرجاء والخشية في قلب المؤمن؟",
+    "expected": [
+      "b37-p156",
+      "b07-p150"
+    ],
+    "returned": [
+      "b07-p150",
+      "b07-p38",
+      "b01-p159",
+      "b37-p156",
+      "b42-p142"
+    ],
+    "rank": 1,
+    "completion": "full"
+  },
+  {
+    "version": "2.10.20",
+    "group": "fresh",
+    "query": "ما جزاء من أحب رسول الله؟",
+    "expected": [
+      "b01-p62"
+    ],
+    "returned": [
+      "b09-p70"
+    ],
+    "rank": null,
+    "completion": "full"
+  },
+  {
+    "version": "2.10.20",
+    "group": "fresh",
+    "query": "هل يصدق اسم التائب على من يستغفر بلسانه فقط؟",
+    "expected": [
+      "b39-p94",
+      "b44-p43"
+    ],
+    "returned": [
+      "b13-p11",
+      "b39-p47",
+      "b39-p94",
+      "b44-p43",
+      "b45-p6"
+    ],
+    "rank": 3,
+    "completion": "full"
+  },
+  {
+    "version": "2.10.20",
+    "group": "fresh",
+    "query": "هل يصرف الاشتغال بالبيع عن الذكر بالقلب؟",
+    "expected": [
+      "b28-p39",
+      "b27-p4",
+      "b41-p134"
+    ],
+    "returned": [
+      "b27-p4",
+      "b28-p39",
+      "b42-p9",
+      "b42-p42",
+      "b29-p8"
+    ],
+    "rank": 1,
+    "completion": "full"
+  },
+  {
+    "version": "2.10.20",
+    "group": "fresh",
+    "query": "أخي أساء إلي فكيف أضبط لساني عند الرد عليه؟",
+    "expected": [
+      "b19-p21",
+      "b44-p3"
+    ],
+    "returned": [
+      "b27-p18",
+      "b41-p99",
+      "b13-p27",
+      "b32-p174",
+      "b28-p42"
+    ],
+    "rank": null,
+    "completion": "full"
+  },
+  {
+    "version": "2.10.20",
+    "group": "fresh",
+    "query": "هل يشترط اعتزال الناس في خلوة عند أهل الطريقة؟",
+    "expected": [
+      "b31-p90",
+      "b28-p69"
+    ],
+    "returned": [
+      "b31-p90",
+      "b10-p230",
+      "b40-p38",
+      "b31-p80",
+      "b40-p60"
+    ],
+    "rank": 1,
+    "completion": "full"
+  },
+  {
+    "version": "2.10.20",
+    "group": "fresh",
+    "query": "ما السبيل إلى إخلاص العبادة وترك انتظار ثناء الناس؟",
+    "expected": [
+      "b07-p134"
+    ],
+    "returned": [
+      "b07-p134",
+      "b29-p72",
+      "b03-p27",
+      "b02-p4"
+    ],
+    "rank": 1,
+    "completion": "full"
+  },
+  {
+    "version": "2.10.20",
+    "group": "fresh",
+    "query": "كيف تصل الفواتح من يقرؤها بأهل الطريق؟",
+    "expected": [
+      "b37-p67",
+      "b15-p31"
+    ],
+    "returned": [
+      "b37-p82",
+      "b41-p113",
+      "b39-p114",
+      "b28-p72",
+      "b41-p51"
+    ],
+    "rank": null,
+    "completion": "full"
+  },
+  {
+    "version": "2.10.20",
+    "group": "fresh",
+    "query": "انقطعت عن ورد الاسم، فمن أين أستأنف؟",
+    "expected": [
+      "b15-p26"
+    ],
+    "returned": [
+      "b26-p70",
+      "b41-p31",
+      "b32-p10",
+      "b32-p19",
+      "b26-p51"
+    ],
+    "rank": null,
+    "completion": "full"
+  },
+  {
+    "version": "2.10.20",
+    "group": "fresh",
+    "query": "ما الذي يتطلبه صدق التوبة إضافة إلى قول أستغفر الله؟",
+    "expected": [
+      "b39-p94",
+      "b44-p43"
+    ],
+    "returned": [
+      "b07-p273",
+      "b07-p120",
+      "b39-p97",
+      "b39-p53"
+    ],
+    "rank": null,
+    "completion": "full"
+  },
+  {
+    "version": "2.10.20",
+    "group": "fresh",
+    "query": "كيف يتكلم الإخوة عند النزاع من غير أن يؤذي بعضهم بعضا؟",
+    "expected": [
+      "b19-p21",
+      "b44-p3"
+    ],
+    "returned": [
+      "b05-p17"
+    ],
+    "rank": null,
+    "completion": "full"
+  },
+  {
+    "version": "2.10.20",
+    "group": "fresh",
+    "query": "هل يجتمع عمل اليد مع ذكر القلب؟",
+    "expected": [
+      "b28-p39",
+      "b27-p4",
+      "b41-p134"
+    ],
+    "returned": [
+      "b27-p4",
+      "b28-p39",
+      "b28-p43",
+      "b29-p42",
+      "b41-p37"
+    ],
+    "rank": 1,
+    "completion": "full"
+  },
+  {
+    "version": "2.10.20",
+    "group": "fresh",
+    "query": "ما فائدة الخلوة في طريق السلوك؟",
+    "expected": [
+      "b31-p90",
+      "b28-p69"
+    ],
+    "returned": [
+      "b31-p90",
+      "b28-p69",
+      "b10-p230",
+      "b39-p271",
+      "b32-p70"
+    ],
+    "rank": 1,
+    "completion": "full"
+  },
+  {
+    "version": "2.10.20",
+    "group": "fresh",
+    "query": "ما علاقة الفاتحة بصلة السالك بشيخه؟",
+    "expected": [
+      "b37-p67",
+      "b15-p31"
+    ],
+    "returned": [
+      "b37-p67",
+      "b06-p26",
+      "b06-p386",
+      "b07-p72",
+      "b10-p243"
+    ],
+    "rank": 1,
+    "completion": "full"
+  },
+  {
+    "version": "2.10.20",
+    "group": "fresh",
+    "query": "هل تقوم المراقبة مقام الخلوة؟",
+    "expected": [
+      "b28-p69",
+      "b31-p90"
+    ],
+    "returned": [
+      "b31-p90",
+      "b07-p144",
+      "b10-p230",
+      "b29-p87",
+      "b39-p135"
+    ],
+    "rank": 1,
+    "completion": "full"
+  },
+  {
+    "version": "2.10.20",
+    "group": "fresh",
+    "query": "حين أرجع لأورادي بعد انقطاع أأبدأ من جديد؟",
+    "expected": [
+      "b15-p26"
+    ],
+    "returned": [
+      "b14-p163",
+      "b13-p69",
+      "b13-p53",
+      "b07-p273",
+      "b07-p96"
+    ],
+    "rank": null,
+    "completion": "full"
+  },
+  {
+    "version": "2.10.20",
+    "group": "fresh",
+    "query": "هل يغنيني الورد عن طلب الرزق؟",
+    "expected": [
+      "b41-p131"
+    ],
+    "returned": [
+      "b41-p131",
+      "b15-p26"
+    ],
+    "rank": 1,
+    "completion": "full"
+  },
+  {
+    "version": "2.10.19",
+    "group": "urdu",
+    "query": "سچی توبہ کی شرائط کیا ہیں؟",
+    "expected": [
+      "b39-p94",
+      "b44-p43"
+    ],
+    "returned": [
+      "b07-p141",
+      "b13-p45",
+      "b44-p39",
+      "b20-p59",
+      "b21-p143"
+    ],
+    "rank": null,
+    "mode": "semantic_auto"
+  },
+  {
+    "version": "2.10.19",
+    "group": "urdu",
+    "query": "سچے مرید کی نشانیاں کیا ہیں؟",
+    "expected": [
+      "b07-p138",
+      "b16-p37"
+    ],
+    "returned": [
+      "b07-p138",
+      "b12-p258",
+      "b07-p194",
+      "b11-p118",
+      "b14-p102"
+    ],
+    "rank": 1,
+    "mode": "semantic_auto"
+  },
+  {
+    "version": "2.10.19",
+    "group": "urdu",
+    "query": "نبی کریم سے محبت کا کیا اجر ہے؟",
+    "expected": [
+      "b01-p62"
+    ],
+    "returned": [
+      "b44-p49",
+      "b44-p16",
+      "b24-p189",
+      "b01-p94",
+      "b09-p24"
+    ],
+    "rank": null,
+    "mode": "semantic_auto"
+  },
+  {
+    "version": "2.10.19",
+    "group": "urdu",
+    "query": "کاروبار کے دوران دل کا ذکر کیسے جاری رکھوں؟",
+    "expected": [
+      "b27-p4",
+      "b28-p39",
+      "b41-p134"
+    ],
+    "returned": [
+      "b14-p117",
+      "b07-p238",
+      "b14-p105",
+      "b39-p60",
+      "b44-p44"
+    ],
+    "rank": null,
+    "mode": "semantic_auto"
+  },
+  {
+    "version": "2.10.19",
+    "group": "urdu",
+    "query": "اللہ کے خوف اور امید میں توازن کیسے قائم ہو؟",
+    "expected": [
+      "b37-p156",
+      "b07-p150"
+    ],
+    "returned": [
+      "b07-p215",
+      "b07-p244",
+      "b14-p5",
+      "b44-p40",
+      "b42-p34"
+    ],
+    "rank": null,
+    "mode": "semantic_auto"
+  },
+  {
+    "version": "2.10.19",
+    "group": "urdu",
+    "query": "اخلاص کے ساتھ عبادت کیسے کی جائے؟",
+    "expected": [
+      "b07-p134"
+    ],
+    "returned": [
+      "b44-p52",
+      "b44-p39",
+      "b21-p39",
+      "b17-p41",
+      "b23-p67"
+    ],
+    "rank": null,
+    "mode": "semantic_auto"
+  },
+  {
+    "version": "2.10.19",
+    "group": "urdu",
+    "query": "سلوک میں خلوت کی کیا اہمیت ہے؟",
+    "expected": [
+      "b31-p90",
+      "b28-p69"
+    ],
+    "returned": [
+      "b14-p202",
+      "b14-p163",
+      "b28-p67",
+      "b42-p26",
+      "b44-p38"
+    ],
+    "rank": null,
+    "mode": "semantic_auto"
+  },
+  {
+    "version": "2.10.19",
+    "group": "urdu",
+    "query": "اگر وظیفہ چھوٹ جائے تو دوبارہ کہاں سے شروع کروں؟",
+    "expected": [
+      "b15-p26"
+    ],
+    "returned": [
+      "b14-p252",
+      "b14-p163",
+      "b10-p47",
+      "b44-p40",
+      "b40-p54"
+    ],
+    "rank": null,
+    "mode": "semantic_auto"
+  },
+  {
+    "version": "2.10.20",
+    "group": "urdu",
+    "query": "سچی توبہ کی شرائط کیا ہیں؟",
+    "expected": [
+      "b39-p94",
+      "b44-p43"
+    ],
+    "returned": [
+      "b13-p11",
+      "b39-p47",
+      "b39-p94",
+      "b44-p43",
+      "b45-p6"
+    ],
+    "rank": 3,
+    "mode": "reformulated"
+  },
+  {
+    "version": "2.10.20",
+    "group": "urdu",
+    "query": "سچے مرید کی نشانیاں کیا ہیں؟",
+    "expected": [
+      "b07-p138",
+      "b16-p37"
+    ],
+    "returned": [
+      "b07-p138",
+      "b42-p14",
+      "b16-p37",
+      "b01-p119",
+      "b43-p18"
+    ],
+    "rank": 1,
+    "mode": "reformulated"
+  },
+  {
+    "version": "2.10.20",
+    "group": "urdu",
+    "query": "نبی کریم سے محبت کا کیا اجر ہے؟",
+    "expected": [
+      "b01-p62"
+    ],
+    "returned": [
+      "b39-p59",
+      "b39-p190",
+      "b15-p22",
+      "b27-p43",
+      "b40-p63"
+    ],
+    "rank": null,
+    "mode": "reformulated"
+  },
+  {
+    "version": "2.10.20",
+    "group": "urdu",
+    "query": "کاروبار کے دوران دل کا ذکر کیسے جاری رکھوں؟",
+    "expected": [
+      "b27-p4",
+      "b28-p39",
+      "b41-p134"
+    ],
+    "returned": [
+      "b07-p193",
+      "b10-p209",
+      "b39-p181",
+      "b27-p18",
+      "b13-p21"
+    ],
+    "rank": null,
+    "mode": "semantic_auto"
+  },
+  {
+    "version": "2.10.20",
+    "group": "urdu",
+    "query": "اللہ کے خوف اور امید میں توازن کیسے قائم ہو؟",
+    "expected": [
+      "b37-p156",
+      "b07-p150"
+    ],
+    "returned": [
+      "b07-p294",
+      "b44-p40",
+      "b44-p1",
+      "b20-p128",
+      "b22-p78"
+    ],
+    "rank": null,
+    "mode": "semantic_auto"
+  },
+  {
+    "version": "2.10.20",
+    "group": "urdu",
+    "query": "اخلاص کے ساتھ عبادت کیسے کی جائے؟",
+    "expected": [
+      "b07-p134"
+    ],
+    "returned": [
+      "b07-p193",
+      "b07-p173",
+      "b26-p2",
+      "b44-p35",
+      "b41-p17"
+    ],
+    "rank": null,
+    "mode": "semantic_auto"
+  },
+  {
+    "version": "2.10.20",
+    "group": "urdu",
+    "query": "سلوک میں خلوت کی کیا اہمیت ہے؟",
+    "expected": [
+      "b31-p90",
+      "b28-p69"
+    ],
+    "returned": [
+      "b31-p90",
+      "b28-p69",
+      "b12-p147",
+      "b10-p230",
+      "b27-p13"
+    ],
+    "rank": 1,
+    "mode": "reformulated"
+  },
+  {
+    "version": "2.10.20",
+    "group": "urdu",
+    "query": "اگر وظیفہ چھوٹ جائے تو دوبارہ کہاں سے شروع کروں؟",
+    "expected": [
+      "b15-p26"
+    ],
+    "returned": [
+      "b14-p252",
+      "b07-p96",
+      "b39-p60",
+      "b26-p99",
+      "b44-p40"
+    ],
+    "rank": null,
+    "mode": "semantic_auto"
+  }
+]

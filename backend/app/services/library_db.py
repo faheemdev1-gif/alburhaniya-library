@@ -1533,6 +1533,8 @@ def search(
                 candidate = _minimum_covering_span(plain_text, groups, normalization_level="safe")
                 spans.append((*candidate, alternative))
             local_score, span_start, span_end, selected_queries = max(spans, key=lambda x: (x[0], -x[1]))
+            if span_end <= span_start:
+                continue
             first_match = span_start
             evidence_end = span_end
             result["_local_score"] = local_score

@@ -142,7 +142,7 @@ def comparison_subjects(query):
  else:
   # Combining two practices is a practical-relation question; keep its
   # intent concepts so an attested paraphrase of either practice can match.
-  between=None if re.search(r'\b(?:نجمع|يجمع)\s+(?:السالك\s+)?بين\b',q) else re.search(r'\bبين\s+(.+)$',q)
+  between=None if re.search(r'\b(?:(?:نجمع|يجمع)\s+(?:السالك\s+)?|(?:الخصام|النزاع|الخلاف|الصلح)\s+)بين\b',q) else re.search(r'\bبين\s+(.+)$',q)
   if between:
    payload=between.group(1)
    pair=re.search(r'\s+و(?=[ء-ي])',payload)
